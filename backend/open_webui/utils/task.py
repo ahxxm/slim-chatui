@@ -1,12 +1,9 @@
-import logging
 import math
 import re
 from datetime import datetime
 from typing import Optional, Any
 
 from open_webui.utils.misc import get_last_user_message, get_messages_content
-
-log = logging.getLogger(__name__)
 
 
 def get_task_model_id(default_model_id: str, task_model: str, models) -> str:

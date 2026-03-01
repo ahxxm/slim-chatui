@@ -7,6 +7,7 @@ import logging
 
 from open_webui.utils.chat import generate_chat_completion
 from open_webui.utils.task import (
+    get_task_model_id,
     title_generation_template,
     follow_up_generation_template,
     autocomplete_generation_template,
@@ -16,8 +17,6 @@ from open_webui.utils.task import (
 )
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.constants import TASKS
-
-from open_webui.utils.task import get_task_model_id
 
 from open_webui.config import (
     DEFAULT_TITLE_GENERATION_PROMPT_TEMPLATE,

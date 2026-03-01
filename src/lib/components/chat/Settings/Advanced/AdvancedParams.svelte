@@ -1,6 +1,4 @@
 <script lang="ts">
-	import Switch from '$lib/components/common/Switch.svelte';
-	import Textarea from '$lib/components/common/Textarea.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Plus from '$lib/components/icons/Plus.svelte';
 	import { getContext } from 'svelte';
@@ -22,8 +20,6 @@
 		logit_bias: null,
 		max_tokens: null,
 		top_p: null,
-		frequency_penalty: null,
-		presence_penalty: null
 	};
 
 	export let params = defaultParams;
@@ -498,184 +494,70 @@
 		{/if}
 	</div>
 
-	<div class=" py-0.5 w-full justify-between">
-		<Tooltip
-			content={$i18n.t(
-				'Sets a scaling bias against tokens to penalize repetitions, based on how many times they have appeared. A higher value (e.g., 1.5) will penalize repetitions more strongly, while a lower value (e.g., 0.9) will be more lenient. At 0, it is disabled.'
-			)}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{'frequency_penalty'}
-				</div>
-
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-					type="button"
-					on:click={() => {
-						params.frequency_penalty = (params?.frequency_penalty ?? null) === null ? 1.1 : null;
-					}}
-				>
-					{#if (params?.frequency_penalty ?? null) === null}
-						<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-					{:else}
-						<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
-
-		{#if (params?.frequency_penalty ?? null) !== null}
-			<div class="flex mt-0.5 space-x-2">
-				<div class=" flex-1">
-					<input
-						id="steps-range"
-						type="range"
-						min="-2"
-						max="2"
-						step="0.05"
-						bind:value={params.frequency_penalty}
-						class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-					/>
-				</div>
-				<div>
-					<input
-						bind:value={params.frequency_penalty}
-						type="number"
-						class=" bg-transparent text-center w-14"
-						min="-2"
-						max="2"
-						step="any"
-					/>
-				</div>
-			</div>
-		{/if}
-	</div>
-
-	<div class=" py-0.5 w-full justify-between">
-		<Tooltip
-			content={$i18n.t(
-				'Sets a flat bias against tokens that have appeared at least once. A higher value (e.g., 1.5) will penalize repetitions more strongly, while a lower value (e.g., 0.9) will be more lenient. At 0, it is disabled.'
-			)}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{'presence_penalty'}
-				</div>
-
-				<button
-					class="p-1 px-3 text-xs flex rounded transition flex-shrink-0 outline-none"
-					type="button"
-					on:click={() => {
-						params.presence_penalty = (params?.presence_penalty ?? null) === null ? 0.0 : null;
-					}}
-				>
-					{#if (params?.presence_penalty ?? null) === null}
-						<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-					{:else}
-						<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
-
-		{#if (params?.presence_penalty ?? null) !== null}
-			<div class="flex mt-0.5 space-x-2">
-				<div class=" flex-1">
-					<input
-						id="steps-range"
-						type="range"
-						min="-2"
-						max="2"
-						step="0.05"
-						bind:value={params.presence_penalty}
-						class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-					/>
-				</div>
-				<div>
-					<input
-						bind:value={params.presence_penalty}
-						type="number"
-						class=" bg-transparent text-center w-14"
-						min="-2"
-						max="2"
-						step="any"
-					/>
-				</div>
-			</div>
-		{/if}
-	</div>
-
-	{#if admin}
-		{#if custom && admin}
-			<div class="flex flex-col justify-center">
-				{#each Object.keys(params?.custom_params ?? {}) as key}
-					<div class=" py-0.5 w-full justify-between mb-1">
-						<div class="flex w-full justify-between">
-							<div class=" self-center text-xs font-medium">
-								<input
-									type="text"
-									class=" text-xs w-full bg-transparent outline-none"
-									placeholder={$i18n.t('Custom Parameter Name')}
-									value={key}
-									on:change={(e) => {
-										const newKey = e.target.value.trim();
-										if (newKey && newKey !== key) {
-											params.custom_params[newKey] = params.custom_params[key];
-											delete params.custom_params[key];
-											params = {
-												...params,
-												custom_params: { ...params.custom_params }
-											};
-										}
-									}}
-								/>
-							</div>
-							<button
-								class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-								type="button"
-								on:click={() => {
-									delete params.custom_params[key];
-									params = {
-										...params,
-										custom_params: { ...params.custom_params }
-									};
+	{#if custom && admin}
+		<div class="flex flex-col justify-center">
+			{#each Object.keys(params?.custom_params ?? {}) as key}
+				<div class=" py-0.5 w-full justify-between mb-1">
+					<div class="flex w-full justify-between">
+						<div class=" self-center text-xs font-medium">
+							<input
+								type="text"
+								class=" text-xs w-full bg-transparent outline-none"
+								placeholder={$i18n.t('Custom Parameter Name')}
+								value={key}
+								on:change={(e) => {
+									const newKey = e.target.value.trim();
+									if (newKey && newKey !== key) {
+										params.custom_params[newKey] = params.custom_params[key];
+										delete params.custom_params[key];
+										params = {
+											...params,
+											custom_params: { ...params.custom_params }
+										};
+									}
 								}}
-							>
-								{$i18n.t('Remove')}
-							</button>
+							/>
 						</div>
-						<div class="flex mt-0.5 space-x-2">
-							<div class=" flex-1">
-								<input
-									bind:value={params.custom_params[key]}
-									type="text"
-									class="text-sm w-full bg-transparent outline-hidden outline-none"
-									placeholder={$i18n.t('Custom Parameter Value')}
-								/>
-							</div>
+						<button
+							class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
+							type="button"
+							on:click={() => {
+								delete params.custom_params[key];
+								params = {
+									...params,
+									custom_params: { ...params.custom_params }
+								};
+							}}
+						>
+							{$i18n.t('Remove')}
+						</button>
+					</div>
+					<div class="flex mt-0.5 space-x-2">
+						<div class=" flex-1">
+							<input
+								bind:value={params.custom_params[key]}
+								type="text"
+								class="text-sm w-full bg-transparent outline-hidden outline-none"
+								placeholder={$i18n.t('Custom Parameter Value')}
+							/>
 						</div>
 					</div>
-				{/each}
+				</div>
+			{/each}
 
-				<button
-					class=" flex gap-2 items-center w-full text-center justify-center mt-1 mb-5"
-					type="button"
-					on:click={() => {
-						params.custom_params = (params?.custom_params ?? {}) || {};
-						params.custom_params['custom_param_name'] = 'custom_param_value';
-					}}
-				>
-					<div>
-						<Plus />
-					</div>
-					<div>{$i18n.t('Add Custom Parameter')}</div>
-				</button>
-			</div>
-		{/if}
+			<button
+				class=" flex gap-2 items-center w-full text-center justify-center mt-1 mb-5"
+				type="button"
+				on:click={() => {
+					params.custom_params = (params?.custom_params ?? {}) || {};
+					params.custom_params['custom_param_name'] = 'custom_param_value';
+				}}
+			>
+				<div>
+					<Plus />
+				</div>
+				<div>{$i18n.t('Add Custom Parameter')}</div>
+			</button>
+		</div>
 	{/if}
 </div>

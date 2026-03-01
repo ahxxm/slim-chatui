@@ -62,8 +62,7 @@ from open_webui.routers import (
     utils,
 )
 
-from sqlalchemy.orm import Session
-from open_webui.internal.db import ScopedSession, get_session
+from open_webui.internal.db import ScopedSession
 
 from open_webui.models.models import Models
 from open_webui.models.users import Users
@@ -113,7 +112,6 @@ from open_webui.config import (
     DEFAULT_MODEL_METADATA,
     DEFAULT_MODEL_PARAMS,
     # Misc
-    ENV,
     CACHE_DIR,
     STATIC_DIR,
     FRONTEND_BUILD_DIR,
@@ -123,7 +121,6 @@ from open_webui.config import (
     RESPONSE_WATERMARK,
     # Admin
     ENABLE_ADMIN_CHAT_ACCESS,
-    BYPASS_ADMIN_ACCESS_CONTROL,
     ENABLE_ADMIN_EXPORT,
     # Tasks
     TASK_MODEL,
@@ -140,6 +137,7 @@ from open_webui.config import (
     reset_config,
 )
 from open_webui.env import (
+    ENV,
     ENABLE_CUSTOM_MODEL_FALLBACK,
     AUDIT_EXCLUDED_PATHS,
     AUDIT_LOG_LEVEL,

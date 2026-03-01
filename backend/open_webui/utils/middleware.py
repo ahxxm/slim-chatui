@@ -505,19 +505,13 @@ def get_image_urls(delta_images, request, metadata, user) -> list[str]:
     return image_urls
 
 
-def apply_params_to_form_data(form_data, model):
+def apply_params_to_form_data(form_data):
     params = form_data.pop("params", {})
     custom_params = params.pop("custom_params", {})
 
-    open_webui_params = {
-        "stream_delta_chunk_size": int,
-        "reasoning_tags": list,
-        "system": str,
-    }
-
-    for key in list(params.keys()):
-        if key in open_webui_params:
-            del params[key]
+    open_webui_only_keys = {"stream_delta_chunk_size", "reasoning_tags", "system"}
+    for key in open_webui_only_keys:
+        params.pop(key, None)
 
     if custom_params:
         # Attempt to parse custom_params if they are strings
@@ -633,7 +627,7 @@ def process_messages_with_output(messages: list[dict]) -> list[dict]:
 
 
 async def process_chat_payload(request, form_data, user, metadata, model):
-    form_data = apply_params_to_form_data(form_data, model)
+    form_data = apply_params_to_form_data(form_data)
     log.debug(f"form_data: {form_data}")
 
     # Load messages from DB when available — DB preserves structured 'output' items

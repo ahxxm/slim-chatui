@@ -109,7 +109,7 @@ type Settings = {
 	userLocation?: any;
 	autoTags?: boolean;
 	autoFollowUps?: boolean;
-	splitLargeChunks?(body: any, splitLargeChunks: any): unknown;
+	splitLargeChunks?: boolean;
 	backgroundImageUrl?: null;
 	landingPageMode?: string;
 	iframeSandboxAllowForms?: boolean;
@@ -130,14 +130,6 @@ type Settings = {
 	renderMarkdownInPreviews?: boolean;
 
 	system?: string;
-	seed?: number;
-	temperature?: string;
-	top_p?: string;
-	options?: ModelOptions;
-};
-
-type ModelOptions = {
-	stop?: boolean;
 };
 
 type TitleSettings = {
