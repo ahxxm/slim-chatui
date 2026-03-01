@@ -288,7 +288,6 @@
 			onUpdate(token);
 		}
 	});
-
 </script>
 
 <div>

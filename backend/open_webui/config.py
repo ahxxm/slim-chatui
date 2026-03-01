@@ -1397,16 +1397,6 @@ USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_PUBLIC_SHARING = (
 )
 
 
-USER_PERMISSIONS_NOTES_ALLOW_SHARING = (
-    os.environ.get("USER_PERMISSIONS_NOTES_ALLOW_SHARING", "False").lower() == "true"
-)
-
-USER_PERMISSIONS_NOTES_ALLOW_PUBLIC_SHARING = (
-    os.environ.get("USER_PERMISSIONS_NOTES_ALLOW_PUBLIC_SHARING", "False").lower()
-    == "true"
-)
-
-
 USER_PERMISSIONS_CHAT_CONTROLS = (
     os.environ.get("USER_PERMISSIONS_CHAT_CONTROLS", "True").lower() == "true"
 )
@@ -1513,14 +1503,6 @@ USER_PERMISSIONS_FEATURES_FOLDERS = (
     os.environ.get("USER_PERMISSIONS_FEATURES_FOLDERS", "True").lower() == "true"
 )
 
-USER_PERMISSIONS_FEATURES_NOTES = (
-    os.environ.get("USER_PERMISSIONS_FEATURES_NOTES", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_FEATURES_CHANNELS = (
-    os.environ.get("USER_PERMISSIONS_FEATURES_CHANNELS", "True").lower() == "true"
-)
-
 USER_PERMISSIONS_FEATURES_API_KEYS = (
     os.environ.get("USER_PERMISSIONS_FEATURES_API_KEYS", "False").lower() == "true"
 )
@@ -1560,8 +1542,6 @@ DEFAULT_USER_PERMISSIONS = {
         "public_tools": USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_PUBLIC_SHARING,
         "skills": USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_SHARING,
         "public_skills": USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_PUBLIC_SHARING,
-        "notes": USER_PERMISSIONS_NOTES_ALLOW_SHARING,
-        "public_notes": USER_PERMISSIONS_NOTES_ALLOW_PUBLIC_SHARING,
     },
     "chat": {
         "controls": USER_PERMISSIONS_CHAT_CONTROLS,
@@ -1588,9 +1568,7 @@ DEFAULT_USER_PERMISSIONS = {
     "features": {
         # General features
         "api_keys": USER_PERMISSIONS_FEATURES_API_KEYS,
-        "notes": USER_PERMISSIONS_FEATURES_NOTES,
         "folders": USER_PERMISSIONS_FEATURES_FOLDERS,
-        "channels": USER_PERMISSIONS_FEATURES_CHANNELS,
         "direct_tool_servers": USER_PERMISSIONS_FEATURES_DIRECT_TOOL_SERVERS,
         # Chat features
         "web_search": USER_PERMISSIONS_FEATURES_WEB_SEARCH,
@@ -1621,44 +1599,11 @@ FOLDER_MAX_FILE_COUNT = PersistentConfig(
     os.environ.get("FOLDER_MAX_FILE_COUNT", ""),
 )
 
-ENABLE_CHANNELS = PersistentConfig(
-    "ENABLE_CHANNELS",
-    "channels.enable",
-    os.environ.get("ENABLE_CHANNELS", "False").lower() == "true",
-)
-
-ENABLE_NOTES = PersistentConfig(
-    "ENABLE_NOTES",
-    "notes.enable",
-    os.environ.get("ENABLE_NOTES", "True").lower() == "true",
-)
-
 ENABLE_USER_STATUS = PersistentConfig(
     "ENABLE_USER_STATUS",
     "users.enable_status",
     os.environ.get("ENABLE_USER_STATUS", "True").lower() == "true",
 )
-
-ENABLE_EVALUATION_ARENA_MODELS = PersistentConfig(
-    "ENABLE_EVALUATION_ARENA_MODELS",
-    "evaluation.arena.enable",
-    os.environ.get("ENABLE_EVALUATION_ARENA_MODELS", "True").lower() == "true",
-)
-EVALUATION_ARENA_MODELS = PersistentConfig(
-    "EVALUATION_ARENA_MODELS",
-    "evaluation.arena.models",
-    [],
-)
-
-DEFAULT_ARENA_MODEL = {
-    "id": "arena-model",
-    "name": "Arena Model",
-    "meta": {
-        "profile_image_url": "/favicon.png",
-        "description": "Submit your questions to anonymous AI chatbots and vote on the best response.",
-        "model_ids": None,
-    },
-}
 
 WEBHOOK_URL = PersistentConfig(
     "WEBHOOK_URL", "webhook_url", os.environ.get("WEBHOOK_URL", "")
@@ -1682,21 +1627,6 @@ ENABLE_ADMIN_CHAT_ACCESS = (
     os.environ.get("ENABLE_ADMIN_CHAT_ACCESS", "True").lower() == "true"
 )
 
-ENABLE_ADMIN_ANALYTICS = (
-    os.environ.get("ENABLE_ADMIN_ANALYTICS", "True").lower() == "true"
-)
-
-ENABLE_COMMUNITY_SHARING = PersistentConfig(
-    "ENABLE_COMMUNITY_SHARING",
-    "ui.enable_community_sharing",
-    os.environ.get("ENABLE_COMMUNITY_SHARING", "True").lower() == "true",
-)
-
-ENABLE_MESSAGE_RATING = PersistentConfig(
-    "ENABLE_MESSAGE_RATING",
-    "ui.enable_message_rating",
-    os.environ.get("ENABLE_MESSAGE_RATING", "True").lower() == "true",
-)
 
 ENABLE_USER_WEBHOOKS = PersistentConfig(
     "ENABLE_USER_WEBHOOKS",
@@ -3979,5 +3909,3 @@ AUDIO_TTS_AZURE_SPEECH_OUTPUT_FORMAT = PersistentConfig(
         "AUDIO_TTS_AZURE_SPEECH_OUTPUT_FORMAT", "audio-24khz-160kbitrate-mono-mp3"
     ),
 )
-
-
