@@ -240,7 +240,7 @@
 					</select>
 				</div>
 			</div>
-			{#if $i18n.language === 'en-US' && !($config?.license_metadata ?? false)}
+			{#if $i18n.language === 'en-US'}
 				<div
 					class="mb-2 text-xs {($settings?.highContrastMode ?? false)
 						? 'text-gray-800 dark:text-gray-100'

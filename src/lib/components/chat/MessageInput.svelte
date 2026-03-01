@@ -1,8 +1,6 @@
 <script lang="ts">
-	import DOMPurify from 'dompurify';
 	import { toast } from 'svelte-sonner';
 
-	import { marked } from 'marked';
 	import { v4 as uuidv4 } from 'uuid';
 	import dayjs from '$lib/dayjs';
 	import duration from 'dayjs/plugin/duration';
@@ -63,7 +61,6 @@
 	import Image from '../common/Image.svelte';
 
 	import XMark from '../icons/XMark.svelte';
-	import GlobeAlt from '../icons/GlobeAlt.svelte';
 	import Wrench from '../icons/Wrench.svelte';
 	import Sparkles from '../icons/Sparkles.svelte';
 
@@ -83,7 +80,6 @@
 
 	const i18n = getContext('i18n');
 
-	export let onUpload: Function = (e) => {};
 	export let onChange: Function = () => {};
 
 	export let createMessagePair: Function;
@@ -107,7 +103,6 @@
 	export let selectedToolIds = [];
 	export let selectedFilterIds = [];
 
-	export let webSearchEnabled = false;
 	export let codeInterpreterEnabled = false;
 
 	export let messageQueue: { id: string; prompt: string; files: any[] }[] = [];
@@ -144,7 +139,6 @@
 			}),
 		selectedToolIds,
 		selectedFilterIds,
-		webSearchEnabled,
 		codeInterpreterEnabled
 	});
 
@@ -436,11 +430,6 @@
 		(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.file_upload ?? true
 	);
 
-	let webSearchCapableModels = [];
-	$: webSearchCapableModels = (atSelectedModel?.id ? [atSelectedModel.id] : selectedModels).filter(
-		(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.web_search ?? true
-	);
-
 	let codeInterpreterCapableModels = [];
 	$: codeInterpreterCapableModels = (
 		atSelectedModel?.id ? [atSelectedModel.id] : selectedModels
@@ -456,13 +445,6 @@
 
 	let showToolsButton = false;
 	$: showToolsButton = ($tools ?? []).length > 0 || ($toolServers ?? []).length > 0;
-
-	let showWebSearchButton = false;
-	$: showWebSearchButton =
-		(atSelectedModel?.id ? [atSelectedModel.id] : selectedModels).length ===
-			webSearchCapableModels.length &&
-		$config?.features?.enable_web_search &&
-		($_user.role === 'admin' || $_user?.permissions?.features?.web_search);
 
 	let showCodeInterpreterButton = false;
 	$: showCodeInterpreterButton =
@@ -517,7 +499,7 @@
 		}
 	};
 
-	const uploadFileHandler = async (file, process = true, itemData = {}) => {
+	const uploadFileHandler = async (file, itemData = {}) => {
 		if ($_user?.role !== 'admin' && !($_user?.permissions?.chat?.file_upload ?? true)) {
 			toast.error($i18n.t('You do not have permission to upload files.'));
 			return null;
@@ -535,7 +517,6 @@
 			id: null,
 			url: '',
 			name: file.name,
-			collection_name: '',
 			status: 'uploading',
 			size: file.size,
 			error: '',
@@ -552,14 +533,12 @@
 
 		if (!$temporaryChatEnabled) {
 			try {
-				// During the file upload, file content is automatically extracted.
-				const uploadedFile = await uploadFile(localStorage.token, file, null, process);
+				const uploadedFile = await uploadFile(localStorage.token, file);
 
 				if (uploadedFile) {
 					console.log('File upload completed:', {
 						id: uploadedFile.id,
-						name: fileItem.name,
-						collection: uploadedFile?.meta?.collection_name
+						name: fileItem.name
 					});
 
 					if (uploadedFile.error) {
@@ -570,8 +549,6 @@
 					fileItem.status = 'uploaded';
 					fileItem.file = uploadedFile;
 					fileItem.id = uploadedFile.id;
-					fileItem.collection_name =
-						uploadedFile?.meta?.collection_name || uploadedFile?.collection_name;
 					fileItem.content_type = uploadedFile.meta?.content_type || uploadedFile.content_type;
 					fileItem.url = `${uploadedFile.id}`;
 
@@ -617,18 +594,6 @@
 	const inputFilesHandler = async (inputFiles) => {
 		console.log('Input files handler called with:', inputFiles);
 
-		if (
-			($config?.file?.max_count ?? null) !== null &&
-			files.length + inputFiles.length > $config?.file?.max_count
-		) {
-			toast.error(
-				$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
-					maxCount: $config?.file?.max_count
-				})
-			);
-			return;
-		}
-
 		inputFiles.forEach(async (file) => {
 			console.log('Processing file:', {
 				name: file.name,
@@ -636,22 +601,6 @@
 				size: file.size,
 				extension: file.name.split('.').at(-1)
 			});
-
-			if (
-				($config?.file?.max_size ?? null) !== null &&
-				file.size > ($config?.file?.max_size ?? 0) * 1024 * 1024
-			) {
-				console.log('File exceeds max size limit:', {
-					fileSize: file.size,
-					maxSize: ($config?.file?.max_size ?? 0) * 1024 * 1024
-				});
-				toast.error(
-					$i18n.t(`File size should not exceed {{maxSize}} MB.`, {
-						maxSize: $config?.file?.max_size
-					})
-				);
-				return;
-			}
 
 			if (file['type'].startsWith('image/')) {
 				if (visionCapableModels.length === 0) {
@@ -715,7 +664,7 @@
 						const blob = await (await fetch(imageUrl)).blob();
 						const compressedFile = new File([blob], file.name, { type: file.type });
 
-						uploadFileHandler(compressedFile, false);
+						uploadFileHandler(compressedFile);
 					}
 				};
 
@@ -813,8 +762,6 @@
 									status: 'processed'
 								}
 							];
-						} else {
-							onUpload(e);
 						}
 					}
 				})
@@ -848,43 +795,6 @@
 									status: 'processed'
 								}
 							];
-						} else {
-							onUpload(e);
-						}
-					}
-				})
-			},
-			{
-				char: '#',
-				render: getSuggestionRenderer(CommandSuggestionList, {
-					i18n,
-					onSelect: (e) => {
-						const { type, data } = e;
-
-						if (type === 'model') {
-							atSelectedModel = data;
-						}
-
-						document.getElementById('chat-input')?.focus();
-					},
-
-					insertTextHandler: insertTextAtCursor,
-					onUpload: (e) => {
-						const { type, data } = e;
-
-						if (type === 'file') {
-							if (files.find((f) => f.id === data.id)) {
-								return;
-							}
-							files = [
-								...files,
-								{
-									...data,
-									status: 'processed'
-								}
-							];
-						} else {
-							onUpload(e);
 						}
 					}
 				})
@@ -897,8 +807,7 @@
 						document.getElementById('chat-input')?.focus();
 					},
 
-					insertTextHandler: insertTextAtCursor,
-					onUpload: () => {}
+					insertTextHandler: insertTextAtCursor
 				})
 			}
 		];
@@ -1188,7 +1097,7 @@
 												dismissible={true}
 												edit={true}
 												small={true}
-												modal={['file', 'collection'].includes(file?.type)}
+												modal={file?.type === 'file'}
 												on:dismiss={async () => {
 													// Remove from UI state
 													files.splice(fileIdx, 1);
@@ -1351,7 +1260,6 @@
 															selectedToolIds = [];
 															selectedFilterIds = [];
 
-															webSearchEnabled = false;
 															codeInterpreterEnabled = false;
 														}
 													}}
@@ -1378,7 +1286,7 @@
 																				}
 																			);
 
-																			await uploadFileHandler(file, true, { context: 'full' });
+																			await uploadFileHandler(file, { context: 'full' });
 																		}
 																	}
 																} else {
@@ -1409,7 +1317,6 @@
 										uploadFilesHandler={() => {
 											filesInputElement.click();
 										}}
-										{onUpload}
 										onClose={async () => {
 											await tick();
 
@@ -1425,7 +1332,7 @@
 										</div>
 									</InputMenu>
 
-									{#if showWebSearchButton || showCodeInterpreterButton || showToolsButton || (toggleFilters && toggleFilters.length > 0)}
+									{#if showCodeInterpreterButton || showToolsButton || (toggleFilters && toggleFilters.length > 0)}
 										<div
 											class="flex self-center w-[1px] h-4 mx-1 bg-gray-200/50 dark:bg-gray-800/50"
 										/>
@@ -1433,11 +1340,9 @@
 										<IntegrationsMenu
 											selectedModels={atSelectedModel ? [atSelectedModel.id] : selectedModels}
 											{toggleFilters}
-											{showWebSearchButton}
 											{showCodeInterpreterButton}
 											bind:selectedToolIds
 											bind:selectedFilterIds
-											bind:webSearchEnabled
 											bind:codeInterpreterEnabled
 											closeOnOutsideClick={integrationsMenuCloseOnOutsideClick}
 											onShowValves={(e) => {
@@ -1543,24 +1448,6 @@
 											{/if}
 										{/each}
 
-										{#if webSearchEnabled}
-											<Tooltip content={$i18n.t('Web Search')} placement="top">
-												<button
-													on:click|preventDefault={() => (webSearchEnabled = !webSearchEnabled)}
-													type="button"
-													class="group p-[7px] flex gap-1.5 items-center text-sm rounded-full transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden {webSearchEnabled ||
-													($settings?.webSearch ?? false) === 'always'
-														? ' text-sky-500 dark:text-sky-300 bg-sky-50 hover:bg-sky-100 dark:bg-sky-400/10 dark:hover:bg-sky-600/10 border border-sky-200/40 dark:border-sky-500/20'
-														: 'bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 '}"
-												>
-													<GlobeAlt className="size-4" strokeWidth="1.75" />
-													<div class="hidden group-hover:block">
-														<XMark className="size-4" strokeWidth="1.75" />
-													</div>
-												</button>
-											</Tooltip>
-										{/if}
-
 										{#if codeInterpreterEnabled}
 											<Tooltip content={$i18n.t('Code Interpreter')} placement="top">
 												<button
@@ -1645,13 +1532,7 @@
 							</div>
 						</div>
 
-						{#if $config?.license_metadata?.input_footer}
-							<div class=" text-xs text-gray-500 text-center line-clamp-1 marked">
-								{@html DOMPurify.sanitize(marked($config?.license_metadata?.input_footer))}
-							</div>
-						{:else}
-							<div class="mb-1" />
-						{/if}
+						<div class="mb-1" />
 					</form>
 				</div>
 			</div>

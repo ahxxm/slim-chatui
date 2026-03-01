@@ -83,8 +83,6 @@
 	};
 	let hapticFeedback = false;
 
-	let webSearch = null;
-
 	let iframeSandboxAllowSameOrigin = false;
 	let iframeSandboxAllowForms = false;
 
@@ -170,11 +168,6 @@
 		});
 	};
 
-	const toggleWebSearch = async () => {
-		webSearch = webSearch === null ? 'always' : null;
-		saveSettings({ webSearch: webSearch });
-	};
-
 	const setTextScaleHandler = (scale) => {
 		textScale = scale;
 		setTextScale(textScale);
@@ -249,7 +242,6 @@
 		}
 
 		backgroundImageUrl = $settings?.backgroundImageUrl ?? null;
-		webSearch = $settings?.webSearch ?? null;
 
 		textScale = $settings?.textScale ?? null;
 	});
@@ -991,27 +983,6 @@
 							}}
 						/>
 					</div>
-				</div>
-			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="web-search-in-chat-label" class=" self-center text-xs">
-						{$i18n.t('Web Search in Chat')}
-					</div>
-
-					<button
-						aria-labelledby="web-search-in-chat-label web-search-state"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
-							toggleWebSearch();
-						}}
-						type="button"
-					>
-						<span class="ml-2 self-center" id="web-search-state"
-							>{webSearch === 'always' ? $i18n.t('Always') : $i18n.t('Default')}</span
-						>
-					</button>
 				</div>
 			</div>
 

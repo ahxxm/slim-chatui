@@ -39,16 +39,6 @@ ENV OPENAI_API_KEY="" \
     WEBUI_SECRET_KEY="" \
     ANONYMIZED_TELEMETRY=false
 
-ENV RAG_EMBEDDING_MODEL="sentence-transformers/all-MiniLM-L6-v2" \
-    RAG_RERANKING_MODEL="" \
-    AUXILIARY_EMBEDDING_MODEL="TaylorAI/bge-micro-v2" \
-    SENTENCE_TRANSFORMERS_HOME="/app/backend/data/cache/embedding/models"
-
-ENV TIKTOKEN_ENCODING_NAME="cl100k_base" \
-    TIKTOKEN_CACHE_DIR="/app/backend/data/cache/tiktoken"
-
-ENV HF_HOME="/app/backend/data/cache/embedding/models"
-
 WORKDIR /app/backend
 
 ENV HOME=/root
@@ -59,16 +49,12 @@ RUN if [ $UID -ne 0 ]; then \
     adduser --uid $UID --gid $GID --home $HOME --disabled-password --no-create-home app; \
     fi
 
-RUN mkdir -p $HOME/.cache/chroma
-RUN echo -n 00000000-0000-0000-0000-000000000000 > $HOME/.cache/chroma/telemetry_user_id
-
 RUN chown -R $UID:$GID /app $HOME
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    git build-essential pandoc gcc netcat-openbsd curl jq \
-    python3-dev \
-    ffmpeg libsm6 libxext6 zstd \
+    git build-essential gcc netcat-openbsd curl jq \
+    python3-dev zstd \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --chown=$UID:$GID ./pyproject.toml /app/pyproject.toml
@@ -76,7 +62,6 @@ COPY --chown=$UID:$GID ./hatch_build.py /app/hatch_build.py
 COPY --chown=$UID:$GID ./backend .
 
 RUN pip3 install --no-cache-dir uv && \
-    pip3 install 'torch<=2.9.1' torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu --no-cache-dir && \
     uv pip install --system --no-cache-dir '/app[all]' && \
     mkdir -p /app/backend/data && chown -R $UID:$GID /app/backend/data/
 

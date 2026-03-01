@@ -49,8 +49,7 @@
 		createMessagesList,
 		getPromptVariables,
 		processDetails,
-		getCodeBlockContents,
-		isYoutubeUrl
+		getCodeBlockContents
 	} from '$lib/utils';
 
 	import {
@@ -64,18 +63,15 @@
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
 	import { generateOpenAIChatCompletion } from '$lib/apis/openai';
-	import { processWeb, processWebSearch, processYoutubeVideo } from '$lib/apis/retrieval';
 	import { getAndUpdateUserLocation, getUserSettings } from '$lib/apis/users';
 	import {
 		chatCompleted,
-		generateQueries,
 		chatAction,
 		generateMoACompletion,
 		stopTask,
 		getTaskIdsByChatId
 	} from '$lib/apis';
 	import { getTools } from '$lib/apis/tools';
-	import { uploadFile } from '$lib/apis/files';
 	import { createOpenAITextStream } from '$lib/apis/streaming';
 	import { getFunctions } from '$lib/apis/functions';
 	import { updateFolderById } from '$lib/apis/folders';
@@ -131,7 +127,6 @@
 
 	let selectedToolIds = [];
 	let selectedFilterIds = [];
-	let webSearchEnabled = false;
 	let codeInterpreterEnabled = false;
 
 	let showCommands = false;
@@ -177,7 +172,6 @@
 		messageQueue = [];
 		selectedToolIds = [];
 		selectedFilterIds = [];
-		webSearchEnabled = false;
 
 		const storageChatInput = sessionStorage.getItem(
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
@@ -223,7 +217,6 @@
 						files = input.files;
 						selectedToolIds = input.selectedToolIds;
 						selectedFilterIds = input.selectedFilterIds;
-						webSearchEnabled = input.webSearchEnabled;
 						codeInterpreterEnabled = input.codeInterpreterEnabled;
 					}
 				} catch (e) {}
@@ -282,7 +275,6 @@
 	const resetInput = () => {
 		selectedToolIds = [];
 		selectedFilterIds = [];
-		webSearchEnabled = false;
 		codeInterpreterEnabled = false;
 
 		if (selectedModelIds.filter((id) => id).length > 0) {
@@ -321,14 +313,6 @@
 
 			// Set Default Features
 			if (model?.info?.meta?.defaultFeatureIds) {
-				if (
-					model.info?.meta?.capabilities?.['web_search'] &&
-					$config?.features?.enable_web_search &&
-					($user?.role === 'admin' || $user?.permissions?.features?.web_search)
-				) {
-					webSearchEnabled = model.info.meta.defaultFeatureIds.includes('web_search');
-				}
-
 				if (
 					model.info?.meta?.capabilities?.['code_interpreter'] &&
 					$config?.features?.enable_code_interpreter &&
@@ -608,7 +592,6 @@
 			files = [];
 			selectedToolIds = [];
 			selectedFilterIds = [];
-			webSearchEnabled = false;
 			codeInterpreterEnabled = false;
 
 			try {
@@ -619,7 +602,6 @@
 					files = input.files;
 					selectedToolIds = input.selectedToolIds;
 					selectedFilterIds = input.selectedFilterIds;
-					webSearchEnabled = input.webSearchEnabled;
 					codeInterpreterEnabled = input.codeInterpreterEnabled;
 				}
 			} catch (e) {}
@@ -674,57 +656,6 @@
 	});
 
 	// File upload functions
-
-	const uploadWeb = async (urls) => {
-		if ($user?.role !== 'admin' && !($user?.permissions?.chat?.web_upload ?? true)) {
-			toast.error($i18n.t('You do not have permission to upload web content.'));
-			return;
-		}
-
-		if (!Array.isArray(urls)) {
-			urls = [urls];
-		}
-
-		// Create file items first
-		const fileItems = urls.map((url) => ({
-			type: 'text',
-			name: url,
-			collection_name: '',
-			status: 'uploading',
-			context: 'full',
-			url,
-			error: ''
-		}));
-
-		// Display all items at once
-		files = [...files, ...fileItems];
-
-		for (const fileItem of fileItems) {
-			try {
-				const res = isYoutubeUrl(fileItem.url)
-					? await processYoutubeVideo(localStorage.token, fileItem.url)
-					: await processWeb(localStorage.token, '', fileItem.url);
-
-				if (res) {
-					fileItem.status = 'uploaded';
-					fileItem.collection_name = res.collection_name;
-					fileItem.file = {
-						...res.file,
-						...fileItem.file
-					};
-				}
-
-				files = [...files];
-			} catch (e) {
-				files = files.filter((f) => f.name !== url);
-				toast.error(`${e}`);
-			}
-		}
-	};
-
-	const onUpload = async (event) => {
-		await uploadWeb(event.data);
-	};
 
 	$: if (history) {
 		getContents();
@@ -913,18 +844,6 @@
 		params = {};
 		taskIds = null;
 		messageQueue = [];
-
-		if ($page.url.searchParams.get('youtube')) {
-			await uploadWeb(`https://www.youtube.com/watch?v=${$page.url.searchParams.get('youtube')}`);
-		}
-
-		if ($page.url.searchParams.get('load-url')) {
-			await uploadWeb($page.url.searchParams.get('load-url'));
-		}
-
-		if ($page.url.searchParams.get('web-search') === 'true') {
-			webSearchEnabled = true;
-		}
 
 		if ($page.url.searchParams.get('code-interpreter') === 'true') {
 			codeInterpreterEnabled = true;
@@ -1434,18 +1353,6 @@
 			return;
 		}
 
-		if (
-			($config?.file?.max_count ?? null) !== null &&
-			files.length + chatFiles.length > $config?.file?.max_count
-		) {
-			toast.error(
-				$i18n.t(`You can only chat with a maximum of {{maxCount}} file(s) at a time.`, {
-					maxCount: $config?.file?.max_count
-				})
-			);
-			return;
-		}
-
 		// Check if there are pending tasks (more reliable than lastMessage.done)
 		if (taskIds !== null && taskIds.length > 0) {
 			if ($settings?.enableMessageQueue ?? true) {
@@ -1490,7 +1397,7 @@
 		chatFiles.push(
 			..._files.filter(
 				(item) =>
-					['doc', 'text', 'chat', 'folder', 'collection'].includes(item.type) ||
+					['text', 'chat', 'folder'].includes(item.type) ||
 					(item.type === 'file' && !(item?.content_type ?? '').startsWith('image/'))
 			)
 		);
@@ -1667,28 +1574,8 @@
 					$config?.features?.enable_code_interpreter &&
 					($user?.role === 'admin' || $user?.permissions?.features?.code_interpreter)
 						? codeInterpreterEnabled
-						: false,
-				web_search:
-					$config?.features?.enable_web_search &&
-					($user?.role === 'admin' || $user?.permissions?.features?.web_search)
-						? webSearchEnabled
 						: false
 			};
-
-		const currentModels = atSelectedModel?.id ? [atSelectedModel.id] : selectedModels;
-		if (
-			currentModels.filter(
-				(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.web_search ?? true
-			).length === currentModels.length
-		) {
-			if ($config?.features?.enable_web_search && ($settings?.webSearch ?? false) === 'always') {
-				features = { ...features, web_search: true };
-			}
-		}
-
-		if ($settings?.memory ?? false) {
-			features = { ...features, memory: true };
-		}
 
 		return features;
 	};
@@ -1711,7 +1598,7 @@
 		files.push(
 			...(userMessage?.files ?? []).filter(
 				(item) =>
-					['doc', 'text', 'chat', 'collection'].includes(item.type) ||
+					['text', 'chat'].includes(item.type) ||
 					(item.type === 'file' && !(item?.content_type ?? '').startsWith('image/'))
 			)
 		);
@@ -1983,12 +1870,6 @@
 			content: $i18n.t(`Uh-oh! There was an issue with the response.`) + '\n' + errorMessage
 		};
 		responseMessage.done = true;
-
-		if (responseMessage.statusHistory) {
-			responseMessage.statusHistory = responseMessage.statusHistory.filter(
-				(status) => status.action !== 'knowledge_search'
-			);
-		}
 
 		history.messages[responseMessage.id] = responseMessage;
 	};
@@ -2326,11 +2207,10 @@
 				<div
 					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"
 				/>
-			{:else if $settings?.backgroundImageUrl ?? $config?.license_metadata?.background_image_url ?? null}
+			{:else if $settings?.backgroundImageUrl}
 				<div
 					class="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
-					style="background-image: url({$settings?.backgroundImageUrl ??
-						$config?.license_metadata?.background_image_url})  "
+					style="background-image: url({$settings?.backgroundImageUrl})  "
 				/>
 
 				<div
@@ -2448,14 +2328,12 @@
 									bind:selectedToolIds
 									bind:selectedFilterIds
 									bind:codeInterpreterEnabled
-									bind:webSearchEnabled
 									bind:atSelectedModel
 									bind:showCommands
 									toolServers={$toolServers}
 									{generating}
 									{stopResponse}
 									{createMessagePair}
-									{onUpload}
 									{messageQueue}
 									onQueueSendNow={async (id) => {
 										const item = messageQueue.find((m) => m.id === id);
@@ -2517,14 +2395,12 @@
 									bind:selectedToolIds
 									bind:selectedFilterIds
 									bind:codeInterpreterEnabled
-									bind:webSearchEnabled
 									bind:atSelectedModel
 									bind:showCommands
 									toolServers={$toolServers}
 									{stopResponse}
 									{createMessagePair}
 									{onSelect}
-									{onUpload}
 									onChange={(data) => {
 										if (!$temporaryChatEnabled) {
 											saveDraft(data);

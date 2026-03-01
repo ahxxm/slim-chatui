@@ -22,9 +22,7 @@ class AccessGrant(Base):
     __tablename__ = "access_grant"
 
     id = Column(Text, primary_key=True)
-    resource_type = Column(
-        Text, nullable=False
-    )  # "knowledge", "model", "prompt", "tool", "file"
+    resource_type = Column(Text, nullable=False)  # "model", "prompt", "tool", "file"
     resource_id = Column(Text, nullable=False)
     principal_type = Column(Text, nullable=False)  # "user" or "group"
     principal_id = Column(

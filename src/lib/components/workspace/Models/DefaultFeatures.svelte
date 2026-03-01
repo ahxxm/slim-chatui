@@ -7,17 +7,13 @@
 	const i18n = getContext('i18n');
 
 	const featureLabels = {
-		web_search: {
-			label: $i18n.t('Web Search'),
-			description: $i18n.t('Model can search the web for information')
-		},
 		code_interpreter: {
 			label: $i18n.t('Code Interpreter'),
 			description: $i18n.t('Model can execute code and perform calculations')
 		}
 	};
 
-	export let availableFeatures = ['web_search', 'code_interpreter'];
+	export let availableFeatures = ['code_interpreter'];
 	export let featureIds = [];
 </script>
 

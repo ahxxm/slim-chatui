@@ -192,7 +192,7 @@
 	}}
 />
 
-<FileItemModal bind:show={showFileItemModal} item={selectedFile} edit={false} />
+<FileItemModal bind:show={showFileItemModal} item={selectedFile} />
 
 <Modal size="xl" bind:show>
 	<div>

@@ -58,7 +58,6 @@ export const selectedFolder = writable(null);
 
 export const models: Writable<Model[]> = writable([]);
 
-export const knowledge: Writable<null | Document[]> = writable(null);
 export const tools = writable(null);
 export const skills = writable(null);
 export const functions = writable(null);
@@ -163,8 +162,6 @@ type Settings = {
 	richTextInput?: boolean;
 	params?: any;
 	userLocation?: any;
-	webSearch?: any;
-	memory?: boolean;
 	autoTags?: boolean;
 	autoFollowUps?: boolean;
 	splitLargeChunks?(body: any, splitLargeChunks: any): unknown;
@@ -210,15 +207,7 @@ type TitleSettings = {
 	prompt?: string;
 };
 
-type Document = {
-	collection_name: string;
-	filename: string;
-	name: string;
-	title: string;
-};
-
 type Config = {
-	license_metadata: any;
 	status: boolean;
 	name: string;
 	version: string;
@@ -231,10 +220,8 @@ type Config = {
 		enable_api_keys: boolean;
 		enable_signup: boolean;
 		enable_login_form: boolean;
-		enable_web_search?: boolean;
 		enable_admin_export: boolean;
 		enable_admin_chat_access: boolean;
-		enable_memories: boolean;
 		enable_autocomplete_generation: boolean;
 		enable_direct_connections: boolean;
 		enable_version_update_check: boolean;

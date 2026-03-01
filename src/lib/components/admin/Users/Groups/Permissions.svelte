@@ -76,22 +76,6 @@
 		<div class="flex flex-col w-full">
 			<div class="flex w-full justify-between my-1">
 				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Knowledge Access')}
-				</div>
-				<Switch bind:state={permissions.workspace.knowledge} />
-			</div>
-			{#if defaultPermissions?.workspace?.knowledge && !permissions.workspace.knowledge}
-				<div>
-					<div class="text-xs text-gray-500">
-						{$i18n.t('This is a default user permission and will remain enabled.')}
-					</div>
-				</div>
-			{/if}
-		</div>
-
-		<div class="flex flex-col w-full">
-			<div class="flex w-full justify-between my-1">
-				<div class=" self-center text-xs font-medium">
 					{$i18n.t('Prompts Access')}
 				</div>
 				<Switch bind:state={permissions.workspace.prompts} />
@@ -213,40 +197,6 @@
 					<Switch bind:state={permissions.sharing.public_models} />
 				</div>
 				{#if defaultPermissions?.sharing?.public_models && !permissions.sharing.public_models}
-					<div>
-						<div class="text-xs text-gray-500">
-							{$i18n.t('This is a default user permission and will remain enabled.')}
-						</div>
-					</div>
-				{/if}
-			</div>
-		{/if}
-
-		<div class="flex flex-col w-full">
-			<div class="flex w-full justify-between my-1">
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Knowledge Sharing')}
-				</div>
-				<Switch bind:state={permissions.sharing.knowledge} />
-			</div>
-			{#if defaultPermissions?.sharing?.knowledge && !permissions.sharing.knowledge}
-				<div>
-					<div class="text-xs text-gray-500">
-						{$i18n.t('This is a default user permission and will remain enabled.')}
-					</div>
-				</div>
-			{/if}
-		</div>
-
-		{#if permissions.sharing.knowledge}
-			<div class="flex flex-col w-full">
-				<div class="flex w-full justify-between my-1">
-					<div class=" self-center text-xs font-medium">
-						{$i18n.t('Knowledge Public Sharing')}
-					</div>
-					<Switch bind:state={permissions.sharing.public_knowledge} />
-				</div>
-				{#if defaultPermissions?.sharing?.public_knowledge && !permissions.sharing.public_knowledge}
 					<div>
 						<div class="text-xs text-gray-500">
 							{$i18n.t('This is a default user permission and will remain enabled.')}
@@ -697,43 +647,11 @@
 		<div class="flex flex-col w-full">
 			<div class="flex w-full justify-between my-1">
 				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Web Search')}
-				</div>
-				<Switch bind:state={permissions.features.web_search} />
-			</div>
-			{#if defaultPermissions?.features?.web_search && !permissions.features.web_search}
-				<div>
-					<div class="text-xs text-gray-500">
-						{$i18n.t('This is a default user permission and will remain enabled.')}
-					</div>
-				</div>
-			{/if}
-		</div>
-
-		<div class="flex flex-col w-full">
-			<div class="flex w-full justify-between my-1">
-				<div class=" self-center text-xs font-medium">
 					{$i18n.t('Code Interpreter')}
 				</div>
 				<Switch bind:state={permissions.features.code_interpreter} />
 			</div>
 			{#if defaultPermissions?.features?.code_interpreter && !permissions.features.code_interpreter}
-				<div>
-					<div class="text-xs text-gray-500">
-						{$i18n.t('This is a default user permission and will remain enabled.')}
-					</div>
-				</div>
-			{/if}
-		</div>
-
-		<div class="flex flex-col w-full">
-			<div class="flex w-full justify-between my-1">
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Memories')}
-				</div>
-				<Switch bind:state={permissions.features.memories} />
-			</div>
-			{#if defaultPermissions?.features?.memories && !permissions.features.memories}
 				<div>
 					<div class="text-xs text-gray-500">
 						{$i18n.t('This is a default user permission and will remain enabled.')}

@@ -4,11 +4,8 @@ import jwt
 import base64
 import hmac
 import hashlib
-import requests
-import os
 import bcrypt
 
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 import json
 
 
@@ -26,13 +23,10 @@ from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import (
     ENABLE_PASSWORD_VALIDATION,
     OFFLINE_MODE,
-    LICENSE_BLOB,
     PASSWORD_VALIDATION_HINT,
     PASSWORD_VALIDATION_REGEX_PATTERN,
-    pk,
     WEBUI_SECRET_KEY,
     TRUSTED_SIGNATURE_KEY,
-    STATIC_DIR,
     WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
 )
 
@@ -63,90 +57,6 @@ def verify_signature(payload: str, signature: str) -> bool:
 
     except Exception:
         return False
-
-
-def override_static(path: str, content: str):
-    # Ensure path is safe
-    if "/" in path or ".." in path:
-        log.error(f"Invalid path: {path}")
-        return
-
-    file_path = os.path.join(STATIC_DIR, path)
-    os.makedirs(os.path.dirname(file_path), exist_ok=True)
-
-    with open(file_path, "wb") as f:
-        f.write(base64.b64decode(content))  # Convert Base64 back to raw binary
-
-
-def get_license_data(app, key):
-    def data_handler(data):
-        for k, v in data.items():
-            if k == "resources":
-                for p, c in v.items():
-                    globals().get("override_static", lambda a, b: None)(p, c)
-            elif k == "count":
-                setattr(app.state, "USER_COUNT", v)
-            elif k == "name":
-                setattr(app.state, "WEBUI_NAME", v)
-            elif k == "metadata":
-                setattr(app.state, "LICENSE_METADATA", v)
-
-    def handler(u):
-        res = requests.post(
-            f"{u}/api/v1/license/",
-            json={"key": key, "version": "1"},
-            timeout=5,
-        )
-
-        if getattr(res, "ok", False):
-            payload = getattr(res, "json", lambda: {})()
-            data_handler(payload)
-            return True
-        else:
-            log.error(
-                f"License: retrieval issue: {getattr(res, 'text', 'unknown error')}"
-            )
-
-    if key:
-        us = [
-            "https://api.openwebui.com",
-            "https://licenses.api.openwebui.com",
-        ]
-        try:
-            for u in us:
-                if handler(u):
-                    return True
-        except Exception as ex:
-            log.exception(f"License: Uncaught Exception: {ex}")
-
-    try:
-        if LICENSE_BLOB:
-            nl = 12
-            kb = hashlib.sha256((key.replace("-", "").upper()).encode()).digest()
-
-            def nt(b):
-                return b[:nl], b[nl:]
-
-            lb = base64.b64decode(LICENSE_BLOB)
-            ln, lt = nt(lb)
-
-            aesgcm = AESGCM(kb)
-            p = json.loads(aesgcm.decrypt(ln, lt, None))
-            pk.verify(base64.b64decode(p["s"]), p["p"].encode())
-
-            pb = base64.b64decode(p["p"])
-            pn, pt = nt(pb)
-
-            data = json.loads(aesgcm.decrypt(pn, pt, None).decode())
-            if not data.get("exp") and data.get("exp") < datetime.now().date():
-                return False
-
-            data_handler(data)
-            return True
-    except Exception as e:
-        log.error(f"License: {e}")
-
-    return False
 
 
 bearer_security = HTTPBearer(auto_error=False)
