@@ -35,7 +35,6 @@ from open_webui.env import (
     LICENSE_BLOB,
     PASSWORD_VALIDATION_HINT,
     PASSWORD_VALIDATION_REGEX_PATTERN,
-    REDIS_KEY_PREFIX,
     pk,
     WEBUI_SECRET_KEY,
     TRUSTED_SIGNATURE_KEY,
@@ -213,44 +212,11 @@ def decode_token(token: str) -> Optional[dict]:
 
 
 async def is_valid_token(request, decoded) -> bool:
-    # Require Redis to check revoked tokens
-    if request.app.state.redis:
-        jti = decoded.get("jti")
-
-        if jti:
-            revoked = await request.app.state.redis.get(
-                f"{REDIS_KEY_PREFIX}:auth:token:{jti}:revoked"
-            )
-            if revoked:
-                return False
-
     return True
 
 
 async def invalidate_token(request, token):
-    decoded = decode_token(token)
-
-    # If token is invalid/expired, nothing to revoke
-    if not decoded:
-        return
-
-    # Require Redis to store revoked tokens
-    if request.app.state.redis:
-        jti = decoded.get("jti")
-        exp = decoded.get("exp")
-
-        if jti and exp:
-            ttl = exp - int(
-                datetime.now(UTC).timestamp()
-            )  # Calculate time-to-live for the token
-
-            if ttl > 0:
-                # Store the revoked token in Redis with an expiration time
-                await request.app.state.redis.set(
-                    f"{REDIS_KEY_PREFIX}:auth:token:{jti}:revoked",
-                    "1",
-                    ex=ttl,
-                )
+    pass
 
 
 def extract_token_from_auth_header(auth_header: str):

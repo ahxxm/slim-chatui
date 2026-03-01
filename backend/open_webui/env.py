@@ -371,46 +371,6 @@ ENABLE_QUERIES_CACHE = os.environ.get("ENABLE_QUERIES_CACHE", "False").lower() =
 RAG_SYSTEM_CONTEXT = os.environ.get("RAG_SYSTEM_CONTEXT", "False").lower() == "true"
 
 ####################################
-# REDIS
-####################################
-
-REDIS_URL = os.environ.get("REDIS_URL", "")
-REDIS_CLUSTER = os.environ.get("REDIS_CLUSTER", "False").lower() == "true"
-
-REDIS_KEY_PREFIX = os.environ.get("REDIS_KEY_PREFIX", "open-webui")
-
-REDIS_SENTINEL_HOSTS = os.environ.get("REDIS_SENTINEL_HOSTS", "")
-REDIS_SENTINEL_PORT = os.environ.get("REDIS_SENTINEL_PORT", "26379")
-
-# Maximum number of retries for Redis operations when using Sentinel fail-over
-REDIS_SENTINEL_MAX_RETRY_COUNT = os.environ.get("REDIS_SENTINEL_MAX_RETRY_COUNT", "2")
-try:
-    REDIS_SENTINEL_MAX_RETRY_COUNT = int(REDIS_SENTINEL_MAX_RETRY_COUNT)
-    if REDIS_SENTINEL_MAX_RETRY_COUNT < 1:
-        REDIS_SENTINEL_MAX_RETRY_COUNT = 2
-except ValueError:
-    REDIS_SENTINEL_MAX_RETRY_COUNT = 2
-
-
-REDIS_SOCKET_CONNECT_TIMEOUT = os.environ.get("REDIS_SOCKET_CONNECT_TIMEOUT", "")
-try:
-    REDIS_SOCKET_CONNECT_TIMEOUT = float(REDIS_SOCKET_CONNECT_TIMEOUT)
-except ValueError:
-    REDIS_SOCKET_CONNECT_TIMEOUT = None
-
-REDIS_RECONNECT_DELAY = os.environ.get("REDIS_RECONNECT_DELAY", "")
-
-if REDIS_RECONNECT_DELAY == "":
-    REDIS_RECONNECT_DELAY = None
-else:
-    try:
-        REDIS_RECONNECT_DELAY = float(REDIS_RECONNECT_DELAY)
-        if REDIS_RECONNECT_DELAY < 0:
-            REDIS_RECONNECT_DELAY = None
-    except Exception:
-        REDIS_RECONNECT_DELAY = None
-
-####################################
 # UVICORN WORKERS
 ####################################
 
@@ -653,40 +613,6 @@ ENABLE_WEBSOCKET_SUPPORT = (
 )
 
 
-WEBSOCKET_MANAGER = os.environ.get("WEBSOCKET_MANAGER", "")
-
-WEBSOCKET_REDIS_OPTIONS = os.environ.get("WEBSOCKET_REDIS_OPTIONS", "")
-
-
-if WEBSOCKET_REDIS_OPTIONS == "":
-    if REDIS_SOCKET_CONNECT_TIMEOUT:
-        WEBSOCKET_REDIS_OPTIONS = {
-            "socket_connect_timeout": REDIS_SOCKET_CONNECT_TIMEOUT
-        }
-    else:
-        log.debug("No WEBSOCKET_REDIS_OPTIONS provided, defaulting to None")
-        WEBSOCKET_REDIS_OPTIONS = None
-else:
-    try:
-        WEBSOCKET_REDIS_OPTIONS = json.loads(WEBSOCKET_REDIS_OPTIONS)
-    except Exception:
-        log.warning("Invalid WEBSOCKET_REDIS_OPTIONS, defaulting to None")
-        WEBSOCKET_REDIS_OPTIONS = None
-
-WEBSOCKET_REDIS_URL = os.environ.get("WEBSOCKET_REDIS_URL", REDIS_URL)
-WEBSOCKET_REDIS_CLUSTER = (
-    os.environ.get("WEBSOCKET_REDIS_CLUSTER", str(REDIS_CLUSTER)).lower() == "true"
-)
-
-websocket_redis_lock_timeout = os.environ.get("WEBSOCKET_REDIS_LOCK_TIMEOUT", "60")
-
-try:
-    WEBSOCKET_REDIS_LOCK_TIMEOUT = int(websocket_redis_lock_timeout)
-except ValueError:
-    WEBSOCKET_REDIS_LOCK_TIMEOUT = 60
-
-WEBSOCKET_SENTINEL_HOSTS = os.environ.get("WEBSOCKET_SENTINEL_HOSTS", "")
-WEBSOCKET_SENTINEL_PORT = os.environ.get("WEBSOCKET_SENTINEL_PORT", "26379")
 WEBSOCKET_SERVER_LOGGING = (
     os.environ.get("WEBSOCKET_SERVER_LOGGING", "False").lower() == "true"
 )

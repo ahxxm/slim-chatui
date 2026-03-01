@@ -21,9 +21,6 @@ from aiocache import cached
 import aiohttp
 import anyio.to_thread
 import requests
-from redis import Redis
-
-
 from fastapi import (
     Depends,
     FastAPI,
@@ -49,12 +46,6 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import Response, StreamingResponse
 from starlette.datastructures import Headers
-
-from starsessions import (
-    SessionMiddleware as StarSessionsMiddleware,
-    SessionAutoloadMiddleware,
-)
-from starsessions.stores.redis import RedisStore
 
 from open_webui.utils import logger
 from open_webui.utils.audit import AuditLevel, AuditLoggingMiddleware
@@ -353,11 +344,6 @@ from open_webui.env import (
     LICENSE_KEY,
     AUDIT_EXCLUDED_PATHS,
     AUDIT_LOG_LEVEL,
-    REDIS_URL,
-    REDIS_CLUSTER,
-    REDIS_KEY_PREFIX,
-    REDIS_SENTINEL_HOSTS,
-    REDIS_SENTINEL_PORT,
     GLOBAL_LOG_LEVEL,
     MAX_BODY_LOG_SIZE,
     SAFE_MODE,
@@ -379,7 +365,6 @@ from open_webui.env import (
     ENABLE_OTEL,
     EXTERNAL_PWA_MANIFEST_URL,
     AIOHTTP_CLIENT_SESSION_SSL,
-    ENABLE_STAR_SESSIONS_MIDDLEWARE,
     ENABLE_PUBLIC_ACTIVE_USERS_COUNT,
     # Admin Account Runtime Creation
     WEBUI_ADMIN_EMAIL,
@@ -427,17 +412,12 @@ from open_webui.utils.oauth import (
     OAuthClientInformationFull,
 )
 from open_webui.utils.security_headers import SecurityHeadersMiddleware
-from open_webui.utils.redis import get_redis_connection
-
 from open_webui.tasks import (
-    redis_task_command_listener,
     list_task_ids_by_item_id,
     create_task,
     stop_task,
     list_tasks,
-)  # Import from tasks.py
-
-from open_webui.utils.redis import get_sentinels_from_env
+)
 
 
 from open_webui.constants import ERROR_MESSAGES
@@ -507,20 +487,6 @@ async def lifespan(app: FastAPI):
     log.info("Installing external dependencies of functions and tools...")
     install_tool_and_function_dependencies()
 
-    app.state.redis = get_redis_connection(
-        redis_url=REDIS_URL,
-        redis_sentinels=get_sentinels_from_env(
-            REDIS_SENTINEL_HOSTS, REDIS_SENTINEL_PORT
-        ),
-        redis_cluster=REDIS_CLUSTER,
-        async_mode=True,
-    )
-
-    if app.state.redis is not None:
-        app.state.redis_task_command_listener = asyncio.create_task(
-            redis_task_command_listener(app)
-        )
-
     if THREAD_POOL_SIZE and THREAD_POOL_SIZE > 0:
         limiter = anyio.to_thread.current_default_thread_limiter()
         limiter.total_tokens = THREAD_POOL_SIZE
@@ -578,9 +544,6 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    if hasattr(app.state, "redis_task_command_listener"):
-        app.state.redis_task_command_listener.cancel()
-
 
 app = FastAPI(
     title="Open WebUI",
@@ -599,13 +562,7 @@ oauth_client_manager = OAuthClientManager(app)
 app.state.oauth_client_manager = oauth_client_manager
 
 app.state.instance_id = None
-app.state.config = AppConfig(
-    redis_url=REDIS_URL,
-    redis_sentinels=get_sentinels_from_env(REDIS_SENTINEL_HOSTS, REDIS_SENTINEL_PORT),
-    redis_cluster=REDIS_CLUSTER,
-    redis_key_prefix=REDIS_KEY_PREFIX,
-)
-app.state.redis = None
+app.state.config = AppConfig()
 
 app.state.WEBUI_NAME = WEBUI_NAME
 app.state.LICENSE_METADATA = None
@@ -1637,7 +1594,6 @@ async def chat_completion(
     ):
         # Asynchronous Chat Processing
         task_id, _ = await create_task(
-            request.app.state.redis,
             process_chat(request, form_data, user, metadata, model),
             id=metadata["chat_id"],
         )
@@ -1760,7 +1716,7 @@ async def stop_task_endpoint(
     request: Request, task_id: str, user=Depends(get_verified_user)
 ):
     try:
-        result = await stop_task(request.app.state.redis, task_id)
+        result = await stop_task(task_id)
         return result
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
@@ -1768,7 +1724,7 @@ async def stop_task_endpoint(
 
 @app.get("/api/tasks")
 async def list_tasks_endpoint(request: Request, user=Depends(get_verified_user)):
-    return {"tasks": await list_tasks(request.app.state.redis)}
+    return {"tasks": await list_tasks()}
 
 
 @app.get("/api/tasks/chat/{chat_id}")
@@ -1779,7 +1735,7 @@ async def list_tasks_by_chat_id_endpoint(
     if chat is None or chat.user_id != user.id:
         return {"task_ids": []}
 
-    task_ids = await list_task_ids_by_item_id(request.app.state.redis, chat_id)
+    task_ids = await list_task_ids_by_item_id(chat_id)
 
     log.debug(f"Task IDs for chat {chat_id}: {task_ids}")
     return {"task_ids": task_ids}
@@ -2008,32 +1964,13 @@ if len(app.state.config.TOOL_SERVER_CONNECTIONS) > 0:
                     )
                     pass
 
-try:
-    if ENABLE_STAR_SESSIONS_MIDDLEWARE:
-        redis_session_store = RedisStore(
-            url=REDIS_URL,
-            prefix=(f"{REDIS_KEY_PREFIX}:session:" if REDIS_KEY_PREFIX else "session:"),
-        )
-
-        app.add_middleware(SessionAutoloadMiddleware)
-        app.add_middleware(
-            StarSessionsMiddleware,
-            store=redis_session_store,
-            cookie_name="owui-session",
-            cookie_same_site=WEBUI_SESSION_COOKIE_SAME_SITE,
-            cookie_https_only=WEBUI_SESSION_COOKIE_SECURE,
-        )
-        log.info("Using Redis for session")
-    else:
-        raise ValueError("No Redis URL provided")
-except Exception as e:
-    app.add_middleware(
-        SessionMiddleware,
-        secret_key=WEBUI_SECRET_KEY,
-        session_cookie="owui-session",
-        same_site=WEBUI_SESSION_COOKIE_SAME_SITE,
-        https_only=WEBUI_SESSION_COOKIE_SECURE,
-    )
+app.add_middleware(
+    SessionMiddleware,
+    secret_key=WEBUI_SECRET_KEY,
+    session_cookie="owui-session",
+    same_site=WEBUI_SESSION_COOKIE_SAME_SITE,
+    https_only=WEBUI_SESSION_COOKIE_SECURE,
+)
 
 
 async def register_client(request, client_id: str) -> bool:

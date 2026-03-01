@@ -71,7 +71,6 @@ from open_webui.utils.webhook import post_webhook
 from open_webui.utils.access_control import get_permissions, has_permission
 from open_webui.utils.groups import apply_default_group_assignment
 
-from open_webui.utils.redis import get_redis_client
 from open_webui.utils.rate_limit import RateLimiter
 
 
@@ -81,9 +80,7 @@ router = APIRouter()
 
 log = logging.getLogger(__name__)
 
-signin_rate_limiter = RateLimiter(
-    redis_client=get_redis_client(), limit=5 * 3, window=60 * 3
-)
+signin_rate_limiter = RateLimiter(limit=5 * 3, window=60 * 3)
 
 
 def create_session_response(

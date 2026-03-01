@@ -7,7 +7,6 @@ import sys
 from aiocache import cached
 from fastapi import Request
 
-from open_webui.socket.utils import RedisDict
 from open_webui.routers import openai, ollama
 from open_webui.functions import get_function_models
 
@@ -338,10 +337,7 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
     log.debug(f"get_all_models() returned {len(models)} models")
 
     models_dict = {model["id"]: model for model in models}
-    if isinstance(request.app.state.MODELS, RedisDict):
-        request.app.state.MODELS.set(models_dict)
-    else:
-        request.app.state.MODELS = models_dict
+    request.app.state.MODELS = models_dict
 
     return models
 
