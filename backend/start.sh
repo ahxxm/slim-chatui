@@ -11,7 +11,6 @@ if [[ "${WEB_LOADER_ENGINE,,}" == "playwright" ]]; then
         playwright install-deps chromium
     fi
 
-    python -c "import nltk; nltk.download('punkt_tab')"
 fi
 
 if [ -n "${WEBUI_SECRET_KEY_FILE}" ]; then

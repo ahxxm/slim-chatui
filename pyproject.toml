@@ -10,19 +10,15 @@ dependencies = [
     "uvicorn[standard]==0.40.0",
     "pydantic==2.12.5",
     "python-multipart==0.0.22",
-    "itsdangerous==2.2.0",
 
     "python-socketio==5.16.1",
-    "python-jose==3.5.0",
     "cryptography",
     "bcrypt==5.0.0",
-    "argon2-cffi==25.1.0",
     "PyJWT[crypto]==2.11.0",
     "authlib==1.6.7",
 
     "requests==2.32.5",
     "aiohttp==3.13.2", # do not update to 3.13.3 - broken
-    "async-timeout",
     "aiocache",
     "aiofiles",
     "starlette-compress==1.7.0",
@@ -39,8 +35,6 @@ dependencies = [
     "redis",
 
     "pytz==2025.2",
-    "APScheduler==3.11.2",
-    "RestrictedPython==8.1",
 
     "loguru==0.7.3",
     "asgiref==3.11.1",
@@ -48,59 +42,31 @@ dependencies = [
     "tiktoken",
     "mcp==1.26.0",
 
-    "openai",
-    "anthropic",
-    "google-genai==1.62.0",
-
     "langchain==1.2.9",
     "langchain-community==0.4.1",
     "langchain-classic==1.0.1",
     "langchain-text-splitters==1.1.0",
 
-    "fake-useragent==2.2.0",
     "chromadb==1.4.1",
     "opensearch-py==3.1.0",
-    "PyMySQL==1.1.2",
-    
+
     "transformers==5.1.0",
     "sentence-transformers==5.2.2",
-    "accelerate",
-    "pyarrow==20.0.0", # fix: pin pyarrow version to 20 for rpi compatibility #15897
-    "einops==0.8.2",
 
     "ftfy==6.3.1",
-    "chardet==5.2.0",
     "pypdf==6.7.0",
-    "fpdf2==2.8.5",
-    "pymdown-extensions==10.20.1",
     "docx2txt==0.9",
     "python-pptx==1.0.2",
     "unstructured==0.18.31",
-    "msoffcrypto-tool==6.0.0",
-    "nltk==3.9.2",
     "Markdown==3.10.1",
-    "pypandoc==1.16.2",
-    "pandas==3.0.0",
-    "openpyxl==3.1.5",
-    "pyxlsb==1.0.10",
-    "xlrd==2.0.2",
     "validators==0.35.0",
-    "psutil",
-    "sentencepiece",
     "azure-ai-documentintelligence==1.0.2",
     "azure-identity==1.25.1",
 
-    "pillow==12.1.0",
-    "opencv-python-headless==4.13.0.92",
-    "rank-bm25==0.2.2",
-
     "black==26.1.0",
     "youtube-transcript-api==1.2.4",
-    "pytube==15.0.0",
 
     "ddgs==9.10.0",
-
-
 ]
 readme = "README.md"
 requires-python = ">= 3.11, < 3.13.0a1"
@@ -170,7 +136,6 @@ exclude = [
     ".gitignore",
     ".webui_secret_key",
     "dev.sh",
-    "requirements.txt",
     "start.sh",
     "start_windows.bat",
     "webui.db",

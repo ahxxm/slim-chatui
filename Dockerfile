@@ -73,19 +73,18 @@ RUN apt-get update && \
     ffmpeg libsm6 libxext6 zstd \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --chown=$UID:$GID ./backend/requirements.txt ./requirements.txt
+COPY --chown=$UID:$GID ./pyproject.toml /app/pyproject.toml
+COPY --chown=$UID:$GID ./hatch_build.py /app/hatch_build.py
+COPY --chown=$UID:$GID ./backend .
 
 RUN pip3 install --no-cache-dir uv && \
     pip3 install 'torch<=2.9.1' torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu --no-cache-dir && \
-    uv pip install --system -r requirements.txt --no-cache-dir && \
+    uv pip install --system --no-cache-dir '/app[all]' && \
     mkdir -p /app/backend/data && chown -R $UID:$GID /app/backend/data/
 
 # copy built frontend files
 COPY --chown=$UID:$GID --from=build /app/build /app/build
 COPY --chown=$UID:$GID --from=build /app/package.json /app/package.json
-
-# copy backend files
-COPY --chown=$UID:$GID ./backend .
 
 EXPOSE 8080
 
