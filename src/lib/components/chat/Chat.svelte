@@ -1534,7 +1534,7 @@
 					follow_up_generation: $settings?.autoFollowUps ?? true
 				},
 
-				...(stream && (model.info?.meta?.capabilities?.usage ?? false)
+				...(stream && (model.info?.meta?.capabilities?.usage ?? true)
 					? {
 							stream_options: {
 								include_usage: true

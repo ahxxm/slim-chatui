@@ -87,12 +87,12 @@ export const SUPPORTED_FILE_EXTENSIONS = [
 ];
 
 export const DEFAULT_CAPABILITIES = {
-	file_context: true,
+	file_context: false,
 	vision: true,
 	file_upload: true,
 	citations: true,
 	status_updates: true,
-	usage: undefined
+	usage: true
 };
 
 export const PASTED_TEXT_CHARACTER_LIMIT = 1000;
