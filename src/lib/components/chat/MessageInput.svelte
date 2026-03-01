@@ -63,7 +63,6 @@
 	import Image from '../common/Image.svelte';
 
 	import XMark from '../icons/XMark.svelte';
-	import GlobeAlt from '../icons/GlobeAlt.svelte';
 	import Wrench from '../icons/Wrench.svelte';
 	import Sparkles from '../icons/Sparkles.svelte';
 
@@ -83,7 +82,6 @@
 
 	const i18n = getContext('i18n');
 
-	export let onUpload: Function = (e) => {};
 	export let onChange: Function = () => {};
 
 	export let createMessagePair: Function;
@@ -107,7 +105,6 @@
 	export let selectedToolIds = [];
 	export let selectedFilterIds = [];
 
-	export let webSearchEnabled = false;
 	export let codeInterpreterEnabled = false;
 
 	export let messageQueue: { id: string; prompt: string; files: any[] }[] = [];
@@ -144,7 +141,6 @@
 			}),
 		selectedToolIds,
 		selectedFilterIds,
-		webSearchEnabled,
 		codeInterpreterEnabled
 	});
 
@@ -436,11 +432,6 @@
 		(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.file_upload ?? true
 	);
 
-	let webSearchCapableModels = [];
-	$: webSearchCapableModels = (atSelectedModel?.id ? [atSelectedModel.id] : selectedModels).filter(
-		(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.web_search ?? true
-	);
-
 	let codeInterpreterCapableModels = [];
 	$: codeInterpreterCapableModels = (
 		atSelectedModel?.id ? [atSelectedModel.id] : selectedModels
@@ -456,13 +447,6 @@
 
 	let showToolsButton = false;
 	$: showToolsButton = ($tools ?? []).length > 0 || ($toolServers ?? []).length > 0;
-
-	let showWebSearchButton = false;
-	$: showWebSearchButton =
-		(atSelectedModel?.id ? [atSelectedModel.id] : selectedModels).length ===
-			webSearchCapableModels.length &&
-		$config?.features?.enable_web_search &&
-		($_user.role === 'admin' || $_user?.permissions?.features?.web_search);
 
 	let showCodeInterpreterButton = false;
 	$: showCodeInterpreterButton =
@@ -813,8 +797,6 @@
 									status: 'processed'
 								}
 							];
-						} else {
-							onUpload(e);
 						}
 					}
 				})
@@ -848,43 +830,6 @@
 									status: 'processed'
 								}
 							];
-						} else {
-							onUpload(e);
-						}
-					}
-				})
-			},
-			{
-				char: '#',
-				render: getSuggestionRenderer(CommandSuggestionList, {
-					i18n,
-					onSelect: (e) => {
-						const { type, data } = e;
-
-						if (type === 'model') {
-							atSelectedModel = data;
-						}
-
-						document.getElementById('chat-input')?.focus();
-					},
-
-					insertTextHandler: insertTextAtCursor,
-					onUpload: (e) => {
-						const { type, data } = e;
-
-						if (type === 'file') {
-							if (files.find((f) => f.id === data.id)) {
-								return;
-							}
-							files = [
-								...files,
-								{
-									...data,
-									status: 'processed'
-								}
-							];
-						} else {
-							onUpload(e);
 						}
 					}
 				})
@@ -897,8 +842,7 @@
 						document.getElementById('chat-input')?.focus();
 					},
 
-					insertTextHandler: insertTextAtCursor,
-					onUpload: () => {}
+					insertTextHandler: insertTextAtCursor
 				})
 			}
 		];
@@ -1351,7 +1295,6 @@
 															selectedToolIds = [];
 															selectedFilterIds = [];
 
-															webSearchEnabled = false;
 															codeInterpreterEnabled = false;
 														}
 													}}
@@ -1409,7 +1352,6 @@
 										uploadFilesHandler={() => {
 											filesInputElement.click();
 										}}
-										{onUpload}
 										onClose={async () => {
 											await tick();
 
@@ -1425,7 +1367,7 @@
 										</div>
 									</InputMenu>
 
-									{#if showWebSearchButton || showCodeInterpreterButton || showToolsButton || (toggleFilters && toggleFilters.length > 0)}
+									{#if showCodeInterpreterButton || showToolsButton || (toggleFilters && toggleFilters.length > 0)}
 										<div
 											class="flex self-center w-[1px] h-4 mx-1 bg-gray-200/50 dark:bg-gray-800/50"
 										/>
@@ -1433,11 +1375,9 @@
 										<IntegrationsMenu
 											selectedModels={atSelectedModel ? [atSelectedModel.id] : selectedModels}
 											{toggleFilters}
-											{showWebSearchButton}
 											{showCodeInterpreterButton}
 											bind:selectedToolIds
 											bind:selectedFilterIds
-											bind:webSearchEnabled
 											bind:codeInterpreterEnabled
 											closeOnOutsideClick={integrationsMenuCloseOnOutsideClick}
 											onShowValves={(e) => {
@@ -1542,24 +1482,6 @@
 												</Tooltip>
 											{/if}
 										{/each}
-
-										{#if webSearchEnabled}
-											<Tooltip content={$i18n.t('Web Search')} placement="top">
-												<button
-													on:click|preventDefault={() => (webSearchEnabled = !webSearchEnabled)}
-													type="button"
-													class="group p-[7px] flex gap-1.5 items-center text-sm rounded-full transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden {webSearchEnabled ||
-													($settings?.webSearch ?? false) === 'always'
-														? ' text-sky-500 dark:text-sky-300 bg-sky-50 hover:bg-sky-100 dark:bg-sky-400/10 dark:hover:bg-sky-600/10 border border-sky-200/40 dark:border-sky-500/20'
-														: 'bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 '}"
-												>
-													<GlobeAlt className="size-4" strokeWidth="1.75" />
-													<div class="hidden group-hover:block">
-														<XMark className="size-4" strokeWidth="1.75" />
-													</div>
-												</button>
-											</Tooltip>
-										{/if}
 
 										{#if codeInterpreterEnabled}
 											<Tooltip content={$i18n.t('Code Interpreter')} placement="top">

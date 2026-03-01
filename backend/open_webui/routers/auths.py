@@ -708,7 +708,6 @@ async def get_admin_config(request: Request, user=Depends(get_admin_user)):
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
         "ENABLE_FOLDERS": request.app.state.config.ENABLE_FOLDERS,
         "FOLDER_MAX_FILE_COUNT": request.app.state.config.FOLDER_MAX_FILE_COUNT,
-        "ENABLE_MEMORIES": request.app.state.config.ENABLE_MEMORIES,
         "ENABLE_USER_WEBHOOKS": request.app.state.config.ENABLE_USER_WEBHOOKS,
         "ENABLE_USER_STATUS": request.app.state.config.ENABLE_USER_STATUS,
         "PENDING_USER_OVERLAY_TITLE": request.app.state.config.PENDING_USER_OVERLAY_TITLE,
@@ -730,7 +729,6 @@ class AdminConfig(BaseModel):
     JWT_EXPIRES_IN: str
     ENABLE_FOLDERS: bool
     FOLDER_MAX_FILE_COUNT: Optional[int | str] = None
-    ENABLE_MEMORIES: bool
     ENABLE_USER_WEBHOOKS: bool
     ENABLE_USER_STATUS: bool
     PENDING_USER_OVERLAY_TITLE: Optional[str] = None
@@ -759,8 +757,6 @@ async def update_admin_config(
     request.app.state.config.FOLDER_MAX_FILE_COUNT = (
         int(form_data.FOLDER_MAX_FILE_COUNT) if form_data.FOLDER_MAX_FILE_COUNT else ""
     )
-    request.app.state.config.ENABLE_MEMORIES = form_data.ENABLE_MEMORIES
-
     if form_data.DEFAULT_USER_ROLE in ["pending", "user", "admin"]:
         request.app.state.config.DEFAULT_USER_ROLE = form_data.DEFAULT_USER_ROLE
 
@@ -797,7 +793,6 @@ async def update_admin_config(
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
         "ENABLE_FOLDERS": request.app.state.config.ENABLE_FOLDERS,
         "FOLDER_MAX_FILE_COUNT": request.app.state.config.FOLDER_MAX_FILE_COUNT,
-        "ENABLE_MEMORIES": request.app.state.config.ENABLE_MEMORIES,
         "ENABLE_USER_WEBHOOKS": request.app.state.config.ENABLE_USER_WEBHOOKS,
         "ENABLE_USER_STATUS": request.app.state.config.ENABLE_USER_STATUS,
         "PENDING_USER_OVERLAY_TITLE": request.app.state.config.PENDING_USER_OVERLAY_TITLE,

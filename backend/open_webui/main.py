@@ -51,7 +51,6 @@ from open_webui.socket.main import (
 from open_webui.routers import (
     ollama,
     openai,
-    retrieval,
     pipelines,
     tasks,
     auths,
@@ -61,23 +60,13 @@ from open_webui.routers import (
     groups,
     files,
     functions,
-    memories,
     models,
-    knowledge,
     prompts,
     skills,
     tools,
     users,
     utils,
 )
-
-from open_webui.routers.retrieval import (
-    get_embedding_function,
-    get_reranking_function,
-    get_ef,
-    get_rf,
-)
-
 
 from sqlalchemy.orm import Session
 from open_webui.internal.db import ScopedSession, get_session
@@ -121,144 +110,9 @@ from open_webui.config import (
     CODE_INTERPRETER_JUPYTER_AUTH_TOKEN,
     CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD,
     CODE_INTERPRETER_JUPYTER_TIMEOUT,
-    ENABLE_MEMORIES,
-    PLAYWRIGHT_WS_URL,
-    PLAYWRIGHT_TIMEOUT,
-    FIRECRAWL_API_BASE_URL,
-    FIRECRAWL_API_KEY,
-    FIRECRAWL_TIMEOUT,
-    WEB_LOADER_ENGINE,
-    WEB_LOADER_CONCURRENT_REQUESTS,
-    WEB_LOADER_TIMEOUT,
-    # Retrieval
-    RAG_TEMPLATE,
-    DEFAULT_RAG_TEMPLATE,
-    RAG_FULL_CONTEXT,
-    BYPASS_EMBEDDING_AND_RETRIEVAL,
-    RAG_EMBEDDING_MODEL,
-    RAG_EMBEDDING_MODEL_AUTO_UPDATE,
-    RAG_EMBEDDING_MODEL_TRUST_REMOTE_CODE,
-    RAG_RERANKING_ENGINE,
-    RAG_RERANKING_MODEL,
-    RAG_EXTERNAL_RERANKER_URL,
-    RAG_EXTERNAL_RERANKER_API_KEY,
-    RAG_EXTERNAL_RERANKER_TIMEOUT,
-    RAG_RERANKING_MODEL_AUTO_UPDATE,
-    RAG_RERANKING_MODEL_TRUST_REMOTE_CODE,
-    RAG_EMBEDDING_ENGINE,
-    RAG_EMBEDDING_BATCH_SIZE,
-    ENABLE_ASYNC_EMBEDDING,
-    RAG_EMBEDDING_CONCURRENT_REQUESTS,
-    RAG_TOP_K,
-    RAG_TOP_K_RERANKER,
-    RAG_RELEVANCE_THRESHOLD,
-    RAG_HYBRID_BM25_WEIGHT,
-    RAG_ALLOWED_FILE_EXTENSIONS,
-    RAG_FILE_MAX_COUNT,
-    RAG_FILE_MAX_SIZE,
+    # File
     FILE_IMAGE_COMPRESSION_WIDTH,
     FILE_IMAGE_COMPRESSION_HEIGHT,
-    RAG_OPENAI_API_BASE_URL,
-    RAG_OPENAI_API_KEY,
-    RAG_AZURE_OPENAI_BASE_URL,
-    RAG_AZURE_OPENAI_API_KEY,
-    RAG_AZURE_OPENAI_API_VERSION,
-    RAG_OLLAMA_BASE_URL,
-    RAG_OLLAMA_API_KEY,
-    CHUNK_OVERLAP,
-    CHUNK_MIN_SIZE_TARGET,
-    CHUNK_SIZE,
-    CONTENT_EXTRACTION_ENGINE,
-    DATALAB_MARKER_API_KEY,
-    DATALAB_MARKER_API_BASE_URL,
-    DATALAB_MARKER_ADDITIONAL_CONFIG,
-    DATALAB_MARKER_SKIP_CACHE,
-    DATALAB_MARKER_FORCE_OCR,
-    DATALAB_MARKER_PAGINATE,
-    DATALAB_MARKER_STRIP_EXISTING_OCR,
-    DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION,
-    DATALAB_MARKER_FORMAT_LINES,
-    DATALAB_MARKER_OUTPUT_FORMAT,
-    MINERU_API_MODE,
-    MINERU_API_URL,
-    MINERU_API_KEY,
-    MINERU_API_TIMEOUT,
-    MINERU_PARAMS,
-    DATALAB_MARKER_USE_LLM,
-    EXTERNAL_DOCUMENT_LOADER_URL,
-    EXTERNAL_DOCUMENT_LOADER_API_KEY,
-    TIKA_SERVER_URL,
-    DOCLING_SERVER_URL,
-    DOCLING_API_KEY,
-    DOCLING_PARAMS,
-    DOCUMENT_INTELLIGENCE_ENDPOINT,
-    DOCUMENT_INTELLIGENCE_KEY,
-    DOCUMENT_INTELLIGENCE_MODEL,
-    MISTRAL_OCR_API_BASE_URL,
-    MISTRAL_OCR_API_KEY,
-    RAG_TEXT_SPLITTER,
-    ENABLE_MARKDOWN_HEADER_TEXT_SPLITTER,
-    TIKTOKEN_ENCODING_NAME,
-    PDF_EXTRACT_IMAGES,
-    PDF_LOADER_MODE,
-    YOUTUBE_LOADER_LANGUAGE,
-    YOUTUBE_LOADER_PROXY_URL,
-    # Retrieval (Web Search)
-    ENABLE_WEB_SEARCH,
-    WEB_SEARCH_ENGINE,
-    BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL,
-    BYPASS_WEB_SEARCH_WEB_LOADER,
-    WEB_SEARCH_RESULT_COUNT,
-    WEB_SEARCH_CONCURRENT_REQUESTS,
-    WEB_SEARCH_TRUST_ENV,
-    WEB_SEARCH_DOMAIN_FILTER_LIST,
-    OLLAMA_CLOUD_WEB_SEARCH_API_KEY,
-    JINA_API_KEY,
-    JINA_API_BASE_URL,
-    SEARCHAPI_API_KEY,
-    SEARCHAPI_ENGINE,
-    SERPAPI_API_KEY,
-    SERPAPI_ENGINE,
-    SEARXNG_QUERY_URL,
-    SEARXNG_LANGUAGE,
-    YACY_QUERY_URL,
-    YACY_USERNAME,
-    YACY_PASSWORD,
-    SERPER_API_KEY,
-    SERPLY_API_KEY,
-    DDGS_BACKEND,
-    SERPSTACK_API_KEY,
-    SERPSTACK_HTTPS,
-    TAVILY_API_KEY,
-    TAVILY_EXTRACT_DEPTH,
-    BING_SEARCH_V7_ENDPOINT,
-    BING_SEARCH_V7_SUBSCRIPTION_KEY,
-    BRAVE_SEARCH_API_KEY,
-    EXA_API_KEY,
-    PERPLEXITY_API_KEY,
-    PERPLEXITY_MODEL,
-    PERPLEXITY_SEARCH_CONTEXT_USAGE,
-    PERPLEXITY_SEARCH_API_URL,
-    SOUGOU_API_SID,
-    SOUGOU_API_SK,
-    KAGI_SEARCH_API_KEY,
-    MOJEEK_SEARCH_API_KEY,
-    BOCHA_SEARCH_API_KEY,
-    GOOGLE_PSE_API_KEY,
-    GOOGLE_PSE_ENGINE_ID,
-    ENABLE_RAG_HYBRID_SEARCH,
-    ENABLE_RAG_HYBRID_SEARCH_ENRICHED_TEXTS,
-    ENABLE_RAG_LOCAL_WEB_FETCH,
-    ENABLE_WEB_LOADER_SSL_VERIFICATION,
-    UPLOAD_DIR,
-    EXTERNAL_WEB_SEARCH_URL,
-    EXTERNAL_WEB_SEARCH_API_KEY,
-    EXTERNAL_WEB_LOADER_URL,
-    EXTERNAL_WEB_LOADER_API_KEY,
-    YANDEX_WEB_SEARCH_URL,
-    YANDEX_WEB_SEARCH_API_KEY,
-    YANDEX_WEB_SEARCH_CONFIG,
-    YOUCOM_API_KEY,
     # WebUI
     WEBUI_AUTH,
     WEBUI_NAME,
@@ -316,14 +170,11 @@ from open_webui.config import (
     ENABLE_TAGS_GENERATION,
     ENABLE_TITLE_GENERATION,
     ENABLE_FOLLOW_UP_GENERATION,
-    ENABLE_SEARCH_QUERY_GENERATION,
-    ENABLE_RETRIEVAL_QUERY_GENERATION,
     ENABLE_AUTOCOMPLETE_GENERATION,
     TITLE_GENERATION_PROMPT_TEMPLATE,
     FOLLOW_UP_GENERATION_PROMPT_TEMPLATE,
     TAGS_GENERATION_PROMPT_TEMPLATE,
     TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE,
-    QUERY_GENERATION_PROMPT_TEMPLATE,
     AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE,
     AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH,
     AppConfig,
@@ -689,240 +540,12 @@ app.state.FUNCTION_CONTENTS = {}
 
 ########################################
 #
-# RETRIEVAL
+# FILES
 #
 ########################################
 
-
-app.state.config.TOP_K = RAG_TOP_K
-app.state.config.TOP_K_RERANKER = RAG_TOP_K_RERANKER
-app.state.config.RELEVANCE_THRESHOLD = RAG_RELEVANCE_THRESHOLD
-app.state.config.HYBRID_BM25_WEIGHT = RAG_HYBRID_BM25_WEIGHT
-
-
-app.state.config.ALLOWED_FILE_EXTENSIONS = RAG_ALLOWED_FILE_EXTENSIONS
-app.state.config.FILE_MAX_SIZE = RAG_FILE_MAX_SIZE
-app.state.config.FILE_MAX_COUNT = RAG_FILE_MAX_COUNT
 app.state.config.FILE_IMAGE_COMPRESSION_WIDTH = FILE_IMAGE_COMPRESSION_WIDTH
 app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT = FILE_IMAGE_COMPRESSION_HEIGHT
-
-
-app.state.config.RAG_FULL_CONTEXT = RAG_FULL_CONTEXT
-app.state.config.BYPASS_EMBEDDING_AND_RETRIEVAL = BYPASS_EMBEDDING_AND_RETRIEVAL
-app.state.config.ENABLE_RAG_HYBRID_SEARCH = ENABLE_RAG_HYBRID_SEARCH
-app.state.config.ENABLE_RAG_HYBRID_SEARCH_ENRICHED_TEXTS = (
-    ENABLE_RAG_HYBRID_SEARCH_ENRICHED_TEXTS
-)
-app.state.config.ENABLE_WEB_LOADER_SSL_VERIFICATION = ENABLE_WEB_LOADER_SSL_VERIFICATION
-
-app.state.config.CONTENT_EXTRACTION_ENGINE = CONTENT_EXTRACTION_ENGINE
-app.state.config.DATALAB_MARKER_API_KEY = DATALAB_MARKER_API_KEY
-app.state.config.DATALAB_MARKER_API_BASE_URL = DATALAB_MARKER_API_BASE_URL
-app.state.config.DATALAB_MARKER_ADDITIONAL_CONFIG = DATALAB_MARKER_ADDITIONAL_CONFIG
-app.state.config.DATALAB_MARKER_SKIP_CACHE = DATALAB_MARKER_SKIP_CACHE
-app.state.config.DATALAB_MARKER_FORCE_OCR = DATALAB_MARKER_FORCE_OCR
-app.state.config.DATALAB_MARKER_PAGINATE = DATALAB_MARKER_PAGINATE
-app.state.config.DATALAB_MARKER_STRIP_EXISTING_OCR = DATALAB_MARKER_STRIP_EXISTING_OCR
-app.state.config.DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION = (
-    DATALAB_MARKER_DISABLE_IMAGE_EXTRACTION
-)
-app.state.config.DATALAB_MARKER_FORMAT_LINES = DATALAB_MARKER_FORMAT_LINES
-app.state.config.DATALAB_MARKER_USE_LLM = DATALAB_MARKER_USE_LLM
-app.state.config.DATALAB_MARKER_OUTPUT_FORMAT = DATALAB_MARKER_OUTPUT_FORMAT
-app.state.config.EXTERNAL_DOCUMENT_LOADER_URL = EXTERNAL_DOCUMENT_LOADER_URL
-app.state.config.EXTERNAL_DOCUMENT_LOADER_API_KEY = EXTERNAL_DOCUMENT_LOADER_API_KEY
-app.state.config.TIKA_SERVER_URL = TIKA_SERVER_URL
-app.state.config.DOCLING_SERVER_URL = DOCLING_SERVER_URL
-app.state.config.DOCLING_API_KEY = DOCLING_API_KEY
-app.state.config.DOCLING_PARAMS = DOCLING_PARAMS
-app.state.config.DOCUMENT_INTELLIGENCE_ENDPOINT = DOCUMENT_INTELLIGENCE_ENDPOINT
-app.state.config.DOCUMENT_INTELLIGENCE_KEY = DOCUMENT_INTELLIGENCE_KEY
-app.state.config.DOCUMENT_INTELLIGENCE_MODEL = DOCUMENT_INTELLIGENCE_MODEL
-app.state.config.MISTRAL_OCR_API_BASE_URL = MISTRAL_OCR_API_BASE_URL
-app.state.config.MISTRAL_OCR_API_KEY = MISTRAL_OCR_API_KEY
-app.state.config.MINERU_API_MODE = MINERU_API_MODE
-app.state.config.MINERU_API_URL = MINERU_API_URL
-app.state.config.MINERU_API_KEY = MINERU_API_KEY
-app.state.config.MINERU_API_TIMEOUT = MINERU_API_TIMEOUT
-app.state.config.MINERU_PARAMS = MINERU_PARAMS
-
-app.state.config.TEXT_SPLITTER = RAG_TEXT_SPLITTER
-app.state.config.ENABLE_MARKDOWN_HEADER_TEXT_SPLITTER = (
-    ENABLE_MARKDOWN_HEADER_TEXT_SPLITTER
-)
-
-app.state.config.TIKTOKEN_ENCODING_NAME = TIKTOKEN_ENCODING_NAME
-
-app.state.config.CHUNK_SIZE = CHUNK_SIZE
-app.state.config.CHUNK_MIN_SIZE_TARGET = CHUNK_MIN_SIZE_TARGET
-app.state.config.CHUNK_OVERLAP = CHUNK_OVERLAP
-
-
-app.state.config.RAG_EMBEDDING_ENGINE = RAG_EMBEDDING_ENGINE
-app.state.config.RAG_EMBEDDING_MODEL = RAG_EMBEDDING_MODEL
-app.state.config.RAG_EMBEDDING_BATCH_SIZE = RAG_EMBEDDING_BATCH_SIZE
-app.state.config.ENABLE_ASYNC_EMBEDDING = ENABLE_ASYNC_EMBEDDING
-app.state.config.RAG_EMBEDDING_CONCURRENT_REQUESTS = RAG_EMBEDDING_CONCURRENT_REQUESTS
-
-app.state.config.RAG_RERANKING_ENGINE = RAG_RERANKING_ENGINE
-app.state.config.RAG_RERANKING_MODEL = RAG_RERANKING_MODEL
-app.state.config.RAG_EXTERNAL_RERANKER_URL = RAG_EXTERNAL_RERANKER_URL
-app.state.config.RAG_EXTERNAL_RERANKER_API_KEY = RAG_EXTERNAL_RERANKER_API_KEY
-app.state.config.RAG_EXTERNAL_RERANKER_TIMEOUT = RAG_EXTERNAL_RERANKER_TIMEOUT
-
-app.state.config.RAG_TEMPLATE = RAG_TEMPLATE
-
-app.state.config.RAG_OPENAI_API_BASE_URL = RAG_OPENAI_API_BASE_URL
-app.state.config.RAG_OPENAI_API_KEY = RAG_OPENAI_API_KEY
-
-app.state.config.RAG_AZURE_OPENAI_BASE_URL = RAG_AZURE_OPENAI_BASE_URL
-app.state.config.RAG_AZURE_OPENAI_API_KEY = RAG_AZURE_OPENAI_API_KEY
-app.state.config.RAG_AZURE_OPENAI_API_VERSION = RAG_AZURE_OPENAI_API_VERSION
-
-app.state.config.RAG_OLLAMA_BASE_URL = RAG_OLLAMA_BASE_URL
-app.state.config.RAG_OLLAMA_API_KEY = RAG_OLLAMA_API_KEY
-
-app.state.config.PDF_EXTRACT_IMAGES = PDF_EXTRACT_IMAGES
-app.state.config.PDF_LOADER_MODE = PDF_LOADER_MODE
-
-app.state.config.YOUTUBE_LOADER_LANGUAGE = YOUTUBE_LOADER_LANGUAGE
-app.state.config.YOUTUBE_LOADER_PROXY_URL = YOUTUBE_LOADER_PROXY_URL
-
-
-app.state.config.ENABLE_WEB_SEARCH = ENABLE_WEB_SEARCH
-app.state.config.WEB_SEARCH_ENGINE = WEB_SEARCH_ENGINE
-app.state.config.WEB_SEARCH_DOMAIN_FILTER_LIST = WEB_SEARCH_DOMAIN_FILTER_LIST
-app.state.config.WEB_SEARCH_RESULT_COUNT = WEB_SEARCH_RESULT_COUNT
-app.state.config.WEB_SEARCH_CONCURRENT_REQUESTS = WEB_SEARCH_CONCURRENT_REQUESTS
-
-app.state.config.WEB_LOADER_ENGINE = WEB_LOADER_ENGINE
-app.state.config.WEB_LOADER_CONCURRENT_REQUESTS = WEB_LOADER_CONCURRENT_REQUESTS
-app.state.config.WEB_LOADER_TIMEOUT = WEB_LOADER_TIMEOUT
-
-app.state.config.WEB_SEARCH_TRUST_ENV = WEB_SEARCH_TRUST_ENV
-app.state.config.BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL = (
-    BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL
-)
-app.state.config.BYPASS_WEB_SEARCH_WEB_LOADER = BYPASS_WEB_SEARCH_WEB_LOADER
-
-
-app.state.config.OLLAMA_CLOUD_WEB_SEARCH_API_KEY = OLLAMA_CLOUD_WEB_SEARCH_API_KEY
-app.state.config.SEARXNG_QUERY_URL = SEARXNG_QUERY_URL
-app.state.config.SEARXNG_LANGUAGE = SEARXNG_LANGUAGE
-app.state.config.YACY_QUERY_URL = YACY_QUERY_URL
-app.state.config.YACY_USERNAME = YACY_USERNAME
-app.state.config.YACY_PASSWORD = YACY_PASSWORD
-app.state.config.GOOGLE_PSE_API_KEY = GOOGLE_PSE_API_KEY
-app.state.config.GOOGLE_PSE_ENGINE_ID = GOOGLE_PSE_ENGINE_ID
-app.state.config.BRAVE_SEARCH_API_KEY = BRAVE_SEARCH_API_KEY
-app.state.config.KAGI_SEARCH_API_KEY = KAGI_SEARCH_API_KEY
-app.state.config.MOJEEK_SEARCH_API_KEY = MOJEEK_SEARCH_API_KEY
-app.state.config.BOCHA_SEARCH_API_KEY = BOCHA_SEARCH_API_KEY
-app.state.config.SERPSTACK_API_KEY = SERPSTACK_API_KEY
-app.state.config.SERPSTACK_HTTPS = SERPSTACK_HTTPS
-app.state.config.SERPER_API_KEY = SERPER_API_KEY
-app.state.config.SERPLY_API_KEY = SERPLY_API_KEY
-app.state.config.DDGS_BACKEND = DDGS_BACKEND
-app.state.config.TAVILY_API_KEY = TAVILY_API_KEY
-app.state.config.SEARCHAPI_API_KEY = SEARCHAPI_API_KEY
-app.state.config.SEARCHAPI_ENGINE = SEARCHAPI_ENGINE
-app.state.config.SERPAPI_API_KEY = SERPAPI_API_KEY
-app.state.config.SERPAPI_ENGINE = SERPAPI_ENGINE
-app.state.config.JINA_API_KEY = JINA_API_KEY
-app.state.config.JINA_API_BASE_URL = JINA_API_BASE_URL
-app.state.config.BING_SEARCH_V7_ENDPOINT = BING_SEARCH_V7_ENDPOINT
-app.state.config.BING_SEARCH_V7_SUBSCRIPTION_KEY = BING_SEARCH_V7_SUBSCRIPTION_KEY
-app.state.config.EXA_API_KEY = EXA_API_KEY
-app.state.config.PERPLEXITY_API_KEY = PERPLEXITY_API_KEY
-app.state.config.PERPLEXITY_MODEL = PERPLEXITY_MODEL
-app.state.config.PERPLEXITY_SEARCH_CONTEXT_USAGE = PERPLEXITY_SEARCH_CONTEXT_USAGE
-app.state.config.PERPLEXITY_SEARCH_API_URL = PERPLEXITY_SEARCH_API_URL
-app.state.config.SOUGOU_API_SID = SOUGOU_API_SID
-app.state.config.SOUGOU_API_SK = SOUGOU_API_SK
-app.state.config.EXTERNAL_WEB_SEARCH_URL = EXTERNAL_WEB_SEARCH_URL
-app.state.config.EXTERNAL_WEB_SEARCH_API_KEY = EXTERNAL_WEB_SEARCH_API_KEY
-app.state.config.EXTERNAL_WEB_LOADER_URL = EXTERNAL_WEB_LOADER_URL
-app.state.config.EXTERNAL_WEB_LOADER_API_KEY = EXTERNAL_WEB_LOADER_API_KEY
-app.state.config.YANDEX_WEB_SEARCH_URL = YANDEX_WEB_SEARCH_URL
-app.state.config.YANDEX_WEB_SEARCH_API_KEY = YANDEX_WEB_SEARCH_API_KEY
-app.state.config.YANDEX_WEB_SEARCH_CONFIG = YANDEX_WEB_SEARCH_CONFIG
-app.state.config.YOUCOM_API_KEY = YOUCOM_API_KEY
-
-
-app.state.config.PLAYWRIGHT_WS_URL = PLAYWRIGHT_WS_URL
-app.state.config.PLAYWRIGHT_TIMEOUT = PLAYWRIGHT_TIMEOUT
-app.state.config.FIRECRAWL_API_BASE_URL = FIRECRAWL_API_BASE_URL
-app.state.config.FIRECRAWL_API_KEY = FIRECRAWL_API_KEY
-app.state.config.FIRECRAWL_TIMEOUT = FIRECRAWL_TIMEOUT
-app.state.config.TAVILY_EXTRACT_DEPTH = TAVILY_EXTRACT_DEPTH
-
-app.state.EMBEDDING_FUNCTION = None
-app.state.RERANKING_FUNCTION = None
-app.state.ef = None
-app.state.rf = None
-
-app.state.YOUTUBE_LOADER_TRANSLATION = None
-
-
-try:
-    app.state.ef = get_ef(
-        app.state.config.RAG_EMBEDDING_ENGINE, app.state.config.RAG_EMBEDDING_MODEL
-    )
-    if (
-        app.state.config.ENABLE_RAG_HYBRID_SEARCH
-        and not app.state.config.BYPASS_EMBEDDING_AND_RETRIEVAL
-    ):
-        app.state.rf = get_rf(
-            app.state.config.RAG_RERANKING_ENGINE,
-            app.state.config.RAG_RERANKING_MODEL,
-            app.state.config.RAG_EXTERNAL_RERANKER_URL,
-            app.state.config.RAG_EXTERNAL_RERANKER_API_KEY,
-            app.state.config.RAG_EXTERNAL_RERANKER_TIMEOUT,
-        )
-    else:
-        app.state.rf = None
-except Exception as e:
-    log.error(f"Error updating models: {e}")
-    pass
-
-
-app.state.EMBEDDING_FUNCTION = get_embedding_function(
-    app.state.config.RAG_EMBEDDING_ENGINE,
-    app.state.config.RAG_EMBEDDING_MODEL,
-    embedding_function=app.state.ef,
-    url=(
-        app.state.config.RAG_OPENAI_API_BASE_URL
-        if app.state.config.RAG_EMBEDDING_ENGINE == "openai"
-        else (
-            app.state.config.RAG_OLLAMA_BASE_URL
-            if app.state.config.RAG_EMBEDDING_ENGINE == "ollama"
-            else app.state.config.RAG_AZURE_OPENAI_BASE_URL
-        )
-    ),
-    key=(
-        app.state.config.RAG_OPENAI_API_KEY
-        if app.state.config.RAG_EMBEDDING_ENGINE == "openai"
-        else (
-            app.state.config.RAG_OLLAMA_API_KEY
-            if app.state.config.RAG_EMBEDDING_ENGINE == "ollama"
-            else app.state.config.RAG_AZURE_OPENAI_API_KEY
-        )
-    ),
-    embedding_batch_size=app.state.config.RAG_EMBEDDING_BATCH_SIZE,
-    azure_api_version=(
-        app.state.config.RAG_AZURE_OPENAI_API_VERSION
-        if app.state.config.RAG_EMBEDDING_ENGINE == "azure_openai"
-        else None
-    ),
-    enable_async=app.state.config.ENABLE_ASYNC_EMBEDDING,
-    concurrent_requests=app.state.config.RAG_EMBEDDING_CONCURRENT_REQUESTS,
-)
-
-app.state.RERANKING_FUNCTION = get_reranking_function(
-    app.state.config.RAG_RERANKING_ENGINE,
-    app.state.config.RAG_RERANKING_MODEL,
-    reranking_function=app.state.rf,
-)
 
 ########################################
 #
@@ -954,8 +577,6 @@ app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD = (
 )
 app.state.config.CODE_INTERPRETER_JUPYTER_TIMEOUT = CODE_INTERPRETER_JUPYTER_TIMEOUT
 
-app.state.config.ENABLE_MEMORIES = ENABLE_MEMORIES
-
 
 ########################################
 #
@@ -968,8 +589,6 @@ app.state.config.TASK_MODEL = TASK_MODEL
 app.state.config.TASK_MODEL_EXTERNAL = TASK_MODEL_EXTERNAL
 
 
-app.state.config.ENABLE_SEARCH_QUERY_GENERATION = ENABLE_SEARCH_QUERY_GENERATION
-app.state.config.ENABLE_RETRIEVAL_QUERY_GENERATION = ENABLE_RETRIEVAL_QUERY_GENERATION
 app.state.config.ENABLE_AUTOCOMPLETE_GENERATION = ENABLE_AUTOCOMPLETE_GENERATION
 app.state.config.ENABLE_TAGS_GENERATION = ENABLE_TAGS_GENERATION
 app.state.config.ENABLE_TITLE_GENERATION = ENABLE_TITLE_GENERATION
@@ -985,7 +604,6 @@ app.state.config.FOLLOW_UP_GENERATION_PROMPT_TEMPLATE = (
 app.state.config.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE = (
     TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE
 )
-app.state.config.QUERY_GENERATION_PROMPT_TEMPLATE = QUERY_GENERATION_PROMPT_TEMPLATE
 app.state.config.AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE = (
     AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE
 )
@@ -1029,10 +647,11 @@ class RedirectMiddleware(BaseHTTPMiddleware):
                 if text:
                     urls = re.match(r"https://\S+", text)
                     if urls:
-                        from open_webui.retrieval.loaders.youtube import _parse_video_id
-
-                        if youtube_video_id := _parse_video_id(urls[0]):
-                            redirect_params["youtube"] = youtube_video_id
+                        yt_match = re.search(
+                            r"(?:v=|youtu\.be/)([a-zA-Z0-9_-]{11})", urls[0]
+                        )
+                        if yt_match:
+                            redirect_params["youtube"] = yt_match.group(1)
                         else:
                             redirect_params["load-url"] = urls[0]
                     else:
@@ -1177,8 +796,6 @@ app.include_router(openai.router, prefix="/openai", tags=["openai"])
 
 app.include_router(pipelines.router, prefix="/api/v1/pipelines", tags=["pipelines"])
 app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["tasks"])
-app.include_router(retrieval.router, prefix="/api/v1/retrieval", tags=["retrieval"])
-
 app.include_router(configs.router, prefix="/api/v1/configs", tags=["configs"])
 
 app.include_router(auths.router, prefix="/api/v1/auths", tags=["auths"])
@@ -1188,12 +805,10 @@ app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(chats.router, prefix="/api/v1/chats", tags=["chats"])
 
 app.include_router(models.router, prefix="/api/v1/models", tags=["models"])
-app.include_router(knowledge.router, prefix="/api/v1/knowledge", tags=["knowledge"])
 app.include_router(prompts.router, prefix="/api/v1/prompts", tags=["prompts"])
 app.include_router(tools.router, prefix="/api/v1/tools", tags=["tools"])
 app.include_router(skills.router, prefix="/api/v1/skills", tags=["skills"])
 
-app.include_router(memories.router, prefix="/api/v1/memories", tags=["memories"])
 app.include_router(folders.router, prefix="/api/v1/folders", tags=["folders"])
 app.include_router(groups.router, prefix="/api/v1/groups", tags=["groups"])
 app.include_router(files.router, prefix="/api/v1/files", tags=["files"])
@@ -1783,7 +1398,6 @@ async def get_app_config(request: Request):
                     "enable_direct_connections": app.state.config.ENABLE_DIRECT_CONNECTIONS,
                     "enable_folders": app.state.config.ENABLE_FOLDERS,
                     "folder_max_file_count": app.state.config.FOLDER_MAX_FILE_COUNT,
-                    "enable_web_search": app.state.config.ENABLE_WEB_SEARCH,
                     "enable_code_execution": app.state.config.ENABLE_CODE_EXECUTION,
                     "enable_code_interpreter": app.state.config.ENABLE_CODE_INTERPRETER,
                     "enable_autocomplete_generation": app.state.config.ENABLE_AUTOCOMPLETE_GENERATION,
@@ -1791,7 +1405,6 @@ async def get_app_config(request: Request):
                     "enable_user_status": app.state.config.ENABLE_USER_STATUS,
                     "enable_admin_export": ENABLE_ADMIN_EXPORT,
                     "enable_admin_chat_access": ENABLE_ADMIN_CHAT_ACCESS,
-                    "enable_memories": app.state.config.ENABLE_MEMORIES,
                 }
                 if user is not None
                 else {}

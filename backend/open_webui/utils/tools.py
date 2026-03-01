@@ -22,9 +22,37 @@ from functools import update_wrapper, partial
 from fastapi import Request
 from pydantic import BaseModel, Field, create_model
 
-from langchain_core.utils.function_calling import (
-    convert_to_openai_function as convert_pydantic_model_to_openai_function_spec,
-)
+
+def convert_pydantic_model_to_openai_function_spec(model: type) -> dict:
+    """Convert a Pydantic model to OpenAI function calling spec using model_json_schema()."""
+    schema = model.model_json_schema()
+    spec = {
+        "name": schema.get("title", model.__name__),
+        "parameters": {
+            "type": "object",
+            "properties": schema.get("properties", {}),
+            "required": schema.get("required", []),
+        },
+    }
+    if model.__doc__:
+        spec["description"] = model.__doc__.strip()
+    # Inline any $defs references into properties
+    defs = schema.get("$defs", {})
+    if defs:
+        import copy as _copy
+
+        def _resolve_refs(obj):
+            if isinstance(obj, dict):
+                if "$ref" in obj:
+                    ref_name = obj["$ref"].rsplit("/", 1)[-1]
+                    return _resolve_refs(_copy.deepcopy(defs.get(ref_name, obj)))
+                return {k: _resolve_refs(v) for k, v in obj.items()}
+            if isinstance(obj, list):
+                return [_resolve_refs(item) for item in obj]
+            return obj
+
+        spec["parameters"] = _resolve_refs(spec["parameters"])
+    return spec
 
 
 from open_webui.utils.misc import is_string_allowed
@@ -45,25 +73,12 @@ from open_webui.env import (
 )
 from open_webui.utils.headers import include_user_info_headers
 from open_webui.tools.builtin import (
-    search_web,
-    fetch_url,
     execute_code,
-    search_memories,
-    add_memory,
-    replace_memory_content,
-    delete_memory,
-    list_memories,
     get_current_timestamp,
     calculate_timestamp,
     search_chats,
     view_chat,
-    list_knowledge_bases,
-    search_knowledge_bases,
-    query_knowledge_bases,
-    search_knowledge_files,
-    query_knowledge_files,
     view_file,
-    view_knowledge_file,
     view_skill,
 )
 
@@ -423,52 +438,13 @@ def get_builtin_tools(
     if is_builtin_tool_enabled("time"):
         builtin_functions.extend([get_current_timestamp, calculate_timestamp])
 
-    # Knowledge base tools - conditional injection based on model knowledge
-    # If model has attached knowledge (any type), only provide query_knowledge_files
-    # Otherwise, provide all KB browsing tools
-    model_knowledge = model.get("info", {}).get("meta", {}).get("knowledge", [])
-    if is_builtin_tool_enabled("knowledge"):
-        if model_knowledge:
-            # Model has attached knowledge - only allow semantic search within it
-            builtin_functions.append(query_knowledge_files)
-            builtin_functions.append(view_file)
-        else:
-            # No model knowledge - allow full KB browsing
-            builtin_functions.extend(
-                [
-                    list_knowledge_bases,
-                    search_knowledge_bases,
-                    query_knowledge_bases,
-                    search_knowledge_files,
-                    query_knowledge_files,
-                    view_knowledge_file,
-                ]
-            )
-
     # Chats tools - search and fetch user's chat history
     if is_builtin_tool_enabled("chats"):
         builtin_functions.extend([search_chats, view_chat])
 
-    # Add memory tools if builtin category enabled AND enabled for this chat
-    if is_builtin_tool_enabled("memory") and features.get("memory"):
-        builtin_functions.extend(
-            [
-                search_memories,
-                add_memory,
-                replace_memory_content,
-                delete_memory,
-                list_memories,
-            ]
-        )
-
-    # Add web search tools if builtin category enabled AND enabled globally AND model has web_search capability
-    if (
-        is_builtin_tool_enabled("web_search")
-        and getattr(request.app.state.config, "ENABLE_WEB_SEARCH", False)
-        and get_model_capability("web_search")
-        and features.get("web_search")
-    ):
-        builtin_functions.extend([search_web, fetch_url])
+    # File viewing tool
+    if is_builtin_tool_enabled("knowledge"):
+        builtin_functions.append(view_file)
 
     # Add code interpreter tool if builtin category enabled AND enabled globally AND model has code_interpreter capability
     if (
@@ -494,7 +470,6 @@ def get_builtin_tools(
                 "__metadata__": extra_params.get("__metadata__"),
                 "__chat_id__": extra_params.get("__chat_id__"),
                 "__message_id__": extra_params.get("__message_id__"),
-                "__model_knowledge__": model_knowledge,
             },
         )
 

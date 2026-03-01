@@ -40,34 +40,6 @@ except ImportError:
 
 DOCKER = os.environ.get("DOCKER", "False").lower() == "true"
 
-# device type embedding models - "cpu" (default), "cuda" (nvidia gpu required) or "mps" (apple silicon) - choosing this right can lead to better performance
-USE_CUDA = os.environ.get("USE_CUDA_DOCKER", "false")
-
-if USE_CUDA.lower() == "true":
-    try:
-        import torch
-
-        assert torch.cuda.is_available(), "CUDA not available"
-        DEVICE_TYPE = "cuda"
-    except Exception as e:
-        cuda_error = (
-            "Error when testing CUDA but USE_CUDA_DOCKER is true. "
-            f"Resetting USE_CUDA_DOCKER to false: {e}"
-        )
-        os.environ["USE_CUDA_DOCKER"] = "false"
-        USE_CUDA = "false"
-        DEVICE_TYPE = "cpu"
-else:
-    DEVICE_TYPE = "cpu"
-
-try:
-    import torch
-
-    if torch.backends.mps.is_available() and torch.backends.mps.is_built():
-        DEVICE_TYPE = "mps"
-except Exception:
-    pass
-
 ####################################
 # LOGGING
 ####################################
@@ -122,10 +94,6 @@ else:
 
 log = logging.getLogger(__name__)
 log.info(f"GLOBAL_LOG_LEVEL: {GLOBAL_LOG_LEVEL}")
-
-if "cuda_error" in locals():
-    log.exception(cuda_error)
-    del cuda_error
 
 SRC_LOG_LEVELS = {}  # Legacy variable, do not remove
 
@@ -360,10 +328,6 @@ RESET_CONFIG_ON_START = (
 ENABLE_REALTIME_CHAT_SAVE = (
     os.environ.get("ENABLE_REALTIME_CHAT_SAVE", "False").lower() == "true"
 )
-
-ENABLE_QUERIES_CACHE = os.environ.get("ENABLE_QUERIES_CACHE", "False").lower() == "true"
-
-RAG_SYSTEM_CONTEXT = os.environ.get("RAG_SYSTEM_CONTEXT", "False").lower() == "true"
 
 ####################################
 # UVICORN WORKERS
@@ -681,71 +645,6 @@ AIOHTTP_CLIENT_SESSION_TOOL_SERVER_SSL = (
     os.environ.get("AIOHTTP_CLIENT_SESSION_TOOL_SERVER_SSL", "True").lower() == "true"
 )
 
-
-RAG_EMBEDDING_TIMEOUT = os.environ.get("RAG_EMBEDDING_TIMEOUT", "")
-
-if RAG_EMBEDDING_TIMEOUT == "":
-    RAG_EMBEDDING_TIMEOUT = None
-else:
-    try:
-        RAG_EMBEDDING_TIMEOUT = int(RAG_EMBEDDING_TIMEOUT)
-    except Exception:
-        RAG_EMBEDDING_TIMEOUT = None
-
-
-####################################
-# SENTENCE TRANSFORMERS
-####################################
-
-
-SENTENCE_TRANSFORMERS_BACKEND = os.environ.get("SENTENCE_TRANSFORMERS_BACKEND", "")
-if SENTENCE_TRANSFORMERS_BACKEND == "":
-    SENTENCE_TRANSFORMERS_BACKEND = "torch"
-
-
-SENTENCE_TRANSFORMERS_MODEL_KWARGS = os.environ.get(
-    "SENTENCE_TRANSFORMERS_MODEL_KWARGS", ""
-)
-if SENTENCE_TRANSFORMERS_MODEL_KWARGS == "":
-    SENTENCE_TRANSFORMERS_MODEL_KWARGS = None
-else:
-    try:
-        SENTENCE_TRANSFORMERS_MODEL_KWARGS = json.loads(
-            SENTENCE_TRANSFORMERS_MODEL_KWARGS
-        )
-    except Exception:
-        SENTENCE_TRANSFORMERS_MODEL_KWARGS = None
-
-
-SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND = os.environ.get(
-    "SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND", ""
-)
-if SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND == "":
-    SENTENCE_TRANSFORMERS_CROSS_ENCODER_BACKEND = "torch"
-
-
-SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = os.environ.get(
-    "SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS", ""
-)
-if SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS == "":
-    SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = None
-else:
-    try:
-        SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = json.loads(
-            SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS
-        )
-    except Exception:
-        SENTENCE_TRANSFORMERS_CROSS_ENCODER_MODEL_KWARGS = None
-
-# Whether to apply sigmoid normalization to CrossEncoder reranking scores.
-# When enabled (default), scores are normalized to 0-1 range for proper
-# relevance threshold behavior with MS MARCO models.
-SENTENCE_TRANSFORMERS_CROSS_ENCODER_SIGMOID_ACTIVATION_FUNCTION = (
-    os.environ.get(
-        "SENTENCE_TRANSFORMERS_CROSS_ENCODER_SIGMOID_ACTIVATION_FUNCTION", "True"
-    ).lower()
-    == "true"
-)
 
 ####################################
 # OFFLINE_MODE

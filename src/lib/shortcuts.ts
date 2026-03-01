@@ -115,11 +115,6 @@ export const shortcuts: ShortcutRegistry = {
 		category: 'Input',
 		tooltip: 'Only active when "Paste Large Text as File" setting is toggled on.'
 	},
-	[Shortcut.ATTACH_FILE]: {
-		name: 'Attach File From Knowledge',
-		keys: ['#'],
-		category: 'Input'
-	},
 	[Shortcut.ADD_PROMPT]: {
 		name: 'Add Custom Prompt',
 		keys: ['/'],

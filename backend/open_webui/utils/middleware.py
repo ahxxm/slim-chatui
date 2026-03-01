@@ -34,21 +34,15 @@ from open_webui.socket.main import (
     get_event_emitter,
 )
 from open_webui.routers.tasks import (
-    generate_queries,
     generate_title,
     generate_follow_ups,
     generate_chat_tags,
-)
-from open_webui.routers.retrieval import (
-    process_web_search,
-    SearchForm,
 )
 from open_webui.utils.tools import get_builtin_tools
 from open_webui.routers.pipelines import (
     process_pipeline_inlet_filter,
     process_pipeline_outlet_filter,
 )
-from open_webui.routers.memories import query_memory, QueryMemoryForm
 
 from open_webui.utils.webhook import post_webhook
 from open_webui.utils.files import (
@@ -63,19 +57,14 @@ from open_webui.models.users import UserModel
 from open_webui.models.functions import Functions
 from open_webui.models.models import Models
 
-from open_webui.retrieval.utils import get_sources_from_items
-
-
 from open_webui.utils.sanitize import sanitize_code
 from open_webui.utils.chat import generate_chat_completion
 from open_webui.utils.task import (
     get_task_model_id,
-    rag_template,
     tools_function_calling_generation_template,
 )
 from open_webui.utils.misc import (
     deep_update,
-    extract_urls,
     get_message_list,
     add_or_update_system_message,
     add_or_update_user_message,
@@ -117,8 +106,6 @@ from open_webui.env import (
     CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES,
     BYPASS_MODEL_ACCESS_CONTROL,
     ENABLE_REALTIME_CHAT_SAVE,
-    ENABLE_QUERIES_CACHE,
-    RAG_SYSTEM_CONTEXT,
     ENABLE_FORWARD_USER_INFO_HEADERS,
     FORWARD_SESSION_INFO_HEADER_CHAT_ID,
     FORWARD_SESSION_INFO_HEADER_MESSAGE_ID,
@@ -149,161 +136,6 @@ def output_id(prefix: str) -> str:
     return f"{prefix}_{uuid4().hex[:24]}"
 
 
-def get_citation_source_from_tool_result(
-    tool_name: str, tool_params: dict, tool_result: str, tool_id: str = ""
-) -> list[dict]:
-    """
-    Parse a tool's result and convert it to source dicts for citation display.
-
-    Follows the source format conventions from get_sources_from_items:
-    - source: file/item info object with id, name, type
-    - document: list of document contents
-    - metadata: list of metadata objects with source, file_id, name fields
-
-    Returns a list of sources (usually one, but query_knowledge_files may return multiple).
-    """
-    try:
-        try:
-            tool_result = json.loads(tool_result)
-        except (json.JSONDecodeError, TypeError):
-            pass  # keep tool_result as-is (e.g. fetch_url returns plain text)
-        if isinstance(tool_result, dict) and "error" in tool_result:
-            return []
-
-        if tool_name == "search_web":
-            # Parse JSON array: [{"title": "...", "link": "...", "snippet": "..."}]
-            results = tool_result
-            documents = []
-            metadata = []
-
-            for result in results:
-                title = result.get("title", "")
-                link = result.get("link", "")
-                snippet = result.get("snippet", "")
-
-                documents.append(f"{title}\n{snippet}")
-                metadata.append(
-                    {
-                        "source": link,
-                        "name": title,
-                        "url": link,
-                    }
-                )
-
-            return [
-                {
-                    "source": {"name": "search_web", "id": "search_web"},
-                    "document": documents,
-                    "metadata": metadata,
-                }
-            ]
-
-        elif tool_name == "view_knowledge_file":
-            file_data = tool_result
-            filename = file_data.get("filename", "Unknown File")
-            file_id = file_data.get("id", "")
-            knowledge_name = file_data.get("knowledge_name", "")
-
-            return [
-                {
-                    "source": {
-                        "id": file_id,
-                        "name": filename,
-                        "type": "file",
-                    },
-                    "document": [file_data.get("content", "")],
-                    "metadata": [
-                        {
-                            "file_id": file_id,
-                            "name": filename,
-                            "source": filename,
-                            **(
-                                {"knowledge_name": knowledge_name}
-                                if knowledge_name
-                                else {}
-                            ),
-                        }
-                    ],
-                }
-            ]
-
-        elif tool_name == "fetch_url":
-            url = tool_params.get("url", "")
-            content = tool_result if isinstance(tool_result, str) else str(tool_result)
-            snippet = content[:500] + ("..." if len(content) > 500 else "")
-
-            return [
-                {
-                    "source": {"name": url or "fetch_url", "id": url or "fetch_url"},
-                    "document": [snippet],
-                    "metadata": [
-                        {
-                            "source": url,
-                            "name": url,
-                            "url": url,
-                        }
-                    ],
-                }
-            ]
-
-        elif tool_name == "query_knowledge_files":
-            chunks = tool_result
-
-            # Group chunks by source for better citation display
-            # Each unique source becomes a separate source entry
-            sources_by_file = {}
-
-            for chunk in chunks:
-                source_name = chunk.get("source", "Unknown")
-                file_id = chunk.get("file_id", "")
-                note_id = chunk.get("note_id", "")
-                chunk_type = chunk.get("type", "file")
-                content = chunk.get("content", "")
-
-                # Use file_id or note_id as the key
-                key = file_id or note_id or source_name
-
-                if key not in sources_by_file:
-                    sources_by_file[key] = {
-                        "source": {
-                            "id": file_id or note_id,
-                            "name": source_name,
-                            "type": chunk_type,
-                        },
-                        "document": [],
-                        "metadata": [],
-                    }
-
-                sources_by_file[key]["document"].append(content)
-                sources_by_file[key]["metadata"].append(
-                    {
-                        "file_id": file_id,
-                        "name": source_name,
-                        "source": source_name,
-                        **({"note_id": note_id} if note_id else {}),
-                    }
-                )
-
-            # Return all grouped sources as a list
-            if sources_by_file:
-                return list(sources_by_file.values())
-
-            # Empty result fallback
-            return []
-
-        else:
-            # Fallback for other tools
-            return [
-                {
-                    "source": {
-                        "name": tool_name,
-                        "type": "tool",
-                        "id": tool_id or tool_name,
-                    },
-                    "document": [str(tool_result)],
-                    "metadata": [{"source": tool_name, "name": tool_name}],
-                }
-            ]
     except Exception as e:
         log.exception(f"Error parsing tool result for {tool_name}: {e}")
         return [
@@ -814,60 +646,6 @@ def handle_responses_streaming_event(
         return current_output, None
 
 
-def apply_source_context_to_messages(
-    request: Request,
-    messages: list,
-    sources: list,
-    user_message: str,
-    include_content: bool = True,
-) -> list:
-    """
-    Build source context from citation sources and apply to messages.
-    Uses RAG template to format context for model consumption.
-
-    When include_content is False, emit <source> tags with id/name but no
-    document body — useful when the content is already present elsewhere
-    (e.g. in a tool result message) and only citation markers are needed.
-    """
-    if not sources or not user_message:
-        return messages
-
-    context_string = ""
-    citation_idx = {}
-
-    for source in sources:
-        for doc, meta in zip(source.get("document", []), source.get("metadata", [])):
-            src_id = meta.get("source") or source.get("source", {}).get("id") or "N/A"
-            if src_id not in citation_idx:
-                citation_idx[src_id] = len(citation_idx) + 1
-            src_name = source.get("source", {}).get("name")
-            body = doc if include_content else ""
-            context_string += (
-                f'<source id="{citation_idx[src_id]}"'
-                + (f' name="{src_name}"' if src_name else "")
-                + f">{body}</source>\n"
-            )
-
-    context_string = context_string.strip()
-    if not context_string:
-        return messages
-
-    if RAG_SYSTEM_CONTEXT:
-        return add_or_update_system_message(
-            rag_template(
-                request.app.state.config.RAG_TEMPLATE, context_string, user_message
-            ),
-            messages,
-            append=True,
-        )
-    else:
-        return add_or_update_user_message(
-            rag_template(
-                request.app.state.config.RAG_TEMPLATE, context_string, user_message
-            ),
-            messages,
-            append=False,
-        )
 
 
 def process_tool_result(
@@ -1243,209 +1021,6 @@ async def chat_completion_tools_handler(
     return body, {"sources": sources}
 
 
-async def chat_memory_handler(
-    request: Request, form_data: dict, extra_params: dict, user
-):
-    try:
-        results = await query_memory(
-            request,
-            QueryMemoryForm(
-                **{
-                    "content": get_last_user_message(form_data["messages"]) or "",
-                    "k": 3,
-                }
-            ),
-            user,
-        )
-    except Exception as e:
-        log.debug(e)
-        results = None
-
-    user_context = ""
-    if results and hasattr(results, "documents"):
-        if results.documents and len(results.documents) > 0:
-            for doc_idx, doc in enumerate(results.documents[0]):
-                created_at_date = "Unknown Date"
-
-                if results.metadatas[0][doc_idx].get("created_at"):
-                    created_at_timestamp = results.metadatas[0][doc_idx]["created_at"]
-                    created_at_date = time.strftime(
-                        "%Y-%m-%d", time.localtime(created_at_timestamp)
-                    )
-
-                user_context += f"{doc_idx + 1}. [{created_at_date}] {doc}\n"
-
-    form_data["messages"] = add_or_update_system_message(
-        f"User Context:\n{user_context}\n", form_data["messages"], append=True
-    )
-
-    return form_data
-
-
-async def chat_web_search_handler(
-    request: Request, form_data: dict, extra_params: dict, user
-):
-    event_emitter = extra_params["__event_emitter__"]
-    await event_emitter(
-        {
-            "type": "status",
-            "data": {
-                "action": "web_search",
-                "description": "Searching the web",
-                "done": False,
-            },
-        }
-    )
-
-    messages = form_data["messages"]
-    user_message = get_last_user_message(messages)
-
-    queries = []
-    try:
-        res = await generate_queries(
-            request,
-            {
-                "model": form_data["model"],
-                "messages": messages,
-                "prompt": user_message,
-                "type": "web_search",
-                "chat_id": extra_params.get("__chat_id__"),
-            },
-            user,
-        )
-
-        response = res["choices"][0]["message"]["content"]
-
-        try:
-            bracket_start = response.find("{")
-            bracket_end = response.rfind("}") + 1
-
-            if bracket_start == -1 or bracket_end == -1:
-                raise Exception("No JSON object found in the response")
-
-            response = response[bracket_start:bracket_end]
-            queries = json.loads(response)
-            queries = queries.get("queries", [])
-        except Exception as e:
-            queries = [response]
-
-        if ENABLE_QUERIES_CACHE:
-            request.state.cached_queries = queries
-
-    except Exception as e:
-        log.exception(e)
-        queries = [user_message]
-
-    # Check if generated queries are empty
-    if len(queries) == 1 and queries[0].strip() == "":
-        queries = [user_message]
-
-    # Check if queries are not found
-    if len(queries) == 0:
-        await event_emitter(
-            {
-                "type": "status",
-                "data": {
-                    "action": "web_search",
-                    "description": "No search query generated",
-                    "done": True,
-                },
-            }
-        )
-        return form_data
-
-    await event_emitter(
-        {
-            "type": "status",
-            "data": {
-                "action": "web_search_queries_generated",
-                "queries": queries,
-                "done": False,
-            },
-        }
-    )
-
-    try:
-        results = await process_web_search(
-            request,
-            SearchForm(queries=queries),
-            user=user,
-        )
-
-        if results:
-            files = form_data.get("files", [])
-
-            if results.get("collection_names"):
-                for col_idx, collection_name in enumerate(
-                    results.get("collection_names")
-                ):
-                    files.append(
-                        {
-                            "collection_name": collection_name,
-                            "name": ", ".join(queries),
-                            "type": "web_search",
-                            "urls": results["filenames"],
-                            "queries": queries,
-                        }
-                    )
-            elif results.get("docs"):
-                # Invoked when bypass embedding and retrieval is set to True
-                docs = results["docs"]
-                files.append(
-                    {
-                        "docs": docs,
-                        "name": ", ".join(queries),
-                        "type": "web_search",
-                        "urls": results["filenames"],
-                        "queries": queries,
-                    }
-                )
-
-            form_data["files"] = files
-
-            await event_emitter(
-                {
-                    "type": "status",
-                    "data": {
-                        "action": "web_search",
-                        "description": "Searched {{count}} sites",
-                        "urls": results["filenames"],
-                        "items": results.get("items", []),
-                        "done": True,
-                    },
-                }
-            )
-        else:
-            await event_emitter(
-                {
-                    "type": "status",
-                    "data": {
-                        "action": "web_search",
-                        "description": "No search results found",
-                        "done": True,
-                        "error": True,
-                    },
-                }
-            )
-
-    except Exception as e:
-        log.exception(e)
-        await event_emitter(
-            {
-                "type": "status",
-                "data": {
-                    "action": "web_search",
-                    "description": "An error occurred while searching the web",
-                    "queries": queries,
-                    "done": True,
-                    "error": True,
-                },
-            }
-        )
-
-    return form_data
-
-
 def get_image_urls(delta_images, request, metadata, user) -> list[str]:
     if not isinstance(delta_images, list):
         return []
@@ -1512,126 +1087,6 @@ def add_file_context(messages: list, chat_id: str, user) -> list:
             message["content"] = file_context + content
 
     return messages
-
-
-async def chat_completion_files_handler(
-    request: Request, body: dict, extra_params: dict, user: UserModel
-) -> tuple[dict, dict[str, list]]:
-    __event_emitter__ = extra_params["__event_emitter__"]
-    sources = []
-
-    if files := body.get("metadata", {}).get("files", None):
-        # Check if all files are in full context mode
-        all_full_context = all(item.get("context") == "full" for item in files)
-
-        queries = []
-        if not all_full_context:
-            try:
-                queries_response = await generate_queries(
-                    request,
-                    {
-                        "model": body["model"],
-                        "messages": body["messages"],
-                        "type": "retrieval",
-                        "chat_id": body.get("metadata", {}).get("chat_id"),
-                    },
-                    user,
-                )
-                queries_response = queries_response["choices"][0]["message"]["content"]
-
-                try:
-                    bracket_start = queries_response.find("{")
-                    bracket_end = queries_response.rfind("}") + 1
-
-                    if bracket_start == -1 or bracket_end == -1:
-                        raise Exception("No JSON object found in the response")
-
-                    queries_response = queries_response[bracket_start:bracket_end]
-                    queries_response = json.loads(queries_response)
-                except Exception as e:
-                    queries_response = {"queries": [queries_response]}
-
-                queries = queries_response.get("queries", [])
-            except:
-                pass
-
-            await __event_emitter__(
-                {
-                    "type": "status",
-                    "data": {
-                        "action": "queries_generated",
-                        "queries": queries,
-                        "done": False,
-                    },
-                }
-            )
-
-        if len(queries) == 0:
-            queries = [get_last_user_message(body["messages"])]
-
-        try:
-            # Directly await async get_sources_from_items (no thread needed - fully async now)
-            sources = await get_sources_from_items(
-                request=request,
-                items=files,
-                queries=queries,
-                embedding_function=lambda query, prefix: request.app.state.EMBEDDING_FUNCTION(
-                    query, prefix=prefix, user=user
-                ),
-                k=request.app.state.config.TOP_K,
-                reranking_function=(
-                    (
-                        lambda query, documents: request.app.state.RERANKING_FUNCTION(
-                            query, documents, user=user
-                        )
-                    )
-                    if request.app.state.RERANKING_FUNCTION
-                    else None
-                ),
-                k_reranker=request.app.state.config.TOP_K_RERANKER,
-                r=request.app.state.config.RELEVANCE_THRESHOLD,
-                hybrid_bm25_weight=request.app.state.config.HYBRID_BM25_WEIGHT,
-                hybrid_search=request.app.state.config.ENABLE_RAG_HYBRID_SEARCH,
-                full_context=all_full_context
-                or request.app.state.config.RAG_FULL_CONTEXT,
-                user=user,
-            )
-        except Exception as e:
-            log.exception(e)
-
-        log.debug(f"rag_contexts:sources: {sources}")
-
-        unique_ids = set()
-        for source in sources or []:
-            if not source or len(source.keys()) == 0:
-                continue
-
-            documents = source.get("document") or []
-            metadatas = source.get("metadata") or []
-            src_info = source.get("source") or {}
-
-            for index, _ in enumerate(documents):
-                metadata = metadatas[index] if index < len(metadatas) else None
-                _id = (
-                    (metadata or {}).get("source")
-                    or (src_info or {}).get("id")
-                    or "N/A"
-                )
-                unique_ids.add(_id)
-
-        sources_count = len(unique_ids)
-        await __event_emitter__(
-            {
-                "type": "status",
-                "data": {
-                    "action": "sources_retrieved",
-                    "count": sources_count,
-                    "done": True,
-                },
-            }
-        )
-
-    return body, {"sources": sources}
 
 
 def apply_params_to_form_data(form_data, model):
@@ -1768,9 +1223,8 @@ def process_messages_with_output(messages: list[dict]) -> list[dict]:
 
 
 async def process_chat_payload(request, form_data, user, metadata, model):
-    # Pipeline Inlet -> Filter Inlet -> Chat Memory -> Chat Web Search
-    # -> Chat Code Interpreter (Form Data Update) -> (Default) Chat Tools Function Calling
-    # -> Chat Files
+    # Pipeline Inlet -> Filter Inlet -> Chat Code Interpreter (Form Data Update)
+    # -> (Default) Chat Tools Function Calling
 
     form_data = apply_params_to_form_data(form_data, model)
     log.debug(f"form_data: {form_data}")
@@ -1880,50 +1334,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                         *form_data.get("files", []),
                     ]
 
-    # Model "Knowledge" handling
     user_message = get_last_user_message(form_data["messages"])
-    model_knowledge = model.get("info", {}).get("meta", {}).get("knowledge", False)
-
-    if (
-        model_knowledge
-        and metadata.get("params", {}).get("function_calling") != "native"
-    ):
-        await event_emitter(
-            {
-                "type": "status",
-                "data": {
-                    "action": "knowledge_search",
-                    "query": user_message,
-                    "done": False,
-                },
-            }
-        )
-
-        knowledge_files = []
-        for item in model_knowledge:
-            if item.get("collection_name"):
-                knowledge_files.append(
-                    {
-                        "id": item.get("collection_name"),
-                        "name": item.get("name"),
-                        "legacy": True,
-                    }
-                )
-            elif item.get("collection_names"):
-                knowledge_files.append(
-                    {
-                        "name": item.get("name"),
-                        "type": "collection",
-                        "collection_names": item.get("collection_names"),
-                        "legacy": True,
-                    }
-                )
-            else:
-                knowledge_files.append(item)
-
-        files = form_data.get("files", [])
-        files.extend(knowledge_files)
-        form_data["files"] = files
 
     variables = form_data.pop("variables", None)
 
@@ -1954,20 +1365,6 @@ async def process_chat_payload(request, form_data, user, metadata, model):
     features = form_data.pop("features", None) or {}
     extra_params["__features__"] = features
     if features:
-        if "memory" in features and features["memory"]:
-            # Skip forced memory injection when native FC is enabled - model can use memory tools
-            if metadata.get("params", {}).get("function_calling") != "native":
-                form_data = await chat_memory_handler(
-                    request, form_data, extra_params, user
-                )
-
-        if "web_search" in features and features["web_search"]:
-            # Skip forced RAG web search when native FC is enabled - model can use web_search tool
-            if metadata.get("params", {}).get("function_calling") != "native":
-                form_data = await chat_web_search_handler(
-                    request, form_data, extra_params, user
-                )
-
         if "code_interpreter" in features and features["code_interpreter"]:
             # Skip XML-tag prompt injection when native FC is enabled —
             # execute_code will be injected as a builtin tool instead
@@ -2300,25 +1697,22 @@ async def process_chat_payload(request, form_data, user, metadata, model):
             except Exception as e:
                 log.exception(e)
 
-    # Check if file context extraction is enabled for this model (default True)
-    file_context_enabled = (
-        model.get("info", {}).get("meta", {}).get("capabilities") or {}
-    ).get("file_context", True)
-
-    if file_context_enabled:
-        try:
-            form_data, flags = await chat_completion_files_handler(
-                request, form_data, extra_params, user
-            )
-            sources.extend(flags.get("sources", []))
-        except Exception as e:
-            log.exception(e)
-
-    # If context is not empty, insert it into the messages
+    # Prepend tool results to user message so the model sees them
+    # NOTE: likely non-native tool calls thus removable,
+    # we prefer hosted tools. 
     if sources and prompt:
-        form_data["messages"] = apply_source_context_to_messages(
-            request, form_data["messages"], sources, prompt
-        )
+        tool_parts = []
+        for source in sources:
+            name = source.get("source", {}).get("name", "")
+            for doc in source.get("document", []):
+                tool_parts.append(f"[{name}]\n{doc}" if name else str(doc))
+        if tool_parts:
+            context = "\n\n".join(tool_parts)
+            form_data["messages"] = add_or_update_user_message(
+                f"{context}\n\n---\n\n{prompt}",
+                form_data["messages"],
+                append=False,
+            )
 
     # If there are citations, add them to the data_items
     sources = [
@@ -2330,19 +1724,6 @@ async def process_chat_payload(request, form_data, user, metadata, model):
 
     if len(sources) > 0:
         events.append({"sources": sources})
-
-    if model_knowledge:
-        await event_emitter(
-            {
-                "type": "status",
-                "data": {
-                    "action": "knowledge_search",
-                    "query": user_message,
-                    "done": True,
-                    "hidden": True,
-                },
-            }
-        )
 
     return form_data, metadata, events
 
@@ -3756,9 +3137,6 @@ async def streaming_chat_response_handler(response, ctx):
                 await stream_body_handler(response, form_data)
 
                 tool_call_retries = 0
-                tool_call_sources = []  # Track citation sources from tool results
-                all_tool_call_sources = []  # Accumulated sources across all iterations
-                user_message = get_last_user_message(form_data["messages"])
 
                 while (
                     len(tool_calls) > 0
@@ -3898,28 +3276,6 @@ async def streaming_chat_response_handler(response, ctx):
                             )
                         )
 
-                        # Extract citation sources from tool results
-                        if (
-                            tool_function_name
-                            in [
-                                "search_web",
-                                "fetch_url",
-                                "view_knowledge_file",
-                                "query_knowledge_files",
-                            ]
-                            and tool_result
-                        ):
-                            try:
-                                citation_sources = get_citation_source_from_tool_result(
-                                    tool_name=tool_function_name,
-                                    tool_params=tool_function_params,
-                                    tool_result=tool_result,
-                                    tool_id=tool.get("tool_id", "") if tool else "",
-                                )
-                                tool_call_sources.extend(citation_sources)
-                            except Exception as e:
-                                log.exception(f"Error extracting citation source: {e}")
-
                         results.append(
                             {
                                 "tool_call_id": tool_call_id,
@@ -3989,28 +3345,6 @@ async def streaming_chat_response_handler(response, ctx):
                             "content": [{"type": "output_text", "text": ""}],
                         }
                     )
-
-                    # Emit citation sources for UI display
-                    for source in tool_call_sources:
-                        await event_emitter({"type": "source", "data": source})
-
-                    # Apply source context to messages for model
-                    # Use metadata_only=True to avoid duplicating content
-                    # that is already in the tool result message.
-                    all_tool_call_sources.extend(tool_call_sources)
-                    if all_tool_call_sources and user_message:
-                        # Restore original user message before re-applying to avoid recursive nesting
-                        form_data["messages"] = add_or_update_user_message(
-                            user_message, form_data["messages"], append=False
-                        )
-                        form_data["messages"] = apply_source_context_to_messages(
-                            request,
-                            form_data["messages"],
-                            all_tool_call_sources,
-                            user_message,
-                            include_content=False,
-                        )
-                    tool_call_sources.clear()
 
                     await event_emitter(
                         {

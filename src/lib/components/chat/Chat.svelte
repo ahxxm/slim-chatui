@@ -49,8 +49,7 @@
 		createMessagesList,
 		getPromptVariables,
 		processDetails,
-		getCodeBlockContents,
-		isYoutubeUrl
+		getCodeBlockContents
 	} from '$lib/utils';
 
 	import {
@@ -64,11 +63,9 @@
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
 	import { generateOpenAIChatCompletion } from '$lib/apis/openai';
-	import { processWeb, processWebSearch, processYoutubeVideo } from '$lib/apis/retrieval';
 	import { getAndUpdateUserLocation, getUserSettings } from '$lib/apis/users';
 	import {
 		chatCompleted,
-		generateQueries,
 		chatAction,
 		generateMoACompletion,
 		stopTask,
@@ -131,7 +128,6 @@
 
 	let selectedToolIds = [];
 	let selectedFilterIds = [];
-	let webSearchEnabled = false;
 	let codeInterpreterEnabled = false;
 
 	let showCommands = false;
@@ -177,7 +173,6 @@
 		messageQueue = [];
 		selectedToolIds = [];
 		selectedFilterIds = [];
-		webSearchEnabled = false;
 
 		const storageChatInput = sessionStorage.getItem(
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
@@ -223,7 +218,6 @@
 						files = input.files;
 						selectedToolIds = input.selectedToolIds;
 						selectedFilterIds = input.selectedFilterIds;
-						webSearchEnabled = input.webSearchEnabled;
 						codeInterpreterEnabled = input.codeInterpreterEnabled;
 					}
 				} catch (e) {}
@@ -282,7 +276,6 @@
 	const resetInput = () => {
 		selectedToolIds = [];
 		selectedFilterIds = [];
-		webSearchEnabled = false;
 		codeInterpreterEnabled = false;
 
 		if (selectedModelIds.filter((id) => id).length > 0) {
@@ -321,14 +314,6 @@
 
 			// Set Default Features
 			if (model?.info?.meta?.defaultFeatureIds) {
-				if (
-					model.info?.meta?.capabilities?.['web_search'] &&
-					$config?.features?.enable_web_search &&
-					($user?.role === 'admin' || $user?.permissions?.features?.web_search)
-				) {
-					webSearchEnabled = model.info.meta.defaultFeatureIds.includes('web_search');
-				}
-
 				if (
 					model.info?.meta?.capabilities?.['code_interpreter'] &&
 					$config?.features?.enable_code_interpreter &&
@@ -608,7 +593,6 @@
 			files = [];
 			selectedToolIds = [];
 			selectedFilterIds = [];
-			webSearchEnabled = false;
 			codeInterpreterEnabled = false;
 
 			try {
@@ -619,7 +603,6 @@
 					files = input.files;
 					selectedToolIds = input.selectedToolIds;
 					selectedFilterIds = input.selectedFilterIds;
-					webSearchEnabled = input.webSearchEnabled;
 					codeInterpreterEnabled = input.codeInterpreterEnabled;
 				}
 			} catch (e) {}
@@ -674,57 +657,6 @@
 	});
 
 	// File upload functions
-
-	const uploadWeb = async (urls) => {
-		if ($user?.role !== 'admin' && !($user?.permissions?.chat?.web_upload ?? true)) {
-			toast.error($i18n.t('You do not have permission to upload web content.'));
-			return;
-		}
-
-		if (!Array.isArray(urls)) {
-			urls = [urls];
-		}
-
-		// Create file items first
-		const fileItems = urls.map((url) => ({
-			type: 'text',
-			name: url,
-			collection_name: '',
-			status: 'uploading',
-			context: 'full',
-			url,
-			error: ''
-		}));
-
-		// Display all items at once
-		files = [...files, ...fileItems];
-
-		for (const fileItem of fileItems) {
-			try {
-				const res = isYoutubeUrl(fileItem.url)
-					? await processYoutubeVideo(localStorage.token, fileItem.url)
-					: await processWeb(localStorage.token, '', fileItem.url);
-
-				if (res) {
-					fileItem.status = 'uploaded';
-					fileItem.collection_name = res.collection_name;
-					fileItem.file = {
-						...res.file,
-						...fileItem.file
-					};
-				}
-
-				files = [...files];
-			} catch (e) {
-				files = files.filter((f) => f.name !== url);
-				toast.error(`${e}`);
-			}
-		}
-	};
-
-	const onUpload = async (event) => {
-		await uploadWeb(event.data);
-	};
 
 	$: if (history) {
 		getContents();
@@ -913,18 +845,6 @@
 		params = {};
 		taskIds = null;
 		messageQueue = [];
-
-		if ($page.url.searchParams.get('youtube')) {
-			await uploadWeb(`https://www.youtube.com/watch?v=${$page.url.searchParams.get('youtube')}`);
-		}
-
-		if ($page.url.searchParams.get('load-url')) {
-			await uploadWeb($page.url.searchParams.get('load-url'));
-		}
-
-		if ($page.url.searchParams.get('web-search') === 'true') {
-			webSearchEnabled = true;
-		}
 
 		if ($page.url.searchParams.get('code-interpreter') === 'true') {
 			codeInterpreterEnabled = true;
@@ -1667,28 +1587,8 @@
 					$config?.features?.enable_code_interpreter &&
 					($user?.role === 'admin' || $user?.permissions?.features?.code_interpreter)
 						? codeInterpreterEnabled
-						: false,
-				web_search:
-					$config?.features?.enable_web_search &&
-					($user?.role === 'admin' || $user?.permissions?.features?.web_search)
-						? webSearchEnabled
 						: false
 			};
-
-		const currentModels = atSelectedModel?.id ? [atSelectedModel.id] : selectedModels;
-		if (
-			currentModels.filter(
-				(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.web_search ?? true
-			).length === currentModels.length
-		) {
-			if ($config?.features?.enable_web_search && ($settings?.webSearch ?? false) === 'always') {
-				features = { ...features, web_search: true };
-			}
-		}
-
-		if ($settings?.memory ?? false) {
-			features = { ...features, memory: true };
-		}
 
 		return features;
 	};
@@ -1983,12 +1883,6 @@
 			content: $i18n.t(`Uh-oh! There was an issue with the response.`) + '\n' + errorMessage
 		};
 		responseMessage.done = true;
-
-		if (responseMessage.statusHistory) {
-			responseMessage.statusHistory = responseMessage.statusHistory.filter(
-				(status) => status.action !== 'knowledge_search'
-			);
-		}
 
 		history.messages[responseMessage.id] = responseMessage;
 	};
@@ -2448,14 +2342,12 @@
 									bind:selectedToolIds
 									bind:selectedFilterIds
 									bind:codeInterpreterEnabled
-									bind:webSearchEnabled
 									bind:atSelectedModel
 									bind:showCommands
 									toolServers={$toolServers}
 									{generating}
 									{stopResponse}
 									{createMessagePair}
-									{onUpload}
 									{messageQueue}
 									onQueueSendNow={async (id) => {
 										const item = messageQueue.find((m) => m.id === id);
@@ -2517,14 +2409,12 @@
 									bind:selectedToolIds
 									bind:selectedFilterIds
 									bind:codeInterpreterEnabled
-									bind:webSearchEnabled
 									bind:atSelectedModel
 									bind:showCommands
 									toolServers={$toolServers}
 									{stopResponse}
 									{createMessagePair}
 									{onSelect}
-									{onUpload}
 									onChange={(data) => {
 										if (!$temporaryChatEnabled) {
 											saveDraft(data);

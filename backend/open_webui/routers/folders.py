@@ -1,12 +1,6 @@
 import logging
-import os
-import shutil
-import uuid
-from pathlib import Path
 from typing import Optional
 from pydantic import BaseModel
-import mimetypes
-
 
 from open_webui.models.folders import (
     FolderForm,
@@ -17,20 +11,14 @@ from open_webui.models.folders import (
 )
 from open_webui.models.chats import Chats
 from open_webui.models.files import Files
-from open_webui.models.knowledge import Knowledges
 
-
-from open_webui.config import UPLOAD_DIR
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
 
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status, Request
-from fastapi.responses import FileResponse, StreamingResponse
-
-
-from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.auth import get_verified_user
 from open_webui.utils.access_control import has_permission
 
 log = logging.getLogger(__name__)
@@ -89,12 +77,7 @@ async def get_folders(
                             file.get("id"), user.id, "read", db=db
                         ):
                             valid_files.append(file)
-                    elif file.get("type") == "collection":
-                        if Knowledges.check_access_by_user_id(
-                            file.get("id"), user.id, "read", db=db
-                        ):
-                            valid_files.append(file)
-                    else:
+                    elif file.get("type") != "collection":
                         valid_files.append(file)
 
                 folder.data["files"] = valid_files
