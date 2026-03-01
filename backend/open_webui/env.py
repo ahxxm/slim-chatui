@@ -437,35 +437,6 @@ ENABLE_COMPRESSION_MIDDLEWARE = (
     os.environ.get("ENABLE_COMPRESSION_MIDDLEWARE", "True").lower() == "true"
 )
 
-####################################
-# OAUTH Configuration
-####################################
-ENABLE_OAUTH_EMAIL_FALLBACK = (
-    os.environ.get("ENABLE_OAUTH_EMAIL_FALLBACK", "False").lower() == "true"
-)
-
-ENABLE_OAUTH_ID_TOKEN_COOKIE = (
-    os.environ.get("ENABLE_OAUTH_ID_TOKEN_COOKIE", "True").lower() == "true"
-)
-
-OAUTH_CLIENT_INFO_ENCRYPTION_KEY = os.environ.get(
-    "OAUTH_CLIENT_INFO_ENCRYPTION_KEY", WEBUI_SECRET_KEY
-)
-
-OAUTH_SESSION_TOKEN_ENCRYPTION_KEY = os.environ.get(
-    "OAUTH_SESSION_TOKEN_ENCRYPTION_KEY", WEBUI_SECRET_KEY
-)
-
-# Maximum number of concurrent OAuth sessions per user per provider
-# This prevents unbounded session growth while allowing multi-device usage
-OAUTH_MAX_SESSIONS_PER_USER = int(os.environ.get("OAUTH_MAX_SESSIONS_PER_USER", "10"))
-
-# Token Exchange Configuration
-# Allows external apps to exchange OAuth tokens for OpenWebUI tokens
-ENABLE_OAUTH_TOKEN_EXCHANGE = (
-    os.environ.get("ENABLE_OAUTH_TOKEN_EXCHANGE", "False").lower() == "true"
-)
-
 
 ####################################
 # MODELS
@@ -507,19 +478,6 @@ else:
         )
     except Exception:
         CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE = 1
-
-
-CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES = os.environ.get(
-    "CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES", "30"
-)
-
-if CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES == "":
-    CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES = 30
-else:
-    try:
-        CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES = int(CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES)
-    except Exception:
-        CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES = 30
 
 
 CHAT_STREAM_RESPONSE_CHUNK_MAX_BUFFER_SIZE = os.environ.get(
@@ -600,26 +558,6 @@ else:
         AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST = 10
 
 
-AIOHTTP_CLIENT_TIMEOUT_TOOL_SERVER_DATA = os.environ.get(
-    "AIOHTTP_CLIENT_TIMEOUT_TOOL_SERVER_DATA", "10"
-)
-
-if AIOHTTP_CLIENT_TIMEOUT_TOOL_SERVER_DATA == "":
-    AIOHTTP_CLIENT_TIMEOUT_TOOL_SERVER_DATA = None
-else:
-    try:
-        AIOHTTP_CLIENT_TIMEOUT_TOOL_SERVER_DATA = int(
-            AIOHTTP_CLIENT_TIMEOUT_TOOL_SERVER_DATA
-        )
-    except Exception:
-        AIOHTTP_CLIENT_TIMEOUT_TOOL_SERVER_DATA = 10
-
-
-AIOHTTP_CLIENT_SESSION_TOOL_SERVER_SSL = (
-    os.environ.get("AIOHTTP_CLIENT_SESSION_TOOL_SERVER_SSL", "True").lower() == "true"
-)
-
-
 ####################################
 # OFFLINE_MODE
 ####################################
@@ -664,19 +602,6 @@ AUDIT_EXCLUDED_PATHS = os.getenv("AUDIT_EXCLUDED_PATHS", "/chats,/chat,/folders"
 )
 AUDIT_EXCLUDED_PATHS = [path.strip() for path in AUDIT_EXCLUDED_PATHS]
 AUDIT_EXCLUDED_PATHS = [path.lstrip("/") for path in AUDIT_EXCLUDED_PATHS]
-
-
-####################################
-# TOOLS/FUNCTIONS PIP OPTIONS
-####################################
-
-ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS = (
-    os.environ.get("ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS", "True").lower()
-    == "true"
-)
-
-PIP_OPTIONS = os.getenv("PIP_OPTIONS", "").split()
-PIP_PACKAGE_INDEX_OPTIONS = os.getenv("PIP_PACKAGE_INDEX_OPTIONS", "").split()
 
 
 ####################################

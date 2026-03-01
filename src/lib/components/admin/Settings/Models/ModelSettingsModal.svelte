@@ -25,8 +25,6 @@
 	import AdvancedParams from '$lib/components/chat/Settings/Advanced/AdvancedParams.svelte';
 
 	import Capabilities from '$lib/components/workspace/Models/Capabilities.svelte';
-	import DefaultFeatures from '$lib/components/workspace/Models/DefaultFeatures.svelte';
-	import BuiltinTools from '$lib/components/workspace/Models/BuiltinTools.svelte';
 	import PromptSuggestions from '$lib/components/workspace/Models/PromptSuggestions.svelte';
 
 	import AdjustmentsHorizontal from '$lib/components/icons/AdjustmentsHorizontal.svelte';
@@ -57,9 +55,8 @@
 	let showDefaultPromptSuggestions = false;
 
 	let defaultCapabilities = {};
-	let defaultFeatureIds = [];
 	let defaultParams = {};
-	let builtinTools = {};
+
 	let promptSuggestions = [];
 
 	$: if (show) {
@@ -99,12 +96,8 @@
 		const savedMeta = config?.DEFAULT_MODEL_METADATA;
 		if (savedMeta && Object.keys(savedMeta).length > 0) {
 			defaultCapabilities = savedMeta.capabilities ?? { ...DEFAULT_CAPABILITIES };
-			defaultFeatureIds = savedMeta.defaultFeatureIds ?? [];
-			builtinTools = savedMeta.builtinTools ?? {};
 		} else {
 			defaultCapabilities = { ...DEFAULT_CAPABILITIES };
-			defaultFeatureIds = [];
-			builtinTools = {};
 		}
 		defaultParams = config?.DEFAULT_MODEL_PARAMS ?? {};
 
@@ -114,9 +107,7 @@
 		loading = true;
 
 		const metadata = {
-			capabilities: defaultCapabilities,
-			...(defaultFeatureIds.length > 0 ? { defaultFeatureIds } : {}),
-			...(Object.keys(builtinTools).length > 0 ? { builtinTools } : {})
+			capabilities: defaultCapabilities
 		};
 
 		const res = await setModelsConfig(localStorage.token, {
@@ -310,27 +301,6 @@
 											{#if showDefaultCapabilities}
 												<div class="mt-2">
 													<Capabilities bind:capabilities={defaultCapabilities} />
-
-													{#if Object.keys(defaultCapabilities).filter((key) => defaultCapabilities[key]).length > 0}
-														{@const availableFeatures = Object.entries(defaultCapabilities)
-															.filter(([key, value]) => value && ['code_interpreter'].includes(key))
-															.map(([key, value]) => key)}
-
-														{#if availableFeatures.length > 0}
-															<div class="mt-4">
-																<DefaultFeatures
-																	{availableFeatures}
-																	bind:featureIds={defaultFeatureIds}
-																/>
-															</div>
-														{/if}
-													{/if}
-
-													{#if defaultCapabilities.builtin_tools}
-														<div class="mt-4">
-															<BuiltinTools bind:builtinTools />
-														</div>
-													{/if}
 												</div>
 											{/if}
 										</div>

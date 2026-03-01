@@ -140,42 +140,23 @@ def convert_output_to_messages(output: list, raw: bool = False) -> list[dict]:
     """
     Convert OR-aligned output items to OpenAI Chat Completion-format messages.
 
-    This reconstructs the full conversation from the stored Responses API-native
-    output items, including assistant messages with tool_calls arrays and tool
-    role messages.
+    Handles message and reasoning item types from the Responses API format.
 
     Args:
         output: List of OR-aligned output items (Responses API format).
-        raw: If True, include reasoning blocks (with original tags) and code
-             interpreter blocks for LLM re-processing follow-ups.
+        raw: If True, include reasoning blocks (with original tags) for
+             LLM re-processing follow-ups.
     """
     if not output or not isinstance(output, list):
         return []
 
     messages = []
-    pending_tool_calls = []
     pending_content = []
-
-    def flush_pending():
-        nonlocal pending_content, pending_tool_calls
-        if pending_content or pending_tool_calls:
-            messages.append(
-                {
-                    "role": "assistant",
-                    "content": "\n".join(pending_content) if pending_content else "",
-                    **(
-                        {"tool_calls": pending_tool_calls} if pending_tool_calls else {}
-                    ),
-                }
-            )
-            pending_content = []
-            pending_tool_calls = []
 
     for item in output:
         item_type = item.get("type", "")
 
         if item_type == "message":
-            # Extract text from output_text content parts
             content_parts = item.get("content", [])
             text = ""
             for part in content_parts:
@@ -184,45 +165,8 @@ def convert_output_to_messages(output: list, raw: bool = False) -> list[dict]:
             if text:
                 pending_content.append(text)
 
-        elif item_type == "function_call":
-            # Collect tool calls to batch into assistant message
-            arguments = item.get("arguments", "{}")
-            # Ensure arguments is always a JSON string
-            if not isinstance(arguments, str):
-                arguments = json.dumps(arguments)
-            pending_tool_calls.append(
-                {
-                    "id": item.get("call_id", ""),
-                    "type": "function",
-                    "function": {
-                        "name": item.get("name", ""),
-                        "arguments": arguments,
-                    },
-                }
-            )
-
-        elif item_type == "function_call_output":
-            # Flush any pending content/tool_calls before adding tool result
-            flush_pending()
-
-            # Extract text from output content parts
-            output_parts = item.get("output", [])
-            content = ""
-            for part in output_parts:
-                if part.get("type") == "input_text":
-                    content += part.get("text", "")
-
-            messages.append(
-                {
-                    "role": "tool",
-                    "tool_call_id": item.get("call_id", ""),
-                    "content": content,
-                }
-            )
-
         elif item_type == "reasoning":
             if raw:
-                # Include reasoning with original tags for LLM re-processing
                 reasoning_text = ""
                 source_list = item.get("summary", []) or item.get("content", [])
                 for part in source_list:
@@ -235,37 +179,14 @@ def convert_output_to_messages(output: list, raw: bool = False) -> list[dict]:
                     start_tag = item.get("start_tag", "<think>")
                     end_tag = item.get("end_tag", "</think>")
                     pending_content.append(f"{start_tag}{reasoning_text}{end_tag}")
-            # else: skip reasoning blocks for normal LLM messages
 
-        elif item_type == "open_webui:code_interpreter":
-            # Always include code interpreter content so the LLM knows
-            # the code was already executed and doesn't retry.
-            code = item.get("code", "")
-            code_output = item.get("output", "")
-
-            if code:
-                pending_content.append(
-                    f"<code_interpreter>\n{code}\n</code_interpreter>"
-                )
-
-            if code_output:
-                if isinstance(code_output, dict):
-                    stdout = code_output.get("stdout", "")
-                    result = code_output.get("result", "")
-                    output_text = stdout or result
-                else:
-                    output_text = str(code_output)
-                if output_text:
-                    pending_content.append(
-                        f"<code_interpreter_output>\n{output_text}\n</code_interpreter_output>"
-                    )
-
-        elif item_type.startswith("open_webui:"):
-            # Skip other extension types
-            pass
-
-    # Flush remaining content/tool_calls
-    flush_pending()
+    if pending_content:
+        messages.append(
+            {
+                "role": "assistant",
+                "content": "\n".join(pending_content),
+            }
+        )
 
     return messages
 

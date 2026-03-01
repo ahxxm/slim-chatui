@@ -11,7 +11,6 @@ from pydantic import BaseModel, ConfigDict
 
 
 from open_webui.models.auths import Auths
-from open_webui.models.oauth_sessions import OAuthSessions
 
 from open_webui.models.groups import Groups
 from open_webui.models.chats import Chats
@@ -39,7 +38,7 @@ from open_webui.utils.auth import (
     get_verified_user,
     validate_password,
 )
-from open_webui.utils.access_control import get_permissions, has_permission
+from open_webui.utils.access_control import get_permissions
 
 log = logging.getLogger(__name__)
 
@@ -170,14 +169,10 @@ async def get_user_permissisions(
 class WorkspacePermissions(BaseModel):
     models: bool = False
     prompts: bool = False
-    tools: bool = False
-    skills: bool = False
     models_import: bool = False
     models_export: bool = False
     prompts_import: bool = False
     prompts_export: bool = False
-    tools_import: bool = False
-    tools_export: bool = False
 
 
 class SharingPermissions(BaseModel):
@@ -185,15 +180,10 @@ class SharingPermissions(BaseModel):
     public_models: bool = False
     prompts: bool = False
     public_prompts: bool = False
-    tools: bool = False
-    public_tools: bool = True
-    skills: bool = False
-    public_skills: bool = False
 
 
 class ChatPermissions(BaseModel):
     controls: bool = True
-    valves: bool = True
     system_prompt: bool = True
     params: bool = True
     file_upload: bool = True
@@ -214,8 +204,6 @@ class ChatPermissions(BaseModel):
 class FeaturesPermissions(BaseModel):
     api_keys: bool = False
     folders: bool = True
-    direct_tool_servers: bool = False
-    code_interpreter: bool = True
 
 
 class SettingsPermissions(BaseModel):
@@ -291,20 +279,6 @@ async def update_user_settings_by_session_user(
     db: Session = Depends(get_session),
 ):
     updated_user_settings = form_data.model_dump()
-    ui_settings = updated_user_settings.get("ui")
-    if (
-        user.role != "admin"
-        and ui_settings is not None
-        and "toolServers" in ui_settings.keys()
-        and not has_permission(
-            user.id,
-            "features.direct_tool_servers",
-            request.app.state.config.USER_PERMISSIONS,
-        )
-    ):
-        # If the user is not an admin and does not have permission to use tool servers, remove the key
-        updated_user_settings["ui"].pop("toolServers", None)
-
     user = Users.update_user_settings_by_id(user.id, updated_user_settings, db=db)
     if user:
         return user.settings
@@ -481,20 +455,6 @@ async def get_user_info_by_id(
                 "is_active": Users.is_user_active(user_id, db=db),
             }
         )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.USER_NOT_FOUND,
-        )
-
-
-@router.get("/{user_id}/oauth/sessions")
-async def get_user_oauth_sessions_by_id(
-    user_id: str, user=Depends(get_admin_user), db: Session = Depends(get_session)
-):
-    sessions = OAuthSessions.get_sessions_by_user_id(user_id, db=db)
-    if sessions and len(sessions) > 0:
-        return sessions
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

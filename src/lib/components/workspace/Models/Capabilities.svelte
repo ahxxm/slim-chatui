@@ -19,10 +19,6 @@
 			label: $i18n.t('File Context'),
 			description: $i18n.t('Inject file content into conversation context')
 		},
-		code_interpreter: {
-			label: $i18n.t('Code Interpreter'),
-			description: $i18n.t('Model can execute code and perform calculations')
-		},
 		usage: {
 			label: $i18n.t('Usage'),
 			description: $i18n.t(
@@ -36,12 +32,6 @@
 		status_updates: {
 			label: $i18n.t('Status Updates'),
 			description: $i18n.t('Displays status updates (e.g., tool call progress) in the response')
-		},
-		builtin_tools: {
-			label: $i18n.t('Builtin Tools'),
-			description: $i18n.t(
-				'Automatically inject system tools in native function calling mode (e.g., timestamps, chat history, etc.)'
-			)
 		}
 	};
 
@@ -49,11 +39,9 @@
 		file_context?: boolean;
 		vision?: boolean;
 		file_upload?: boolean;
-		code_interpreter?: boolean;
 		usage?: boolean;
 		citations?: boolean;
 		status_updates?: boolean;
-		builtin_tools?: boolean;
 	} = {};
 
 	// Hide file_context when file_upload is disabled

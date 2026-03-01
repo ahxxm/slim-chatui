@@ -1,6 +1,12 @@
 # slim-chatui
 
-Opinionated, diverged hard fork of [Open WebUI](https://github.com/open-webui/open-webui) (v0.8.5).
+Opinionated, diverged hard fork of [Open WebUI](https://github.com/open-webui/open-webui) (v0.8.5), so that you can _chat_ with (largely) stateless LLMs.
+
+Opinions:
+
+- Chat first
+- Personal usage: no `$ENTERPRISE` ldap/oauth/analytics/chats
+- slim: starts in ~3 seconds
 
 ---
 
@@ -60,8 +66,6 @@ For more information, be sure to check out our [Open WebUI Documentation](https:
 - ☁️ **Cloud-Native Integration**: Native support for Google Drive and OneDrive/SharePoint file picking, enabling seamless document import from enterprise cloud storage.
 
 - 🌐🌍 **Multilingual Support**: Experience Open WebUI in your preferred language with our internationalization (i18n) support. Join us in expanding our supported languages! We're actively seeking contributors!
-
-- 🧩 **Pipelines, Open WebUI Plugin Support**: Seamlessly integrate custom logic and Python libraries into Open WebUI using [Pipelines Plugin Framework](https://github.com/open-webui/pipelines). Launch your Pipelines instance, set the OpenAI URL to the Pipelines URL, and explore endless possibilities. [Examples](https://github.com/open-webui/pipelines/tree/main/examples) include **Function Calling**, User **Rate Limiting** to control access, **Usage Monitoring** with tools like Langfuse, **Live Translation with LibreTranslate** for multilingual support, **Toxic Message Filtering** and much more.
 
 - 🌟 **Continuous Updates**: We are committed to improving Open WebUI with regular updates, fixes, and new features.
 

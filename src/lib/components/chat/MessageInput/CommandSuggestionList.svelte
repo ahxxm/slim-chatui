@@ -1,14 +1,11 @@
 <script lang="ts">
 	import Prompts from './Commands/Prompts.svelte';
 	import Models from './Commands/Models.svelte';
-	import Skills from './Commands/Skills.svelte';
 
 	export let char = '';
 	export let query = '';
-	export let command: (payload: { id: string; label: string }) => void;
 
 	export let onSelect = (e) => {};
-	export let onUpload = (e) => {};
 	export let insertTextHandler = (text) => {};
 
 	let suggestionElement = null;
@@ -83,27 +80,6 @@
 
 						onSelect({
 							type: 'model',
-							data: data
-						});
-					}
-				}}
-			/>
-		{:else if char === '$'}
-			<Skills
-				bind:this={suggestionElement}
-				{query}
-				bind:filteredItems
-				onSelect={(e) => {
-					const { type, data } = e;
-
-					if (type === 'skill') {
-						command({
-							id: `${data.id}|${data.name}`,
-							label: data.name
-						});
-
-						onSelect({
-							type: 'skill',
 							data: data
 						});
 					}
