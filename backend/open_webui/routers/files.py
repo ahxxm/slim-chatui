@@ -27,7 +27,6 @@ from open_webui.internal.db import get_session, SessionLocal
 from open_webui.constants import ERROR_MESSAGES
 from open_webui.retrieval.vector.factory import VECTOR_DB_CLIENT
 
-from open_webui.models.channels import Channels
 from open_webui.models.users import Users
 from open_webui.models.files import (
     FileForm,
@@ -101,11 +100,6 @@ def has_access_to_file(
         for knowledge_base in knowledge_bases:
             if knowledge_base.id == knowledge_base_id:
                 return True
-
-    # Check if the file is associated with any channels the user has access to
-    channels = Channels.get_channels_by_file_id_and_user_id(file_id, user.id, db=db)
-    if access_type == "read" and channels:
-        return True
 
     # Check if the file is associated with any chats the user has access to
     # TODO: Granular access control for chats
@@ -317,15 +311,6 @@ def upload_file_handler(
             ),
             db=db,
         )
-
-        if "channel_id" in file_metadata:
-            channel = Channels.get_channel_by_id_and_user_id(
-                file_metadata["channel_id"], user.id, db=db
-            )
-            if channel:
-                Channels.add_file_to_channel_by_id(
-                    channel.id, file_item.id, user.id, db=db
-                )
 
         if process:
             if background_tasks and process_in_background:

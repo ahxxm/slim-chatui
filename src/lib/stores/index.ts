@@ -49,9 +49,6 @@ export const shortCodesToEmojis = writable(
 export const chatId = writable('');
 export const chatTitle = writable('');
 
-export const channels = writable([]);
-export const channelId = writable(null);
-
 export const chats = writable(null);
 export const pinnedChats = writable([]);
 export const tags = writable([]);
@@ -107,7 +104,7 @@ type BaseModel = {
 	id: string;
 	name: string;
 	info?: ModelConfig;
-	owned_by: 'ollama' | 'openai' | 'arena';
+	owned_by: 'ollama' | 'openai';
 };
 
 export interface OpenAIModel extends BaseModel {
@@ -262,7 +259,6 @@ type Config = {
 		enable_image_generation: boolean;
 		enable_admin_export: boolean;
 		enable_admin_chat_access: boolean;
-		enable_admin_analytics: boolean;
 		enable_community_sharing: boolean;
 		enable_memories: boolean;
 		enable_autocomplete_generation: boolean;

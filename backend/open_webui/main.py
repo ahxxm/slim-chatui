@@ -69,7 +69,6 @@ from open_webui.socket.main import (
     get_models_in_use,
 )
 from open_webui.routers import (
-    analytics,
     audio,
     images,
     ollama,
@@ -78,9 +77,7 @@ from open_webui.routers import (
     pipelines,
     tasks,
     auths,
-    channels,
     chats,
-    notes,
     folders,
     configs,
     groups,
@@ -90,7 +87,6 @@ from open_webui.routers import (
     models,
     knowledge,
     prompts,
-    evaluations,
     skills,
     tools,
     users,
@@ -365,13 +361,10 @@ from open_webui.config import (
     API_KEYS_ALLOWED_ENDPOINTS,
     ENABLE_FOLDERS,
     FOLDER_MAX_FILE_COUNT,
-    ENABLE_CHANNELS,
-    ENABLE_NOTES,
     ENABLE_USER_STATUS,
     ENABLE_COMMUNITY_SHARING,
     ENABLE_MESSAGE_RATING,
     ENABLE_USER_WEBHOOKS,
-    ENABLE_EVALUATION_ARENA_MODELS,
     BYPASS_ADMIN_ACCESS_CONTROL,
     USER_PERMISSIONS,
     DEFAULT_USER_ROLE,
@@ -381,11 +374,9 @@ from open_webui.config import (
     DEFAULT_PROMPT_SUGGESTIONS,
     DEFAULT_MODELS,
     DEFAULT_PINNED_MODELS,
-    DEFAULT_ARENA_MODEL,
     MODEL_ORDER_LIST,
     DEFAULT_MODEL_METADATA,
     DEFAULT_MODEL_PARAMS,
-    EVALUATION_ARENA_MODELS,
     # WebUI (OAuth)
     ENABLE_OAUTH_ROLE_MANAGEMENT,
     OAUTH_ROLES_CLAIM,
@@ -406,7 +397,6 @@ from open_webui.config import (
     RESPONSE_WATERMARK,
     # Admin
     ENABLE_ADMIN_CHAT_ACCESS,
-    ENABLE_ADMIN_ANALYTICS,
     BYPASS_ADMIN_ACCESS_CONTROL,
     ENABLE_ADMIN_EXPORT,
     # Tasks
@@ -804,15 +794,10 @@ app.state.config.BANNERS = WEBUI_BANNERS
 
 app.state.config.ENABLE_FOLDERS = ENABLE_FOLDERS
 app.state.config.FOLDER_MAX_FILE_COUNT = FOLDER_MAX_FILE_COUNT
-app.state.config.ENABLE_CHANNELS = ENABLE_CHANNELS
-app.state.config.ENABLE_NOTES = ENABLE_NOTES
 app.state.config.ENABLE_COMMUNITY_SHARING = ENABLE_COMMUNITY_SHARING
 app.state.config.ENABLE_MESSAGE_RATING = ENABLE_MESSAGE_RATING
 app.state.config.ENABLE_USER_WEBHOOKS = ENABLE_USER_WEBHOOKS
 app.state.config.ENABLE_USER_STATUS = ENABLE_USER_STATUS
-
-app.state.config.ENABLE_EVALUATION_ARENA_MODELS = ENABLE_EVALUATION_ARENA_MODELS
-app.state.config.EVALUATION_ARENA_MODELS = EVALUATION_ARENA_MODELS
 
 # Migrate legacy access_control → access_grants on boot
 from open_webui.utils.access_control import migrate_access_control
@@ -822,12 +807,6 @@ if any("access_control" in c.get("config", {}) for c in connections):
     for connection in connections:
         migrate_access_control(connection.get("config", {}))
     app.state.config.TOOL_SERVER_CONNECTIONS = connections
-
-arena_models = app.state.config.EVALUATION_ARENA_MODELS
-if any("access_control" in m.get("meta", {}) for m in arena_models):
-    for model in arena_models:
-        migrate_access_control(model.get("meta", {}))
-    app.state.config.EVALUATION_ARENA_MODELS = arena_models
 
 app.state.config.OAUTH_USERNAME_CLAIM = OAUTH_USERNAME_CLAIM
 app.state.config.OAUTH_PICTURE_CLAIM = OAUTH_PICTURE_CLAIM
@@ -1453,10 +1432,7 @@ app.include_router(auths.router, prefix="/api/v1/auths", tags=["auths"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 
 
-app.include_router(channels.router, prefix="/api/v1/channels", tags=["channels"])
 app.include_router(chats.router, prefix="/api/v1/chats", tags=["chats"])
-app.include_router(notes.router, prefix="/api/v1/notes", tags=["notes"])
-
 
 app.include_router(models.router, prefix="/api/v1/models", tags=["models"])
 app.include_router(knowledge.router, prefix="/api/v1/knowledge", tags=["knowledge"])
@@ -1469,11 +1445,6 @@ app.include_router(folders.router, prefix="/api/v1/folders", tags=["folders"])
 app.include_router(groups.router, prefix="/api/v1/groups", tags=["groups"])
 app.include_router(files.router, prefix="/api/v1/files", tags=["files"])
 app.include_router(functions.router, prefix="/api/v1/functions", tags=["functions"])
-app.include_router(
-    evaluations.router, prefix="/api/v1/evaluations", tags=["evaluations"]
-)
-if ENABLE_ADMIN_ANALYTICS:
-    app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 
 
@@ -2061,8 +2032,6 @@ async def get_app_config(request: Request):
                     "enable_direct_connections": app.state.config.ENABLE_DIRECT_CONNECTIONS,
                     "enable_folders": app.state.config.ENABLE_FOLDERS,
                     "folder_max_file_count": app.state.config.FOLDER_MAX_FILE_COUNT,
-                    "enable_channels": app.state.config.ENABLE_CHANNELS,
-                    "enable_notes": app.state.config.ENABLE_NOTES,
                     "enable_web_search": app.state.config.ENABLE_WEB_SEARCH,
                     "enable_code_execution": app.state.config.ENABLE_CODE_EXECUTION,
                     "enable_code_interpreter": app.state.config.ENABLE_CODE_INTERPRETER,
@@ -2074,7 +2043,6 @@ async def get_app_config(request: Request):
                     "enable_user_status": app.state.config.ENABLE_USER_STATUS,
                     "enable_admin_export": ENABLE_ADMIN_EXPORT,
                     "enable_admin_chat_access": ENABLE_ADMIN_CHAT_ACCESS,
-                    "enable_admin_analytics": ENABLE_ADMIN_ANALYTICS,
                     "enable_memories": app.state.config.ENABLE_MEMORIES,
                 }
                 if user is not None
