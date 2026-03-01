@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { config, models, settings, showCallOverlay, TTSWorker } from '$lib/stores';
+	import { config, models, settings, showCallOverlay } from '$lib/stores';
 	import { onMount, tick, getContext, onDestroy, createEventDispatcher } from 'svelte';
 
 	const dispatch = createEventDispatcher();
@@ -12,7 +12,6 @@
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import VideoInputMenu from './CallOverlay/VideoInputMenu.svelte';
-	import { KokoroWorker } from '$lib/workers/KokoroWorker';
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
 	const i18n = getContext('i18n');
@@ -476,21 +475,7 @@
 					}
 				}
 
-				if ($settings.audio?.tts?.engine === 'browser-kokoro') {
-					const url = await $TTSWorker
-						.generate({
-							text: content,
-							voice: getVoiceId()
-						})
-						.catch((error) => {
-							console.error(error);
-							toast.error(`${error}`);
-						});
-
-					if (url) {
-						audioCache.set(content, new Audio(url));
-					}
-				} else if ($config.audio.tts.engine !== '') {
+				if ($config.audio.tts.engine !== '') {
 					const res = await synthesizeOpenAISpeech(localStorage.token, getVoiceId(), content).catch(
 						(error) => {
 							console.error(error);
