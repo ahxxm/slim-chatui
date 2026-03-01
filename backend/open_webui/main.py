@@ -95,7 +95,6 @@ from open_webui.routers import (
     tools,
     users,
     utils,
-    scim,
 )
 
 from open_webui.routers.retrieval import (
@@ -338,20 +337,10 @@ from open_webui.config import (
     BOCHA_SEARCH_API_KEY,
     GOOGLE_PSE_API_KEY,
     GOOGLE_PSE_ENGINE_ID,
-    GOOGLE_DRIVE_CLIENT_ID,
-    GOOGLE_DRIVE_API_KEY,
-    ENABLE_ONEDRIVE_INTEGRATION,
-    ONEDRIVE_CLIENT_ID_PERSONAL,
-    ONEDRIVE_CLIENT_ID_BUSINESS,
-    ONEDRIVE_SHAREPOINT_URL,
-    ONEDRIVE_SHAREPOINT_TENANT_ID,
-    ENABLE_ONEDRIVE_PERSONAL,
-    ENABLE_ONEDRIVE_BUSINESS,
     ENABLE_RAG_HYBRID_SEARCH,
     ENABLE_RAG_HYBRID_SEARCH_ENRICHED_TEXTS,
     ENABLE_RAG_LOCAL_WEB_FETCH,
     ENABLE_WEB_LOADER_SSL_VERIFICATION,
-    ENABLE_GOOGLE_DRIVE_INTEGRATION,
     UPLOAD_DIR,
     EXTERNAL_WEB_SEARCH_URL,
     EXTERNAL_WEB_SEARCH_API_KEY,
@@ -405,25 +394,6 @@ from open_webui.config import (
     OAUTH_USERNAME_CLAIM,
     OAUTH_ALLOWED_ROLES,
     OAUTH_ADMIN_ROLES,
-    # WebUI (LDAP)
-    ENABLE_LDAP,
-    LDAP_SERVER_LABEL,
-    LDAP_SERVER_HOST,
-    LDAP_SERVER_PORT,
-    LDAP_ATTRIBUTE_FOR_MAIL,
-    LDAP_ATTRIBUTE_FOR_USERNAME,
-    LDAP_SEARCH_FILTERS,
-    LDAP_SEARCH_BASE,
-    LDAP_APP_DN,
-    LDAP_APP_PASSWORD,
-    LDAP_USE_TLS,
-    LDAP_CA_CERT_FILE,
-    LDAP_VALIDATE_CERT,
-    LDAP_CIPHERS,
-    # LDAP Group Management
-    ENABLE_LDAP_GROUP_MANAGEMENT,
-    ENABLE_LDAP_GROUP_CREATION,
-    LDAP_ATTRIBUTE_FOR_GROUPS,
     # Misc
     ENV,
     CACHE_DIR,
@@ -485,9 +455,6 @@ from open_webui.env import (
     WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
     WEBUI_AUTH_TRUSTED_NAME_HEADER,
     WEBUI_AUTH_SIGNOUT_REDIRECT_URL,
-    # SCIM
-    ENABLE_SCIM,
-    SCIM_TOKEN,
     ENABLE_COMPRESSION_MIDDLEWARE,
     ENABLE_WEBSOCKET_SUPPORT,
     BYPASS_MODEL_ACCESS_CONTROL,
@@ -785,15 +752,6 @@ app.state.config.ENABLE_DIRECT_CONNECTIONS = ENABLE_DIRECT_CONNECTIONS
 
 ########################################
 #
-# SCIM
-#
-########################################
-
-app.state.ENABLE_SCIM = ENABLE_SCIM
-app.state.SCIM_TOKEN = SCIM_TOKEN
-
-########################################
-#
 # MODELS
 #
 ########################################
@@ -879,27 +837,6 @@ app.state.config.ENABLE_OAUTH_ROLE_MANAGEMENT = ENABLE_OAUTH_ROLE_MANAGEMENT
 app.state.config.OAUTH_ROLES_CLAIM = OAUTH_ROLES_CLAIM
 app.state.config.OAUTH_ALLOWED_ROLES = OAUTH_ALLOWED_ROLES
 app.state.config.OAUTH_ADMIN_ROLES = OAUTH_ADMIN_ROLES
-
-app.state.config.ENABLE_LDAP = ENABLE_LDAP
-app.state.config.LDAP_SERVER_LABEL = LDAP_SERVER_LABEL
-app.state.config.LDAP_SERVER_HOST = LDAP_SERVER_HOST
-app.state.config.LDAP_SERVER_PORT = LDAP_SERVER_PORT
-app.state.config.LDAP_ATTRIBUTE_FOR_MAIL = LDAP_ATTRIBUTE_FOR_MAIL
-app.state.config.LDAP_ATTRIBUTE_FOR_USERNAME = LDAP_ATTRIBUTE_FOR_USERNAME
-app.state.config.LDAP_APP_DN = LDAP_APP_DN
-app.state.config.LDAP_APP_PASSWORD = LDAP_APP_PASSWORD
-app.state.config.LDAP_SEARCH_BASE = LDAP_SEARCH_BASE
-app.state.config.LDAP_SEARCH_FILTERS = LDAP_SEARCH_FILTERS
-app.state.config.LDAP_USE_TLS = LDAP_USE_TLS
-app.state.config.LDAP_CA_CERT_FILE = LDAP_CA_CERT_FILE
-app.state.config.LDAP_VALIDATE_CERT = LDAP_VALIDATE_CERT
-app.state.config.LDAP_CIPHERS = LDAP_CIPHERS
-
-# For LDAP Group Management
-app.state.config.ENABLE_LDAP_GROUP_MANAGEMENT = ENABLE_LDAP_GROUP_MANAGEMENT
-app.state.config.ENABLE_LDAP_GROUP_CREATION = ENABLE_LDAP_GROUP_CREATION
-app.state.config.LDAP_ATTRIBUTE_FOR_GROUPS = LDAP_ATTRIBUTE_FOR_GROUPS
-
 
 app.state.AUTH_TRUSTED_EMAIL_HEADER = WEBUI_AUTH_TRUSTED_EMAIL_HEADER
 app.state.AUTH_TRUSTED_NAME_HEADER = WEBUI_AUTH_TRUSTED_NAME_HEADER
@@ -1032,8 +969,6 @@ app.state.config.BYPASS_WEB_SEARCH_EMBEDDING_AND_RETRIEVAL = (
 )
 app.state.config.BYPASS_WEB_SEARCH_WEB_LOADER = BYPASS_WEB_SEARCH_WEB_LOADER
 
-app.state.config.ENABLE_GOOGLE_DRIVE_INTEGRATION = ENABLE_GOOGLE_DRIVE_INTEGRATION
-app.state.config.ENABLE_ONEDRIVE_INTEGRATION = ENABLE_ONEDRIVE_INTEGRATION
 
 app.state.config.OLLAMA_CLOUD_WEB_SEARCH_API_KEY = OLLAMA_CLOUD_WEB_SEARCH_API_KEY
 app.state.config.SEARXNG_QUERY_URL = SEARXNG_QUERY_URL
@@ -1540,10 +1475,6 @@ app.include_router(
 if ENABLE_ADMIN_ANALYTICS:
     app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
-
-# SCIM 2.0 API for identity management
-if ENABLE_SCIM:
-    app.include_router(scim.router, prefix="/api/v1/scim/v2", tags=["scim"])
 
 
 try:
@@ -2118,7 +2049,6 @@ async def get_app_config(request: Request):
             "auth": WEBUI_AUTH,
             "auth_trusted_header": bool(app.state.AUTH_TRUSTED_EMAIL_HEADER),
             "enable_signup_password_confirmation": ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
-            "enable_ldap": app.state.config.ENABLE_LDAP,
             "enable_api_keys": app.state.config.ENABLE_API_KEYS,
             "enable_signup": app.state.config.ENABLE_SIGNUP,
             "enable_login_form": app.state.config.ENABLE_LOGIN_FORM,
@@ -2145,17 +2075,7 @@ async def get_app_config(request: Request):
                     "enable_admin_export": ENABLE_ADMIN_EXPORT,
                     "enable_admin_chat_access": ENABLE_ADMIN_CHAT_ACCESS,
                     "enable_admin_analytics": ENABLE_ADMIN_ANALYTICS,
-                    "enable_google_drive_integration": app.state.config.ENABLE_GOOGLE_DRIVE_INTEGRATION,
-                    "enable_onedrive_integration": app.state.config.ENABLE_ONEDRIVE_INTEGRATION,
                     "enable_memories": app.state.config.ENABLE_MEMORIES,
-                    **(
-                        {
-                            "enable_onedrive_personal": ENABLE_ONEDRIVE_PERSONAL,
-                            "enable_onedrive_business": ENABLE_ONEDRIVE_BUSINESS,
-                        }
-                        if app.state.config.ENABLE_ONEDRIVE_INTEGRATION
-                        else {}
-                    ),
                 }
                 if user is not None
                 else {}
@@ -2189,16 +2109,6 @@ async def get_app_config(request: Request):
                     },
                 },
                 "permissions": {**app.state.config.USER_PERMISSIONS},
-                "google_drive": {
-                    "client_id": GOOGLE_DRIVE_CLIENT_ID.value,
-                    "api_key": GOOGLE_DRIVE_API_KEY.value,
-                },
-                "onedrive": {
-                    "client_id_personal": ONEDRIVE_CLIENT_ID_PERSONAL,
-                    "client_id_business": ONEDRIVE_CLIENT_ID_BUSINESS,
-                    "sharepoint_url": ONEDRIVE_SHAREPOINT_URL.value,
-                    "sharepoint_tenant_id": ONEDRIVE_SHAREPOINT_TENANT_ID.value,
-                },
                 "ui": {
                     "pending_user_overlay_title": app.state.config.PENDING_USER_OVERLAY_TITLE,
                     "pending_user_overlay_content": app.state.config.PENDING_USER_OVERLAY_CONTENT,

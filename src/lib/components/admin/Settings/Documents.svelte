@@ -1443,26 +1443,6 @@
 				</div>
 
 				<div class="mb-3">
-					<div class=" mt-0.5 mb-2.5 text-base font-medium">{$i18n.t('Integration')}</div>
-
-					<hr class=" border-gray-100/30 dark:border-gray-850/30 my-2" />
-
-					<div class="  mb-2.5 flex w-full justify-between">
-						<div class=" self-center text-xs font-medium">{$i18n.t('Google Drive')}</div>
-						<div class="flex items-center relative">
-							<Switch bind:state={RAGConfig.ENABLE_GOOGLE_DRIVE_INTEGRATION} />
-						</div>
-					</div>
-
-					<div class="  mb-2.5 flex w-full justify-between">
-						<div class=" self-center text-xs font-medium">{$i18n.t('OneDrive')}</div>
-						<div class="flex items-center relative">
-							<Switch bind:state={RAGConfig.ENABLE_ONEDRIVE_INTEGRATION} />
-						</div>
-					</div>
-				</div>
-
-				<div class="mb-3">
 					<div class=" mt-0.5 mb-2.5 text-base font-medium">{$i18n.t('Danger Zone')}</div>
 
 					<hr class=" border-gray-100/30 dark:border-gray-850/30 my-2" />
