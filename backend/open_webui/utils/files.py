@@ -13,8 +13,6 @@ from fastapi import (
 from typing import Optional
 from pathlib import Path
 
-from open_webui.storage.provider import Storage
-
 from open_webui.models.chats import Chats
 from open_webui.models.files import Files
 from open_webui.routers.files import upload_file_handler
@@ -49,7 +47,7 @@ def get_image_base64_from_url(url: str) -> Optional[str]:
             if not file:
                 return None
 
-            file_path = Storage.get_file(file.path)
+            file_path = file.path
             file_path = Path(file_path)
 
             if file_path.is_file():
@@ -163,7 +161,7 @@ def get_image_base64_from_file_id(id: str) -> Optional[str]:
         return None
 
     try:
-        file_path = Storage.get_file(file.path)
+        file_path = file.path
         file_path = Path(file_path)
 
         # Check if the file already exists in the cache
