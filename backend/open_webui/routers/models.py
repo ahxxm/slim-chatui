@@ -26,7 +26,6 @@ from fastapi.responses import FileResponse, StreamingResponse
 
 
 from open_webui.utils.auth import get_admin_user, get_verified_user
-from open_webui.utils.access_control import has_permission
 from open_webui.config import STATIC_DIR
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
@@ -134,9 +133,7 @@ async def create_new_model(
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
 ):
-    if user.role != "admin" and not has_permission(
-        user.id, "workspace.models", request.app.state.config.USER_PERMISSIONS, db=db
-    ):
+    if user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ERROR_MESSAGES.UNAUTHORIZED,
@@ -177,12 +174,7 @@ async def export_models(
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
 ):
-    if user.role != "admin" and not has_permission(
-        user.id,
-        "workspace.models_export",
-        request.app.state.config.USER_PERMISSIONS,
-        db=db,
-    ):
+    if user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ERROR_MESSAGES.UNAUTHORIZED,
@@ -207,12 +199,7 @@ async def import_models(
     form_data: ModelsImportForm = (...),
     db: Session = Depends(get_session),
 ):
-    if user.role != "admin" and not has_permission(
-        user.id,
-        "workspace.models_import",
-        request.app.state.config.USER_PERMISSIONS,
-        db=db,
-    ):
+    if user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ERROR_MESSAGES.UNAUTHORIZED,

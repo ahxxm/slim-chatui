@@ -165,7 +165,6 @@ from open_webui.utils.models import (
     get_all_models,
     get_all_base_models,
     check_model_access,
-    get_filtered_models,
 )
 from open_webui.utils.chat import (
     generate_chat_completion as chat_completion_handler,
@@ -674,8 +673,6 @@ async def get_models(
             )
         )
 
-    models = get_filtered_models(models, user)
-
     log.debug(
         f"/api/models returned filtered models accessible to the user: {json.dumps([model.get('id') for model in models])}"
     )
@@ -744,7 +741,7 @@ async def chat_completion(
             model = request.app.state.MODELS[model_id]
             model_info = Models.get_model_by_id(model_id)
 
-            check_model_access(user, model)
+            check_model_access(model)
         else:
             model = model_item
 

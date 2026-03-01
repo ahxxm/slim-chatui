@@ -121,7 +121,7 @@ async def get_user_permissisions(
     db: Session = Depends(get_session),
 ):
     user_permissions = get_permissions(
-        user.id, request.app.state.config.USER_PERMISSIONS, db=db
+        request.app.state.config.USER_PERMISSIONS
     )
 
     return user_permissions
@@ -130,22 +130,6 @@ async def get_user_permissisions(
 ############################
 # User Default Permissions
 ############################
-class WorkspacePermissions(BaseModel):
-    models: bool = False
-    prompts: bool = False
-    models_import: bool = False
-    models_export: bool = False
-    prompts_import: bool = False
-    prompts_export: bool = False
-
-
-class SharingPermissions(BaseModel):
-    models: bool = False
-    public_models: bool = False
-    prompts: bool = False
-    public_prompts: bool = False
-
-
 class ChatPermissions(BaseModel):
     controls: bool = True
     system_prompt: bool = True
@@ -175,8 +159,6 @@ class SettingsPermissions(BaseModel):
 
 
 class UserPermissions(BaseModel):
-    workspace: WorkspacePermissions
-    sharing: SharingPermissions
     chat: ChatPermissions
     features: FeaturesPermissions
     settings: SettingsPermissions
@@ -185,12 +167,6 @@ class UserPermissions(BaseModel):
 @router.get("/default/permissions", response_model=UserPermissions)
 async def get_default_user_permissions(request: Request, user=Depends(get_admin_user)):
     return {
-        "workspace": WorkspacePermissions(
-            **request.app.state.config.USER_PERMISSIONS.get("workspace", {})
-        ),
-        "sharing": SharingPermissions(
-            **request.app.state.config.USER_PERMISSIONS.get("sharing", {})
-        ),
         "chat": ChatPermissions(
             **request.app.state.config.USER_PERMISSIONS.get("chat", {})
         ),

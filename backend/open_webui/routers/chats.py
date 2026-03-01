@@ -80,7 +80,7 @@ async def delete_all_user_chats(
 ):
 
     if user.role == "user" and not has_permission(
-        user.id, "chat.delete", request.app.state.config.USER_PERMISSIONS
+        "chat.delete", request.app.state.config.USER_PERMISSIONS
     ):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -672,7 +672,7 @@ async def delete_chat_by_id(
         return result
     else:
         if not has_permission(
-            user.id, "chat.delete", request.app.state.config.USER_PERMISSIONS
+            "chat.delete", request.app.state.config.USER_PERMISSIONS
         ):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -878,7 +878,7 @@ async def share_chat_by_id(
 ):
     if (user.role != "admin") and (
         not has_permission(
-            user.id, "chat.share", request.app.state.config.USER_PERMISSIONS
+            "chat.share", request.app.state.config.USER_PERMISSIONS
         )
     ):
         raise HTTPException(

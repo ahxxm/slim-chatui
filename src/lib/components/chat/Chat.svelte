@@ -1490,16 +1490,7 @@
 				stream: stream,
 				model: model.id,
 				messages: messages,
-				params: {
-					...params,
-					stop:
-						params?.stop
-							? params.stop
-									.split(',')
-									.map((token) => token.trim())
-									.map((str) => decodeURIComponent(JSON.parse('"' + str.replace(/\"/g, '\\"') + '"')))
-							: undefined
-				},
+				params: {},
 
 				files: (files?.length ?? 0) > 0 ? files : undefined,
 

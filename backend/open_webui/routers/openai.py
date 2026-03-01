@@ -427,10 +427,6 @@ async def get_all_models_responses(request: Request, user: UserModel) -> list:
     return responses
 
 
-async def get_filtered_models(models, user, db=None):
-    return models.get("data", [])
-
-
 @cached(
     ttl=MODELS_CACHE_TTL,
     key=lambda _, user: f"openai_all_models_{user.id}" if user else "openai_all_models",
@@ -593,7 +589,7 @@ async def get_models(
                 error_detail = f"Unexpected error: {str(e)}"
                 raise HTTPException(status_code=500, detail=error_detail)
 
-    models["data"] = await get_filtered_models(models, user)
+    models["data"] = models.get("data", [])
 
     return models
 
@@ -883,7 +879,6 @@ async def generate_chat_completion(
     request: Request,
     form_data: dict,
     user=Depends(get_verified_user),
-    bypass_filter: Optional[bool] = False,
     bypass_system_prompt: bool = False,
 ):
     idx = 0
@@ -913,9 +908,6 @@ async def generate_chat_completion(
             payload = apply_model_params_to_body_openai(params, payload)
             if not bypass_system_prompt:
                 payload = apply_system_prompt_to_body(system, payload, metadata, user)
-
-    elif not bypass_filter:
-        pass
 
     # Check if model is already in app state cache to avoid expensive get_all_models() call
     models = request.app.state.OPENAI_MODELS

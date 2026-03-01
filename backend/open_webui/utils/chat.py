@@ -21,7 +21,7 @@ from open_webui.routers.openai import (
 
 from open_webui.utils.models import check_model_access
 
-from open_webui.env import GLOBAL_LOG_LEVEL, BYPASS_MODEL_ACCESS_CONTROL
+from open_webui.env import GLOBAL_LOG_LEVEL
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
@@ -130,12 +130,9 @@ async def generate_chat_completion(
     request: Request,
     form_data: dict,
     user: Any,
-    bypass_filter: bool = False,
     bypass_system_prompt: bool = False,
 ):
     log.debug(f"generate_chat_completion: {form_data}")
-    if BYPASS_MODEL_ACCESS_CONTROL:
-        bypass_filter = True
 
     if hasattr(request.state, "metadata"):
         if "metadata" not in form_data:
@@ -165,14 +162,12 @@ async def generate_chat_completion(
             request, form_data, user=user, models=models
         )
     else:
-        # Check if user has access to the model
-        if not bypass_filter and user.role == "user":
-            check_model_access(user, model)
+        if user.role == "user":
+            check_model_access(model)
 
         return await generate_openai_chat_completion(
             request=request,
             form_data=form_data,
             user=user,
-            bypass_filter=bypass_filter,
             bypass_system_prompt=bypass_system_prompt,
         )

@@ -118,12 +118,6 @@
 	};
 
 	onMount(async () => {
-		// Scroll to top 'workspace-container' element
-		const workspaceContainer = document.getElementById('workspace-container');
-		if (workspaceContainer) {
-			workspaceContainer.scrollTop = 0;
-		}
-
 		if (model) {
 			name = model.name;
 			await tick();

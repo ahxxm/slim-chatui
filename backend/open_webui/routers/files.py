@@ -34,7 +34,6 @@ from open_webui.models.chats import Chats
 
 from open_webui.storage.provider import Storage
 
-from open_webui.config import BYPASS_ADMIN_ACCESS_CONTROL
 from open_webui.utils.auth import get_admin_user, get_verified_user
 
 log = logging.getLogger(__name__)
@@ -169,7 +168,7 @@ async def list_files(
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
 ):
-    if user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL:
+    if user.role == "admin":
         return Files.get_files(db=db)
     else:
         return Files.get_files_by_user_id(user.id, db=db)
@@ -194,7 +193,7 @@ async def search_files(
     db: Session = Depends(get_session),
 ):
     user_id = (
-        None if (user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL) else user.id
+        None if user.role == "admin" else user.id
     )
 
     files = Files.search_files(

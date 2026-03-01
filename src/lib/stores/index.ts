@@ -105,7 +105,6 @@ type Settings = {
 	hapticFeedback?: boolean;
 	responseAutoCopy?: any;
 	richTextInput?: boolean;
-	params?: any;
 	userLocation?: any;
 	autoTags?: boolean;
 	autoFollowUps?: boolean;

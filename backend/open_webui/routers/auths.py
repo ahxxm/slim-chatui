@@ -107,7 +107,7 @@ def create_session_response(
         )
 
     user_permissions = get_permissions(
-        user.id, request.app.state.config.USER_PERMISSIONS, db=db
+        request.app.state.config.USER_PERMISSIONS
     )
 
     return {
@@ -178,7 +178,7 @@ async def get_session_user(
         )
 
     user_permissions = get_permissions(
-        user.id, request.app.state.config.USER_PERMISSIONS, db=db
+        request.app.state.config.USER_PERMISSIONS
     )
 
     return {
@@ -715,7 +715,7 @@ async def generate_api_key(
     request: Request, user=Depends(get_current_user), db: Session = Depends(get_session)
 ):
     if not request.app.state.config.ENABLE_API_KEYS or not has_permission(
-        user.id, "features.api_keys", request.app.state.config.USER_PERMISSIONS
+        "features.api_keys", request.app.state.config.USER_PERMISSIONS
     ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
