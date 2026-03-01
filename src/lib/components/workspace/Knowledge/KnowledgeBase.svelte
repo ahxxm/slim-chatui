@@ -9,14 +9,7 @@
 
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import {
-		mobile,
-		showSidebar,
-		knowledge as _knowledge,
-		config,
-		user,
-		settings
-	} from '$lib/stores';
+	import { mobile, showSidebar, knowledge as _knowledge, config, user } from '$lib/stores';
 
 	import {
 		updateFileDataContentById,
@@ -300,14 +293,7 @@
 		fileItems = [fileItem, ...(fileItems ?? [])];
 		try {
 			let metadata = {
-				knowledge_id: knowledge.id,
-				// If the file is an audio file, provide the language for STT.
-				...((file.type.startsWith('audio/') || file.type.startsWith('video/')) &&
-				$settings?.audio?.stt?.language
-					? {
-							language: $settings?.audio?.stt?.language
-						}
-					: {})
+				knowledge_id: knowledge.id
 			};
 
 			const uploadedFile = await uploadFile(localStorage.token, file, metadata).catch((e) => {

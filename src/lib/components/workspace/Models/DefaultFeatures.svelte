@@ -11,17 +11,13 @@
 			label: $i18n.t('Web Search'),
 			description: $i18n.t('Model can search the web for information')
 		},
-		image_generation: {
-			label: $i18n.t('Image Generation'),
-			description: $i18n.t('Model can generate images based on text prompts')
-		},
 		code_interpreter: {
 			label: $i18n.t('Code Interpreter'),
 			description: $i18n.t('Model can execute code and perform calculations')
 		}
 	};
 
-	export let availableFeatures = ['web_search', 'image_generation', 'code_interpreter'];
+	export let availableFeatures = ['web_search', 'code_interpreter'];
 	export let featureIds = [];
 </script>
 
