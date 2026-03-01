@@ -785,5 +785,3 @@ async def get_api_key(
         }
     else:
         raise HTTPException(404, detail=ERROR_MESSAGES.API_KEY_NOT_FOUND)
-
-
