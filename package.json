@@ -1,6 +1,6 @@
 {
-	"name": "open-webui",
-	"version": "0.8.5",
+	"name": "slim-chatui",
+	"version": "0.1.0",
 	"private": true,
 	"scripts": {
 		"dev": "vite dev --host",
