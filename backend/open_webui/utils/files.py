@@ -1,32 +1,86 @@
-from open_webui.routers.images import (
-    get_image_data,
-    upload_image,
-)
+import base64
+import io
+import logging
+import mimetypes
+import re
 
-from fastapi import (
-    APIRouter,
-    Depends,
-    HTTPException,
-    Request,
-    UploadFile,
-)
-from typing import Optional
+import requests
+from fastapi import Request, UploadFile
 from pathlib import Path
+from typing import Optional
 
 from open_webui.models.chats import Chats
 from open_webui.models.files import Files
 from open_webui.routers.files import upload_file_handler
 from open_webui.retrieval.web.utils import validate_url
 
-import mimetypes
-import base64
-import io
-import re
-
-import requests
+log = logging.getLogger(__name__)
 
 BASE64_IMAGE_URL_PREFIX = re.compile(r"data:image/\w+;base64,", re.IGNORECASE)
 MARKDOWN_IMAGE_URL_PATTERN = re.compile(r"!\[(.*?)\]\((.+?)\)", re.IGNORECASE)
+
+
+def get_image_data(data: str, headers=None):
+    try:
+        if data.startswith("http://") or data.startswith("https://"):
+            if headers:
+                r = requests.get(data, headers=headers)
+            else:
+                r = requests.get(data)
+
+            r.raise_for_status()
+            if r.headers["content-type"].split("/")[0] == "image":
+                mime_type = r.headers["content-type"]
+                return r.content, mime_type
+            else:
+                log.error("Url does not point to an image.")
+                return None
+        else:
+            if "," in data:
+                header, encoded = data.split(",", 1)
+                mime_type = header.split(";")[0].lstrip("data:")
+                img_data = base64.b64decode(encoded)
+            else:
+                mime_type = "image/png"
+                img_data = base64.b64decode(data)
+            return img_data, mime_type
+    except Exception as e:
+        log.exception(f"Error loading image data: {e}")
+        return None, None
+
+
+def upload_image(request, image_data, content_type, metadata, user, db=None):
+    image_format = mimetypes.guess_extension(content_type)
+    file = UploadFile(
+        file=io.BytesIO(image_data),
+        filename=f"generated-image{image_format}",
+        headers={
+            "content-type": content_type,
+        },
+    )
+    file_item = upload_file_handler(
+        request,
+        file=file,
+        metadata=metadata,
+        process=False,
+        user=user,
+    )
+
+    if file_item and file_item.id:
+        chat_id = metadata.get("chat_id")
+        message_id = metadata.get("message_id")
+
+        if chat_id and message_id:
+            Chats.insert_chat_files(
+                chat_id=chat_id,
+                message_id=message_id,
+                file_ids=[file_item.id],
+                user_id=user.id,
+                db=db,
+            )
+
+    url = request.app.url_path_for("get_file_content_by_id", id=file_item.id)
+    return file_item, url
 
 
 def get_image_base64_from_url(url: str) -> Optional[str]:

@@ -37,7 +37,6 @@ from open_webui.routers.tasks import (
     generate_queries,
     generate_title,
     generate_follow_ups,
-    generate_image_prompt,
     generate_chat_tags,
 )
 from open_webui.routers.retrieval import (
@@ -45,12 +44,6 @@ from open_webui.routers.retrieval import (
     SearchForm,
 )
 from open_webui.utils.tools import get_builtin_tools
-from open_webui.routers.images import (
-    image_generations,
-    CreateImageForm,
-    image_edits,
-    EditImageForm,
-)
 from open_webui.routers.pipelines import (
     process_pipeline_inlet_filter,
     process_pipeline_outlet_filter,
@@ -113,7 +106,6 @@ from open_webui.utils.mcp.client import MCPClient
 
 from open_webui.config import (
     CACHE_DIR,
-    DEFAULT_VOICE_MODE_PROMPT_TEMPLATE,
     DEFAULT_TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE,
     DEFAULT_CODE_INTERPRETER_PROMPT,
     CODE_INTERPRETER_BLOCKED_MODULES,
@@ -1454,24 +1446,6 @@ async def chat_web_search_handler(
     return form_data
 
 
-def get_images_from_messages(message_list):
-    images = []
-
-    for message in reversed(message_list):
-
-        message_images = []
-        for file in message.get("files", []):
-            if file.get("type") == "image":
-                message_images.append(file.get("url"))
-            elif file.get("content_type", "").startswith("image/"):
-                message_images.append(file.get("url"))
-
-        if message_images:
-            images.append(message_images)
-
-    return images
-
-
 def get_image_urls(delta_images, request, metadata, user) -> list[str]:
     if not isinstance(delta_images, list):
         return []
@@ -1538,202 +1512,6 @@ def add_file_context(messages: list, chat_id: str, user) -> list:
             message["content"] = file_context + content
 
     return messages
-
-
-async def chat_image_generation_handler(
-    request: Request, form_data: dict, extra_params: dict, user
-):
-    metadata = extra_params.get("__metadata__", {})
-    chat_id = metadata.get("chat_id", None)
-    __event_emitter__ = extra_params.get("__event_emitter__", None)
-
-    if not chat_id or not isinstance(chat_id, str) or not __event_emitter__:
-        return form_data
-
-    if chat_id.startswith("local:"):
-        message_list = form_data.get("messages", [])
-    else:
-        chat = Chats.get_chat_by_id_and_user_id(chat_id, user.id)
-        await __event_emitter__(
-            {
-                "type": "status",
-                "data": {"description": "Creating image", "done": False},
-            }
-        )
-
-        messages_map = chat.chat.get("history", {}).get("messages", {})
-        message_id = chat.chat.get("history", {}).get("currentId")
-        message_list = get_message_list(messages_map, message_id)
-
-    user_message = get_last_user_message(message_list)
-
-    prompt = user_message
-    message_images = get_images_from_messages(message_list)
-
-    # Limit to first 2 sets of images
-    # We may want to change this in the future to allow more images
-    input_images = []
-    for idx, images in enumerate(message_images):
-        if idx >= 2:
-            break
-        for image in images:
-            input_images.append(image)
-
-    system_message_content = ""
-
-    if len(input_images) > 0 and request.app.state.config.ENABLE_IMAGE_EDIT:
-        # Edit image(s)
-        try:
-            images = await image_edits(
-                request=request,
-                form_data=EditImageForm(**{"prompt": prompt, "image": input_images}),
-                metadata={
-                    "chat_id": metadata.get("chat_id", None),
-                    "message_id": metadata.get("message_id", None),
-                },
-                user=user,
-            )
-
-            await __event_emitter__(
-                {
-                    "type": "status",
-                    "data": {"description": "Image created", "done": True},
-                }
-            )
-
-            await __event_emitter__(
-                {
-                    "type": "files",
-                    "data": {
-                        "files": [
-                            {
-                                "type": "image",
-                                "url": image["url"],
-                            }
-                            for image in images
-                        ]
-                    },
-                }
-            )
-
-            system_message_content = "<context>The requested image has been edited and created and is now being shown to the user. Let them know that it has been generated.</context>"
-        except Exception as e:
-            log.debug(e)
-
-            error_message = ""
-            if isinstance(e, HTTPException):
-                if e.detail and isinstance(e.detail, dict):
-                    error_message = e.detail.get("message", str(e.detail))
-                else:
-                    error_message = str(e.detail)
-
-            await __event_emitter__(
-                {
-                    "type": "status",
-                    "data": {
-                        "description": f"An error occurred while generating an image",
-                        "done": True,
-                    },
-                }
-            )
-
-            system_message_content = f"<context>Image generation was attempted but failed. The system is currently unable to generate the image. Tell the user that the following error occurred: {error_message}</context>"
-
-    else:
-        # Create image(s)
-        if request.app.state.config.ENABLE_IMAGE_PROMPT_GENERATION:
-            try:
-                res = await generate_image_prompt(
-                    request,
-                    {
-                        "model": form_data["model"],
-                        "messages": form_data["messages"],
-                        "chat_id": metadata.get("chat_id"),
-                    },
-                    user,
-                )
-
-                response = res["choices"][0]["message"]["content"]
-
-                try:
-                    bracket_start = response.find("{")
-                    bracket_end = response.rfind("}") + 1
-
-                    if bracket_start == -1 or bracket_end == -1:
-                        raise Exception("No JSON object found in the response")
-
-                    response = response[bracket_start:bracket_end]
-                    response = json.loads(response)
-                    prompt = response.get("prompt", [])
-                except Exception as e:
-                    prompt = user_message
-
-            except Exception as e:
-                log.exception(e)
-                prompt = user_message
-
-        try:
-            images = await image_generations(
-                request=request,
-                form_data=CreateImageForm(**{"prompt": prompt}),
-                metadata={
-                    "chat_id": metadata.get("chat_id", None),
-                    "message_id": metadata.get("message_id", None),
-                },
-                user=user,
-            )
-
-            await __event_emitter__(
-                {
-                    "type": "status",
-                    "data": {"description": "Image created", "done": True},
-                }
-            )
-
-            await __event_emitter__(
-                {
-                    "type": "files",
-                    "data": {
-                        "files": [
-                            {
-                                "type": "image",
-                                "url": image["url"],
-                            }
-                            for image in images
-                        ]
-                    },
-                }
-            )
-
-            system_message_content = "<context>The requested image has been created by the system successfully and is now being shown to the user. Let the user know that the image they requested has been generated and is now shown in the chat.</context>"
-        except Exception as e:
-            log.debug(e)
-
-            error_message = ""
-            if isinstance(e, HTTPException):
-                if e.detail and isinstance(e.detail, dict):
-                    error_message = e.detail.get("message", str(e.detail))
-                else:
-                    error_message = str(e.detail)
-
-            await __event_emitter__(
-                {
-                    "type": "status",
-                    "data": {
-                        "description": f"An error occurred while generating an image",
-                        "done": True,
-                    },
-                }
-            )
-
-            system_message_content = f"<context>Image generation was attempted but failed because of an error. The system is currently unable to generate the image. Tell the user that the following error occurred: {error_message}</context>"
-
-    if system_message_content:
-        form_data["messages"] = add_or_update_system_message(
-            system_message_content, form_data["messages"]
-        )
-
-    return form_data
 
 
 async def chat_completion_files_handler(
@@ -1990,7 +1768,7 @@ def process_messages_with_output(messages: list[dict]) -> list[dict]:
 
 
 async def process_chat_payload(request, form_data, user, metadata, model):
-    # Pipeline Inlet -> Filter Inlet -> Chat Memory -> Chat Web Search -> Chat Image Generation
+    # Pipeline Inlet -> Filter Inlet -> Chat Memory -> Chat Web Search
     # -> Chat Code Interpreter (Form Data Update) -> (Default) Chat Tools Function Calling
     # -> Chat Files
 
@@ -2176,18 +1954,6 @@ async def process_chat_payload(request, form_data, user, metadata, model):
     features = form_data.pop("features", None) or {}
     extra_params["__features__"] = features
     if features:
-        if "voice" in features and features["voice"]:
-            if request.app.state.config.VOICE_MODE_PROMPT_TEMPLATE != None:
-                if request.app.state.config.VOICE_MODE_PROMPT_TEMPLATE != "":
-                    template = request.app.state.config.VOICE_MODE_PROMPT_TEMPLATE
-                else:
-                    template = DEFAULT_VOICE_MODE_PROMPT_TEMPLATE
-
-                form_data["messages"] = add_or_update_system_message(
-                    template,
-                    form_data["messages"],
-                )
-
         if "memory" in features and features["memory"]:
             # Skip forced memory injection when native FC is enabled - model can use memory tools
             if metadata.get("params", {}).get("function_calling") != "native":
@@ -2199,13 +1965,6 @@ async def process_chat_payload(request, form_data, user, metadata, model):
             # Skip forced RAG web search when native FC is enabled - model can use web_search tool
             if metadata.get("params", {}).get("function_calling") != "native":
                 form_data = await chat_web_search_handler(
-                    request, form_data, extra_params, user
-                )
-
-        if "image_generation" in features and features["image_generation"]:
-            # Skip forced image generation when native FC is enabled - model can use generate_image tool
-            if metadata.get("params", {}).get("function_calling") != "native":
-                form_data = await chat_image_generation_handler(
                     request, form_data, extra_params, user
                 )
 

@@ -69,8 +69,6 @@ export const banners: Writable<Banner[]> = writable([]);
 
 export const settings: Writable<Settings> = writable({});
 
-export const audioQueue = writable(null);
-
 export const sidebarWidth = writable(260);
 
 export const showSidebar = writable(false);
@@ -84,8 +82,6 @@ export const showControls = writable(false);
 export const showEmbeds = writable(false);
 export const showOverview = writable(false);
 export const showArtifacts = writable(false);
-export const showCallOverlay = writable(false);
-
 export const artifactCode = writable(null);
 export const artifactContents = writable(null);
 
@@ -154,8 +150,6 @@ type Settings = {
 	detectArtifacts?: boolean;
 	showUpdateToast?: boolean;
 	showChangelog?: boolean;
-	showEmojiInCall?: boolean;
-	voiceInterruption?: boolean;
 	collapseCodeBlocks?: boolean;
 	expandDetails?: boolean;
 	notificationSound?: boolean;
@@ -187,10 +181,6 @@ type Settings = {
 	chatBubble?: boolean;
 	copyFormatted?: boolean;
 	models?: string[];
-	conversationMode?: boolean;
-	speechAutoSend?: boolean;
-	responseAutoPlayback?: boolean;
-	audio?: AudioSettings;
 	showUsername?: boolean;
 	notificationEnabled?: boolean;
 	highContrastMode?: boolean;
@@ -215,16 +205,6 @@ type Settings = {
 
 type ModelOptions = {
 	stop?: boolean;
-};
-
-type AudioSettings = {
-	stt: any;
-	tts: any;
-	STTEngine?: string;
-	TTSEngine?: string;
-	speaker?: string;
-	model?: string;
-	nonLocalVoices?: boolean;
 };
 
 type TitleSettings = {
@@ -256,7 +236,6 @@ type Config = {
 		enable_signup: boolean;
 		enable_login_form: boolean;
 		enable_web_search?: boolean;
-		enable_image_generation: boolean;
 		enable_admin_export: boolean;
 		enable_admin_chat_access: boolean;
 		enable_memories: boolean;

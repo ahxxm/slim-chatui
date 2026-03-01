@@ -14,8 +14,7 @@
 		showSidebar,
 		knowledge as _knowledge,
 		config,
-		user,
-		settings
+		user
 	} from '$lib/stores';
 
 	import {
@@ -300,14 +299,7 @@
 		fileItems = [fileItem, ...(fileItems ?? [])];
 		try {
 			let metadata = {
-				knowledge_id: knowledge.id,
-				// If the file is an audio file, provide the language for STT.
-				...((file.type.startsWith('audio/') || file.type.startsWith('video/')) &&
-				$settings?.audio?.stt?.language
-					? {
-							language: $settings?.audio?.stt?.language
-						}
-					: {})
+				knowledge_id: knowledge.id
 			};
 
 			const uploadedFile = await uploadFile(localStorage.token, file, metadata).catch((e) => {

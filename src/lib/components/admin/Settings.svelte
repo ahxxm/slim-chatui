@@ -10,8 +10,6 @@
 
 	import General from './Settings/General.svelte';
 	import Pipelines from './Settings/Pipelines.svelte';
-	import Audio from './Settings/Audio.svelte';
-	import Images from './Settings/Images.svelte';
 	import Interface from './Settings/Interface.svelte';
 	import Models from './Settings/Models.svelte';
 	import Connections from './Settings/Connections.svelte';
@@ -41,8 +39,6 @@
 			'web',
 			'code-execution',
 			'interface',
-			'audio',
-			'images',
 			'pipelines',
 			'db'
 		].includes(tabFromPath)
@@ -190,37 +186,6 @@
 			]
 		},
 		{
-			id: 'audio',
-			title: 'Audio',
-			route: '/admin/settings/audio',
-			keywords: [
-				'audio',
-				'voice',
-				'speech',
-				'tts',
-				'stt',
-				'whisper',
-				'deepgram',
-				'azure',
-				'openai',
-				'elevenlabs'
-			]
-		},
-		{
-			id: 'images',
-			title: 'Images',
-			route: '/admin/settings/images',
-			keywords: [
-				'images',
-				'generation',
-				'dalle',
-				'stable diffusion',
-				'comfyui',
-				'automatic1111',
-				'gemini'
-			]
-		},
-		{
 			id: 'pipelines',
 			title: 'Pipelines',
 			route: '/admin/settings/pipelines',
@@ -303,8 +268,6 @@
 		<!-- {$i18n.t('Web Search')} -->
 		<!-- {$i18n.t('Code Execution')} -->
 		<!-- {$i18n.t('Interface')} -->
-		<!-- {$i18n.t('Audio')} -->
-		<!-- {$i18n.t('Images')} -->
 		<!-- {$i18n.t('Pipelines')} -->
 		<!-- {$i18n.t('Database')} -->
 		{#each filteredSettings as tab (tab.id)}
@@ -422,33 +385,6 @@
 								clip-rule="evenodd"
 							/>
 						</svg>
-					{:else if tab.id === 'audio'}
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 16 16"
-							fill="currentColor"
-							class="w-4 h-4"
-						>
-							<path
-								d="M7.557 2.066A.75.75 0 0 1 8 2.75v10.5a.75.75 0 0 1-1.248.56L3.59 11H2a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h1.59l3.162-2.81a.75.75 0 0 1 .805-.124ZM12.95 3.05a.75.75 0 1 0-1.06 1.06 5.5 5.5 0 0 1 0 7.78.75.75 0 1 0 1.06 1.06 7 7 0 0 0 0-9.9Z"
-							/>
-							<path
-								d="M10.828 5.172a.75.75 0 1 0-1.06 1.06 2.5 2.5 0 0 1 0 3.536.75.75 0 1 0 1.06 1.06 4 4 0 0 0 0-5.656Z"
-							/>
-						</svg>
-					{:else if tab.id === 'images'}
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 16 16"
-							fill="currentColor"
-							class="w-4 h-4"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4Zm10.5 5.707a.5.5 0 0 0-.146-.353l-1-1a.5.5 0 0 0-.708 0L9.354 9.646a.5.5 0 0 1-.708 0L6.354 7.354a.5.5 0 0 0-.708 0l-2 2a.5.5 0 0 0-.146.353V12a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5V9.707ZM12 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"
-								clip-rule="evenodd"
-							/>
-						</svg>
 					{:else if tab.id === 'pipelines'}
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -539,18 +475,6 @@
 			/>
 		{:else if selectedTab === 'interface'}
 			<Interface
-				on:save={() => {
-					toast.success($i18n.t('Settings saved successfully!'));
-				}}
-			/>
-		{:else if selectedTab === 'audio'}
-			<Audio
-				saveHandler={() => {
-					toast.success($i18n.t('Settings saved successfully!'));
-				}}
-			/>
-		{:else if selectedTab === 'images'}
-			<Images
 				on:save={() => {
 					toast.success($i18n.t('Settings saved successfully!'));
 				}}
