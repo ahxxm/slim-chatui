@@ -53,7 +53,7 @@ from open_webui.utils.auth import (
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
 from open_webui.utils.webhook import post_webhook
-from open_webui.utils.access_control import get_permissions, has_permission
+from open_webui.utils.access_control import has_permission
 
 from open_webui.utils.rate_limit import RateLimiter
 
@@ -106,10 +106,6 @@ def create_session_response(
             secure=WEBUI_AUTH_COOKIE_SECURE,
         )
 
-    user_permissions = get_permissions(
-        request.app.state.config.USER_PERMISSIONS
-    )
-
     return {
         "token": token,
         "token_type": "Bearer",
@@ -119,7 +115,7 @@ def create_session_response(
         "name": user.name,
         "role": user.role,
         "profile_image_url": f"/api/v1/users/{user.id}/profile/image",
-        "permissions": user_permissions,
+        "permissions": request.app.state.config.USER_PERMISSIONS,
     }
 
 
@@ -177,10 +173,6 @@ async def get_session_user(
             secure=WEBUI_AUTH_COOKIE_SECURE,
         )
 
-    user_permissions = get_permissions(
-        request.app.state.config.USER_PERMISSIONS
-    )
-
     return {
         "token": token,
         "token_type": "Bearer",
@@ -196,7 +188,7 @@ async def get_session_user(
         "status_emoji": user.status_emoji,
         "status_message": user.status_message,
         "status_expires_at": user.status_expires_at,
-        "permissions": user_permissions,
+        "permissions": request.app.state.config.USER_PERMISSIONS,
     }
 
 

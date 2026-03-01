@@ -19,8 +19,6 @@ from open_webui.routers.openai import (
     generate_chat_completion as generate_openai_chat_completion,
 )
 
-from open_webui.utils.models import check_model_access
-
 from open_webui.env import GLOBAL_LOG_LEVEL
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
@@ -155,16 +153,11 @@ async def generate_chat_completion(
     if model_id not in models:
         raise Exception("Model not found")
 
-    model = models[model_id]
-
     if getattr(request.state, "direct", False):
         return await generate_direct_chat_completion(
             request, form_data, user=user, models=models
         )
     else:
-        if user.role == "user":
-            check_model_access(model)
-
         return await generate_openai_chat_completion(
             request=request,
             form_data=form_data,

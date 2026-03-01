@@ -164,7 +164,6 @@ from open_webui.env import (
 from open_webui.utils.models import (
     get_all_models,
     get_all_base_models,
-    check_model_access,
 )
 from open_webui.utils.chat import (
     generate_chat_completion as chat_completion_handler,
@@ -740,8 +739,6 @@ async def chat_completion(
 
             model = request.app.state.MODELS[model_id]
             model_info = Models.get_model_by_id(model_id)
-
-            check_model_access(model)
         else:
             model = model_item
 

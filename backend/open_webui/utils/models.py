@@ -116,9 +116,3 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
     request.app.state.MODELS = models_dict
 
     return models
-
-
-def check_model_access(model, db=None):
-    model_info = Models.get_model_by_id(model.get("id"), db=db)
-    if not model_info:
-        raise Exception("Model not found")

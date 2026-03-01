@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { SvelteFlowProvider } from '@xyflow/svelte';
-	import { slide } from 'svelte/transition';
 	import { Pane, PaneResizer } from 'paneforge';
 
 	import { onDestroy, onMount, tick } from 'svelte';
@@ -12,7 +10,6 @@
 	import Embeds from './ChatControls/Embeds.svelte';
 
 	export let history;
-	export let models = [];
 
 	export let chatId = null;
 
@@ -157,7 +154,6 @@
 						on:close={() => {
 							showControls.set(false);
 						}}
-						{models}
 						bind:chatFiles
 						bind:params
 					/>
@@ -239,7 +235,6 @@
 							on:close={() => {
 								showControls.set(false);
 							}}
-							{models}
 							bind:chatFiles
 							bind:params
 						/>

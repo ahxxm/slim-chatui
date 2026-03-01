@@ -3,7 +3,6 @@ import sys
 
 from fastapi import Request
 from open_webui.models.users import UserModel
-from open_webui.utils.models import check_model_access
 from open_webui.env import GLOBAL_LOG_LEVEL
 
 from open_webui.routers.openai import embeddings as openai_embeddings
@@ -38,11 +37,6 @@ async def generate_embeddings(
     model_id = form_data.get("model")
     if model_id not in models:
         raise Exception("Model not found")
-    model = models[model_id]
-
-    if not getattr(request.state, "direct", False):
-        if user.role == "user":
-            check_model_access(model)
 
     return await openai_embeddings(
         request=request,

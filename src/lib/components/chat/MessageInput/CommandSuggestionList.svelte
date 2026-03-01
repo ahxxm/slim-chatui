@@ -1,7 +1,6 @@
 <script lang="ts">
 	import Models from './Commands/Models.svelte';
 
-	export let char = '';
 	export let query = '';
 
 	export let onSelect = (e) => {};
@@ -53,24 +52,22 @@
 	id="suggestions-container"
 >
 	<div class="overflow-y-auto scrollbar-thin max-h-60">
-		{#if char === '@'}
-			<Models
-				bind:this={suggestionElement}
-				{query}
-				bind:filteredItems
-				onSelect={(e) => {
-					const { type, data } = e;
+		<Models
+			bind:this={suggestionElement}
+			{query}
+			bind:filteredItems
+			onSelect={(e) => {
+				const { type, data } = e;
 
-					if (type === 'model') {
-						insertTextHandler('');
+				if (type === 'model') {
+					insertTextHandler('');
 
-						onSelect({
-							type: 'model',
-							data: data
-						});
-					}
-				}}
-			/>
-		{/if}
+					onSelect({
+						type: 'model',
+						data: data
+					});
+				}
+			}}
+		/>
 	</div>
 </div>

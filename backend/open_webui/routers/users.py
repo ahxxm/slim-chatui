@@ -36,7 +36,6 @@ from open_webui.utils.auth import (
     get_verified_user,
     validate_password,
 )
-from open_webui.utils.access_control import get_permissions
 
 log = logging.getLogger(__name__)
 
@@ -120,11 +119,7 @@ async def get_user_permissisions(
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
 ):
-    user_permissions = get_permissions(
-        request.app.state.config.USER_PERMISSIONS
-    )
-
-    return user_permissions
+    return request.app.state.config.USER_PERMISSIONS
 
 
 ############################

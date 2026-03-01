@@ -1,21 +1,10 @@
-from typing import Dict, Any
-
 from open_webui.config import DEFAULT_USER_PERMISSIONS
-import json
 
 
-def get_permissions(
-    default_permissions: Dict[str, Any],
-) -> Dict[str, Any]:
-    return json.loads(json.dumps(default_permissions))
-
-
-def has_permission(
-    permission_key: str,
-    default_permissions: Dict[str, Any] = {},
-) -> bool:
-    merged = json.loads(json.dumps(DEFAULT_USER_PERMISSIONS))
-    for key, value in default_permissions.items():
+def has_permission(permission_key: str, user_permissions: dict) -> bool:
+    """Check a dot-path permission key against user_permissions merged over defaults."""
+    merged = {**DEFAULT_USER_PERMISSIONS}
+    for key, value in user_permissions.items():
         if isinstance(value, dict) and isinstance(merged.get(key), dict):
             merged[key] = {**merged[key], **value}
         else:
