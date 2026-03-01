@@ -571,8 +571,7 @@
 		'Admins have access to all tools at all times; users need tools assigned per model in the workspace.'
 	)}
 </div> -->
-
-		</div>
+	</div>
 
 	<DeleteConfirmDialog
 		bind:show={showDeleteConfirm}

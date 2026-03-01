@@ -30,7 +30,7 @@ jobs:
           node-version: '22'
 
       - name: Install Dependencies
-        run: npm install --legacy-peer-deps
+        run: npm ci --legacy-peer-deps
 
       - name: Format Frontend
         run: npm run format

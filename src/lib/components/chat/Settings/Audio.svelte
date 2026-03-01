@@ -79,7 +79,6 @@
 
 		await getVoices();
 	});
-
 </script>
 
 <form

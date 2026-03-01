@@ -1583,7 +1583,6 @@ export const updateWebhookUrl = async (token: string, url: string) => {
 	return res.url;
 };
 
-
 export const getModelConfig = async (token: string): Promise<GlobalModelConfig> => {
 	let error = null;
 

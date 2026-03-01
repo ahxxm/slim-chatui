@@ -28,7 +28,7 @@
 		appInfo,
 		toolServers,
 		playingNotificationSound,
-		appData,
+		appData
 	} from '$lib/stores';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -85,7 +85,6 @@
 	let tokenTimer = null;
 
 	let showRefresh = false;
-
 
 	let heartbeatInterval = null;
 
@@ -400,7 +399,6 @@
 	};
 
 	onMount(async () => {
-
 		let touchstartY = 0;
 
 		function isNavOrDescendant(el) {
@@ -667,7 +665,6 @@
 		<slot />
 	{/if}
 {/if}
-
 
 <Toaster
 	theme={$theme.includes('dark')

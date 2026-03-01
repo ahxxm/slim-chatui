@@ -68,7 +68,6 @@
 				<div class="flex items-center">{$i18n.t('Edit')}</div>
 			</DropdownMenu.Item>
 
-
 			<DropdownMenu.Item
 				class="select-none flex gap-2 items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
 				on:click={() => {

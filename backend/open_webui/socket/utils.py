@@ -112,5 +112,3 @@ class RedisDict:
         if key not in self:
             self[key] = default
         return self[key]
-
-

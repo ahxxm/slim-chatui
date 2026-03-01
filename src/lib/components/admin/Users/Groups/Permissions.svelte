@@ -710,8 +710,6 @@
 			{/if}
 		</div>
 
-
-
 		<div class="flex flex-col w-full">
 			<div class="flex w-full justify-between my-1">
 				<div class=" self-center text-xs font-medium">

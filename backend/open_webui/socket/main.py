@@ -40,8 +40,6 @@ from open_webui.socket.utils import RedisDict, RedisLock
 from open_webui.utils.redis import get_redis_connection
 
 
-
-
 from open_webui.env import (
     GLOBAL_LOG_LEVEL,
 )

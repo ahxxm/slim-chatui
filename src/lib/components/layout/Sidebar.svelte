@@ -694,7 +694,6 @@
 					</Tooltip>
 				</div>
 
-
 				{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.knowledge || $user?.permissions?.workspace?.prompts || $user?.permissions?.workspace?.tools}
 					<div class="">
 						<Tooltip content={$i18n.t('Workspace')} placement="right">
@@ -904,7 +903,6 @@
 							<HotkeyHint name="search" className=" group-hover:visible invisible" />
 						</button>
 					</div>
-
 
 					{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.knowledge || $user?.permissions?.workspace?.prompts || $user?.permissions?.workspace?.tools}
 						<div class="px-[0.4375rem] flex justify-center text-gray-800 dark:text-gray-200">

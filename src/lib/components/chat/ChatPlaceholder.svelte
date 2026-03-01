@@ -102,7 +102,7 @@
 						{#if models[selectedModelIdx]?.info?.meta?.user}
 							<div class="mt-0.5 text-sm font-normal text-gray-400 dark:text-gray-500">
 								By
-									{models[selectedModelIdx]?.info?.meta?.user.name}
+								{models[selectedModelIdx]?.info?.meta?.user.name}
 							</div>
 						{/if}
 					{:else}

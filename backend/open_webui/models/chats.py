@@ -182,7 +182,6 @@ class ChatListResponse(BaseModel):
     total: int
 
 
-
 class ChatTable:
     def _clean_null_bytes(self, obj):
         """Recursively remove null bytes from strings in dict/list structures."""

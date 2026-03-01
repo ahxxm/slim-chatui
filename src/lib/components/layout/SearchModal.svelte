@@ -224,7 +224,6 @@
 	};
 
 	onMount(() => {
-
 		document.addEventListener('keydown', onKeyDown);
 	});
 

@@ -781,8 +781,8 @@
 								}
 							})
 						]
-					: []),
-				],
+					: [])
+			],
 			content,
 			autofocus: messageInput ? true : false,
 			onTransaction: () => {

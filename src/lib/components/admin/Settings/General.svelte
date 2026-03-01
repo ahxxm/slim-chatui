@@ -3,10 +3,7 @@
 	import { v4 as uuidv4 } from 'uuid';
 
 	import { getBackendConfig, getVersionUpdates, getWebhookUrl, updateWebhookUrl } from '$lib/apis';
-	import {
-		getAdminConfig,
-		updateAdminConfig
-	} from '$lib/apis/auths';
+	import { getAdminConfig, updateAdminConfig } from '$lib/apis/auths';
 	import { getBanners, setBanners } from '$lib/apis/configs';
 	import { getGroups } from '$lib/apis/groups';
 	import Switch from '$lib/components/common/Switch.svelte';
@@ -433,8 +430,7 @@
 							</div>
 						{/if}
 					</div>
-
-					</div>
+				</div>
 
 				<div class="mb-3">
 					<div class=" mt-0.5 mb-2.5 text-base font-medium">{$i18n.t('Features')}</div>

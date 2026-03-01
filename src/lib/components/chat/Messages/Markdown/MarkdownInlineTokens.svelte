@@ -33,10 +33,7 @@
 		try {
 			const url = new URL(href, window.location.origin);
 			// Check if same origin and an in-app route
-			if (
-				url.origin === window.location.origin &&
-				url.pathname.startsWith('/c/')
-			) {
+			if (url.origin === window.location.origin && url.pathname.startsWith('/c/')) {
 				e.preventDefault();
 				goto(url.pathname + url.search + url.hash);
 			}

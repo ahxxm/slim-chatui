@@ -22,7 +22,7 @@ export const DEFAULT_PERMISSIONS = {
 		tools: false,
 		public_tools: false,
 		skills: false,
-		public_skills: false,
+		public_skills: false
 	},
 	chat: {
 		controls: true,

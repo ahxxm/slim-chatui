@@ -14,14 +14,7 @@
 	import { getChatById } from '$lib/apis/chats';
 	import { generateTags } from '$lib/apis';
 
-	import {
-		audioQueue,
-		config,
-		models,
-		settings,
-		temporaryChatEnabled,
-		user
-	} from '$lib/stores';
+	import { audioQueue, config, models, settings, temporaryChatEnabled, user } from '$lib/stores';
 	import { synthesizeOpenAISpeech } from '$lib/apis/audio';
 	import { imageGenerations } from '$lib/apis/images';
 	import {
@@ -1015,7 +1008,7 @@
 												type="button"
 												class="hidden regenerate-response-button"
 												on:click={() => {
-														regenerateResponse(message);
+													regenerateResponse(message);
 
 													(model?.actions ?? []).forEach((action) => {
 														dispatch('action', {

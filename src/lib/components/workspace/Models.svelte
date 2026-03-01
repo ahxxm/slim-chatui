@@ -659,7 +659,6 @@
 			</div>
 		{/if}
 	</div>
-
 {:else}
 	<div class="w-full h-full flex justify-center items-center">
 		<Spinner className="size-5" />

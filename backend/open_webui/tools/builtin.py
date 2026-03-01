@@ -408,8 +408,7 @@ async def execute_code(
             code,
             (
                 __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_TOKEN
-                if __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH
-                == "token"
+                if __request__.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH == "token"
                 else None
             ),
             (
