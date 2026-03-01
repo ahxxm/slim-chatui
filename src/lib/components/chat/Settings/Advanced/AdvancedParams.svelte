@@ -16,7 +16,6 @@
 		// Advanced
 		stream_response: null, // Set stream responses for this model individually
 		stream_delta_chunk_size: null, // Set the chunk size for streaming responses
-		function_calling: null,
 		reasoning_tags: null,
 		seed: null,
 		stop: null,
@@ -146,35 +145,6 @@
 			{/if}
 		</div>
 	{/if}
-
-	<div>
-		<Tooltip
-			content={$i18n.t(
-				"Default mode works with a wider range of models by calling tools once before execution. Native mode leverages the model's built-in tool-calling capabilities, but requires the model to inherently support this feature."
-			)}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class=" py-0.5 flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Function Calling')}
-				</div>
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition"
-					on:click={() => {
-						params.function_calling = (params?.function_calling ?? null) === null ? 'native' : null;
-					}}
-					type="button"
-				>
-					{#if params.function_calling === 'native'}
-						<span class="ml-2 self-center">{$i18n.t('Native')}</span>
-					{:else}
-						<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
-	</div>
 
 	<div class=" py-0.5 w-full justify-between">
 		<Tooltip

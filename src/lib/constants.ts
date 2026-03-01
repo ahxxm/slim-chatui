@@ -26,11 +26,7 @@ export const SUPPORTED_FILE_TYPE = [
 	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
 	'application/octet-stream',
 	'application/x-javascript',
-	'text/markdown',
-	'audio/mpeg',
-	'audio/wav',
-	'audio/ogg',
-	'audio/x-m4a'
+	'text/markdown'
 ];
 
 export const SUPPORTED_FILE_EXTENSIONS = [
@@ -96,11 +92,9 @@ export const DEFAULT_CAPABILITIES = {
 	file_context: true,
 	vision: true,
 	file_upload: true,
-	code_interpreter: true,
 	citations: true,
 	status_updates: true,
-	usage: undefined,
-	builtin_tools: true
+	usage: undefined
 };
 
 export const PASTED_TEXT_CHARACTER_LIMIT = 1000;

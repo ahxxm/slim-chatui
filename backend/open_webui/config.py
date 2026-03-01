@@ -11,8 +11,6 @@ from urllib.parse import urlparse
 
 from pydantic import BaseModel
 from sqlalchemy import JSON, Column, DateTime, Integer, func
-from authlib.integrations.starlette_client import OAuth
-
 
 from open_webui.env import (
     DATA_DIR,
@@ -163,17 +161,8 @@ class PersistentConfig(Generic[T]):
         self.config_value = get_config_value(config_path)
 
         if self.config_value is not None and ENABLE_PERSISTENT_CONFIG:
-            if (
-                self.config_path.startswith("oauth.")
-                and not ENABLE_OAUTH_PERSISTENT_CONFIG
-            ):
-                log.info(
-                    f"Skipping loading of '{env_name}' as OAuth persistent config is disabled"
-                )
-                self.value = env_value
-            else:
-                log.info(f"'{env_name}' loaded from the latest database entry")
-                self.value = self.config_value
+            log.info(f"'{env_name}' loaded from the latest database entry")
+            self.value = self.config_value
         else:
             self.value = env_value
 
@@ -270,519 +259,6 @@ if JWT_EXPIRES_IN.value == "-1":
         "⚠️  SECURITY WARNING: JWT_EXPIRES_IN is set to '-1'\n"
         "    See: https://docs.openwebui.com/getting-started/env-configuration\n"
     )
-
-####################################
-# OAuth config
-####################################
-
-ENABLE_OAUTH_PERSISTENT_CONFIG = (
-    os.environ.get("ENABLE_OAUTH_PERSISTENT_CONFIG", "False").lower() == "true"
-)
-
-ENABLE_OAUTH_SIGNUP = PersistentConfig(
-    "ENABLE_OAUTH_SIGNUP",
-    "oauth.enable_signup",
-    os.environ.get("ENABLE_OAUTH_SIGNUP", "False").lower() == "true",
-)
-
-
-OAUTH_MERGE_ACCOUNTS_BY_EMAIL = PersistentConfig(
-    "OAUTH_MERGE_ACCOUNTS_BY_EMAIL",
-    "oauth.merge_accounts_by_email",
-    os.environ.get("OAUTH_MERGE_ACCOUNTS_BY_EMAIL", "False").lower() == "true",
-)
-
-OAUTH_PROVIDERS = {}
-
-GOOGLE_CLIENT_ID = PersistentConfig(
-    "GOOGLE_CLIENT_ID",
-    "oauth.google.client_id",
-    os.environ.get("GOOGLE_CLIENT_ID", ""),
-)
-
-GOOGLE_CLIENT_SECRET = PersistentConfig(
-    "GOOGLE_CLIENT_SECRET",
-    "oauth.google.client_secret",
-    os.environ.get("GOOGLE_CLIENT_SECRET", ""),
-)
-
-
-GOOGLE_OAUTH_SCOPE = PersistentConfig(
-    "GOOGLE_OAUTH_SCOPE",
-    "oauth.google.scope",
-    os.environ.get("GOOGLE_OAUTH_SCOPE", "openid email profile"),
-)
-
-GOOGLE_REDIRECT_URI = PersistentConfig(
-    "GOOGLE_REDIRECT_URI",
-    "oauth.google.redirect_uri",
-    os.environ.get("GOOGLE_REDIRECT_URI", ""),
-)
-
-MICROSOFT_CLIENT_ID = PersistentConfig(
-    "MICROSOFT_CLIENT_ID",
-    "oauth.microsoft.client_id",
-    os.environ.get("MICROSOFT_CLIENT_ID", ""),
-)
-
-MICROSOFT_CLIENT_SECRET = PersistentConfig(
-    "MICROSOFT_CLIENT_SECRET",
-    "oauth.microsoft.client_secret",
-    os.environ.get("MICROSOFT_CLIENT_SECRET", ""),
-)
-
-MICROSOFT_CLIENT_TENANT_ID = PersistentConfig(
-    "MICROSOFT_CLIENT_TENANT_ID",
-    "oauth.microsoft.tenant_id",
-    os.environ.get("MICROSOFT_CLIENT_TENANT_ID", ""),
-)
-
-MICROSOFT_CLIENT_LOGIN_BASE_URL = PersistentConfig(
-    "MICROSOFT_CLIENT_LOGIN_BASE_URL",
-    "oauth.microsoft.login_base_url",
-    os.environ.get(
-        "MICROSOFT_CLIENT_LOGIN_BASE_URL", "https://login.microsoftonline.com"
-    ),
-)
-
-MICROSOFT_CLIENT_PICTURE_URL = PersistentConfig(
-    "MICROSOFT_CLIENT_PICTURE_URL",
-    "oauth.microsoft.picture_url",
-    os.environ.get(
-        "MICROSOFT_CLIENT_PICTURE_URL",
-        "https://graph.microsoft.com/v1.0/me/photo/$value",
-    ),
-)
-
-
-MICROSOFT_OAUTH_SCOPE = PersistentConfig(
-    "MICROSOFT_OAUTH_SCOPE",
-    "oauth.microsoft.scope",
-    os.environ.get("MICROSOFT_OAUTH_SCOPE", "openid email profile"),
-)
-
-MICROSOFT_REDIRECT_URI = PersistentConfig(
-    "MICROSOFT_REDIRECT_URI",
-    "oauth.microsoft.redirect_uri",
-    os.environ.get("MICROSOFT_REDIRECT_URI", ""),
-)
-
-GITHUB_CLIENT_ID = PersistentConfig(
-    "GITHUB_CLIENT_ID",
-    "oauth.github.client_id",
-    os.environ.get("GITHUB_CLIENT_ID", ""),
-)
-
-GITHUB_CLIENT_SECRET = PersistentConfig(
-    "GITHUB_CLIENT_SECRET",
-    "oauth.github.client_secret",
-    os.environ.get("GITHUB_CLIENT_SECRET", ""),
-)
-
-GITHUB_CLIENT_SCOPE = PersistentConfig(
-    "GITHUB_CLIENT_SCOPE",
-    "oauth.github.scope",
-    os.environ.get("GITHUB_CLIENT_SCOPE", "user:email"),
-)
-
-GITHUB_CLIENT_REDIRECT_URI = PersistentConfig(
-    "GITHUB_CLIENT_REDIRECT_URI",
-    "oauth.github.redirect_uri",
-    os.environ.get("GITHUB_CLIENT_REDIRECT_URI", ""),
-)
-
-OAUTH_CLIENT_ID = PersistentConfig(
-    "OAUTH_CLIENT_ID",
-    "oauth.oidc.client_id",
-    os.environ.get("OAUTH_CLIENT_ID", ""),
-)
-
-OAUTH_CLIENT_SECRET = PersistentConfig(
-    "OAUTH_CLIENT_SECRET",
-    "oauth.oidc.client_secret",
-    os.environ.get("OAUTH_CLIENT_SECRET", ""),
-)
-
-OPENID_PROVIDER_URL = PersistentConfig(
-    "OPENID_PROVIDER_URL",
-    "oauth.oidc.provider_url",
-    os.environ.get("OPENID_PROVIDER_URL", ""),
-)
-
-OPENID_REDIRECT_URI = PersistentConfig(
-    "OPENID_REDIRECT_URI",
-    "oauth.oidc.redirect_uri",
-    os.environ.get("OPENID_REDIRECT_URI", ""),
-)
-
-OAUTH_SCOPES = PersistentConfig(
-    "OAUTH_SCOPES",
-    "oauth.oidc.scopes",
-    os.environ.get("OAUTH_SCOPES", "openid email profile"),
-)
-
-OAUTH_TIMEOUT = PersistentConfig(
-    "OAUTH_TIMEOUT",
-    "oauth.oidc.oauth_timeout",
-    os.environ.get("OAUTH_TIMEOUT", ""),
-)
-
-OAUTH_TOKEN_ENDPOINT_AUTH_METHOD = PersistentConfig(
-    "OAUTH_TOKEN_ENDPOINT_AUTH_METHOD",
-    "oauth.oidc.token_endpoint_auth_method",
-    os.environ.get("OAUTH_TOKEN_ENDPOINT_AUTH_METHOD", None),
-)
-
-OAUTH_CODE_CHALLENGE_METHOD = PersistentConfig(
-    "OAUTH_CODE_CHALLENGE_METHOD",
-    "oauth.oidc.code_challenge_method",
-    os.environ.get("OAUTH_CODE_CHALLENGE_METHOD", None),
-)
-
-OAUTH_PROVIDER_NAME = PersistentConfig(
-    "OAUTH_PROVIDER_NAME",
-    "oauth.oidc.provider_name",
-    os.environ.get("OAUTH_PROVIDER_NAME", "SSO"),
-)
-
-OAUTH_SUB_CLAIM = PersistentConfig(
-    "OAUTH_SUB_CLAIM",
-    "oauth.oidc.sub_claim",
-    os.environ.get("OAUTH_SUB_CLAIM", None),
-)
-
-OAUTH_USERNAME_CLAIM = PersistentConfig(
-    "OAUTH_USERNAME_CLAIM",
-    "oauth.oidc.username_claim",
-    os.environ.get("OAUTH_USERNAME_CLAIM", "name"),
-)
-
-
-OAUTH_PICTURE_CLAIM = PersistentConfig(
-    "OAUTH_PICTURE_CLAIM",
-    "oauth.oidc.avatar_claim",
-    os.environ.get("OAUTH_PICTURE_CLAIM", "picture"),
-)
-
-OAUTH_EMAIL_CLAIM = PersistentConfig(
-    "OAUTH_EMAIL_CLAIM",
-    "oauth.oidc.email_claim",
-    os.environ.get("OAUTH_EMAIL_CLAIM", "email"),
-)
-
-OAUTH_GROUPS_CLAIM = PersistentConfig(
-    "OAUTH_GROUPS_CLAIM",
-    "oauth.oidc.group_claim",
-    os.environ.get("OAUTH_GROUPS_CLAIM", os.environ.get("OAUTH_GROUP_CLAIM", "groups")),
-)
-
-FEISHU_CLIENT_ID = PersistentConfig(
-    "FEISHU_CLIENT_ID",
-    "oauth.feishu.client_id",
-    os.environ.get("FEISHU_CLIENT_ID", ""),
-)
-
-FEISHU_CLIENT_SECRET = PersistentConfig(
-    "FEISHU_CLIENT_SECRET",
-    "oauth.feishu.client_secret",
-    os.environ.get("FEISHU_CLIENT_SECRET", ""),
-)
-
-FEISHU_OAUTH_SCOPE = PersistentConfig(
-    "FEISHU_OAUTH_SCOPE",
-    "oauth.feishu.scope",
-    os.environ.get("FEISHU_OAUTH_SCOPE", "contact:user.base:readonly"),
-)
-
-FEISHU_REDIRECT_URI = PersistentConfig(
-    "FEISHU_REDIRECT_URI",
-    "oauth.feishu.redirect_uri",
-    os.environ.get("FEISHU_REDIRECT_URI", ""),
-)
-
-ENABLE_OAUTH_ROLE_MANAGEMENT = PersistentConfig(
-    "ENABLE_OAUTH_ROLE_MANAGEMENT",
-    "oauth.enable_role_mapping",
-    os.environ.get("ENABLE_OAUTH_ROLE_MANAGEMENT", "False").lower() == "true",
-)
-
-ENABLE_OAUTH_GROUP_MANAGEMENT = PersistentConfig(
-    "ENABLE_OAUTH_GROUP_MANAGEMENT",
-    "oauth.enable_group_mapping",
-    os.environ.get("ENABLE_OAUTH_GROUP_MANAGEMENT", "False").lower() == "true",
-)
-
-ENABLE_OAUTH_GROUP_CREATION = PersistentConfig(
-    "ENABLE_OAUTH_GROUP_CREATION",
-    "oauth.enable_group_creation",
-    os.environ.get("ENABLE_OAUTH_GROUP_CREATION", "False").lower() == "true",
-)
-
-
-oauth_group_default_share = (
-    os.environ.get("OAUTH_GROUP_DEFAULT_SHARE", "true").strip().lower()
-)
-OAUTH_GROUP_DEFAULT_SHARE = PersistentConfig(
-    "OAUTH_GROUP_DEFAULT_SHARE",
-    "oauth.group_default_share",
-    (
-        "members"
-        if oauth_group_default_share == "members"
-        else oauth_group_default_share == "true"
-    ),
-)
-
-
-OAUTH_BLOCKED_GROUPS = PersistentConfig(
-    "OAUTH_BLOCKED_GROUPS",
-    "oauth.blocked_groups",
-    os.environ.get("OAUTH_BLOCKED_GROUPS", "[]"),
-)
-
-OAUTH_GROUPS_SEPARATOR = os.environ.get("OAUTH_GROUPS_SEPARATOR", ";")
-
-OAUTH_ROLES_CLAIM = PersistentConfig(
-    "OAUTH_ROLES_CLAIM",
-    "oauth.roles_claim",
-    os.environ.get("OAUTH_ROLES_CLAIM", "roles"),
-)
-
-OAUTH_ROLES_SEPARATOR = os.environ.get("OAUTH_ROLES_SEPARATOR", ",")
-
-OAUTH_ALLOWED_ROLES = PersistentConfig(
-    "OAUTH_ALLOWED_ROLES",
-    "oauth.allowed_roles",
-    [
-        role.strip()
-        for role in os.environ.get(
-            "OAUTH_ALLOWED_ROLES", f"user{OAUTH_ROLES_SEPARATOR}admin"
-        ).split(OAUTH_ROLES_SEPARATOR)
-        if role
-    ],
-)
-
-OAUTH_ADMIN_ROLES = PersistentConfig(
-    "OAUTH_ADMIN_ROLES",
-    "oauth.admin_roles",
-    [
-        role.strip()
-        for role in os.environ.get("OAUTH_ADMIN_ROLES", "admin").split(
-            OAUTH_ROLES_SEPARATOR
-        )
-        if role
-    ],
-)
-
-OAUTH_ALLOWED_DOMAINS = PersistentConfig(
-    "OAUTH_ALLOWED_DOMAINS",
-    "oauth.allowed_domains",
-    [
-        domain.strip()
-        for domain in os.environ.get("OAUTH_ALLOWED_DOMAINS", "*").split(",")
-    ],
-)
-
-OAUTH_UPDATE_PICTURE_ON_LOGIN = PersistentConfig(
-    "OAUTH_UPDATE_PICTURE_ON_LOGIN",
-    "oauth.update_picture_on_login",
-    os.environ.get("OAUTH_UPDATE_PICTURE_ON_LOGIN", "False").lower() == "true",
-)
-
-OAUTH_ACCESS_TOKEN_REQUEST_INCLUDE_CLIENT_ID = (
-    os.environ.get("OAUTH_ACCESS_TOKEN_REQUEST_INCLUDE_CLIENT_ID", "False").lower()
-    == "true"
-)
-
-OAUTH_AUDIENCE = PersistentConfig(
-    "OAUTH_AUDIENCE",
-    "oauth.audience",
-    os.environ.get("OAUTH_AUDIENCE", ""),
-)
-
-
-def load_oauth_providers():
-    OAUTH_PROVIDERS.clear()
-    if GOOGLE_CLIENT_ID.value and GOOGLE_CLIENT_SECRET.value:
-
-        def google_oauth_register(oauth: OAuth):
-            client = oauth.register(
-                name="google",
-                client_id=GOOGLE_CLIENT_ID.value,
-                client_secret=GOOGLE_CLIENT_SECRET.value,
-                server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-                client_kwargs={
-                    "scope": GOOGLE_OAUTH_SCOPE.value,
-                    **(
-                        {"timeout": int(OAUTH_TIMEOUT.value)}
-                        if OAUTH_TIMEOUT.value
-                        else {}
-                    ),
-                },
-                redirect_uri=GOOGLE_REDIRECT_URI.value,
-            )
-            return client
-
-        OAUTH_PROVIDERS["google"] = {
-            "redirect_uri": GOOGLE_REDIRECT_URI.value,
-            "register": google_oauth_register,
-        }
-
-    if (
-        MICROSOFT_CLIENT_ID.value
-        and MICROSOFT_CLIENT_SECRET.value
-        and MICROSOFT_CLIENT_TENANT_ID.value
-    ):
-
-        def microsoft_oauth_register(oauth: OAuth):
-            client = oauth.register(
-                name="microsoft",
-                client_id=MICROSOFT_CLIENT_ID.value,
-                client_secret=MICROSOFT_CLIENT_SECRET.value,
-                server_metadata_url=f"{MICROSOFT_CLIENT_LOGIN_BASE_URL.value}/{MICROSOFT_CLIENT_TENANT_ID.value}/v2.0/.well-known/openid-configuration?appid={MICROSOFT_CLIENT_ID.value}",
-                client_kwargs={
-                    "scope": MICROSOFT_OAUTH_SCOPE.value,
-                    **(
-                        {"timeout": int(OAUTH_TIMEOUT.value)}
-                        if OAUTH_TIMEOUT.value
-                        else {}
-                    ),
-                },
-                redirect_uri=MICROSOFT_REDIRECT_URI.value,
-            )
-            return client
-
-        OAUTH_PROVIDERS["microsoft"] = {
-            "redirect_uri": MICROSOFT_REDIRECT_URI.value,
-            "picture_url": MICROSOFT_CLIENT_PICTURE_URL.value,
-            "register": microsoft_oauth_register,
-        }
-
-    if GITHUB_CLIENT_ID.value and GITHUB_CLIENT_SECRET.value:
-
-        def github_oauth_register(oauth: OAuth):
-            client = oauth.register(
-                name="github",
-                client_id=GITHUB_CLIENT_ID.value,
-                client_secret=GITHUB_CLIENT_SECRET.value,
-                access_token_url="https://github.com/login/oauth/access_token",
-                authorize_url="https://github.com/login/oauth/authorize",
-                api_base_url="https://api.github.com",
-                userinfo_endpoint="https://api.github.com/user",
-                client_kwargs={
-                    "scope": GITHUB_CLIENT_SCOPE.value,
-                    **(
-                        {"timeout": int(OAUTH_TIMEOUT.value)}
-                        if OAUTH_TIMEOUT.value
-                        else {}
-                    ),
-                },
-                redirect_uri=GITHUB_CLIENT_REDIRECT_URI.value,
-            )
-            return client
-
-        OAUTH_PROVIDERS["github"] = {
-            "redirect_uri": GITHUB_CLIENT_REDIRECT_URI.value,
-            "register": github_oauth_register,
-            "sub_claim": "id",
-        }
-
-    if (
-        OAUTH_CLIENT_ID.value
-        and (OAUTH_CLIENT_SECRET.value or OAUTH_CODE_CHALLENGE_METHOD.value)
-        and OPENID_PROVIDER_URL.value
-    ):
-
-        def oidc_oauth_register(oauth: OAuth):
-            client_kwargs = {
-                "scope": OAUTH_SCOPES.value,
-                **(
-                    {
-                        "token_endpoint_auth_method": OAUTH_TOKEN_ENDPOINT_AUTH_METHOD.value
-                    }
-                    if OAUTH_TOKEN_ENDPOINT_AUTH_METHOD.value
-                    else {}
-                ),
-                **(
-                    {"timeout": int(OAUTH_TIMEOUT.value)} if OAUTH_TIMEOUT.value else {}
-                ),
-            }
-
-            if (
-                OAUTH_CODE_CHALLENGE_METHOD.value
-                and OAUTH_CODE_CHALLENGE_METHOD.value == "S256"
-            ):
-                client_kwargs["code_challenge_method"] = "S256"
-            elif OAUTH_CODE_CHALLENGE_METHOD.value:
-                raise Exception(
-                    'Code challenge methods other than "%s" not supported. Given: "%s"'
-                    % ("S256", OAUTH_CODE_CHALLENGE_METHOD.value)
-                )
-
-            client = oauth.register(
-                name="oidc",
-                client_id=OAUTH_CLIENT_ID.value,
-                client_secret=OAUTH_CLIENT_SECRET.value,
-                server_metadata_url=OPENID_PROVIDER_URL.value,
-                client_kwargs=client_kwargs,
-                redirect_uri=OPENID_REDIRECT_URI.value,
-            )
-            return client
-
-        OAUTH_PROVIDERS["oidc"] = {
-            "name": OAUTH_PROVIDER_NAME.value,
-            "redirect_uri": OPENID_REDIRECT_URI.value,
-            "register": oidc_oauth_register,
-        }
-
-    if FEISHU_CLIENT_ID.value and FEISHU_CLIENT_SECRET.value:
-
-        def feishu_oauth_register(oauth: OAuth):
-            client = oauth.register(
-                name="feishu",
-                client_id=FEISHU_CLIENT_ID.value,
-                client_secret=FEISHU_CLIENT_SECRET.value,
-                access_token_url="https://open.feishu.cn/open-apis/authen/v2/oauth/token",
-                authorize_url="https://accounts.feishu.cn/open-apis/authen/v1/authorize",
-                api_base_url="https://open.feishu.cn/open-apis",
-                userinfo_endpoint="https://open.feishu.cn/open-apis/authen/v1/user_info",
-                client_kwargs={
-                    "scope": FEISHU_OAUTH_SCOPE.value,
-                    **(
-                        {"timeout": int(OAUTH_TIMEOUT.value)}
-                        if OAUTH_TIMEOUT.value
-                        else {}
-                    ),
-                },
-                redirect_uri=FEISHU_REDIRECT_URI.value,
-            )
-            return client
-
-        OAUTH_PROVIDERS["feishu"] = {
-            "register": feishu_oauth_register,
-            "sub_claim": "user_id",
-        }
-
-    configured_providers = []
-    if GOOGLE_CLIENT_ID.value:
-        configured_providers.append("Google")
-    if MICROSOFT_CLIENT_ID.value:
-        configured_providers.append("Microsoft")
-    if GITHUB_CLIENT_ID.value:
-        configured_providers.append("GitHub")
-    if FEISHU_CLIENT_ID.value:
-        configured_providers.append("Feishu")
-
-    if configured_providers and not OPENID_PROVIDER_URL.value:
-        provider_list = ", ".join(configured_providers)
-        log.warning(
-            f"⚠️  OAuth providers configured ({provider_list}) but OPENID_PROVIDER_URL not set - logout will not work!"
-        )
-        log.warning(
-            f"Set OPENID_PROVIDER_URL to your OAuth provider's OpenID Connect discovery endpoint to fix logout functionality."
-        )
-
-
-load_oauth_providers()
 
 ####################################
 # Static DIR
@@ -1025,25 +501,6 @@ ENABLE_BASE_MODELS_CACHE = PersistentConfig(
 
 
 ####################################
-# TOOL_SERVERS
-####################################
-
-try:
-    tool_server_connections = json.loads(
-        os.environ.get("TOOL_SERVER_CONNECTIONS", "[]")
-    )
-except Exception as e:
-    log.exception(f"Error loading TOOL_SERVER_CONNECTIONS: {e}")
-    tool_server_connections = []
-
-
-TOOL_SERVER_CONNECTIONS = PersistentConfig(
-    "TOOL_SERVER_CONNECTIONS",
-    "tool_server.connections",
-    tool_server_connections,
-)
-
-####################################
 # WEBUI
 ####################################
 
@@ -1061,13 +518,6 @@ ENABLE_SIGNUP = PersistentConfig(
     ),
 )
 
-ENABLE_LOGIN_FORM = PersistentConfig(
-    "ENABLE_LOGIN_FORM",
-    "ui.ENABLE_LOGIN_FORM",
-    os.environ.get("ENABLE_LOGIN_FORM", "True").lower() == "true",
-)
-
-ENABLE_PASSWORD_AUTH = os.environ.get("ENABLE_PASSWORD_AUTH", "True").lower() == "true"
 
 DEFAULT_LOCALE = PersistentConfig(
     "DEFAULT_LOCALE",
@@ -1189,15 +639,6 @@ USER_PERMISSIONS_WORKSPACE_PROMPTS_ACCESS = (
     == "true"
 )
 
-USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS", "False").lower() == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS", "False").lower()
-    == "true"
-)
-
 USER_PERMISSIONS_WORKSPACE_MODELS_IMPORT = (
     os.environ.get("USER_PERMISSIONS_WORKSPACE_MODELS_IMPORT", "False").lower()
     == "true"
@@ -1217,15 +658,6 @@ USER_PERMISSIONS_WORKSPACE_PROMPTS_EXPORT = (
     os.environ.get("USER_PERMISSIONS_WORKSPACE_PROMPTS_EXPORT", "False").lower()
     == "true"
 )
-
-USER_PERMISSIONS_WORKSPACE_TOOLS_IMPORT = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_TOOLS_IMPORT", "False").lower() == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_TOOLS_EXPORT = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_TOOLS_EXPORT", "False").lower() == "true"
-)
-
 
 USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_SHARING = (
     os.environ.get("USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_SHARING", "False").lower()
@@ -1252,37 +684,8 @@ USER_PERMISSIONS_WORKSPACE_PROMPTS_ALLOW_PUBLIC_SHARING = (
 )
 
 
-USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_SHARING = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_SHARING", "False").lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_PUBLIC_SHARING = (
-    os.environ.get(
-        "USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_PUBLIC_SHARING", "False"
-    ).lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_SHARING = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_SHARING", "False").lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_PUBLIC_SHARING = (
-    os.environ.get(
-        "USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_PUBLIC_SHARING", "False"
-    ).lower()
-    == "true"
-)
-
-
 USER_PERMISSIONS_CHAT_CONTROLS = (
     os.environ.get("USER_PERMISSIONS_CHAT_CONTROLS", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_VALVES = (
-    os.environ.get("USER_PERMISSIONS_CHAT_VALVES", "True").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_SYSTEM_PROMPT = (
@@ -1348,16 +751,6 @@ USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED = (
 )
 
 
-USER_PERMISSIONS_FEATURES_DIRECT_TOOL_SERVERS = (
-    os.environ.get("USER_PERMISSIONS_FEATURES_DIRECT_TOOL_SERVERS", "False").lower()
-    == "true"
-)
-
-USER_PERMISSIONS_FEATURES_CODE_INTERPRETER = (
-    os.environ.get("USER_PERMISSIONS_FEATURES_CODE_INTERPRETER", "True").lower()
-    == "true"
-)
-
 USER_PERMISSIONS_FEATURES_FOLDERS = (
     os.environ.get("USER_PERMISSIONS_FEATURES_FOLDERS", "True").lower() == "true"
 )
@@ -1375,28 +768,19 @@ DEFAULT_USER_PERMISSIONS = {
     "workspace": {
         "models": USER_PERMISSIONS_WORKSPACE_MODELS_ACCESS,
         "prompts": USER_PERMISSIONS_WORKSPACE_PROMPTS_ACCESS,
-        "tools": USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS,
-        "skills": USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS,
         "models_import": USER_PERMISSIONS_WORKSPACE_MODELS_IMPORT,
         "models_export": USER_PERMISSIONS_WORKSPACE_MODELS_EXPORT,
         "prompts_import": USER_PERMISSIONS_WORKSPACE_PROMPTS_IMPORT,
         "prompts_export": USER_PERMISSIONS_WORKSPACE_PROMPTS_EXPORT,
-        "tools_import": USER_PERMISSIONS_WORKSPACE_TOOLS_IMPORT,
-        "tools_export": USER_PERMISSIONS_WORKSPACE_TOOLS_EXPORT,
     },
     "sharing": {
         "models": USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_SHARING,
         "public_models": USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_PUBLIC_SHARING,
         "prompts": USER_PERMISSIONS_WORKSPACE_PROMPTS_ALLOW_SHARING,
         "public_prompts": USER_PERMISSIONS_WORKSPACE_PROMPTS_ALLOW_PUBLIC_SHARING,
-        "tools": USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_SHARING,
-        "public_tools": USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_PUBLIC_SHARING,
-        "skills": USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_SHARING,
-        "public_skills": USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_PUBLIC_SHARING,
     },
     "chat": {
         "controls": USER_PERMISSIONS_CHAT_CONTROLS,
-        "valves": USER_PERMISSIONS_CHAT_VALVES,
         "system_prompt": USER_PERMISSIONS_CHAT_SYSTEM_PROMPT,
         "params": USER_PERMISSIONS_CHAT_PARAMS,
         "file_upload": USER_PERMISSIONS_CHAT_FILE_UPLOAD,
@@ -1414,12 +798,8 @@ DEFAULT_USER_PERMISSIONS = {
         "temporary_enforced": USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED,
     },
     "features": {
-        # General features
         "api_keys": USER_PERMISSIONS_FEATURES_API_KEYS,
         "folders": USER_PERMISSIONS_FEATURES_FOLDERS,
-        "direct_tool_servers": USER_PERMISSIONS_FEATURES_DIRECT_TOOL_SERVERS,
-        # Chat features
-        "code_interpreter": USER_PERMISSIONS_FEATURES_CODE_INTERPRETER,
     },
     "settings": {
         "interface": USER_PERMISSIONS_SETTINGS_INTERFACE,
@@ -1456,16 +836,8 @@ WEBHOOK_URL = PersistentConfig(
 
 ENABLE_ADMIN_EXPORT = os.environ.get("ENABLE_ADMIN_EXPORT", "True").lower() == "true"
 
-ENABLE_ADMIN_WORKSPACE_CONTENT_ACCESS = (
-    os.environ.get("ENABLE_ADMIN_WORKSPACE_CONTENT_ACCESS", "True").lower() == "true"
-)
-
 BYPASS_ADMIN_ACCESS_CONTROL = (
-    os.environ.get(
-        "BYPASS_ADMIN_ACCESS_CONTROL",
-        os.environ.get("ENABLE_ADMIN_WORKSPACE_CONTENT_ACCESS", "True"),
-    ).lower()
-    == "true"
+    os.environ.get("BYPASS_ADMIN_ACCESS_CONTROL", "True").lower() == "true"
 )
 
 ENABLE_ADMIN_CHAT_ACCESS = (
@@ -1736,37 +1108,6 @@ Output:
 """
 
 
-TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE = PersistentConfig(
-    "TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE",
-    "task.tools.prompt_template",
-    os.environ.get("TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE", ""),
-)
-
-
-DEFAULT_TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE = """Available Tools: {{TOOLS}}
-
-Your task is to choose and return the correct tool(s) from the list of available tools based on the query. Follow these guidelines:
-
-- Return only the JSON object, without any additional text or explanation.
-
-- If no tools match the query, return an empty array: 
-   {
-     "tool_calls": []
-   }
-
-- If one or more tools match the query, construct a JSON response containing a "tool_calls" array with objects that include:
-   - "name": The tool's name.
-   - "parameters": A dictionary of required parameters and their corresponding values.
-
-The format for the JSON response is strictly:
-{
-  "tool_calls": [
-    {"name": "toolName1", "parameters": {"key1": "value1"}},
-    {"name": "toolName2", "parameters": {"key2": "value2"}}
-  ]
-}"""
-
-
 DEFAULT_EMOJI_GENERATION_PROMPT_TEMPLATE = """Your task is to reflect the speaker's likely facial expression through a fitting emoji. Interpret emotions from the message and reflect their facial expression using fitting, diverse emojis (e.g., 😊, 😢, 😡, 😱).
 
 Message: ```{{prompt}}```"""
@@ -1776,141 +1117,6 @@ DEFAULT_MOA_GENERATION_PROMPT_TEMPLATE = """You have been provided with a set of
 Your task is to synthesize these responses into a single, high-quality response. It is crucial to critically evaluate the information provided in these responses, recognizing that some of it may be biased or incorrect. Your response should not simply replicate the given answers but should offer a refined, accurate, and comprehensive reply to the instruction. Ensure your response is well-structured, coherent, and adheres to the highest standards of accuracy and reliability.
 
 Responses from models: {{responses}}"""
-
-
-####################################
-# Code Interpreter
-####################################
-
-ENABLE_CODE_EXECUTION = PersistentConfig(
-    "ENABLE_CODE_EXECUTION",
-    "code_execution.enable",
-    os.environ.get("ENABLE_CODE_EXECUTION", "True").lower() == "true",
-)
-
-CODE_EXECUTION_ENGINE = PersistentConfig(
-    "CODE_EXECUTION_ENGINE",
-    "code_execution.engine",
-    os.environ.get("CODE_EXECUTION_ENGINE", "jupyter"),
-)
-
-CODE_EXECUTION_JUPYTER_URL = PersistentConfig(
-    "CODE_EXECUTION_JUPYTER_URL",
-    "code_execution.jupyter.url",
-    os.environ.get("CODE_EXECUTION_JUPYTER_URL", ""),
-)
-
-CODE_EXECUTION_JUPYTER_AUTH = PersistentConfig(
-    "CODE_EXECUTION_JUPYTER_AUTH",
-    "code_execution.jupyter.auth",
-    os.environ.get("CODE_EXECUTION_JUPYTER_AUTH", ""),
-)
-
-CODE_EXECUTION_JUPYTER_AUTH_TOKEN = PersistentConfig(
-    "CODE_EXECUTION_JUPYTER_AUTH_TOKEN",
-    "code_execution.jupyter.auth_token",
-    os.environ.get("CODE_EXECUTION_JUPYTER_AUTH_TOKEN", ""),
-)
-
-
-CODE_EXECUTION_JUPYTER_AUTH_PASSWORD = PersistentConfig(
-    "CODE_EXECUTION_JUPYTER_AUTH_PASSWORD",
-    "code_execution.jupyter.auth_password",
-    os.environ.get("CODE_EXECUTION_JUPYTER_AUTH_PASSWORD", ""),
-)
-
-CODE_EXECUTION_JUPYTER_TIMEOUT = PersistentConfig(
-    "CODE_EXECUTION_JUPYTER_TIMEOUT",
-    "code_execution.jupyter.timeout",
-    int(os.environ.get("CODE_EXECUTION_JUPYTER_TIMEOUT", "60")),
-)
-
-ENABLE_CODE_INTERPRETER = PersistentConfig(
-    "ENABLE_CODE_INTERPRETER",
-    "code_interpreter.enable",
-    os.environ.get("ENABLE_CODE_INTERPRETER", "True").lower() == "true",
-)
-
-CODE_INTERPRETER_ENGINE = PersistentConfig(
-    "CODE_INTERPRETER_ENGINE",
-    "code_interpreter.engine",
-    os.environ.get("CODE_INTERPRETER_ENGINE", "jupyter"),
-)
-
-CODE_INTERPRETER_PROMPT_TEMPLATE = PersistentConfig(
-    "CODE_INTERPRETER_PROMPT_TEMPLATE",
-    "code_interpreter.prompt_template",
-    os.environ.get("CODE_INTERPRETER_PROMPT_TEMPLATE", ""),
-)
-
-CODE_INTERPRETER_JUPYTER_URL = PersistentConfig(
-    "CODE_INTERPRETER_JUPYTER_URL",
-    "code_interpreter.jupyter.url",
-    os.environ.get(
-        "CODE_INTERPRETER_JUPYTER_URL", os.environ.get("CODE_EXECUTION_JUPYTER_URL", "")
-    ),
-)
-
-CODE_INTERPRETER_JUPYTER_AUTH = PersistentConfig(
-    "CODE_INTERPRETER_JUPYTER_AUTH",
-    "code_interpreter.jupyter.auth",
-    os.environ.get(
-        "CODE_INTERPRETER_JUPYTER_AUTH",
-        os.environ.get("CODE_EXECUTION_JUPYTER_AUTH", ""),
-    ),
-)
-
-CODE_INTERPRETER_JUPYTER_AUTH_TOKEN = PersistentConfig(
-    "CODE_INTERPRETER_JUPYTER_AUTH_TOKEN",
-    "code_interpreter.jupyter.auth_token",
-    os.environ.get(
-        "CODE_INTERPRETER_JUPYTER_AUTH_TOKEN",
-        os.environ.get("CODE_EXECUTION_JUPYTER_AUTH_TOKEN", ""),
-    ),
-)
-
-
-CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD = PersistentConfig(
-    "CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD",
-    "code_interpreter.jupyter.auth_password",
-    os.environ.get(
-        "CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD",
-        os.environ.get("CODE_EXECUTION_JUPYTER_AUTH_PASSWORD", ""),
-    ),
-)
-
-CODE_INTERPRETER_JUPYTER_TIMEOUT = PersistentConfig(
-    "CODE_INTERPRETER_JUPYTER_TIMEOUT",
-    "code_interpreter.jupyter.timeout",
-    int(
-        os.environ.get(
-            "CODE_INTERPRETER_JUPYTER_TIMEOUT",
-            os.environ.get("CODE_EXECUTION_JUPYTER_TIMEOUT", "60"),
-        )
-    ),
-)
-
-CODE_INTERPRETER_BLOCKED_MODULES = [
-    library.strip()
-    for library in os.environ.get("CODE_INTERPRETER_BLOCKED_MODULES", "").split(",")
-    if library.strip()
-]
-
-DEFAULT_CODE_INTERPRETER_PROMPT = """
-#### Tools Available
-
-1. **Code Interpreter**: `<code_interpreter type="code" lang="python"></code_interpreter>`
-   - You have access to a Python shell that runs directly in the user's browser, enabling fast execution of code for analysis, calculations, or problem-solving.  Use it in this response.
-   - The Python code you write can incorporate a wide array of libraries, handle data manipulation or visualization, perform API calls for web-related tasks, or tackle virtually any computational challenge. Use this flexibility to **think outside the box, craft elegant solutions, and harness Python's full potential**.
-   - To use it, **you must enclose your code within `<code_interpreter type="code" lang="python">` XML tags** and stop right away. If you don't, the code won't execute. 
-   - When writing code in the code_interpreter XML tag, Do NOT use the triple backticks code block for markdown formatting, example: ```py # python code ``` will cause an error because it is markdown formatting, it is not python code.
-   - When coding, **always aim to print meaningful outputs** (e.g., results, tables, summaries, or visuals) to better interpret and verify the findings. Avoid relying on implicit outputs; prioritize explicit and clear print statements so the results are effectively communicated to the user.  
-   - After obtaining the printed output, **always provide a concise analysis, interpretation, or next steps to help the user understand the findings or refine the outcome further.**  
-   - If the results are unclear, unexpected, or require validation, refine the code and execute it again as needed. Always aim to deliver meaningful insights from the results, iterating if necessary.  
-   - **If a link to an image, audio, or any file is provided in markdown format in the output, ALWAYS regurgitate word for word, explicitly display it as part of the response to ensure the user can access it easily, do NOT change the link.**
-   - All responses should be communicated in the chat's primary language, ensuring seamless understanding. If the chat is multilingual, default to English for clarity.
-
-Ensure that the tools are effectively utilized to achieve the highest-quality analysis for the user."""
 
 
 ####################################

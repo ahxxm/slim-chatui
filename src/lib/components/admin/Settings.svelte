@@ -9,12 +9,9 @@
 	import Database from './Settings/Database.svelte';
 
 	import General from './Settings/General.svelte';
-	import Pipelines from './Settings/Pipelines.svelte';
 	import Interface from './Settings/Interface.svelte';
 	import Models from './Settings/Models.svelte';
 	import Connections from './Settings/Connections.svelte';
-	import CodeExecution from './Settings/CodeExecution.svelte';
-	import Tools from './Settings/Tools.svelte';
 
 	import Search from '../icons/Search.svelte';
 	import XMark from '../icons/XMark.svelte';
@@ -27,16 +24,7 @@
 	$: {
 		const pathParts = $page.url.pathname.split('/');
 		const tabFromPath = pathParts[pathParts.length - 1];
-		selectedTab = [
-			'general',
-			'connections',
-			'models',
-			'tools',
-			'code-execution',
-			'interface',
-			'pipelines',
-			'db'
-		].includes(tabFromPath)
+		selectedTab = ['general', 'connections', 'models', 'interface', 'db'].includes(tabFromPath)
 			? tabFromPath
 			: 'general';
 	}
@@ -111,18 +99,6 @@
 			]
 		},
 		{
-			id: 'tools',
-			title: 'External Tools',
-			route: '/admin/settings/tools',
-			keywords: ['tools', 'plugins', 'extensions', 'functions', 'openapi', 'server']
-		},
-		{
-			id: 'code-execution',
-			title: 'Code Execution',
-			route: '/admin/settings/code-execution',
-			keywords: ['code execution', 'python', 'sandbox', 'compiler', 'jupyter', 'interpreter']
-		},
-		{
 			id: 'interface',
 			title: 'Interface',
 			route: '/admin/settings/interface',
@@ -136,12 +112,6 @@
 				'title generation',
 				'tags'
 			]
-		},
-		{
-			id: 'pipelines',
-			title: 'Pipelines',
-			route: '/admin/settings/pipelines',
-			keywords: ['pipelines', 'workflows', 'filters', 'valves', 'middleware']
 		},
 		{
 			id: 'db',
@@ -215,10 +185,7 @@
 		<!-- {$i18n.t('General')} -->
 		<!-- {$i18n.t('Connections')} -->
 		<!-- {$i18n.t('Models')} -->
-		<!-- {$i18n.t('External Tools')} -->
-		<!-- {$i18n.t('Code Execution')} -->
 		<!-- {$i18n.t('Interface')} -->
-		<!-- {$i18n.t('Pipelines')} -->
 		<!-- {$i18n.t('Database')} -->
 		{#each filteredSettings as tab (tab.id)}
 			<a
@@ -268,32 +235,6 @@
 								clip-rule="evenodd"
 							/>
 						</svg>
-					{:else if tab.id === 'tools'}
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							fill="currentColor"
-							class="size-4"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M12 6.75a5.25 5.25 0 0 1 6.775-5.025.75.75 0 0 1 .313 1.248l-3.32 3.319c.063.475.276.934.641 1.299.365.365.824.578 1.3.64l3.318-3.319a.75.75 0 0 1 1.248.313 5.25 5.25 0 0 1-5.472 6.756c-1.018-.086-1.87.1-2.309.634L7.344 21.3A3.298 3.298 0 1 1 2.7 16.657l8.684-7.151c.533-.44.72-1.291.634-2.309A5.342 5.342 0 0 1 12 6.75ZM4.117 19.125a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008Z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-					{:else if tab.id === 'code-execution'}
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 16 16"
-							fill="currentColor"
-							class="size-4"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4Zm2.22 1.97a.75.75 0 0 0 0 1.06l.97.97-.97.97a.75.75 0 1 0 1.06 1.06l1.5-1.5a.75.75 0 0 0 0-1.06l-1.5-1.5a.75.75 0 0 0-1.06 0ZM8.75 8.5a.75.75 0 0 0 0 1.5h2.5a.75.75 0 0 0 0-1.5h-2.5Z"
-								clip-rule="evenodd"
-							/>
-						</svg>
 					{:else if tab.id === 'interface'}
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -305,23 +246,6 @@
 								fill-rule="evenodd"
 								d="M2 4.25A2.25 2.25 0 0 1 4.25 2h7.5A2.25 2.25 0 0 1 14 4.25v5.5A2.25 2.25 0 0 1 11.75 12h-1.312c.1.128.21.248.328.36a.75.75 0 0 1 .234.545v.345a.75.75 0 0 1-.75.75h-4.5a.75.75 0 0 1-.75-.75v-.345a.75.75 0 0 1 .234-.545c.118-.111.228-.232.328-.36H4.25A2.25 2.25 0 0 1 2 9.75v-5.5Zm2.25-.75a.75.75 0 0 0-.75.75v4.5c0 .414.336.75.75.75h7.5a.75.75 0 0 0 .75-.75v-4.5a.75.75 0 0 0-.75-.75h-7.5Z"
 								clip-rule="evenodd"
-							/>
-						</svg>
-					{:else if tab.id === 'pipelines'}
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							fill="currentColor"
-							class="size-4"
-						>
-							<path
-								d="M11.644 1.59a.75.75 0 0 1 .712 0l9.75 5.25a.75.75 0 0 1 0 1.32l-9.75 5.25a.75.75 0 0 1-.712 0l-9.75-5.25a.75.75 0 0 1 0-1.32l9.75-5.25Z"
-							/>
-							<path
-								d="m3.265 10.602 7.668 4.129a2.25 2.25 0 0 0 2.134 0l7.668-4.13 1.37.739a.75.75 0 0 1 0 1.32l-9.75 5.25a.75.75 0 0 1-.71 0l-9.75-5.25a.75.75 0 0 1 0-1.32l1.37-.738Z"
-							/>
-							<path
-								d="m10.933 19.231-7.668-4.13-1.37.739a.75.75 0 0 0 0 1.32l9.75 5.25c.221.12.489.12.71 0l9.75-5.25a.75.75 0 0 0 0-1.32l-1.37-.738-7.668 4.13a2.25 2.25 0 0 1-2.134-.001Z"
 							/>
 						</svg>
 					{:else if tab.id === 'db'}
@@ -366,17 +290,6 @@
 			/>
 		{:else if selectedTab === 'models'}
 			<Models />
-		{:else if selectedTab === 'tools'}
-			<Tools />
-		{:else if selectedTab === 'code-execution'}
-			<CodeExecution
-				saveHandler={async () => {
-					toast.success($i18n.t('Settings saved successfully!'));
-
-					await tick();
-					await config.set(await getBackendConfig());
-				}}
-			/>
 		{:else if selectedTab === 'interface'}
 			<Interface
 				on:save={() => {
@@ -385,12 +298,6 @@
 			/>
 		{:else if selectedTab === 'db'}
 			<Database
-				saveHandler={() => {
-					toast.success($i18n.t('Settings saved successfully!'));
-				}}
-			/>
-		{:else if selectedTab === 'pipelines'}
-			<Pipelines
 				saveHandler={() => {
 					toast.success($i18n.t('Settings saved successfully!'));
 				}}

@@ -156,22 +156,6 @@ async def get_headers_and_cookies(
     elif auth_type == "session":
         cookies = request.cookies
         token = request.state.token.credentials
-    elif auth_type == "system_oauth":
-        cookies = request.cookies
-
-        oauth_token = None
-        try:
-            if request.cookies.get("oauth_session_id", None):
-                oauth_token = await request.app.state.oauth_manager.get_oauth_token(
-                    user.id,
-                    request.cookies.get("oauth_session_id", None),
-                )
-        except Exception as e:
-            log.error(f"Error getting OAuth token: {e}")
-
-        if oauth_token:
-            token = f"{oauth_token.get('access_token', '')}"
-
     elif auth_type in ("azure_ad", "microsoft_entra_id"):
         token = get_microsoft_entra_id_access_token()
 
@@ -1023,15 +1007,6 @@ async def generate_chat_completion(
     prefix_id = api_config.get("prefix_id", None)
     if prefix_id:
         payload["model"] = payload["model"].replace(f"{prefix_id}.", "")
-
-    # Add user info to the payload if the model is a pipeline
-    if "pipeline" in model and model.get("pipeline"):
-        payload["user"] = {
-            "name": user.name,
-            "id": user.id,
-            "email": user.email,
-            "role": user.role,
-        }
 
     url = request.app.state.config.OPENAI_API_BASE_URLS[idx]
     key = request.app.state.config.OPENAI_API_KEYS[idx]

@@ -248,11 +248,9 @@
 
 		<hr class="border-gray-50 dark:border-gray-850/30 my-4" />
 
-		{#if $config?.features.enable_login_form}
-			<div class="mt-2">
-				<UpdatePassword />
-			</div>
-		{/if}
+		<div class="mt-2">
+			<UpdatePassword />
+		</div>
 
 		{#if ($config?.features?.enable_api_keys ?? true) && ($user?.role === 'admin' || ($user?.permissions?.features?.api_keys ?? false))}
 			<div class="flex justify-between items-center text-sm mt-2">

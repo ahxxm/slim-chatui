@@ -1,26 +1,19 @@
-import time
 import logging
 import sys
 
-from aiocache import cached
-from typing import Any, Optional
+from typing import Any
 import json
 
 import uuid
 import asyncio
 
-from fastapi import Request, status
-from starlette.responses import Response, StreamingResponse, JSONResponse
-
-
-from open_webui.models.users import UserModel
+from fastapi import Request
+from starlette.responses import StreamingResponse
 
 from open_webui.socket.main import (
     sio,
     get_event_call,
-    get_event_emitter,
 )
-from open_webui.functions import generate_function_chat_completion
 
 from open_webui.routers.openai import (
     generate_chat_completion as generate_openai_chat_completion,
@@ -30,23 +23,11 @@ from open_webui.routers.ollama import (
     generate_chat_completion as generate_ollama_chat_completion,
 )
 
-from open_webui.routers.pipelines import (
-    process_pipeline_inlet_filter,
-    process_pipeline_outlet_filter,
-)
-
-from open_webui.models.functions import Functions
-from open_webui.models.models import Models
-
 from open_webui.utils.models import get_all_models, check_model_access
 from open_webui.utils.payload import convert_payload_openai_to_ollama
 from open_webui.utils.response import (
     convert_response_ollama_to_openai,
     convert_streaming_response_ollama_to_openai,
-)
-from open_webui.utils.filter import (
-    get_sorted_filter_ids,
-    process_filter_functions,
 )
 
 from open_webui.env import GLOBAL_LOG_LEVEL, BYPASS_MODEL_ACCESS_CONTROL
@@ -197,11 +178,6 @@ async def generate_chat_completion(
         if not bypass_filter and user.role == "user":
             check_model_access(user, model)
 
-        if model.get("pipe"):
-            # Below does not require bypass_filter because this is the only route the uses this function and it is already bypassing the filter
-            return await generate_function_chat_completion(
-                request, form_data, user=user, models=models
-            )
         if model.get("owned_by") == "ollama":
             # Using /ollama/api/chat endpoint
             form_data = convert_payload_openai_to_ollama(form_data)
@@ -231,9 +207,6 @@ async def generate_chat_completion(
             )
 
 
-chat_completion = generate_chat_completion
-
-
 async def chat_completed(request: Request, form_data: dict, user: Any):
     if not request.app.state.MODELS:
         await get_all_models(request, user=user)
@@ -252,41 +225,4 @@ async def chat_completed(request: Request, form_data: dict, user: Any):
 
     model = models[model_id]
 
-    try:
-        data = await process_pipeline_outlet_filter(request, data, user, models)
-    except Exception as e:
-        raise Exception(f"Error: {e}")
-
-    metadata = {
-        "chat_id": data["chat_id"],
-        "message_id": data["id"],
-        "filter_ids": data.get("filter_ids", []),
-        "session_id": data["session_id"],
-        "user_id": user.id,
-    }
-
-    extra_params = {
-        "__event_emitter__": get_event_emitter(metadata),
-        "__event_call__": get_event_call(metadata),
-        "__user__": user.model_dump() if isinstance(user, UserModel) else {},
-        "__metadata__": metadata,
-        "__request__": request,
-        "__model__": model,
-    }
-
-    try:
-        filter_ids = get_sorted_filter_ids(
-            request, model, metadata.get("filter_ids", [])
-        )
-        filter_functions = Functions.get_functions_by_ids(filter_ids)
-
-        result, _ = await process_filter_functions(
-            request=request,
-            filter_functions=filter_functions,
-            filter_type="outlet",
-            form_data=data,
-            extra_params=extra_params,
-        )
-        return result
-    except Exception as e:
-        raise Exception(f"Error: {e}")
+    return data

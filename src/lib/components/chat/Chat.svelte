@@ -35,9 +35,6 @@
 		chatTitle,
 		showArtifacts,
 		artifactContents,
-		tools,
-		toolServers,
-		functions,
 		selectedFolder,
 		pinnedChats,
 		showEmbeds
@@ -64,16 +61,8 @@
 	} from '$lib/apis/chats';
 	import { generateOpenAIChatCompletion } from '$lib/apis/openai';
 	import { getAndUpdateUserLocation, getUserSettings } from '$lib/apis/users';
-	import {
-		chatCompleted,
-		chatAction,
-		generateMoACompletion,
-		stopTask,
-		getTaskIdsByChatId
-	} from '$lib/apis';
-	import { getTools } from '$lib/apis/tools';
+	import { chatCompleted, generateMoACompletion, stopTask, getTaskIdsByChatId } from '$lib/apis';
 	import { createOpenAITextStream } from '$lib/apis/streaming';
-	import { getFunctions } from '$lib/apis/functions';
 	import { updateFolderById } from '$lib/apis/folders';
 
 	import Banner from '../common/Banner.svelte';
@@ -125,12 +114,6 @@
 		selectedModelIds = selectedModels;
 	}
 
-	let selectedToolIds = [];
-	let selectedFilterIds = [];
-	let codeInterpreterEnabled = false;
-
-	let showCommands = false;
-
 	let generating = false;
 	let generationController = null;
 
@@ -170,8 +153,6 @@
 
 		files = [];
 		messageQueue = [];
-		selectedToolIds = [];
-		selectedFilterIds = [];
 
 		const storageChatInput = sessionStorage.getItem(
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
@@ -215,9 +196,6 @@
 					if (!$temporaryChatEnabled) {
 						messageInput?.setText(input.prompt);
 						files = input.files;
-						selectedToolIds = input.selectedToolIds;
-						selectedFilterIds = input.selectedFilterIds;
-						codeInterpreterEnabled = input.codeInterpreterEnabled;
 					}
 				} catch (e) {}
 			} else {
@@ -268,60 +246,7 @@
 	}
 
 	const onSelectedModelIdsChange = () => {
-		resetInput();
 		oldSelectedModelIds = JSON.parse(JSON.stringify(selectedModelIds));
-	};
-
-	const resetInput = () => {
-		selectedToolIds = [];
-		selectedFilterIds = [];
-		codeInterpreterEnabled = false;
-
-		if (selectedModelIds.filter((id) => id).length > 0) {
-			setDefaults();
-		}
-	};
-
-	const setDefaults = async () => {
-		if (!$tools) {
-			tools.set(await getTools(localStorage.token));
-		}
-		if (!$functions) {
-			functions.set(await getFunctions(localStorage.token));
-		}
-		if (selectedModels.length !== 1 && !atSelectedModel) {
-			return;
-		}
-
-		const model = atSelectedModel ?? $models.find((m) => m.id === selectedModels[0]);
-		if (model) {
-			// Set Default Tools
-			if (model?.info?.meta?.toolIds) {
-				selectedToolIds = [
-					...new Set(
-						[...(model?.info?.meta?.toolIds ?? [])].filter((id) => $tools.find((t) => t.id === id))
-					)
-				];
-			}
-
-			// Set Default Filters (Toggleable only)
-			if (model?.info?.meta?.defaultFilterIds) {
-				selectedFilterIds = model.info.meta.defaultFilterIds.filter((id) =>
-					model?.filters?.find((f) => f.id === id)
-				);
-			}
-
-			// Set Default Features
-			if (model?.info?.meta?.defaultFeatureIds) {
-				if (
-					model.info?.meta?.capabilities?.['code_interpreter'] &&
-					$config?.features?.enable_code_interpreter &&
-					($user?.role === 'admin' || $user?.permissions?.features?.code_interpreter)
-				) {
-					codeInterpreterEnabled = model.info.meta.defaultFeatureIds.includes('code_interpreter');
-				}
-			}
-		}
 	};
 
 	const showMessage = async (message, scroll = true) => {
@@ -422,30 +347,10 @@
 					chat = await getChatById(localStorage.token, $chatId);
 					allTags.set(await getAllTags(localStorage.token));
 				} else if (type === 'source' || type === 'citation') {
-					if (data?.type === 'code_execution') {
-						// Code execution; update existing code execution by ID, or add new one.
-						if (!message?.code_executions) {
-							message.code_executions = [];
-						}
-
-						const existingCodeExecutionIndex = message.code_executions.findIndex(
-							(execution) => execution.id === data.id
-						);
-
-						if (existingCodeExecutionIndex !== -1) {
-							message.code_executions[existingCodeExecutionIndex] = data;
-						} else {
-							message.code_executions.push(data);
-						}
-
-						message.code_executions = message.code_executions;
+					if (message?.sources) {
+						message.sources.push(data);
 					} else {
-						// Regular source.
-						if (message?.sources) {
-							message.sources.push(data);
-						} else {
-							message.sources = [data];
-						}
+						message.sources = [data];
 					}
 				} else if (type === 'notification') {
 					const toastType = data?.type ?? 'info';
@@ -590,9 +495,6 @@
 			messageInput?.setText('');
 
 			files = [];
-			selectedToolIds = [];
-			selectedFilterIds = [];
-			codeInterpreterEnabled = false;
 
 			try {
 				const input = JSON.parse(storageChatInput);
@@ -600,9 +502,6 @@
 				if (!$temporaryChatEnabled) {
 					messageInput?.setText(input.prompt);
 					files = input.files;
-					selectedToolIds = input.selectedToolIds;
-					selectedFilterIds = input.selectedFilterIds;
-					codeInterpreterEnabled = input.codeInterpreterEnabled;
 				}
 			} catch (e) {}
 		}
@@ -831,7 +730,6 @@
 
 		autoScroll = true;
 
-		resetInput();
 		await chatId.set('');
 		await chatTitle.set('');
 
@@ -844,24 +742,6 @@
 		params = {};
 		taskIds = null;
 		messageQueue = [];
-
-		if ($page.url.searchParams.get('code-interpreter') === 'true') {
-			codeInterpreterEnabled = true;
-		}
-
-		if ($page.url.searchParams.get('tools')) {
-			selectedToolIds = $page.url.searchParams
-				.get('tools')
-				?.split(',')
-				.map((id) => id.trim())
-				.filter((id) => id);
-		} else if ($page.url.searchParams.get('tool-ids')) {
-			selectedToolIds = $page.url.searchParams
-				.get('tool-ids')
-				?.split(',')
-				.map((id) => id.trim())
-				.filter((id) => id);
-		}
 
 		if ($page.url.searchParams.get('q')) {
 			const q = $page.url.searchParams.get('q') ?? '';
@@ -975,7 +855,6 @@
 				...(m.usage ? { usage: m.usage } : {}),
 				...(m.sources ? { sources: m.sources } : {})
 			})),
-			filter_ids: selectedFilterIds.length > 0 ? selectedFilterIds : undefined,
 			model_item: $models.find((m) => m.id === modelId),
 			chat_id: _chatId,
 			session_id: $socket?.id,
@@ -1032,59 +911,6 @@
 			files = combinedFiles;
 			await tick();
 			await submitPrompt(combinedPrompt);
-		}
-	};
-
-	const chatActionHandler = async (_chatId, actionId, modelId, responseMessageId, event = null) => {
-		const messages = createMessagesList(history, responseMessageId);
-
-		const res = await chatAction(localStorage.token, actionId, {
-			model: modelId,
-			messages: messages.map((m) => ({
-				id: m.id,
-				role: m.role,
-				content: m.content,
-				info: m.info ? m.info : undefined,
-				timestamp: m.timestamp,
-				...(m.sources ? { sources: m.sources } : {})
-			})),
-			...(event ? { event: event } : {}),
-			model_item: $models.find((m) => m.id === modelId),
-			chat_id: _chatId,
-			session_id: $socket?.id,
-			id: responseMessageId
-		}).catch((error) => {
-			toast.error(`${error}`);
-			messages.at(-1).error = { content: error };
-			return null;
-		});
-
-		if (res !== null && res.messages) {
-			// Update chat history with the new messages
-			for (const message of res.messages) {
-				history.messages[message.id] = {
-					...history.messages[message.id],
-					...(history.messages[message.id].content !== message.content
-						? { originalContent: history.messages[message.id].content }
-						: {}),
-					...message
-				};
-			}
-		}
-
-		if ($chatId == _chatId) {
-			if (!$temporaryChatEnabled) {
-				chat = await updateChatById(localStorage.token, _chatId, {
-					models: selectedModels,
-					messages: messages,
-					history: history,
-					params: params,
-					files: chatFiles
-				});
-
-				currentChatPage.set(1);
-				await chats.set(await getChatList(localStorage.token, $currentChatPage));
-			}
 		}
 	};
 
@@ -1565,21 +1391,6 @@
 		chats.set(await getChatList(localStorage.token, $currentChatPage));
 	};
 
-	const getFeatures = () => {
-		let features = {};
-
-		if ($config?.features)
-			features = {
-				code_interpreter:
-					$config?.features?.enable_code_interpreter &&
-					($user?.role === 'admin' || $user?.permissions?.features?.code_interpreter)
-						? codeInterpreterEnabled
-						: false
-			};
-
-		return features;
-	};
-
 	const sendMessageSocket = async (model, _messages, _history, responseMessageId, _chatId) => {
 		const responseMessage = _history.messages[responseMessageId];
 		const userMessage = _history.messages[responseMessage.parentId];
@@ -1677,58 +1488,6 @@
 			})
 			.filter((message) => message?.role === 'user' || message?.content?.trim());
 
-		const toolIds = [];
-		const toolServerIds = [];
-
-		for (const toolId of selectedToolIds) {
-			if (toolId.startsWith('direct_server:')) {
-				let serverId = toolId.replace('direct_server:', '');
-				// Check if serverId is a number
-				if (!isNaN(parseInt(serverId))) {
-					toolServerIds.push(parseInt(serverId));
-				} else {
-					toolServerIds.push(serverId);
-				}
-			} else {
-				toolIds.push(toolId);
-			}
-		}
-
-		// Parse skill mentions (<$skillId|label>) from user messages
-		const skillMentionRegex = /<\$([^|>]+)\|?[^>]*>/g;
-		const skillIds = [];
-		for (const message of messages) {
-			const content =
-				typeof message.content === 'string' ? message.content : (message.content?.[0]?.text ?? '');
-			for (const match of content.matchAll(skillMentionRegex)) {
-				if (!skillIds.includes(match[1])) {
-					skillIds.push(match[1]);
-				}
-			}
-		}
-
-		// Strip skill mentions from message content
-		if (skillIds.length > 0) {
-			messages = messages.map((message) => {
-				if (typeof message.content === 'string') {
-					return {
-						...message,
-						content: message.content.replace(/<\$[^>]+>/g, '').trim()
-					};
-				} else if (Array.isArray(message.content)) {
-					return {
-						...message,
-						content: message.content.map((part) =>
-							part.type === 'text'
-								? { ...part, text: part.text.replace(/<\$[^>]+>/g, '').trim() }
-								: part
-						)
-					};
-				}
-				return message;
-			});
-		}
-
 		const res = await generateOpenAIChatCompletion(
 			localStorage.token,
 			{
@@ -1748,13 +1507,6 @@
 
 				files: (files?.length ?? 0) > 0 ? files : undefined,
 
-				filter_ids: selectedFilterIds.length > 0 ? selectedFilterIds : undefined,
-				tool_ids: toolIds.length > 0 ? toolIds : undefined,
-				skill_ids: skillIds.length > 0 ? skillIds : undefined,
-				tool_servers: ($toolServers ?? []).filter(
-					(server, idx) => toolServerIds.includes(idx) || toolServerIds.includes(server?.id)
-				),
-				features: getFeatures(),
 				variables: {
 					...getPromptVariables(
 						$user?.name,
@@ -2307,7 +2059,6 @@
 										{continueResponse}
 										{regenerateResponse}
 										{mergeResponses}
-										{chatActionHandler}
 										{addMessages}
 										topPadding={true}
 										bottomPadding={files.length > 0}
@@ -2325,12 +2076,7 @@
 									bind:files
 									bind:prompt
 									bind:autoScroll
-									bind:selectedToolIds
-									bind:selectedFilterIds
-									bind:codeInterpreterEnabled
 									bind:atSelectedModel
-									bind:showCommands
-									toolServers={$toolServers}
 									{generating}
 									{stopResponse}
 									{createMessagePair}
@@ -2392,12 +2138,7 @@
 									bind:files
 									bind:prompt
 									bind:autoScroll
-									bind:selectedToolIds
-									bind:selectedFilterIds
-									bind:codeInterpreterEnabled
 									bind:atSelectedModel
-									bind:showCommands
-									toolServers={$toolServers}
 									{stopResponse}
 									{createMessagePair}
 									{onSelect}

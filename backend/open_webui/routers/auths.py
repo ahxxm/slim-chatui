@@ -3,7 +3,6 @@ import uuid
 import time
 import datetime
 import logging
-from aiohttp import ClientSession
 import urllib
 
 
@@ -25,7 +24,6 @@ from open_webui.models.users import (
     UserStatus,
 )
 from open_webui.models.groups import Groups
-from open_webui.models.oauth_sessions import OAuthSessions
 
 from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
 from open_webui.env import (
@@ -37,17 +35,9 @@ from open_webui.env import (
     WEBUI_AUTH_COOKIE_SECURE,
     WEBUI_AUTH_SIGNOUT_REDIRECT_URL,
     ENABLE_INITIAL_ADMIN_SIGNUP,
-    ENABLE_OAUTH_TOKEN_EXCHANGE,
 )
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import Response, JSONResponse
-from open_webui.config import (
-    OPENID_PROVIDER_URL,
-    ENABLE_OAUTH_SIGNUP,
-    ENABLE_PASSWORD_AUTH,
-    OAUTH_PROVIDERS,
-    OAUTH_MERGE_ACCOUNTS_BY_EMAIL,
-)
 from pydantic import BaseModel
 
 from open_webui.utils.misc import parse_duration, validate_email_format
@@ -310,12 +300,6 @@ async def signin(
     form_data: SigninForm,
     db: Session = Depends(get_session),
 ):
-    if not ENABLE_PASSWORD_AUTH:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=ERROR_MESSAGES.ACTION_PROHIBITED,
-        )
-
     if WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
         if WEBUI_AUTH_TRUSTED_EMAIL_HEADER not in request.headers:
             raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_TRUSTED_HEADER)
@@ -479,10 +463,7 @@ async def signup(
     has_users = Users.has_users(db=db)
 
     if WEBUI_AUTH:
-        if (
-            not request.app.state.config.ENABLE_SIGNUP
-            or not request.app.state.config.ENABLE_LOGIN_FORM
-        ):
+        if not request.app.state.config.ENABLE_SIGNUP:
             if has_users or not ENABLE_INITIAL_ADMIN_SIGNUP:
                 raise HTTPException(
                     status.HTTP_403_FORBIDDEN, detail=ERROR_MESSAGES.ACCESS_PROHIBITED
@@ -524,57 +505,8 @@ async def signup(
 
 
 @router.get("/signout")
-async def signout(
-    request: Request, response: Response, db: Session = Depends(get_session)
-):
+async def signout(request: Request, response: Response):
     response.delete_cookie("token")
-    response.delete_cookie("oui-session")
-    response.delete_cookie("oauth_id_token")
-
-    oauth_session_id = request.cookies.get("oauth_session_id")
-    if oauth_session_id:
-        response.delete_cookie("oauth_session_id")
-
-        session = OAuthSessions.get_session_by_id(oauth_session_id, db=db)
-        oauth_server_metadata_url = (
-            request.app.state.oauth_manager.get_server_metadata_url(session.provider)
-            if session
-            else None
-        ) or OPENID_PROVIDER_URL.value
-
-        if session and oauth_server_metadata_url:
-            oauth_id_token = session.token.get("id_token")
-            try:
-                async with ClientSession(trust_env=True) as session:
-                    async with session.get(oauth_server_metadata_url) as r:
-                        if r.status == 200:
-                            openid_data = await r.json()
-                            logout_url = openid_data.get("end_session_endpoint")
-
-                            if logout_url:
-                                return JSONResponse(
-                                    status_code=200,
-                                    content={
-                                        "status": True,
-                                        "redirect_url": f"{logout_url}?id_token_hint={oauth_id_token}"
-                                        + (
-                                            f"&post_logout_redirect_uri={WEBUI_AUTH_SIGNOUT_REDIRECT_URL}"
-                                            if WEBUI_AUTH_SIGNOUT_REDIRECT_URL
-                                            else ""
-                                        ),
-                                    },
-                                    headers=response.headers,
-                                )
-                        else:
-                            raise Exception("Failed to fetch OpenID configuration")
-
-            except Exception as e:
-                log.error(f"OpenID signout error: {str(e)}")
-                raise HTTPException(
-                    status_code=500,
-                    detail="Failed to sign out from the OpenID provider.",
-                    headers=response.headers,
-                )
 
     if WEBUI_AUTH_SIGNOUT_REDIRECT_URL:
         return JSONResponse(
@@ -850,108 +782,3 @@ async def get_api_key(
         }
     else:
         raise HTTPException(404, detail=ERROR_MESSAGES.API_KEY_NOT_FOUND)
-
-
-############################
-# Token Exchange
-############################
-
-
-class TokenExchangeForm(BaseModel):
-    token: str  # OAuth access token from external provider
-
-
-@router.post("/oauth/{provider}/token/exchange", response_model=SessionUserResponse)
-async def token_exchange(
-    request: Request,
-    response: Response,
-    provider: str,
-    form_data: TokenExchangeForm,
-    db: Session = Depends(get_session),
-):
-    """
-    Exchange an external OAuth provider token for an OpenWebUI JWT.
-    This endpoint is disabled by default. Set ENABLE_OAUTH_TOKEN_EXCHANGE=True to enable.
-    """
-    if not ENABLE_OAUTH_TOKEN_EXCHANGE:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Token exchange is disabled",
-        )
-
-    provider = provider.lower()
-
-    # Check if provider is configured
-    if provider not in OAUTH_PROVIDERS:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Provider '{provider}' is not configured",
-        )
-    # Get the OAuth client for this provider
-    oauth_manager = request.app.state.oauth_manager
-    client = oauth_manager.get_client(provider)
-    if not client:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"OAuth client for '{provider}' not found",
-        )
-
-    # Validate the token by calling the userinfo endpoint
-    try:
-        token_data = {"access_token": form_data.token, "token_type": "Bearer"}
-        user_data = await client.userinfo(token=token_data)
-
-        if not user_data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid token or unable to fetch user info",
-            )
-    except Exception as e:
-        log.warning(f"Token exchange failed for provider {provider}: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid token or unable to validate with provider",
-        )
-
-    # Extract user information from the token claims
-    email_claim = request.app.state.config.OAUTH_EMAIL_CLAIM
-    username_claim = request.app.state.config.OAUTH_USERNAME_CLAIM
-
-    # Get sub claim
-    sub = user_data.get(
-        request.app.state.config.OAUTH_SUB_CLAIM
-        or OAUTH_PROVIDERS[provider].get("sub_claim", "sub")
-    )
-    if not sub:
-        log.warning(f"Token exchange failed: sub claim missing from user data")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Token missing required 'sub' claim",
-        )
-
-    email = user_data.get(email_claim, "")
-    if not email:
-        log.warning(f"Token exchange failed: email claim missing from user data")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Token missing required email claim",
-        )
-    email = email.lower()
-
-    # Try to find the user by OAuth sub
-    user = Users.get_user_by_oauth_sub(provider, sub, db=db)
-
-    if not user and OAUTH_MERGE_ACCOUNTS_BY_EMAIL.value:
-        # Try to find by email if merge is enabled
-        user = Users.get_user_by_email(email, db=db)
-        if user:
-            # Link the OAuth sub to this user
-            Users.update_user_oauth_by_id(user.id, provider, sub, db=db)
-
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User not found. Please sign in via the web interface first.",
-        )
-
-    return create_session_response(request, user, db)

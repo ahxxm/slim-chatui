@@ -32,13 +32,11 @@
 	import Image from '$lib/components/common/Image.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
-	import Sparkles from '$lib/components/icons/Sparkles.svelte';
 
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 
 	import Error from './Error.svelte';
 	import Citations from './Citations.svelte';
-	import CodeExecutions from './CodeExecutions.svelte';
 	import ContentRenderer from './ContentRenderer.svelte';
 
 	import FileItem from '$lib/components/common/FileItem.svelte';
@@ -73,17 +71,6 @@
 		done: boolean;
 		error?: boolean | { content: string };
 		sources?: string[];
-		code_executions?: {
-			uuid: string;
-			name: string;
-			code: string;
-			language?: string;
-			result?: {
-				error?: string;
-				output?: string;
-				files?: { name: string; url: string }[];
-			};
-		}[];
 		info?: {
 			openai?: boolean;
 			prompt_tokens?: number;
@@ -121,7 +108,6 @@
 	export let updateChat: Function;
 	export let editMessage: Function;
 	export let saveMessage: Function;
-	export let actionMessage: Function;
 	export let deleteMessage: Function;
 
 	export let submitMessage: Function;
@@ -542,10 +528,6 @@
 									{readOnly}
 								/>
 							{/if}
-
-							{#if message.code_executions}
-								<CodeExecutions codeExecutions={message.code_executions} />
-							{/if}
 						</div>
 					</div>
 				</div>
@@ -937,36 +919,6 @@
 											</Tooltip>
 										{/if}
 									{/if}
-
-									{#each model?.actions ?? [] as action}
-										<Tooltip content={action.name} placement="bottom">
-											<button
-												type="button"
-												aria-label={action.name}
-												class="{isLastMessage || ($settings?.highContrastMode ?? false)
-													? 'visible'
-													: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition"
-												on:click={() => {
-													actionMessage(action.id, message);
-												}}
-											>
-												{#if action?.icon}
-													<div class="size-4">
-														<img
-															src={action.icon}
-															class="w-4 h-4 {action.icon.includes('data:image/svg')
-																? 'dark:invert-[80%]'
-																: ''}"
-															style="fill: currentColor;"
-															alt={action.name}
-														/>
-													</div>
-												{:else}
-													<Sparkles strokeWidth="2.1" className="size-4" />
-												{/if}
-											</button>
-										</Tooltip>
-									{/each}
 								{/if}
 							{/if}
 						{/if}

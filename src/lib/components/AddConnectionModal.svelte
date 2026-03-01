@@ -383,7 +383,6 @@
 											{#if !ollama}
 												<option value="session">{$i18n.t('Session')}</option>
 												{#if !direct}
-													<option value="system_oauth">{$i18n.t('OAuth')}</option>
 													{#if azure}
 														<option value="microsoft_entra_id">{$i18n.t('Entra ID')}</option>
 													{/if}
@@ -410,12 +409,6 @@
 												class={`text-xs self-center translate-y-[1px] ${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500'}`}
 											>
 												{$i18n.t('Forwards system user session credentials to authenticate')}
-											</div>
-										{:else if auth_type === 'system_oauth'}
-											<div
-												class={`text-xs self-center translate-y-[1px] ${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500'}`}
-											>
-												{$i18n.t('Forwards system user OAuth access token to authenticate')}
 											</div>
 										{:else if ['azure_ad', 'microsoft_entra_id'].includes(auth_type)}
 											<div

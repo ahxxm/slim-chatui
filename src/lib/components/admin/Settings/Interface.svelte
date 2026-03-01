@@ -25,8 +25,7 @@
 		ENABLE_AUTOCOMPLETE_GENERATION: true,
 		AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH: -1,
 		TAGS_GENERATION_PROMPT_TEMPLATE: '',
-		ENABLE_TAGS_GENERATION: true,
-		TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE: ''
+		ENABLE_TAGS_GENERATION: true
 	};
 
 	const updateInterfaceHandler = async () => {
@@ -309,22 +308,6 @@
 						</Tooltip>
 					</div>
 				{/if}
-
-				<div class="mb-2.5">
-					<div class=" mb-1 text-xs font-medium">{$i18n.t('Tools Function Calling Prompt')}</div>
-
-					<Tooltip
-						content={$i18n.t('Leave empty to use the default prompt, or enter a custom prompt')}
-						placement="top-start"
-					>
-						<Textarea
-							bind:value={taskConfig.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE}
-							placeholder={$i18n.t(
-								'Leave empty to use the default prompt, or enter a custom prompt'
-							)}
-						/>
-					</Tooltip>
-				</div>
 			</div>
 		</div>
 

@@ -58,12 +58,6 @@ export const selectedFolder = writable(null);
 
 export const models: Writable<Model[]> = writable([]);
 
-export const tools = writable(null);
-export const skills = writable(null);
-export const functions = writable(null);
-
-export const toolServers = writable([]);
-
 export const banners: Writable<Banner[]> = writable([]);
 
 export const settings: Writable<Settings> = writable({});
@@ -143,7 +137,6 @@ type OllamaModelDetails = {
 
 type Settings = {
 	pinnedModels?: never[];
-	toolServers?: never[];
 	detectArtifacts?: boolean;
 
 	collapseCodeBlocks?: boolean;
@@ -219,18 +212,12 @@ type Config = {
 		auth_trusted_header: boolean;
 		enable_api_keys: boolean;
 		enable_signup: boolean;
-		enable_login_form: boolean;
 		enable_admin_export: boolean;
 		enable_admin_chat_access: boolean;
 		enable_autocomplete_generation: boolean;
 		enable_direct_connections: boolean;
 		enable_version_update_check: boolean;
 		folder_max_file_count?: number;
-	};
-	oauth: {
-		providers: {
-			[key: string]: string;
-		};
 	};
 	ui?: {
 		pending_user_overlay_title?: string;

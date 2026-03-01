@@ -30,7 +30,6 @@
 	export let editMessage;
 	export let saveMessage;
 	export let deleteMessage;
-	export let actionMessage;
 	export let submitMessage;
 
 	export let regenerateResponse;
@@ -87,7 +86,6 @@
 				{updateChat}
 				{editMessage}
 				{saveMessage}
-				{actionMessage}
 				{submitMessage}
 				{deleteMessage}
 				{continueResponse}
@@ -109,7 +107,6 @@
 					{updateChat}
 					{editMessage}
 					{saveMessage}
-					{actionMessage}
 					{submitMessage}
 					{deleteMessage}
 					{continueResponse}

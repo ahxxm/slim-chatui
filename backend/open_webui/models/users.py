@@ -2,7 +2,7 @@ import time
 from typing import Optional
 
 from sqlalchemy.orm import Session, defer
-from open_webui.internal.db import Base, JSONField, get_db, get_db_context
+from open_webui.internal.db import Base, get_db_context
 
 
 from open_webui.env import DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL
@@ -19,15 +19,12 @@ from sqlalchemy import (
     JSON,
     Column,
     String,
-    Boolean,
     Text,
     Date,
     exists,
     select,
-    cast,
 )
 from sqlalchemy import or_, case, func
-from sqlalchemy.dialects.postgresql import JSONB
 
 import datetime
 
@@ -67,9 +64,6 @@ class User(Base):
 
     info = Column(JSON, nullable=True)
     settings = Column(JSON, nullable=True)
-
-    oauth = Column(JSON, nullable=True)
-
     last_active_at = Column(BigInteger)
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
@@ -99,9 +93,6 @@ class UserModel(BaseModel):
 
     info: Optional[dict] = None
     settings: Optional[UserSettings] = None
-
-    oauth: Optional[dict] = None
-
     last_active_at: int  # timestamp in epoch
     updated_at: int  # timestamp in epoch
     created_at: int  # timestamp in epoch
@@ -245,7 +236,6 @@ class UsersTable:
         profile_image_url: str = "/user.png",
         role: str = "pending",
         username: Optional[str] = None,
-        oauth: Optional[dict] = None,
         db: Optional[Session] = None,
     ) -> Optional[UserModel]:
         with get_db_context(db) as db:
@@ -260,7 +250,6 @@ class UsersTable:
                     "created_at": int(time.time()),
                     "updated_at": int(time.time()),
                     "username": username,
-                    "oauth": oauth,
                 }
             )
             result = User(**user.model_dump())
@@ -309,27 +298,6 @@ class UsersTable:
                 )
                 return UserModel.model_validate(user) if user else None
         except Exception:
-            return None
-
-    def get_user_by_oauth_sub(
-        self, provider: str, sub: str, db: Optional[Session] = None
-    ) -> Optional[UserModel]:
-        try:
-            with get_db_context(db) as db:  # type: Session
-                dialect_name = db.bind.dialect.name
-
-                query = db.query(User)
-                if dialect_name == "sqlite":
-                    query = query.filter(User.oauth.contains({provider: {"sub": sub}}))
-                elif dialect_name == "postgresql":
-                    query = query.filter(
-                        User.oauth[provider].cast(JSONB)["sub"].astext == sub
-                    )
-
-                user = query.first()
-                return UserModel.model_validate(user) if user else None
-        except Exception as e:
-            # You may want to log the exception here
             return None
 
     def get_users(
@@ -586,38 +554,6 @@ class UsersTable:
                 db.commit()
                 db.refresh(user)
                 return UserModel.model_validate(user)
-        except Exception:
-            return None
-
-    def update_user_oauth_by_id(
-        self, id: str, provider: str, sub: str, db: Optional[Session] = None
-    ) -> Optional[UserModel]:
-        """
-        Update or insert an OAuth provider/sub pair into the user's oauth JSON field.
-        Example resulting structure:
-            {
-                "google": { "sub": "123" },
-                "github": { "sub": "abc" }
-            }
-        """
-        try:
-            with get_db_context(db) as db:
-                user = db.query(User).filter_by(id=id).first()
-                if not user:
-                    return None
-
-                # Load existing oauth JSON or create empty
-                oauth = user.oauth or {}
-
-                # Update or insert provider entry
-                oauth[provider] = {"sub": sub}
-
-                # Persist updated JSON
-                db.query(User).filter_by(id=id).update({"oauth": oauth})
-                db.commit()
-
-                return UserModel.model_validate(user)
-
         except Exception:
             return None
 

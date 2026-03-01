@@ -1,5 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status, Request
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi.responses import JSONResponse
 
 from pydantic import BaseModel
 from typing import Optional
@@ -16,8 +16,6 @@ from open_webui.utils.task import (
 )
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.constants import TASKS
-
-from open_webui.routers.pipelines import process_pipeline_inlet_filter
 
 from open_webui.utils.task import get_task_model_id
 
@@ -70,7 +68,6 @@ async def get_task_config(request: Request, user=Depends(get_verified_user)):
         "ENABLE_FOLLOW_UP_GENERATION": request.app.state.config.ENABLE_FOLLOW_UP_GENERATION,
         "ENABLE_TAGS_GENERATION": request.app.state.config.ENABLE_TAGS_GENERATION,
         "ENABLE_TITLE_GENERATION": request.app.state.config.ENABLE_TITLE_GENERATION,
-        "TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE": request.app.state.config.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE,
     }
 
 
@@ -85,7 +82,6 @@ class TaskConfigForm(BaseModel):
     FOLLOW_UP_GENERATION_PROMPT_TEMPLATE: str
     ENABLE_FOLLOW_UP_GENERATION: bool
     ENABLE_TAGS_GENERATION: bool
-    TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE: str
 
 
 @router.post("/config/update")
@@ -117,9 +113,6 @@ async def update_task_config(
         form_data.TAGS_GENERATION_PROMPT_TEMPLATE
     )
     request.app.state.config.ENABLE_TAGS_GENERATION = form_data.ENABLE_TAGS_GENERATION
-    request.app.state.config.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE = (
-        form_data.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE
-    )
 
     return {
         "TASK_MODEL": request.app.state.config.TASK_MODEL,
@@ -132,7 +125,6 @@ async def update_task_config(
         "ENABLE_TAGS_GENERATION": request.app.state.config.ENABLE_TAGS_GENERATION,
         "ENABLE_FOLLOW_UP_GENERATION": request.app.state.config.ENABLE_FOLLOW_UP_GENERATION,
         "FOLLOW_UP_GENERATION_PROMPT_TEMPLATE": request.app.state.config.FOLLOW_UP_GENERATION_PROMPT_TEMPLATE,
-        "TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE": request.app.state.config.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE,
     }
 
 
@@ -204,12 +196,6 @@ async def generate_title(
         },
     }
 
-    # Process the payload through the pipeline
-    try:
-        payload = await process_pipeline_inlet_filter(request, payload, user, models)
-    except Exception as e:
-        raise e
-
     try:
         return await generate_chat_completion(request, form_data=payload, user=user)
     except Exception as e:
@@ -277,12 +263,6 @@ async def generate_follow_ups(
         },
     }
 
-    # Process the payload through the pipeline
-    try:
-        payload = await process_pipeline_inlet_filter(request, payload, user, models)
-    except Exception as e:
-        raise e
-
     try:
         return await generate_chat_completion(request, form_data=payload, user=user)
     except Exception as e:
@@ -349,12 +329,6 @@ async def generate_chat_tags(
             "chat_id": form_data.get("chat_id", None),
         },
     }
-
-    # Process the payload through the pipeline
-    try:
-        payload = await process_pipeline_inlet_filter(request, payload, user, models)
-    except Exception as e:
-        raise e
 
     try:
         return await generate_chat_completion(request, form_data=payload, user=user)
@@ -436,12 +410,6 @@ async def generate_autocompletion(
         },
     }
 
-    # Process the payload through the pipeline
-    try:
-        payload = await process_pipeline_inlet_filter(request, payload, user, models)
-    except Exception as e:
-        raise e
-
     try:
         return await generate_chat_completion(request, form_data=payload, user=user)
     except Exception as e:
@@ -505,12 +473,6 @@ async def generate_emoji(
         },
     }
 
-    # Process the payload through the pipeline
-    try:
-        payload = await process_pipeline_inlet_filter(request, payload, user, models)
-    except Exception as e:
-        raise e
-
     try:
         return await generate_chat_completion(request, form_data=payload, user=user)
     except Exception as e:
@@ -559,12 +521,6 @@ async def generate_moa_response(
             "task_body": form_data,
         },
     }
-
-    # Process the payload through the pipeline
-    try:
-        payload = await process_pipeline_inlet_filter(request, payload, user, models)
-    except Exception as e:
-        raise e
 
     try:
         return await generate_chat_completion(request, form_data=payload, user=user)

@@ -45,17 +45,8 @@
 	export let files = [];
 	export let messageInput = null;
 
-	export let selectedToolIds = [];
-	export let selectedFilterIds = [];
-
-	export let showCommands = false;
-
-	export let codeInterpreterEnabled = false;
-
 	export let onSelect = (e) => {};
 	export let onChange = (e) => {};
-
-	export let toolServers = [];
 
 	let models = [];
 	let selectedModelIdx = 0;
@@ -192,12 +183,7 @@
 					bind:files
 					bind:prompt
 					bind:autoScroll
-					bind:selectedToolIds
-					bind:selectedFilterIds
-					bind:codeInterpreterEnabled
 					bind:atSelectedModel
-					bind:showCommands
-					{toolServers}
 					{stopResponse}
 					{createMessagePair}
 					placeholder={$i18n.t('How can I help you today?')}
