@@ -19,17 +19,9 @@
 			label: $i18n.t('Chat History'),
 			description: $i18n.t('Search and view user chat history')
 		},
-		notes: {
-			label: $i18n.t('Notes'),
-			description: $i18n.t('Search, view, and manage user notes')
-		},
 		knowledge: {
 			label: $i18n.t('Knowledge Base'),
 			description: $i18n.t('Browse and query knowledge bases')
-		},
-		channels: {
-			label: $i18n.t('Channels'),
-			description: $i18n.t('Search channels and channel messages')
 		},
 		web_search: {
 			label: $i18n.t('Web Search'),

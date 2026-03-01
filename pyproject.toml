@@ -1,6 +1,6 @@
 [project]
-name = "open-webui"
-description = "Open WebUI"
+name = "slim-chatui"
+description = "Opinionated hard fork of Open WebUI"
 authors = [
     { name = "Timothy Jaeryang Baek", email = "tim@openwebui.com" }
 ]
@@ -36,7 +36,6 @@ dependencies = [
     "peewee==3.19.0",
     "peewee-migrate==1.14.3",
 
-    "pycrdt==0.12.46",
     "redis",
 
     "pytz==2025.2",
@@ -183,7 +182,7 @@ exclude = [
     "webui.db",
     "chroma.sqlite3",
 ]
-force-include = { "CHANGELOG.md" = "open_webui/CHANGELOG.md", build = "open_webui/frontend" }
+force-include = { build = "open_webui/frontend" }
 
 [tool.codespell]
 # Ref: https://github.com/codespell-project/codespell#using-a-config-file

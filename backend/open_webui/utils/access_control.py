@@ -117,7 +117,7 @@ def has_access(
     """
     Check if a user has the specified permission using an in-memory access_grants list.
 
-    Used for config-driven resources (arena models, tool servers) that store
+    Used for config-driven resources (tool servers) that store
     access control as JSON in PersistentConfig rather than in the access_grant DB table.
 
     Semantics:

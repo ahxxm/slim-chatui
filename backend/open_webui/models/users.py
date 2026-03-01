@@ -9,8 +9,6 @@ from open_webui.env import DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL
 
 from open_webui.models.chats import Chats
 from open_webui.models.groups import Groups, GroupMember
-from open_webui.models.channels import ChannelMember
-
 from open_webui.utils.misc import throttle
 from open_webui.utils.validate import validate_profile_image_url
 
@@ -117,12 +115,6 @@ class UserModel(BaseModel):
         return self
 
 
-class UserStatusModel(UserModel):
-    is_active: bool = False
-
-    model_config = ConfigDict(from_attributes=True)
-
-
 class ApiKey(Base):
     __tablename__ = "api_key"
 
@@ -206,19 +198,8 @@ class UserIdNameResponse(BaseModel):
     name: str
 
 
-class UserIdNameStatusResponse(UserStatus):
-    id: str
-    name: str
-    is_active: Optional[bool] = None
-
-
 class UserInfoListResponse(BaseModel):
     users: list[UserInfoResponse]
-    total: int
-
-
-class UserIdNameListResponse(BaseModel):
-    users: list[UserIdNameResponse]
     total: int
 
 
@@ -372,17 +353,6 @@ class UsersTable:
                         )
                     )
 
-                channel_id = filter.get("channel_id")
-                if channel_id:
-                    query = query.filter(
-                        exists(
-                            select(ChannelMember.id).where(
-                                ChannelMember.user_id == User.id,
-                                ChannelMember.channel_id == channel_id,
-                            )
-                        )
-                    )
-
                 user_ids = filter.get("user_ids")
                 group_ids = filter.get("group_ids")
 
@@ -504,7 +474,7 @@ class UsersTable:
 
     def get_users_by_user_ids(
         self, user_ids: list[str], db: Optional[Session] = None
-    ) -> list[UserStatusModel]:
+    ) -> list[UserModel]:
         with get_db_context(db) as db:
             users = (
                 db.query(User)
