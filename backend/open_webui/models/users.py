@@ -2,7 +2,7 @@ import time
 from typing import Optional
 
 from sqlalchemy.orm import Session, defer
-from open_webui.internal.db import Base, JSONField, get_db, get_db_context
+from open_webui.internal.db import Base, get_db_context
 
 
 from open_webui.env import DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL
@@ -19,12 +19,10 @@ from sqlalchemy import (
     JSON,
     Column,
     String,
-    Boolean,
     Text,
     Date,
     exists,
     select,
-    cast,
 )
 from sqlalchemy import or_, case, func
 

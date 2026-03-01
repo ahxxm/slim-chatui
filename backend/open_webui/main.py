@@ -33,7 +33,6 @@ from starlette_compress import CompressMiddleware
 
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.middleware.sessions import SessionMiddleware
 from starlette.responses import Response, StreamingResponse
 from starlette.datastructures import Headers
 
@@ -122,7 +121,6 @@ from open_webui.config import (
     SHOW_ADMIN_DETAILS,
     JWT_EXPIRES_IN,
     ENABLE_SIGNUP,
-    ENABLE_LOGIN_FORM,
     ENABLE_API_KEYS,
     ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS,
     API_KEYS_ALLOWED_ENDPOINTS,
@@ -182,13 +180,9 @@ from open_webui.env import (
     DEPLOYMENT_ID,
     INSTANCE_ID,
     WEBUI_BUILD_HASH,
-    WEBUI_SECRET_KEY,
-    WEBUI_SESSION_COOKIE_SAME_SITE,
-    WEBUI_SESSION_COOKIE_SECURE,
     ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
     WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
     WEBUI_AUTH_TRUSTED_NAME_HEADER,
-    WEBUI_AUTH_SIGNOUT_REDIRECT_URL,
     ENABLE_COMPRESSION_MIDDLEWARE,
     ENABLE_WEBSOCKET_SUPPORT,
     BYPASS_MODEL_ACCESS_CONTROL,
@@ -436,7 +430,6 @@ app.state.BASE_MODELS = []
 
 app.state.config.WEBUI_URL = WEBUI_URL
 app.state.config.ENABLE_SIGNUP = ENABLE_SIGNUP
-app.state.config.ENABLE_LOGIN_FORM = ENABLE_LOGIN_FORM
 
 app.state.config.ENABLE_API_KEYS = ENABLE_API_KEYS
 app.state.config.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS = (
@@ -487,7 +480,6 @@ if any("access_control" in c.get("config", {}) for c in connections):
 
 app.state.AUTH_TRUSTED_EMAIL_HEADER = WEBUI_AUTH_TRUSTED_EMAIL_HEADER
 app.state.AUTH_TRUSTED_NAME_HEADER = WEBUI_AUTH_TRUSTED_NAME_HEADER
-app.state.WEBUI_AUTH_SIGNOUT_REDIRECT_URL = WEBUI_AUTH_SIGNOUT_REDIRECT_URL
 app.state.EXTERNAL_PWA_MANIFEST_URL = EXTERNAL_PWA_MANIFEST_URL
 
 
@@ -1342,7 +1334,6 @@ async def get_app_config(request: Request):
             "enable_signup_password_confirmation": ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
             "enable_api_keys": app.state.config.ENABLE_API_KEYS,
             "enable_signup": app.state.config.ENABLE_SIGNUP,
-            "enable_login_form": app.state.config.ENABLE_LOGIN_FORM,
             "enable_websocket": ENABLE_WEBSOCKET_SUPPORT,
             "enable_public_active_users_count": ENABLE_PUBLIC_ACTIVE_USERS_COUNT,
             "enable_easter_eggs": ENABLE_EASTER_EGGS,
@@ -1451,15 +1442,6 @@ async def get_current_usage(user=Depends(get_verified_user)):
     except Exception as e:
         log.error(f"Error getting usage statistics: {e}")
         raise HTTPException(status_code=500, detail="Internal Server Error")
-
-
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=WEBUI_SECRET_KEY,
-    session_cookie="owui-session",
-    same_site=WEBUI_SESSION_COOKIE_SAME_SITE,
-    https_only=WEBUI_SESSION_COOKIE_SECURE,
-)
 
 
 @app.get("/manifest.json")

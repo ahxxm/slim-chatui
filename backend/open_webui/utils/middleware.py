@@ -4,7 +4,7 @@ import sys
 import textwrap
 
 import asyncio
-from typing import Any, Optional
+from typing import Optional
 import json
 import html
 import re
@@ -34,7 +34,6 @@ from open_webui.routers.tasks import (
 from open_webui.utils.tools import get_builtin_tools
 from open_webui.routers.pipelines import (
     process_pipeline_inlet_filter,
-    process_pipeline_outlet_filter,
 )
 
 from open_webui.utils.webhook import post_webhook
@@ -93,7 +92,6 @@ from open_webui.env import (
     ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION,
     CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE,
     CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES,
-    BYPASS_MODEL_ACCESS_CONTROL,
     ENABLE_REALTIME_CHAT_SAVE,
     ENABLE_FORWARD_USER_INFO_HEADERS,
     FORWARD_SESSION_INFO_HEADER_CHAT_ID,

@@ -537,12 +537,6 @@ ENABLE_SIGNUP = PersistentConfig(
     ),
 )
 
-ENABLE_LOGIN_FORM = PersistentConfig(
-    "ENABLE_LOGIN_FORM",
-    "ui.ENABLE_LOGIN_FORM",
-    os.environ.get("ENABLE_LOGIN_FORM", "True").lower() == "true",
-)
-
 
 DEFAULT_LOCALE = PersistentConfig(
     "DEFAULT_LOCALE",
@@ -931,16 +925,8 @@ WEBHOOK_URL = PersistentConfig(
 
 ENABLE_ADMIN_EXPORT = os.environ.get("ENABLE_ADMIN_EXPORT", "True").lower() == "true"
 
-ENABLE_ADMIN_WORKSPACE_CONTENT_ACCESS = (
-    os.environ.get("ENABLE_ADMIN_WORKSPACE_CONTENT_ACCESS", "True").lower() == "true"
-)
-
 BYPASS_ADMIN_ACCESS_CONTROL = (
-    os.environ.get(
-        "BYPASS_ADMIN_ACCESS_CONTROL",
-        os.environ.get("ENABLE_ADMIN_WORKSPACE_CONTENT_ACCESS", "True"),
-    ).lower()
-    == "true"
+    os.environ.get("BYPASS_ADMIN_ACCESS_CONTROL", "True").lower() == "true"
 )
 
 ENABLE_ADMIN_CHAT_ACCESS = (

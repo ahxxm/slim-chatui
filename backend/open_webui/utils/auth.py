@@ -6,8 +6,6 @@ import hmac
 import hashlib
 import bcrypt
 
-import json
-
 
 from datetime import datetime, timedelta
 from pytz import UTC
@@ -22,7 +20,6 @@ from open_webui.constants import ERROR_MESSAGES
 
 from open_webui.env import (
     ENABLE_PASSWORD_VALIDATION,
-    OFFLINE_MODE,
     PASSWORD_VALIDATION_HINT,
     PASSWORD_VALIDATION_REGEX_PATTERN,
     WEBUI_SECRET_KEY,
