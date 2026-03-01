@@ -509,12 +509,6 @@ DEFAULT_USER_ROLE = PersistentConfig(
     os.getenv("DEFAULT_USER_ROLE", "pending"),
 )
 
-DEFAULT_GROUP_ID = PersistentConfig(
-    "DEFAULT_GROUP_ID",
-    "ui.default_group_id",
-    os.environ.get("DEFAULT_GROUP_ID", ""),
-)
-
 PENDING_USER_OVERLAY_TITLE = PersistentConfig(
     "PENDING_USER_OVERLAY_TITLE",
     "ui.pending_user_overlay_title",
@@ -532,61 +526,6 @@ RESPONSE_WATERMARK = PersistentConfig(
     "RESPONSE_WATERMARK",
     "ui.watermark",
     os.environ.get("RESPONSE_WATERMARK", ""),
-)
-
-
-USER_PERMISSIONS_WORKSPACE_MODELS_ACCESS = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_MODELS_ACCESS", "False").lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_PROMPTS_ACCESS = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_PROMPTS_ACCESS", "False").lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_MODELS_IMPORT = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_MODELS_IMPORT", "False").lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_MODELS_EXPORT = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_MODELS_EXPORT", "False").lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_PROMPTS_IMPORT = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_PROMPTS_IMPORT", "False").lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_PROMPTS_EXPORT = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_PROMPTS_EXPORT", "False").lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_SHARING = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_SHARING", "False").lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_PUBLIC_SHARING = (
-    os.environ.get(
-        "USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_PUBLIC_SHARING", "False"
-    ).lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_PROMPTS_ALLOW_SHARING = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_PROMPTS_ALLOW_SHARING", "False").lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_PROMPTS_ALLOW_PUBLIC_SHARING = (
-    os.environ.get(
-        "USER_PERMISSIONS_WORKSPACE_PROMPTS_ALLOW_PUBLIC_SHARING", "False"
-    ).lower()
-    == "true"
 )
 
 
@@ -671,20 +610,6 @@ USER_PERMISSIONS_SETTINGS_INTERFACE = (
 
 
 DEFAULT_USER_PERMISSIONS = {
-    "workspace": {
-        "models": USER_PERMISSIONS_WORKSPACE_MODELS_ACCESS,
-        "prompts": USER_PERMISSIONS_WORKSPACE_PROMPTS_ACCESS,
-        "models_import": USER_PERMISSIONS_WORKSPACE_MODELS_IMPORT,
-        "models_export": USER_PERMISSIONS_WORKSPACE_MODELS_EXPORT,
-        "prompts_import": USER_PERMISSIONS_WORKSPACE_PROMPTS_IMPORT,
-        "prompts_export": USER_PERMISSIONS_WORKSPACE_PROMPTS_EXPORT,
-    },
-    "sharing": {
-        "models": USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_SHARING,
-        "public_models": USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_PUBLIC_SHARING,
-        "prompts": USER_PERMISSIONS_WORKSPACE_PROMPTS_ALLOW_SHARING,
-        "public_prompts": USER_PERMISSIONS_WORKSPACE_PROMPTS_ALLOW_PUBLIC_SHARING,
-    },
     "chat": {
         "controls": USER_PERMISSIONS_CHAT_CONTROLS,
         "system_prompt": USER_PERMISSIONS_CHAT_SYSTEM_PROMPT,
@@ -741,10 +666,6 @@ WEBHOOK_URL = PersistentConfig(
 )
 
 ENABLE_ADMIN_EXPORT = os.environ.get("ENABLE_ADMIN_EXPORT", "True").lower() == "true"
-
-BYPASS_ADMIN_ACCESS_CONTROL = (
-    os.environ.get("BYPASS_ADMIN_ACCESS_CONTROL", "True").lower() == "true"
-)
 
 ENABLE_ADMIN_CHAT_ACCESS = (
     os.environ.get("ENABLE_ADMIN_CHAT_ACCESS", "True").lower() == "true"

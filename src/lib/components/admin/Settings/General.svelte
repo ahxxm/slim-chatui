@@ -4,7 +4,6 @@
 	import { getBackendConfig, getWebhookUrl, updateWebhookUrl } from '$lib/apis';
 	import { getAdminConfig, updateAdminConfig } from '$lib/apis/auths';
 	import { getBanners, setBanners } from '$lib/apis/configs';
-	import { getGroups } from '$lib/apis/groups';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
@@ -22,8 +21,6 @@
 
 	let adminConfig = null;
 	let webhookUrl = '';
-	let groups = [];
-
 	let banners: Banner[] = [];
 
 	const updateBanners = async () => {
@@ -53,9 +50,6 @@
 
 			(async () => {
 				webhookUrl = await getWebhookUrl(localStorage.token);
-			})(),
-			(async () => {
-				groups = await getGroups(localStorage.token);
 			})()
 		]);
 
@@ -114,23 +108,6 @@
 							</select>
 						</div>
 					</div>
-
-					<div class="  mb-2.5 flex w-full justify-between">
-						<div class=" self-center text-xs font-medium">{$i18n.t('Default Group')}</div>
-						<div class="flex items-center relative">
-							<select
-								class="w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
-								bind:value={adminConfig.DEFAULT_GROUP_ID}
-								placeholder={$i18n.t('Select a group')}
-							>
-								<option value={''}>None</option>
-								{#each groups as group}
-									<option value={group.id}>{group.name}</option>
-								{/each}
-							</select>
-						</div>
-					</div>
-
 					<div class=" mb-2.5 flex w-full justify-between pr-2">
 						<div class=" self-center text-xs font-medium">{$i18n.t('Enable New Sign Ups')}</div>
 

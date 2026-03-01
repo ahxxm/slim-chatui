@@ -4,19 +4,13 @@ import base64
 import json
 import logging
 
-from open_webui.models.groups import Groups
 from open_webui.models.models import (
     ModelForm,
-    ModelMeta,
     ModelModel,
-    ModelParams,
     ModelResponse,
     ModelListResponse,
-    ModelAccessListResponse,
-    ModelAccessResponse,
     Models,
 )
-from open_webui.models.access_grants import AccessGrants, has_public_read_access_grant
 
 from pydantic import BaseModel
 from open_webui.constants import ERROR_MESSAGES
@@ -33,7 +27,7 @@ from fastapi.responses import FileResponse, StreamingResponse
 
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.utils.access_control import has_permission
-from open_webui.config import BYPASS_ADMIN_ACCESS_CONTROL, STATIC_DIR
+from open_webui.config import STATIC_DIR
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
 
@@ -55,7 +49,7 @@ PAGE_ITEM_COUNT = 30
 
 
 @router.get(
-    "/list", response_model=ModelAccessListResponse
+    "/list", response_model=ModelListResponse
 )  # do NOT use "/" as path, conflicts with main.py
 async def get_models(
     query: Optional[str] = None,
@@ -85,41 +79,10 @@ async def get_models(
     if direction:
         filter["direction"] = direction
 
-    # Pre-fetch user group IDs once - used for both filter and write_access check
-    groups = Groups.get_groups_by_member_id(user.id, db=db)
-    user_group_ids = {group.id for group in groups}
-
-    if not user.role == "admin" or not BYPASS_ADMIN_ACCESS_CONTROL:
-        if groups:
-            filter["group_ids"] = [group.id for group in groups]
-
-        filter["user_id"] = user.id
-
     result = Models.search_models(user.id, filter=filter, skip=skip, limit=limit, db=db)
 
-    # Batch-fetch writable model IDs in a single query instead of N has_access calls
-    model_ids = [model.id for model in result.items]
-    writable_model_ids = AccessGrants.get_accessible_resource_ids(
-        user_id=user.id,
-        resource_type="model",
-        resource_ids=model_ids,
-        permission="write",
-        user_group_ids=user_group_ids,
-        db=db,
-    )
-
-    return ModelAccessListResponse(
-        items=[
-            ModelAccessResponse(
-                **model.model_dump(),
-                write_access=(
-                    (user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL)
-                    or user.id == model.user_id
-                    or model.id in writable_model_ids
-                ),
-            )
-            for model in result.items
-        ],
+    return ModelListResponse(
+        items=result.items,
         total=result.total,
     )
 
@@ -145,10 +108,7 @@ async def get_base_models(
 async def get_model_tags(
     user=Depends(get_verified_user), db: Session = Depends(get_session)
 ):
-    if user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL:
-        models = Models.get_models(db=db)
-    else:
-        models = Models.get_models_by_user_id(user.id, db=db)
+    models = Models.get_models(db=db)
 
     tags_set = set()
     for model in models:
@@ -228,10 +188,7 @@ async def export_models(
             detail=ERROR_MESSAGES.UNAUTHORIZED,
         )
 
-    if user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL:
-        return Models.get_models(db=db)
-    else:
-        return Models.get_models_by_user_id(user.id, db=db)
+    return Models.get_models(db=db)
 
 
 ############################
@@ -336,42 +293,13 @@ class ModelIdForm(BaseModel):
 
 
 # Note: We're not using the typical url path param here, but instead using a query parameter to allow '/' in the id
-@router.get("/model", response_model=Optional[ModelAccessResponse])
+@router.get("/model", response_model=Optional[ModelResponse])
 async def get_model_by_id(
     id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
 ):
     model = Models.get_model_by_id(id, db=db)
     if model:
-        if (
-            (user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL)
-            or model.user_id == user.id
-            or AccessGrants.has_access(
-                user_id=user.id,
-                resource_type="model",
-                resource_id=model.id,
-                permission="read",
-                db=db,
-            )
-        ):
-            return ModelAccessResponse(
-                **model.model_dump(),
-                write_access=(
-                    (user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL)
-                    or user.id == model.user_id
-                    or AccessGrants.has_access(
-                        user_id=user.id,
-                        resource_type="model",
-                        resource_id=model.id,
-                        permission="write",
-                        db=db,
-                    )
-                ),
-            )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-            )
+        return model
     else:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -431,36 +359,25 @@ async def toggle_model_by_id(
     id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
 ):
     model = Models.get_model_by_id(id, db=db)
-    if model:
-        if (
-            user.role == "admin"
-            or model.user_id == user.id
-            or AccessGrants.has_access(
-                user_id=user.id,
-                resource_type="model",
-                resource_id=model.id,
-                permission="write",
-                db=db,
-            )
-        ):
-            model = Models.toggle_model_by_id(id, db=db)
+    if not model:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
 
-            if model:
-                return model
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=ERROR_MESSAGES.DEFAULT("Error updating function"),
-                )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=ERROR_MESSAGES.UNAUTHORIZED,
-            )
-    else:
+    if user.role != "admin" and model.user_id != user.id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.NOT_FOUND,
+            detail=ERROR_MESSAGES.UNAUTHORIZED,
+        )
+
+    model = Models.toggle_model_by_id(id, db=db)
+    if model:
+        return model
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.DEFAULT("Error toggling model"),
         )
 
 
@@ -478,116 +395,20 @@ async def update_model_by_id(
     model = Models.get_model_by_id(form_data.id, db=db)
     if not model:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        model.user_id != user.id
-        and not AccessGrants.has_access(
-            user_id=user.id,
-            resource_type="model",
-            resource_id=model.id,
-            permission="write",
-            db=db,
-        )
-        and user.role != "admin"
-    ):
+    if user.role != "admin" and model.user_id != user.id:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=ERROR_MESSAGES.UNAUTHORIZED,
         )
 
     model = Models.update_model_by_id(
         form_data.id, ModelForm(**form_data.model_dump()), db=db
     )
     return model
-
-
-############################
-# UpdateModelAccessById
-############################
-
-
-class ModelAccessGrantsForm(BaseModel):
-    id: str
-    name: Optional[str] = None
-    access_grants: list[dict]
-
-
-@router.post("/model/access/update", response_model=Optional[ModelModel])
-async def update_model_access_by_id(
-    request: Request,
-    form_data: ModelAccessGrantsForm,
-    user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
-):
-    model = Models.get_model_by_id(form_data.id, db=db)
-
-    # Non-preset models (e.g. direct OpenAI models) may not have a DB
-    # entry yet. Create a minimal one so access grants can be stored.
-    if not model:
-        if user.role != "admin":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-            )
-        model = Models.insert_new_model(
-            ModelForm(
-                id=form_data.id,
-                name=form_data.name or form_data.id,
-                meta=ModelMeta(),
-                params=ModelParams(),
-            ),
-            user.id,
-            db=db,
-        )
-        if not model:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=ERROR_MESSAGES.DEFAULT("Error creating model entry"),
-            )
-
-    if (
-        model.user_id != user.id
-        and not AccessGrants.has_access(
-            user_id=user.id,
-            resource_type="model",
-            resource_id=model.id,
-            permission="write",
-            db=db,
-        )
-        and user.role != "admin"
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
-
-    # Strip public sharing if user lacks permission
-    if (
-        user.role != "admin"
-        and has_public_read_access_grant(form_data.access_grants)
-        and not has_permission(
-            user.id,
-            "sharing.public_models",
-            request.app.state.config.USER_PERMISSIONS,
-        )
-    ):
-        form_data.access_grants = [
-            grant
-            for grant in form_data.access_grants
-            if not (
-                grant.get("principal_type") == "user"
-                and grant.get("principal_id") == "*"
-            )
-        ]
-
-    AccessGrants.set_access_grants(
-        "model", form_data.id, form_data.access_grants, db=db
-    )
-
-    return Models.get_model_by_id(form_data.id, db=db)
 
 
 ############################
@@ -604,21 +425,11 @@ async def delete_model_by_id(
     model = Models.get_model_by_id(form_data.id, db=db)
     if not model:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        user.role != "admin"
-        and model.user_id != user.id
-        and not AccessGrants.has_access(
-            user_id=user.id,
-            resource_type="model",
-            resource_id=model.id,
-            permission="write",
-            db=db,
-        )
-    ):
+    if user.role != "admin" and model.user_id != user.id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ERROR_MESSAGES.UNAUTHORIZED,

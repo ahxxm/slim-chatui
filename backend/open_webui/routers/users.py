@@ -12,12 +12,10 @@ from pydantic import BaseModel, ConfigDict
 
 from open_webui.models.auths import Auths
 
-from open_webui.models.groups import Groups
 from open_webui.models.chats import Chats
 from open_webui.models.users import (
     UserModel,
-    UserGroupIdsModel,
-    UserGroupIdsListResponse,
+    UserListResponse,
     UserInfoResponse,
     UserInfoListResponse,
     UserRoleUpdateForm,
@@ -53,7 +51,7 @@ router = APIRouter()
 PAGE_ITEM_COUNT = 30
 
 
-@router.get("/", response_model=UserGroupIdsListResponse)
+@router.get("/", response_model=UserListResponse)
 async def get_users(
     query: Optional[str] = None,
     order_by: Optional[str] = None,
@@ -75,29 +73,7 @@ async def get_users(
     if direction:
         filter["direction"] = direction
 
-    filter["direction"] = direction
-
-    result = Users.get_users(filter=filter, skip=skip, limit=limit, db=db)
-
-    users = result["users"]
-    total = result["total"]
-
-    # Fetch groups for all users in a single query to avoid N+1
-    user_ids = [user.id for user in users]
-    user_groups = Groups.get_groups_by_member_ids(user_ids, db=db)
-
-    return {
-        "users": [
-            UserGroupIdsModel(
-                **{
-                    **user.model_dump(),
-                    "group_ids": [group.id for group in user_groups.get(user.id, [])],
-                }
-            )
-            for user in users
-        ],
-        "total": total,
-    }
+    return Users.get_users(filter=filter, skip=skip, limit=limit, db=db)
 
 
 @router.get("/all", response_model=UserInfoListResponse)
@@ -131,18 +107,6 @@ async def search_users(
         filter["direction"] = direction
 
     return Users.get_users(filter=filter, skip=skip, limit=limit, db=db)
-
-
-############################
-# User Groups
-############################
-
-
-@router.get("/groups")
-async def get_user_groups(
-    user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    return Groups.get_groups_by_member_id(user.id, db=db)
 
 
 ############################
@@ -401,7 +365,6 @@ async def update_user_info_by_session_user(
 class UserActiveResponse(UserStatus):
     name: str
     profile_image_url: Optional[str] = None
-    groups: Optional[list] = []
 
     is_active: bool
     model_config = ConfigDict(extra="allow")
@@ -426,11 +389,9 @@ async def get_user_by_id(
 
     user = Users.get_user_by_id(user_id, db=db)
     if user:
-        groups = Groups.get_groups_by_member_id(user_id, db=db)
         return UserActiveResponse(
             **{
                 **user.model_dump(),
-                "groups": [{"id": group.id, "name": group.name} for group in groups],
                 "is_active": Users.is_user_active(user_id, db=db),
             }
         )
@@ -447,11 +408,9 @@ async def get_user_info_by_id(
 ):
     user = Users.get_user_by_id(user_id, db=db)
     if user:
-        groups = Groups.get_groups_by_member_id(user_id, db=db)
         return UserInfoResponse(
             **{
                 **user.model_dump(),
-                "groups": [{"id": group.id, "name": group.name} for group in groups],
                 "is_active": Users.is_user_active(user_id, db=db),
             }
         )
@@ -640,13 +599,3 @@ async def delete_user_by_id(
     )
 
 
-############################
-# GetUserGroupsById
-############################
-
-
-@router.get("/{user_id}/groups")
-async def get_user_groups_by_id(
-    user_id: str, user=Depends(get_admin_user), db: Session = Depends(get_session)
-):
-    return Groups.get_groups_by_member_id(user_id, db=db)

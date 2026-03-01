@@ -8,7 +8,6 @@
 
 	const i18n = getContext('i18n');
 
-	import AdvancedParams from './Advanced/AdvancedParams.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	export let saveSettings: Function;
 	export let getModels: Function;
@@ -21,8 +20,6 @@
 	let lang = $i18n.language;
 	let notificationEnabled = false;
 	let system = '';
-
-	let showAdvanced = false;
 
 	const toggleNotification = async () => {
 		const permission = await Notification.requestPermission();
@@ -39,32 +36,9 @@
 		}
 	};
 
-	let params = {
-		// Advanced
-		stream_delta_chunk_size: null,
-		seed: null,
-		temperature: null,
-		reasoning_effort: null,
-		logit_bias: null,
-		top_p: null,
-		stop: null,
-		max_tokens: null
-	};
-
 	const saveHandler = async () => {
 		saveSettings({
-			system: system !== '' ? system : undefined,
-			params: {
-				stream_delta_chunk_size:
-					params.stream_delta_chunk_size !== null ? params.stream_delta_chunk_size : undefined,
-				seed: params.seed !== null ? params.seed : undefined,
-				stop: params.stop ? params.stop.split(',').filter((e) => e) : undefined,
-				temperature: params.temperature !== null ? params.temperature : undefined,
-				reasoning_effort: params.reasoning_effort !== null ? params.reasoning_effort : undefined,
-				logit_bias: params.logit_bias !== null ? params.logit_bias : undefined,
-				top_p: params.top_p !== null ? params.top_p : undefined,
-				max_tokens: params.max_tokens !== null ? params.max_tokens : undefined
-			}
+			system: system !== '' ? system : undefined
 		});
 		dispatch('save');
 	};
@@ -80,9 +54,6 @@
 
 		notificationEnabled = $settings.notificationEnabled ?? false;
 		system = $settings.system ?? '';
-
-		params = { ...params, ...$settings.params };
-		params.stop = $settings?.params?.stop ? ($settings?.params?.stop ?? []).join(',') : null;
 	});
 
 	const applyTheme = (_theme: string) => {
@@ -240,28 +211,6 @@
 					rows="4"
 					placeholder={$i18n.t('Enter system prompt here')}
 				/>
-			</div>
-		{/if}
-
-		{#if $user?.role === 'admin' || (($user?.permissions.chat?.controls ?? true) && ($user?.permissions.chat?.params ?? true))}
-			<div class="mt-2 space-y-3 pr-1.5">
-				<div class="flex justify-between items-center text-sm">
-					<div class="  font-medium">{$i18n.t('Advanced Parameters')}</div>
-					<button
-						class=" text-xs font-medium {($settings?.highContrastMode ?? false)
-							? 'text-gray-800 dark:text-gray-100'
-							: 'text-gray-400 dark:text-gray-500'}"
-						type="button"
-						aria-expanded={showAdvanced}
-						on:click={() => {
-							showAdvanced = !showAdvanced;
-						}}>{showAdvanced ? $i18n.t('Hide') : $i18n.t('Show')}</button
-					>
-				</div>
-
-				{#if showAdvanced}
-					<AdvancedParams admin={$user?.role === 'admin'} bind:params />
-				{/if}
 			</div>
 		{/if}
 	</div>

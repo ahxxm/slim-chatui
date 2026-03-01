@@ -54,10 +54,8 @@ from open_webui.routers import (
     chats,
     folders,
     configs,
-    groups,
     files,
     models,
-    prompts,
     users,
     utils,
 )
@@ -99,10 +97,8 @@ from open_webui.config import (
     FOLDER_MAX_FILE_COUNT,
     ENABLE_USER_STATUS,
     ENABLE_USER_WEBHOOKS,
-    BYPASS_ADMIN_ACCESS_CONTROL,
     USER_PERMISSIONS,
     DEFAULT_USER_ROLE,
-    DEFAULT_GROUP_ID,
     PENDING_USER_OVERLAY_CONTENT,
     PENDING_USER_OVERLAY_TITLE,
     DEFAULT_PROMPT_SUGGESTIONS,
@@ -153,7 +149,6 @@ from open_webui.env import (
     WEBUI_AUTH_TRUSTED_NAME_HEADER,
     ENABLE_COMPRESSION_MIDDLEWARE,
     ENABLE_WEBSOCKET_SUPPORT,
-    BYPASS_MODEL_ACCESS_CONTROL,
     RESET_CONFIG_ON_START,
     EXTERNAL_PWA_MANIFEST_URL,
     ENABLE_PUBLIC_ACTIVE_USERS_COUNT,
@@ -363,7 +358,6 @@ app.state.config.DEFAULT_MODEL_PARAMS = DEFAULT_MODEL_PARAMS
 
 app.state.config.DEFAULT_PROMPT_SUGGESTIONS = DEFAULT_PROMPT_SUGGESTIONS
 app.state.config.DEFAULT_USER_ROLE = DEFAULT_USER_ROLE
-app.state.config.DEFAULT_GROUP_ID = DEFAULT_GROUP_ID
 
 app.state.config.PENDING_USER_OVERLAY_CONTENT = PENDING_USER_OVERLAY_CONTENT
 app.state.config.PENDING_USER_OVERLAY_TITLE = PENDING_USER_OVERLAY_TITLE
@@ -615,10 +609,7 @@ app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(chats.router, prefix="/api/v1/chats", tags=["chats"])
 
 app.include_router(models.router, prefix="/api/v1/models", tags=["models"])
-app.include_router(prompts.router, prefix="/api/v1/prompts", tags=["prompts"])
-
 app.include_router(folders.router, prefix="/api/v1/folders", tags=["folders"])
-app.include_router(groups.router, prefix="/api/v1/groups", tags=["groups"])
 app.include_router(files.router, prefix="/api/v1/files", tags=["files"])
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 
@@ -753,14 +744,7 @@ async def chat_completion(
             model = request.app.state.MODELS[model_id]
             model_info = Models.get_model_by_id(model_id)
 
-            # Check if user has access to the model
-            if not BYPASS_MODEL_ACCESS_CONTROL and (
-                user.role != "admin" or not BYPASS_ADMIN_ACCESS_CONTROL
-            ):
-                try:
-                    check_model_access(user, model)
-                except Exception as e:
-                    raise e
+            check_model_access(user, model)
         else:
             model = model_item
 

@@ -10,7 +10,6 @@
 	import Tags from '$lib/components/chat/Tags.svelte';
 	import Share from '$lib/components/icons/Share.svelte';
 	import ArchiveBox from '$lib/components/icons/ArchiveBox.svelte';
-	import DocumentDuplicate from '$lib/components/icons/DocumentDuplicate.svelte';
 	import Download from '$lib/components/icons/Download.svelte';
 	import ArrowUpCircle from '$lib/components/icons/ArrowUpCircle.svelte';
 	import Pin from '$lib/components/icons/Pin.svelte';
@@ -28,7 +27,6 @@
 	export let hideHandler: Function;
 	export let pinModelHandler: Function;
 	export let copyLinkHandler: Function;
-	export let cloneHandler: Function;
 
 	export let onClose: Function;
 
@@ -139,18 +137,6 @@
 				<div class="flex items-center">{$i18n.t('Copy Link')}</div>
 			</DropdownMenu.Item>
 
-			{#if model?.is_active ?? true}
-				<DropdownMenu.Item
-					class="select-none flex gap-2 items-center px-3 py-1.5 text-sm  font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
-					on:click={() => {
-						cloneHandler();
-					}}
-				>
-					<DocumentDuplicate />
-
-					<div class="flex items-center">{$i18n.t('Clone')}</div>
-				</DropdownMenu.Item>
-			{/if}
 
 			<DropdownMenu.Item
 				class="select-none flex gap-2 items-center px-3 py-1.5 text-sm  font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"

@@ -1440,10 +1440,10 @@
 		const stream = model?.info?.params?.stream_response ?? true;
 
 		let messages = [
-			params?.system || $settings.system
+			params?.system !== undefined || $settings?.system !== undefined
 				? {
 						role: 'system',
-						content: `${params?.system ?? $settings?.system ?? ''}`
+						content: params?.system ?? $settings?.system ?? ''
 					}
 				: undefined,
 			..._messages.map((message) => ({
@@ -1491,13 +1491,13 @@
 				model: model.id,
 				messages: messages,
 				params: {
-					...$settings?.params,
 					...params,
 					stop:
-						(params?.stop ?? $settings?.params?.stop ?? undefined)
-							? (params?.stop.split(',').map((token) => token.trim()) ?? $settings.params.stop).map(
-									(str) => decodeURIComponent(JSON.parse('"' + str.replace(/\"/g, '\\"') + '"'))
-								)
+						params?.stop
+							? params.stop
+									.split(',')
+									.map((token) => token.trim())
+									.map((str) => decodeURIComponent(JSON.parse('"' + str.replace(/\"/g, '\\"') + '"')))
 							: undefined
 				},
 

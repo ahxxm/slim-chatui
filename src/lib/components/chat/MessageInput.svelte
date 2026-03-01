@@ -107,7 +107,6 @@
 				return {
 					...file,
 					user: undefined,
-					access_grants: undefined
 				};
 			})
 	});
@@ -692,23 +691,6 @@
 					insertTextHandler: insertTextAtCursor
 				})
 			},
-			{
-				char: '/',
-				render: getSuggestionRenderer(CommandSuggestionList, {
-					i18n,
-					onSelect: (e) => {
-						const { type, data } = e;
-
-						if (type === 'model') {
-							atSelectedModel = data;
-						}
-
-						document.getElementById('chat-input')?.focus();
-					},
-
-					insertTextHandler: insertTextAtCursor
-				})
-			}
 		];
 		loaded = true;
 

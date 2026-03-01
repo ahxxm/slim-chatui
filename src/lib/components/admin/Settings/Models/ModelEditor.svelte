@@ -7,13 +7,10 @@
 
 	import AdvancedParams from '$lib/components/chat/Settings/Advanced/AdvancedParams.svelte';
 	import Tags from '$lib/components/common/Tags.svelte';
-	import Capabilities from '$lib/components/workspace/Models/Capabilities.svelte';
+	import Capabilities from './Capabilities.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import PromptSuggestions from './PromptSuggestions.svelte';
-	import AccessControlModal from '../common/AccessControlModal.svelte';
-	import LockClosed from '$lib/components/icons/LockClosed.svelte';
-	import { updateModelAccessGrants } from '$lib/apis/models';
 
 	const i18n = getContext('i18n');
 
@@ -33,7 +30,6 @@
 
 	let showAdvanced = false;
 	let showPreview = false;
-	let showAccessControlModal = false;
 
 	let loaded = false;
 
@@ -77,8 +73,6 @@
 
 	let capabilities = { ...DEFAULT_CAPABILITIES };
 
-	let accessGrants = [];
-
 	const submitHandler = async () => {
 		loading = true;
 
@@ -101,7 +95,6 @@
 
 		info.params = { ...info.params, ...params };
 
-		info.access_grants = accessGrants;
 		info.meta.capabilities = capabilities;
 
 		if (enableDescription) {
@@ -164,8 +157,6 @@
 
 			capabilities = { ...capabilities, ...(model?.meta?.capabilities ?? {}) };
 
-			accessGrants = model?.access_grants ?? [];
-
 			info = {
 				...info,
 				...JSON.parse(
@@ -188,29 +179,6 @@
 </script>
 
 {#if loaded}
-	<AccessControlModal
-		bind:show={showAccessControlModal}
-		bind:accessGrants
-		accessRoles={preset ? ['read', 'write'] : ['read']}
-		share={$user?.permissions?.sharing?.models || $user?.role === 'admin'}
-		sharePublic={$user?.permissions?.sharing?.public_models || $user?.role === 'admin'}
-		onChange={async () => {
-			if (edit && model?.id) {
-				try {
-					await updateModelAccessGrants(
-						localStorage.token,
-						model.id,
-						model.name ?? name,
-						accessGrants
-					);
-					toast.success($i18n.t('Saved'));
-				} catch (error) {
-					toast.error(error?.detail ?? `${error}`);
-				}
-			}
-		}}
-	/>
-
 	{#if onBack}
 		<button
 			class="flex space-x-1"
@@ -413,22 +381,6 @@
 											/>
 										</div>
 									</div>
-								</div>
-
-								<div class="shrink-0">
-									<button
-										class="bg-gray-50 shrink-0 hover:bg-gray-100 text-black dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-white transition px-2 py-1 rounded-full flex gap-1 items-center"
-										type="button"
-										on:click={() => {
-											showAccessControlModal = true;
-										}}
-									>
-										<LockClosed strokeWidth="2.5" className="size-3.5 shrink-0" />
-
-										<div class="text-sm font-medium shrink-0">
-											{$i18n.t('Access')}
-										</div>
-									</button>
 								</div>
 							</div>
 

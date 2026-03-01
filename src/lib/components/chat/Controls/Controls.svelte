@@ -4,7 +4,6 @@
 	const i18n = getContext('i18n');
 
 	import XMark from '$lib/components/icons/XMark.svelte';
-	import AdvancedParams from '../Settings/Advanced/AdvancedParams.svelte';
 	import FileItem from '$lib/components/common/FileItem.svelte';
 	import Collapsible from '$lib/components/common/Collapsible.svelte';
 
@@ -72,18 +71,6 @@
 							rows="4"
 							placeholder={$i18n.t('Enter system prompt')}
 						/>
-					</div>
-				</Collapsible>
-
-				<hr class="my-2 border-gray-50 dark:border-gray-700/10" />
-			{/if}
-
-			{#if $user?.role === 'admin' || ($user?.permissions.chat?.params ?? true)}
-				<Collapsible title={$i18n.t('Advanced Params')} open={true} buttonClassName="w-full">
-					<div class="text-sm mt-1.5" slot="content">
-						<div>
-							<AdvancedParams admin={$user?.role === 'admin'} custom={true} bind:params />
-						</div>
 					</div>
 				</Collapsible>
 			{/if}

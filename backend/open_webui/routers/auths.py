@@ -23,14 +23,11 @@ from open_webui.models.users import (
     UpdateProfileForm,
     UserStatus,
 )
-from open_webui.models.groups import Groups
-
 from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
 from open_webui.env import (
     WEBUI_AUTH,
     WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
     WEBUI_AUTH_TRUSTED_NAME_HEADER,
-    WEBUI_AUTH_TRUSTED_GROUPS_HEADER,
     WEBUI_AUTH_COOKIE_SAME_SITE,
     WEBUI_AUTH_COOKIE_SECURE,
     WEBUI_AUTH_SIGNOUT_REDIRECT_URL,
@@ -57,7 +54,6 @@ from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
 from open_webui.utils.webhook import post_webhook
 from open_webui.utils.access_control import get_permissions, has_permission
-from open_webui.utils.groups import apply_default_group_assignment
 
 from open_webui.utils.rate_limit import RateLimiter
 
@@ -324,14 +320,6 @@ async def signin(
             )
 
         user = Auths.authenticate_user_by_email(email, db=db)
-        if WEBUI_AUTH_TRUSTED_GROUPS_HEADER and user and user.role != "admin":
-            group_names = request.headers.get(
-                WEBUI_AUTH_TRUSTED_GROUPS_HEADER, ""
-            ).split(",")
-            group_names = [name.strip() for name in group_names if name.strip()]
-
-            if group_names:
-                Groups.sync_groups_by_group_names(user.id, group_names, db=db)
 
     elif WEBUI_AUTH == False:
         admin_email = "admin@localhost"
@@ -444,12 +432,6 @@ async def signup_handler(
             },
         )
 
-    apply_default_group_assignment(
-        request.app.state.config.DEFAULT_GROUP_ID,
-        user.id,
-        db=db,
-    )
-
     return user
 
 
@@ -560,12 +542,6 @@ async def add_user(
         )
 
         if user:
-            apply_default_group_assignment(
-                request.app.state.config.DEFAULT_GROUP_ID,
-                user.id,
-                db=db,
-            )
-
             token = create_token(data={"id": user.id})
             return {
                 "token": token,
@@ -636,7 +612,6 @@ async def get_admin_config(request: Request, user=Depends(get_admin_user)):
         "ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS": request.app.state.config.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS,
         "API_KEYS_ALLOWED_ENDPOINTS": request.app.state.config.API_KEYS_ALLOWED_ENDPOINTS,
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
-        "DEFAULT_GROUP_ID": request.app.state.config.DEFAULT_GROUP_ID,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
         "ENABLE_FOLDERS": request.app.state.config.ENABLE_FOLDERS,
         "FOLDER_MAX_FILE_COUNT": request.app.state.config.FOLDER_MAX_FILE_COUNT,
@@ -657,7 +632,6 @@ class AdminConfig(BaseModel):
     ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS: bool
     API_KEYS_ALLOWED_ENDPOINTS: str
     DEFAULT_USER_ROLE: str
-    DEFAULT_GROUP_ID: str
     JWT_EXPIRES_IN: str
     ENABLE_FOLDERS: bool
     FOLDER_MAX_FILE_COUNT: Optional[int | str] = None
@@ -692,8 +666,6 @@ async def update_admin_config(
     if form_data.DEFAULT_USER_ROLE in ["pending", "user", "admin"]:
         request.app.state.config.DEFAULT_USER_ROLE = form_data.DEFAULT_USER_ROLE
 
-    request.app.state.config.DEFAULT_GROUP_ID = form_data.DEFAULT_GROUP_ID
-
     pattern = r"^(-1|0|(-?\d+(\.\d+)?)(ms|s|m|h|d|w))$"
 
     # Check if the input string matches the pattern
@@ -721,7 +693,6 @@ async def update_admin_config(
         "ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS": request.app.state.config.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS,
         "API_KEYS_ALLOWED_ENDPOINTS": request.app.state.config.API_KEYS_ALLOWED_ENDPOINTS,
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
-        "DEFAULT_GROUP_ID": request.app.state.config.DEFAULT_GROUP_ID,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
         "ENABLE_FOLDERS": request.app.state.config.ENABLE_FOLDERS,
         "FOLDER_MAX_FILE_COUNT": request.app.state.config.FOLDER_MAX_FILE_COUNT,

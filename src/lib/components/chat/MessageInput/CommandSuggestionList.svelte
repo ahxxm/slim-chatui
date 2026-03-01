@@ -1,5 +1,4 @@
 <script lang="ts">
-	import Prompts from './Commands/Prompts.svelte';
 	import Models from './Commands/Models.svelte';
 
 	export let char = '';
@@ -54,20 +53,7 @@
 	id="suggestions-container"
 >
 	<div class="overflow-y-auto scrollbar-thin max-h-60">
-		{#if char === '/'}
-			<Prompts
-				bind:this={suggestionElement}
-				{query}
-				bind:filteredItems
-				onSelect={(e) => {
-					const { type, data } = e;
-
-					if (type === 'prompt') {
-						insertTextHandler(data.content);
-					}
-				}}
-			/>
-		{:else if char === '@'}
+		{#if char === '@'}
 			<Models
 				bind:this={suggestionElement}
 				{query}

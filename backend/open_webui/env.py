@@ -359,11 +359,6 @@ WEBUI_AUTH_TRUSTED_EMAIL_HEADER = os.environ.get(
     "WEBUI_AUTH_TRUSTED_EMAIL_HEADER", None
 )
 WEBUI_AUTH_TRUSTED_NAME_HEADER = os.environ.get("WEBUI_AUTH_TRUSTED_NAME_HEADER", None)
-WEBUI_AUTH_TRUSTED_GROUPS_HEADER = os.environ.get(
-    "WEBUI_AUTH_TRUSTED_GROUPS_HEADER", None
-)
-
-
 ENABLE_PASSWORD_VALIDATION = (
     os.environ.get("ENABLE_PASSWORD_VALIDATION", "False").lower() == "true"
 )
@@ -384,10 +379,6 @@ except Exception as e:
 
 PASSWORD_VALIDATION_HINT = os.environ.get("PASSWORD_VALIDATION_HINT", "")
 
-
-BYPASS_MODEL_ACCESS_CONTROL = (
-    os.environ.get("BYPASS_MODEL_ACCESS_CONTROL", "False").lower() == "true"
-)
 
 WEBUI_AUTH_SIGNOUT_REDIRECT_URL = os.environ.get(
     "WEBUI_AUTH_SIGNOUT_REDIRECT_URL", None
