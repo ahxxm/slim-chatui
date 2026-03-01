@@ -80,20 +80,12 @@ export const currentChatPage = writable(1);
 export const isLastActiveTab = writable(true);
 export const playingNotificationSound = writable(false);
 
-export type Model = OpenAIModel;
-
-type BaseModel = {
+export type Model = {
 	id: string;
 	name: string;
 	info?: ModelConfig;
-	owned_by: 'openai';
+	owned_by: string;
 };
-
-export interface OpenAIModel extends BaseModel {
-	owned_by: 'openai';
-	external: boolean;
-	source?: string;
-}
 
 type Settings = {
 	pinnedModels?: never[];
@@ -151,7 +143,6 @@ type ModelOptions = {
 type TitleSettings = {
 	auto?: boolean;
 	model?: string;
-	modelExternal?: string;
 	prompt?: string;
 };
 

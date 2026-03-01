@@ -127,7 +127,6 @@ from open_webui.config import (
     ENABLE_ADMIN_EXPORT,
     # Tasks
     TASK_MODEL,
-    TASK_MODEL_EXTERNAL,
     ENABLE_TAGS_GENERATION,
     ENABLE_TITLE_GENERATION,
     ENABLE_FOLLOW_UP_GENERATION,
@@ -177,7 +176,6 @@ from open_webui.utils.models import (
 )
 from open_webui.utils.chat import (
     generate_chat_completion as chat_completion_handler,
-    chat_completed as chat_completed_handler,
 )
 from open_webui.utils.embeddings import generate_embeddings
 from open_webui.utils.middleware import (
@@ -406,7 +404,6 @@ app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT = FILE_IMAGE_COMPRESSION_HEIGHT
 
 
 app.state.config.TASK_MODEL = TASK_MODEL
-app.state.config.TASK_MODEL_EXTERNAL = TASK_MODEL_EXTERNAL
 
 
 app.state.config.ENABLE_AUTOCOMPLETE_GENERATION = ENABLE_AUTOCOMPLETE_GENERATION
@@ -1062,10 +1059,16 @@ async def chat_completed(
         model_item = form_data.pop("model_item", {})
 
         if model_item.get("direct", False):
-            request.state.direct = True
-            request.state.model = model_item
+            models = {model_item["id"]: model_item}
+        else:
+            if not request.app.state.MODELS:
+                await get_all_models(request, user=user)
+            models = request.app.state.MODELS
 
-        return await chat_completed_handler(request, form_data, user)
+        if form_data.get("model") not in models:
+            raise Exception("Model not found")
+
+        return form_data
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -19,7 +19,7 @@ from open_webui.routers.openai import (
     generate_chat_completion as generate_openai_chat_completion,
 )
 
-from open_webui.utils.models import get_all_models, check_model_access
+from open_webui.utils.models import check_model_access
 
 from open_webui.env import GLOBAL_LOG_LEVEL, BYPASS_MODEL_ACCESS_CONTROL
 
@@ -176,24 +176,3 @@ async def generate_chat_completion(
             bypass_filter=bypass_filter,
             bypass_system_prompt=bypass_system_prompt,
         )
-
-
-async def chat_completed(request: Request, form_data: dict, user: Any):
-    if not request.app.state.MODELS:
-        await get_all_models(request, user=user)
-
-    if getattr(request.state, "direct", False) and hasattr(request.state, "model"):
-        models = {
-            request.state.model["id"]: request.state.model,
-        }
-    else:
-        models = request.app.state.MODELS
-
-    data = form_data
-    model_id = data["model"]
-    if model_id not in models:
-        raise Exception("Model not found")
-
-    model = models[model_id]
-
-    return data

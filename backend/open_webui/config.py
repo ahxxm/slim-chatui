@@ -847,14 +847,8 @@ ADMIN_EMAIL = PersistentConfig(
 
 TASK_MODEL = PersistentConfig(
     "TASK_MODEL",
-    "task.model.default",
-    os.environ.get("TASK_MODEL", ""),
-)
-
-TASK_MODEL_EXTERNAL = PersistentConfig(
-    "TASK_MODEL_EXTERNAL",
     "task.model.external",
-    os.environ.get("TASK_MODEL_EXTERNAL", ""),
+    os.environ.get("TASK_MODEL", os.environ.get("TASK_MODEL_EXTERNAL", "")),
 )
 
 TITLE_GENERATION_PROMPT_TEMPLATE = PersistentConfig(

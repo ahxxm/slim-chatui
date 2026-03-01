@@ -1437,11 +1437,7 @@
 			});
 		}
 
-		const stream =
-			model?.info?.params?.stream_response ??
-			$settings?.params?.stream_response ??
-			params?.stream_response ??
-			true;
+		const stream = model?.info?.params?.stream_response ?? true;
 
 		let messages = [
 			params?.system || $settings.system

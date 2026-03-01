@@ -510,7 +510,6 @@ def apply_params_to_form_data(form_data, model):
     custom_params = params.pop("custom_params", {})
 
     open_webui_params = {
-        "stream_response": bool,
         "stream_delta_chunk_size": int,
         "reasoning_tags": list,
         "system": str,

@@ -41,7 +41,6 @@
 
 	let params = {
 		// Advanced
-		stream_response: null,
 		stream_delta_chunk_size: null,
 		seed: null,
 		temperature: null,
@@ -70,7 +69,6 @@
 		saveSettings({
 			system: system !== '' ? system : undefined,
 			params: {
-				stream_response: params.stream_response !== null ? params.stream_response : undefined,
 				stream_delta_chunk_size:
 					params.stream_delta_chunk_size !== null ? params.stream_delta_chunk_size : undefined,
 				seed: (params.seed !== null ? params.seed : undefined) ?? undefined,

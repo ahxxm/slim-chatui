@@ -54,22 +54,6 @@
 	}}
 >
 	<div class="flex flex-col flex-1 gap-1.5">
-		<!-- {#if (item?.model?.tags ?? []).length > 0}
-			<div
-				class="flex gap-0.5 self-center items-start h-full w-full translate-y-[0.5px] overflow-x-auto scrollbar-none"
-			>
-				{#each item.model?.tags.sort((a, b) => a.name.localeCompare(b.name)) as tag}
-					<Tooltip content={tag.name} className="flex-shrink-0">
-						<div
-							class=" text-xs font-semibold px-1 rounded-sm uppercase bg-gray-500/20 text-gray-700 dark:text-gray-200"
-						>
-							{tag.name}
-						</div>
-					</Tooltip>
-				{/each}
-			</div>
-		{/if} -->
-
 		<div class="flex items-center gap-2">
 			<div class="flex items-center min-w-fit">
 				<Tooltip content={$user?.role === 'admin' ? (item?.value ?? '') : ''} placement="top-start">

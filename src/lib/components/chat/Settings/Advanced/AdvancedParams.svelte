@@ -13,7 +13,6 @@
 	export let custom = false;
 
 	const defaultParams = {
-		stream_response: null,
 		stream_delta_chunk_size: null,
 		reasoning_tags: null,
 		seed: null,
@@ -34,42 +33,6 @@
 </script>
 
 <div class=" space-y-1 text-xs pb-safe-bottom">
-	<div>
-		<Tooltip
-			content={$i18n.t(
-				'When enabled, the model will respond to each chat message in real-time, generating a response as soon as the user sends a message. This mode is useful for live chat applications, but may impact performance on slower hardware.'
-			)}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class=" py-0.5 flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Stream Chat Response')}
-				</div>
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition"
-					on:click={() => {
-						params.stream_response =
-							(params?.stream_response ?? null) === null
-								? true
-								: params.stream_response
-									? false
-									: null;
-					}}
-					type="button"
-				>
-					{#if params.stream_response === true}
-						<span class="ml-2 self-center">{$i18n.t('On')}</span>
-					{:else if params.stream_response === false}
-						<span class="ml-2 self-center">{$i18n.t('Off')}</span>
-					{:else}
-						<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
-	</div>
-
 	{#if admin}
 		<div>
 			<Tooltip
@@ -482,7 +445,7 @@
 	<div class=" py-0.5 w-full justify-between">
 		<Tooltip
 			content={$i18n.t(
-				'Works together with top-k. A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more focused and conservative text.'
+				'A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more focused and conservative text.'
 			)}
 			placement="top-start"
 			className="inline-tooltip"
