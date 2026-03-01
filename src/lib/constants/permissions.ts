@@ -1,7 +1,6 @@
 export const DEFAULT_PERMISSIONS = {
 	workspace: {
 		models: false,
-		knowledge: false,
 		prompts: false,
 		tools: false,
 		skills: false,
@@ -15,8 +14,6 @@ export const DEFAULT_PERMISSIONS = {
 	sharing: {
 		models: false,
 		public_models: false,
-		knowledge: false,
-		public_knowledge: false,
 		prompts: false,
 		public_prompts: false,
 		tools: false,
@@ -47,9 +44,7 @@ export const DEFAULT_PERMISSIONS = {
 		api_keys: false,
 		folders: true,
 		direct_tool_servers: false,
-		web_search: true,
-		code_interpreter: true,
-		memories: true
+		code_interpreter: true
 	},
 	settings: {
 		interface: true

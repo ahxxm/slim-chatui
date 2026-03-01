@@ -10,7 +10,6 @@
 
 	import AdvancedParams from '$lib/components/chat/Settings/Advanced/AdvancedParams.svelte';
 	import Tags from '$lib/components/common/Tags.svelte';
-	import Knowledge from '$lib/components/workspace/Models/Knowledge.svelte';
 	import ToolsSelector from '$lib/components/workspace/Models/ToolsSelector.svelte';
 	import SkillsSelector from '$lib/components/workspace/Models/SkillsSelector.svelte';
 	import FiltersSelector from '$lib/components/workspace/Models/FiltersSelector.svelte';
@@ -88,7 +87,6 @@
 		system: ''
 	};
 
-	let knowledge = [];
 	let toolIds = [];
 	let skillIds = [];
 
@@ -122,13 +120,6 @@
 			return;
 		}
 
-		if (knowledge.some((item) => item.status === 'uploading')) {
-			toast.error($i18n.t('Please wait until all files are uploaded.'));
-			loading = false;
-
-			return;
-		}
-
 		info.params = { ...info.params, ...params };
 
 		info.access_grants = accessGrants;
@@ -138,14 +129,6 @@
 			info.meta.description = info.meta.description.trim() === '' ? null : info.meta.description;
 		} else {
 			info.meta.description = null;
-		}
-
-		if (knowledge.length > 0) {
-			info.meta.knowledge = knowledge;
-		} else {
-			if (info.meta.knowledge) {
-				delete info.meta.knowledge;
-			}
 		}
 
 		if (toolIds.length > 0) {
@@ -258,25 +241,6 @@
 						','
 					)
 				: null;
-
-			knowledge = (model?.meta?.knowledge ?? []).map((item) => {
-				if (item?.collection_name && item?.type !== 'file') {
-					return {
-						id: item.collection_name,
-						name: item.name,
-						legacy: true
-					};
-				} else if (item?.collection_names) {
-					return {
-						name: item.name,
-						type: 'collection',
-						collection_names: item.collection_names,
-						legacy: true
-					};
-				} else {
-					return item;
-				}
-			});
 
 			toolIds = model?.meta?.toolIds ?? [];
 			skillIds = model?.meta?.skillIds ?? [];
@@ -721,10 +685,6 @@
 					</div>
 
 					<div class="my-4">
-						<Knowledge bind:selectedItems={knowledge} />
-					</div>
-
-					<div class="my-4">
 						<ToolsSelector bind:selectedToolIds={toolIds} tools={$tools ?? []} />
 					</div>
 
@@ -778,7 +738,7 @@
 
 					{#if Object.keys(capabilities).filter((key) => capabilities[key]).length > 0}
 						{@const availableFeatures = Object.entries(capabilities)
-							.filter(([key, value]) => value && ['web_search', 'code_interpreter'].includes(key))
+							.filter(([key, value]) => value && ['code_interpreter'].includes(key))
 							.map(([key, value]) => key)}
 
 						{#if availableFeatures.length > 0}

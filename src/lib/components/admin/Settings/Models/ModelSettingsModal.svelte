@@ -313,10 +313,7 @@
 
 													{#if Object.keys(defaultCapabilities).filter((key) => defaultCapabilities[key]).length > 0}
 														{@const availableFeatures = Object.entries(defaultCapabilities)
-															.filter(
-																([key, value]) =>
-																	value && ['web_search', 'code_interpreter'].includes(key)
-															)
+															.filter(([key, value]) => value && ['code_interpreter'].includes(key))
 															.map(([key, value]) => key)}
 
 														{#if availableFeatures.length > 0}

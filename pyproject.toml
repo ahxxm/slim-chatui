@@ -36,34 +36,12 @@ dependencies = [
     "loguru==0.7.3",
     "asgiref==3.11.1",
 
-    "tiktoken",
     "mcp==1.26.0",
 
-    "langchain==1.2.9",
-    "langchain-community==0.4.1",
-    "langchain-classic==1.0.1",
-    "langchain-text-splitters==1.1.0",
-
-    "chromadb==1.4.1",
-    "opensearch-py==3.1.0",
-
-    "transformers==5.1.0",
-    "sentence-transformers==5.2.2",
-
-    "ftfy==6.3.1",
-    "pypdf==6.7.0",
-    "docx2txt==0.9",
-    "python-pptx==1.0.2",
-    "unstructured==0.18.31",
     "Markdown==3.10.1",
-    "validators==0.35.0",
-    "azure-ai-documentintelligence==1.0.2",
     "azure-identity==1.25.1",
 
     "black==26.1.0",
-    "youtube-transcript-api==1.2.4",
-
-    "ddgs==9.10.0",
 ]
 readme = "README.md"
 requires-python = ">= 3.11, < 3.13.0a1"
@@ -81,29 +59,10 @@ classifiers = [
 [project.optional-dependencies]
 postgres = [
     "psycopg2-binary==2.9.11",
-    "pgvector==0.4.2",
 ]
 
 all = [
-    "pymongo",
     "psycopg2-binary==2.9.11",
-    "pgvector==0.4.2",
-    "docker~=7.1.0",
-    "pytest~=8.3.2",
-    "pytest-docker~=3.2.5",
-    "playwright==1.58.0", # Caution: version must match docker-compose.playwright.yaml - Update the docker-compose.yaml if necessary
-    "elasticsearch==9.3.0",
-
-    "qdrant-client==1.16.2",
-    
-    "weaviate-client==4.19.2",
-    "pymilvus==2.6.8",
-    "pinecone==6.0.2",
-    "oracledb==3.4.2",
-    "colbert-ai==0.2.22",
-
-    "firecrawl-py==4.14.0",
-    "azure-search-documents==11.6.0",
 ]
 
 [project.scripts]

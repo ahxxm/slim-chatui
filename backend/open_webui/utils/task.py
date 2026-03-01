@@ -3,12 +3,8 @@ import math
 import re
 from datetime import datetime
 from typing import Optional, Any
-import uuid
-
 
 from open_webui.utils.misc import get_last_user_message, get_messages_content
-
-from open_webui.config import DEFAULT_RAG_TEMPLATE
 
 log = logging.getLogger(__name__)
 
@@ -184,50 +180,6 @@ def replace_messages_variable(
     return template
 
 
-# {{prompt:middletruncate:8000}}
-
-
-def rag_template(template: str, context: str, query: str):
-    if template.strip() == "":
-        template = DEFAULT_RAG_TEMPLATE
-
-    template = prompt_template(template)
-
-    if "[context]" not in template and "{{CONTEXT}}" not in template:
-        log.debug(
-            "WARNING: The RAG template does not contain the '[context]' or '{{CONTEXT}}' placeholder."
-        )
-
-    if "<context>" in context and "</context>" in context:
-        log.debug(
-            "WARNING: Potential prompt injection attack: the RAG "
-            "context contains '<context>' and '</context>'. This might be "
-            "nothing, or the user might be trying to hack something."
-        )
-
-    query_placeholders = []
-    if "[query]" in context:
-        query_placeholder = "{{QUERY" + str(uuid.uuid4()) + "}}"
-        template = template.replace("[query]", query_placeholder)
-        query_placeholders.append((query_placeholder, "[query]"))
-
-    if "{{QUERY}}" in context:
-        query_placeholder = "{{QUERY" + str(uuid.uuid4()) + "}}"
-        template = template.replace("{{QUERY}}", query_placeholder)
-        query_placeholders.append((query_placeholder, "{{QUERY}}"))
-
-    template = template.replace("[context]", context)
-    template = template.replace("{{CONTEXT}}", context)
-
-    template = template.replace("[query]", query)
-    template = template.replace("{{QUERY}}", query)
-
-    for query_placeholder, original_placeholder in query_placeholders:
-        template = template.replace(query_placeholder, original_placeholder)
-
-    return template
-
-
 def title_generation_template(
     template: str, messages: list[dict], user: Optional[Any] = None
 ) -> str:
@@ -287,51 +239,13 @@ def autocomplete_generation_template(
     return template
 
 
-def query_generation_template(
-    template: str, messages: list[dict], user: Optional[Any] = None
-) -> str:
-    prompt = get_last_user_message(messages)
-    template = replace_prompt_variable(template, prompt)
-    template = replace_messages_variable(template, messages)
-
-    template = prompt_template(template, user)
-    return template
-
-
 def moa_response_generation_template(
     template: str, prompt: str, responses: list[str]
 ) -> str:
-    def replacement_function(match):
-        full_match = match.group(0)
-        start_length = match.group(1)
-        end_length = match.group(2)
-        middle_length = match.group(3)
+    template = replace_prompt_variable(template, prompt)
 
-        if full_match == "{{prompt}}":
-            return prompt
-        elif start_length is not None:
-            return prompt[: int(start_length)]
-        elif end_length is not None:
-            return prompt[-int(end_length) :]
-        elif middle_length is not None:
-            middle_length = int(middle_length)
-            if len(prompt) <= middle_length:
-                return prompt
-            start = prompt[: math.ceil(middle_length / 2)]
-            end = prompt[-math.floor(middle_length / 2) :]
-            return f"{start}...{end}"
-        return ""
-
-    template = re.sub(
-        r"{{prompt}}|{{prompt:start:(\d+)}}|{{prompt:end:(\d+)}}|{{prompt:middletruncate:(\d+)}}",
-        replacement_function,
-        template,
-    )
-
-    responses = [f'"""{response}"""' for response in responses]
-    responses = "\n\n".join(responses)
-
-    template = template.replace("{{responses}}", responses)
+    formatted = "\n\n".join(f'"""{r}"""' for r in responses)
+    template = template.replace("{{responses}}", formatted)
     return template
 
 

@@ -6,7 +6,6 @@
 	import { settings } from '$lib/stores';
 
 	import FileItemModal from './FileItemModal.svelte';
-	import GarbageBin from '../icons/GarbageBin.svelte';
 	import Spinner from './Spinner.svelte';
 	import Tooltip from './Tooltip.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
@@ -24,7 +23,6 @@
 	export let loading = false;
 
 	export let item = null;
-	export let edit = false;
 	export let small = false;
 
 	export let name: string;
@@ -32,7 +30,6 @@
 	export let size: number;
 
 	import DocumentPage from '../icons/DocumentPage.svelte';
-	import Database from '../icons/Database.svelte';
 	import ChatBubble from '../icons/ChatBubble.svelte';
 	import Folder from '../icons/Folder.svelte';
 	let showModal = false;
@@ -47,7 +44,7 @@
 </script>
 
 {#if item}
-	<FileItemModal bind:show={showModal} bind:item {edit} />
+	<FileItemModal bind:show={showModal} bind:item />
 {/if}
 
 <button
@@ -104,18 +101,14 @@
 		<div class="pl-1.5">
 			{#if !loading}
 				<Tooltip
-					content={type === 'collection'
-						? $i18n.t('Collection')
-						: type === 'chat'
-							? $i18n.t('Chat')
-							: type === 'file'
-								? $i18n.t('File')
-								: $i18n.t('Document')}
+					content={type === 'chat'
+						? $i18n.t('Chat')
+						: type === 'file'
+							? $i18n.t('File')
+							: $i18n.t('Document')}
 					placement="top"
 				>
-					{#if type === 'collection'}
-						<Database />
-					{:else if type === 'chat'}
+					{#if type === 'chat'}
 						<ChatBubble />
 					{:else if type === 'folder'}
 						<Folder />
@@ -142,10 +135,6 @@
 			>
 				{#if type === 'file'}
 					{$i18n.t('File')}
-				{:else if type === 'doc'}
-					{$i18n.t('Document')}
-				{:else if type === 'collection'}
-					{$i18n.t('Collection')}
 				{:else}
 					<span class=" capitalize line-clamp-1">{type}</span>
 				{/if}
@@ -184,15 +173,6 @@
 			>
 				<XMark className={'size-4'} />
 			</button>
-
-			<!-- <button
-				class=" p-1 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-full group-hover:visible invisible transition"
-				type="button"
-				on:click={() => {
-				}}
-			>
-				<GarbageBin />
-			</button> -->
 		</div>
 	{/if}
 </button>

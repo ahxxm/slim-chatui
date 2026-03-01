@@ -12,7 +12,6 @@
 	import General from './Settings/General.svelte';
 	import Interface from './Settings/Interface.svelte';
 	import DataControls from './Settings/DataControls.svelte';
-	import Personalization from './Settings/Personalization.svelte';
 	import Search from '../icons/Search.svelte';
 	import XMark from '../icons/XMark.svelte';
 	import Connections from './Settings/Connections.svelte';
@@ -23,7 +22,6 @@
 	import UserCircle from '../icons/UserCircle.svelte';
 	import InfoCircle from '../icons/InfoCircle.svelte';
 	import WrenchAlt from '../icons/WrenchAlt.svelte';
-	import Face from '../icons/Face.svelte';
 	import AppNotification from '../icons/AppNotification.svelte';
 	import UserBadgeCheck from '../icons/UserBadgeCheck.svelte';
 
@@ -87,11 +85,9 @@
 				'always collapse codeblocks',
 				'always collapse code blocks',
 				'always expand details',
-				'always on web search',
 				'always play notification sound',
 				'alwayscollapsecodeblocks',
 				'alwaysexpanddetails',
-				'alwaysonwebsearch',
 				'alwaysplaynotificationsound',
 				'android',
 				'auto chat tags',
@@ -199,9 +195,7 @@
 				'widescreen mode',
 				'widescreenmode',
 				'whatsnew',
-				'whats new',
-				'websearchinchat',
-				'web search in chat'
+				'whats new'
 			]
 		},
 		{
@@ -231,28 +225,6 @@
 			]
 		},
 
-		{
-			id: 'personalization',
-			title: 'Personalization',
-			keywords: [
-				'account preferences',
-				'account settings',
-				'accountpreferences',
-				'accountsettings',
-				'custom settings',
-				'customsettings',
-				'experimental',
-				'memories',
-				'memory',
-				'personalization',
-				'personalize',
-				'personal settings',
-				'personalsettings',
-				'profile',
-				'user preferences',
-				'userpreferences'
-			]
-		},
 		{
 			id: 'data_controls',
 			title: 'Data Controls',
@@ -411,13 +383,6 @@
 
 			if (tab.id === 'interface') {
 				return $user?.role === 'admin' || ($user?.permissions?.settings?.interface ?? true);
-			}
-
-			if (tab.id === 'personalization') {
-				return (
-					$config?.features?.enable_memories &&
-					($user?.role === 'admin' || ($user?.permissions?.features?.memories ?? true))
-				);
 			}
 
 			return true;
@@ -645,30 +610,6 @@
 									<div class=" self-center">{$i18n.t('External Tools')}</div>
 								</button>
 							{/if}
-						{:else if tabId === 'personalization'}
-							<button
-								role="tab"
-								aria-controls="tab-personalization"
-								aria-selected={selectedTab === 'personalization'}
-								class={`px-0.5 md:px-2.5 py-1 min-w-fit rounded-xl flex-1 md:flex-none flex text-left transition
-								${
-									selectedTab === 'personalization'
-										? ($settings?.highContrastMode ?? false)
-											? 'dark:bg-gray-800 bg-gray-200'
-											: ''
-										: ($settings?.highContrastMode ?? false)
-											? 'hover:bg-gray-200 dark:hover:bg-gray-800'
-											: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'
-								}`}
-								on:click={() => {
-									selectedTab = 'personalization';
-								}}
-							>
-								<div class=" self-center mr-2">
-									<Face strokeWidth="2" />
-								</div>
-								<div class=" self-center">{$i18n.t('Personalization')}</div>
-							</button>
 						{:else if tabId === 'data_controls'}
 							<button
 								role="tab"
@@ -795,13 +736,6 @@
 					<Tools
 						saveSettings={async (updated) => {
 							await saveSettings(updated);
-							toast.success($i18n.t('Settings saved successfully!'));
-						}}
-					/>
-				{:else if selectedTab === 'personalization'}
-					<Personalization
-						{saveSettings}
-						on:save={() => {
 							toast.success($i18n.t('Settings saved successfully!'));
 						}}
 					/>

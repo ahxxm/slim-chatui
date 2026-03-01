@@ -51,9 +51,7 @@
 	export let showCommands = false;
 
 	export let codeInterpreterEnabled = false;
-	export let webSearchEnabled = false;
 
-	export let onUpload: Function = (e) => {};
 	export let onSelect = (e) => {};
 	export let onChange = (e) => {};
 
@@ -197,7 +195,6 @@
 					bind:selectedToolIds
 					bind:selectedFilterIds
 					bind:codeInterpreterEnabled
-					bind:webSearchEnabled
 					bind:atSelectedModel
 					bind:showCommands
 					{toolServers}
@@ -205,7 +202,6 @@
 					{createMessagePair}
 					placeholder={$i18n.t('How can I help you today?')}
 					{onChange}
-					{onUpload}
 					on:submit={(e) => {
 						dispatch('submit', e.detail);
 					}}

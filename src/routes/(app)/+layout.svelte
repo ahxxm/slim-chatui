@@ -18,7 +18,6 @@
 		user,
 		settings,
 		models,
-		knowledge,
 		tools,
 		functions,
 		tags,
