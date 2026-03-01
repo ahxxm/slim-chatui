@@ -48,7 +48,6 @@ from open_webui.socket.main import (
     get_models_in_use,
 )
 from open_webui.routers import (
-    ollama,
     openai,
     tasks,
     auths,
@@ -63,18 +62,13 @@ from open_webui.routers import (
     utils,
 )
 
-from sqlalchemy.orm import Session
-from open_webui.internal.db import ScopedSession, get_session
+from open_webui.internal.db import ScopedSession
 
 from open_webui.models.models import Models
 from open_webui.models.users import Users
 from open_webui.models.chats import Chats
 
 from open_webui.config import (
-    # Ollama
-    ENABLE_OLLAMA_API,
-    OLLAMA_BASE_URLS,
-    OLLAMA_API_CONFIGS,
     # OpenAI
     ENABLE_OPENAI_API,
     OPENAI_API_BASE_URLS,
@@ -118,7 +112,6 @@ from open_webui.config import (
     DEFAULT_MODEL_METADATA,
     DEFAULT_MODEL_PARAMS,
     # Misc
-    ENV,
     CACHE_DIR,
     STATIC_DIR,
     FRONTEND_BUILD_DIR,
@@ -128,11 +121,9 @@ from open_webui.config import (
     RESPONSE_WATERMARK,
     # Admin
     ENABLE_ADMIN_CHAT_ACCESS,
-    BYPASS_ADMIN_ACCESS_CONTROL,
     ENABLE_ADMIN_EXPORT,
     # Tasks
     TASK_MODEL,
-    TASK_MODEL_EXTERNAL,
     ENABLE_TAGS_GENERATION,
     ENABLE_TITLE_GENERATION,
     ENABLE_FOLLOW_UP_GENERATION,
@@ -146,6 +137,7 @@ from open_webui.config import (
     reset_config,
 )
 from open_webui.env import (
+    ENV,
     ENABLE_CUSTOM_MODEL_FALLBACK,
     AUDIT_EXCLUDED_PATHS,
     AUDIT_LOG_LEVEL,
@@ -182,7 +174,6 @@ from open_webui.utils.models import (
 )
 from open_webui.utils.chat import (
     generate_chat_completion as chat_completion_handler,
-    chat_completed as chat_completed_handler,
 )
 from open_webui.utils.embeddings import generate_embeddings
 from open_webui.utils.middleware import (
@@ -314,19 +305,6 @@ app.state.WEBUI_NAME = WEBUI_NAME
 
 ########################################
 #
-# OLLAMA
-#
-########################################
-
-
-app.state.config.ENABLE_OLLAMA_API = ENABLE_OLLAMA_API
-app.state.config.OLLAMA_BASE_URLS = OLLAMA_BASE_URLS
-app.state.config.OLLAMA_API_CONFIGS = OLLAMA_API_CONFIGS
-
-app.state.OLLAMA_MODELS = {}
-
-########################################
-#
 # OPENAI
 #
 ########################################
@@ -424,7 +402,6 @@ app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT = FILE_IMAGE_COMPRESSION_HEIGHT
 
 
 app.state.config.TASK_MODEL = TASK_MODEL
-app.state.config.TASK_MODEL_EXTERNAL = TASK_MODEL_EXTERNAL
 
 
 app.state.config.ENABLE_AUTOCOMPLETE_GENERATION = ENABLE_AUTOCOMPLETE_GENERATION
@@ -625,7 +602,6 @@ app.add_middleware(
 app.mount("/ws", socket_app)
 
 
-app.include_router(ollama.router, prefix="/ollama", tags=["ollama"])
 app.include_router(openai.router, prefix="/openai", tags=["openai"])
 
 
@@ -736,7 +712,7 @@ async def embeddings(
 
     This handler:
       - Performs user/model checks and dispatches to the correct backend.
-      - Supports OpenAI, Ollama, and any compatible provider.
+      - Supports OpenAI and any compatible provider.
 
     Args:
         request (Request): Request context.
@@ -1081,10 +1057,16 @@ async def chat_completed(
         model_item = form_data.pop("model_item", {})
 
         if model_item.get("direct", False):
-            request.state.direct = True
-            request.state.model = model_item
+            models = {model_item["id"]: model_item}
+        else:
+            if not request.app.state.MODELS:
+                await get_all_models(request, user=user)
+            models = request.app.state.MODELS
 
-        return await chat_completed_handler(request, form_data, user)
+        if form_data.get("model") not in models:
+            raise Exception("Model not found")
+
+        return form_data
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

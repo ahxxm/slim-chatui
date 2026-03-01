@@ -744,8 +744,6 @@ def get_azure_allowed_params(api_version: str) -> set[str]:
         "stream",
         "stop",
         "max_tokens",
-        "presence_penalty",
-        "frequency_penalty",
         "logit_bias",
         "user",
         "function_call",
@@ -871,8 +869,6 @@ def convert_to_responses_payload(payload: dict) -> dict:
     for unsupported_key in (
         "stream_options",
         "logit_bias",
-        "frequency_penalty",
-        "presence_penalty",
         "stop",
     ):
         responses_payload.pop(unsupported_key, None)

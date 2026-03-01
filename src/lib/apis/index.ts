@@ -60,48 +60,33 @@ export const getModels = async (
 
 					if (enable) {
 						if (modelIds.length > 0) {
-							const modelList = {
-								object: 'list',
-								data: modelIds.map((modelId) => ({
-									id: modelId,
-									name: modelId,
-									owned_by: 'openai',
-									openai: { id: modelId },
-									urlIdx: idx
-								}))
-							};
-
 							requests.push(
-								(async () => {
-									return modelList;
-								})()
+								Promise.resolve({
+									object: 'list',
+									data: modelIds.map((modelId) => ({
+										id: modelId,
+										name: modelId,
+										owned_by: 'openai',
+										urlIdx: idx
+									}))
+								})
 							);
 						} else {
 							requests.push(
-								(async () => {
-									return await getOpenAIModelsDirect(url, OPENAI_API_KEYS[idx])
-										.then((res) => {
-											return res;
-										})
-										.catch((err) => {
-											return {
-												object: 'list',
-												data: [],
-												urlIdx: idx
-											};
-										});
-								})()
+								getOpenAIModelsDirect(url, OPENAI_API_KEYS[idx]).catch(() => ({
+									object: 'list',
+									data: [],
+									urlIdx: idx
+								}))
 							);
 						}
 					} else {
 						requests.push(
-							(async () => {
-								return {
-									object: 'list',
-									data: [],
-									urlIdx: idx
-								};
-							})()
+							Promise.resolve({
+								object: 'list',
+								data: [],
+								urlIdx: idx
+							})
 						);
 					}
 				}
@@ -114,7 +99,7 @@ export const getModels = async (
 				const apiConfig = OPENAI_API_CONFIGS[idx.toString()] ?? {};
 
 				let models = Array.isArray(response) ? response : (response?.data ?? []);
-				models = models.map((model) => ({ ...model, openai: { id: model.id }, urlIdx: idx }));
+				models = models.map((model) => ({ ...model, urlIdx: idx }));
 
 				const prefixId = apiConfig.prefix_id;
 				if (prefixId) {

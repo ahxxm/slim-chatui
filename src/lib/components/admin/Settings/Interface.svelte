@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { getModels, getTaskConfig, updateTaskConfig } from '$lib/apis';
-	import { config, settings } from '$lib/stores';
 	import { createEventDispatcher, onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
@@ -17,7 +16,6 @@
 
 	let taskConfig = {
 		TASK_MODEL: '',
-		TASK_MODEL_EXTERNAL: '',
 		ENABLE_TITLE_GENERATION: true,
 		TITLE_GENERATION_PROMPT_TEMPLATE: '',
 		ENABLE_FOLLOW_UP_GENERATION: true,
@@ -114,92 +112,43 @@
 					</Tooltip>
 				</div>
 
-				<div class=" mb-2.5 flex w-full gap-2">
-					<div class="flex-1">
-						<div class=" text-xs mb-1">{$i18n.t('Local Task Model')}</div>
-						<select
-							class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
-							bind:value={taskConfig.TASK_MODEL}
-							placeholder={$i18n.t('Select a model')}
-							on:change={() => {
-								if (taskConfig.TASK_MODEL) {
-									const model = models.find((m) => m.id === taskConfig.TASK_MODEL);
-									if (model) {
-										if (
-											model?.access_grants &&
-											!model.access_grants.some(
-												(g) =>
-													g.principal_type === 'user' &&
-													g.principal_id === '*' &&
-													g.permission === 'read'
-											)
-										) {
-											toast.error(
-												$i18n.t(
-													'This model is not publicly available. Please select another model.'
-												)
-											);
-										}
-
-										taskConfig.TASK_MODEL = model.id;
-									} else {
-										taskConfig.TASK_MODEL = '';
+				<div class="mb-2.5">
+					<select
+						class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
+						bind:value={taskConfig.TASK_MODEL}
+						placeholder={$i18n.t('Select a model')}
+						on:change={() => {
+							if (taskConfig.TASK_MODEL) {
+								const model = models.find((m) => m.id === taskConfig.TASK_MODEL);
+								if (model) {
+									if (
+										model?.access_grants &&
+										!model.access_grants.some(
+											(g) =>
+												g.principal_type === 'user' &&
+												g.principal_id === '*' &&
+												g.permission === 'read'
+										)
+									) {
+										toast.error(
+											$i18n.t('This model is not publicly available. Please select another model.')
+										);
 									}
-								}
-							}}
-						>
-							<option value="" selected>{$i18n.t('Current Model')}</option>
-							{#each models as model}
-								<option value={model.id} class="bg-gray-100 dark:bg-gray-700">
-									{model.name}
-									{model?.connection_type === 'local' ? `(${$i18n.t('Local')})` : ''}
-								</option>
-							{/each}
-						</select>
-					</div>
 
-					<div class="flex-1">
-						<div class=" text-xs mb-1">{$i18n.t('External Task Model')}</div>
-						<select
-							class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
-							bind:value={taskConfig.TASK_MODEL_EXTERNAL}
-							placeholder={$i18n.t('Select a model')}
-							on:change={() => {
-								if (taskConfig.TASK_MODEL_EXTERNAL) {
-									const model = models.find((m) => m.id === taskConfig.TASK_MODEL_EXTERNAL);
-									if (model) {
-										if (
-											model?.access_grants &&
-											!model.access_grants.some(
-												(g) =>
-													g.principal_type === 'user' &&
-													g.principal_id === '*' &&
-													g.permission === 'read'
-											)
-										) {
-											toast.error(
-												$i18n.t(
-													'This model is not publicly available. Please select another model.'
-												)
-											);
-										}
-
-										taskConfig.TASK_MODEL_EXTERNAL = model.id;
-									} else {
-										taskConfig.TASK_MODEL_EXTERNAL = '';
-									}
+									taskConfig.TASK_MODEL = model.id;
+								} else {
+									taskConfig.TASK_MODEL = '';
 								}
-							}}
-						>
-							<option value="" selected>{$i18n.t('Current Model')}</option>
-							{#each models as model}
-								<option value={model.id} class="bg-gray-100 dark:bg-gray-700">
-									{model.name}
-									{model?.connection_type === 'local' ? `(${$i18n.t('Local')})` : ''}
-								</option>
-							{/each}
-						</select>
-					</div>
+							}
+						}}
+					>
+						<option value="" selected>{$i18n.t('Current Model')}</option>
+						{#each models as model}
+							<option value={model.id} class="bg-gray-100 dark:bg-gray-700">
+								{model.name}
+							</option>
+						{/each}
+					</select>
 				</div>
 
 				<div class="mb-2.5 flex w-full items-center justify-between">

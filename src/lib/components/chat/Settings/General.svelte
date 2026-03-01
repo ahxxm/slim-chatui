@@ -41,65 +41,29 @@
 
 	let params = {
 		// Advanced
-		stream_response: null,
 		stream_delta_chunk_size: null,
 		seed: null,
 		temperature: null,
 		reasoning_effort: null,
 		logit_bias: null,
-		frequency_penalty: null,
-		presence_penalty: null,
-		repeat_penalty: null,
-		repeat_last_n: null,
-		mirostat: null,
-		mirostat_eta: null,
-		mirostat_tau: null,
-		top_k: null,
 		top_p: null,
-		min_p: null,
 		stop: null,
-		tfs_z: null,
-		num_ctx: null,
-		num_batch: null,
-		num_keep: null,
-		max_tokens: null,
-		num_gpu: null
+		max_tokens: null
 	};
 
 	const saveHandler = async () => {
 		saveSettings({
 			system: system !== '' ? system : undefined,
 			params: {
-				stream_response: params.stream_response !== null ? params.stream_response : undefined,
 				stream_delta_chunk_size:
 					params.stream_delta_chunk_size !== null ? params.stream_delta_chunk_size : undefined,
-				seed: (params.seed !== null ? params.seed : undefined) ?? undefined,
+				seed: params.seed !== null ? params.seed : undefined,
 				stop: params.stop ? params.stop.split(',').filter((e) => e) : undefined,
 				temperature: params.temperature !== null ? params.temperature : undefined,
 				reasoning_effort: params.reasoning_effort !== null ? params.reasoning_effort : undefined,
 				logit_bias: params.logit_bias !== null ? params.logit_bias : undefined,
-				frequency_penalty: params.frequency_penalty !== null ? params.frequency_penalty : undefined,
-				presence_penalty: params.frequency_penalty !== null ? params.frequency_penalty : undefined,
-				repeat_penalty: params.frequency_penalty !== null ? params.frequency_penalty : undefined,
-				repeat_last_n: params.repeat_last_n !== null ? params.repeat_last_n : undefined,
-				mirostat: params.mirostat !== null ? params.mirostat : undefined,
-				mirostat_eta: params.mirostat_eta !== null ? params.mirostat_eta : undefined,
-				mirostat_tau: params.mirostat_tau !== null ? params.mirostat_tau : undefined,
-				top_k: params.top_k !== null ? params.top_k : undefined,
 				top_p: params.top_p !== null ? params.top_p : undefined,
-				min_p: params.min_p !== null ? params.min_p : undefined,
-				tfs_z: params.tfs_z !== null ? params.tfs_z : undefined,
-				num_ctx: params.num_ctx !== null ? params.num_ctx : undefined,
-				num_batch: params.num_batch !== null ? params.num_batch : undefined,
-				num_keep: params.num_keep !== null ? params.num_keep : undefined,
-				max_tokens: params.max_tokens !== null ? params.max_tokens : undefined,
-				use_mmap: params.use_mmap !== null ? params.use_mmap : undefined,
-				use_mlock: params.use_mlock !== null ? params.use_mlock : undefined,
-				num_thread: params.num_thread !== null ? params.num_thread : undefined,
-				num_gpu: params.num_gpu !== null ? params.num_gpu : undefined,
-				think: params.think !== null ? params.think : undefined,
-				keep_alive: params.keep_alive !== null ? params.keep_alive : undefined,
-				format: params.format !== null ? params.format : undefined
+				max_tokens: params.max_tokens !== null ? params.max_tokens : undefined
 			}
 		});
 		dispatch('save');
@@ -238,24 +202,6 @@
 					</select>
 				</div>
 			</div>
-			{#if $i18n.language === 'en-US'}
-				<div
-					class="mb-2 text-xs {($settings?.highContrastMode ?? false)
-						? 'text-gray-800 dark:text-gray-100'
-						: 'text-gray-400 dark:text-gray-500'}"
-				>
-					Couldn't find your language?
-					<a
-						class="font-medium underline {($settings?.highContrastMode ?? false)
-							? 'text-gray-700 dark:text-gray-200'
-							: 'text-gray-300'}"
-						href="https://github.com/open-webui/open-webui/blob/main/docs/CONTRIBUTING.md#-translations-and-internationalization"
-						target="_blank"
-					>
-						Help us translate Open WebUI!
-					</a>
-				</div>
-			{/if}
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">

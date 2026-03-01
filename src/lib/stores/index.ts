@@ -21,15 +21,10 @@ export const appInfo = writable(null);
 export const appData = writable(null);
 
 // Frontend
-export const MODEL_DOWNLOAD_POOL = writable({});
-
 export const mobile = writable(false);
 
 export const socket: Writable<null | Socket> = writable(null);
-export const activeUserIds: Writable<null | string[]> = writable(null);
 export const activeChatIds: Writable<Set<string>> = writable(new Set());
-export const USAGE_POOL: Writable<null | string[]> = writable(null);
-
 export const theme = writable('system');
 
 export const shortCodesToEmojis = writable(
@@ -85,54 +80,11 @@ export const currentChatPage = writable(1);
 export const isLastActiveTab = writable(true);
 export const playingNotificationSound = writable(false);
 
-export type Model = OpenAIModel | OllamaModel;
-
-type BaseModel = {
+export type Model = {
 	id: string;
 	name: string;
 	info?: ModelConfig;
-	owned_by: 'ollama' | 'openai';
-};
-
-export interface OpenAIModel extends BaseModel {
-	owned_by: 'openai';
-	external: boolean;
-	source?: string;
-}
-
-export interface OllamaModel extends BaseModel {
-	owned_by: 'ollama';
-	details: OllamaModelDetails;
-	size: number;
-	description: string;
-	model: string;
-	modified_at: string;
-	digest: string;
-	ollama?: {
-		name?: string;
-		model?: string;
-		modified_at: string;
-		size?: number;
-		digest?: string;
-		details?: {
-			parent_model?: string;
-			format?: string;
-			family?: string;
-			families?: string[];
-			parameter_size?: string;
-			quantization_level?: string;
-		};
-		urls?: number[];
-	};
-}
-
-type OllamaModelDetails = {
-	parent_model: string;
-	format: string;
-	family: string;
-	families: string[] | null;
-	parameter_size: string;
-	quantization_level: string;
+	owned_by: string;
 };
 
 type Settings = {
@@ -157,7 +109,7 @@ type Settings = {
 	userLocation?: any;
 	autoTags?: boolean;
 	autoFollowUps?: boolean;
-	splitLargeChunks?(body: any, splitLargeChunks: any): unknown;
+	splitLargeChunks?: boolean;
 	backgroundImageUrl?: null;
 	landingPageMode?: string;
 	iframeSandboxAllowForms?: boolean;
@@ -178,25 +130,11 @@ type Settings = {
 	renderMarkdownInPreviews?: boolean;
 
 	system?: string;
-	seed?: number;
-	temperature?: string;
-	repeat_penalty?: string;
-	top_k?: string;
-	top_p?: string;
-	num_ctx?: string;
-	num_batch?: string;
-	num_keep?: string;
-	options?: ModelOptions;
-};
-
-type ModelOptions = {
-	stop?: boolean;
 };
 
 type TitleSettings = {
 	auto?: boolean;
 	model?: string;
-	modelExternal?: string;
 	prompt?: string;
 };
 
