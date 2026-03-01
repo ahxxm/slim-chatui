@@ -554,7 +554,6 @@
 						</div>
 					</div>
 				</div>
-
 			{/if}
 
 			<div class=" my-2 text-sm font-medium">{$i18n.t('Chat')}</div>
