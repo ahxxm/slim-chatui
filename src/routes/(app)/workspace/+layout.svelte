@@ -1,14 +1,6 @@
 <script lang="ts">
 	import { onMount, getContext } from 'svelte';
-	import {
-		WEBUI_NAME,
-		showSidebar,
-		functions,
-		user,
-		mobile,
-		models,
-		tools
-	} from '$lib/stores';
+	import { WEBUI_NAME, showSidebar, functions, user, mobile, models, tools } from '$lib/stores';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
@@ -88,7 +80,6 @@
 								href="/workspace/models">{$i18n.t('Models')}</a
 							>
 						{/if}
-
 
 						{#if $user?.role === 'admin' || $user?.permissions?.workspace?.prompts}
 							<a
