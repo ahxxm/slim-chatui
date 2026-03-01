@@ -23,8 +23,6 @@ export const DEFAULT_PERMISSIONS = {
 		public_tools: false,
 		skills: false,
 		public_skills: false,
-		notes: false,
-		public_notes: false
 	},
 	chat: {
 		controls: true,
@@ -50,7 +48,6 @@ export const DEFAULT_PERMISSIONS = {
 	},
 	features: {
 		api_keys: false,
-		notes: true,
 		folders: true,
 		direct_tool_servers: false,
 		web_search: true,

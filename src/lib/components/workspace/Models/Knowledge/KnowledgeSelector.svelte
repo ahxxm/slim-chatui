@@ -126,7 +126,7 @@
 					{#each items as item, i}
 						{#if i === 0 || item?.type !== items[i - 1]?.type}
 							<div class="px-2 text-xs text-gray-500 py-1">
-								{:else if item?.type === 'collection'}
+								{#if item?.type === 'collection'}
 									{$i18n.t('Collections')}
 								{:else if item?.type === 'file'}
 									{$i18n.t('Files')}
@@ -146,7 +146,7 @@
 								}}
 							>
 								<div class="  text-black dark:text-gray-100 flex items-center gap-1 shrink-0">
-									{:else if item.type === 'collection'}
+									{#if item.type === 'collection'}
 										<Tooltip
 											content={$i18n.t('Collection')}
 											placement="top"

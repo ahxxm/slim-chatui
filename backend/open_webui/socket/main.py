@@ -7,7 +7,6 @@ import sys
 import time
 from typing import Dict, Set
 from redis import asyncio as aioredis
-import pycrdt as Y
 
 from open_webui.models.users import Users, UserNameResponse
 from open_webui.models.chats import Chats
@@ -37,7 +36,7 @@ from open_webui.env import (
     WEBSOCKET_SERVER_ENGINEIO_LOGGING,
 )
 from open_webui.utils.auth import decode_token
-from open_webui.socket.utils import RedisDict, RedisLock, YdocManager
+from open_webui.socket.utils import RedisDict, RedisLock
 from open_webui.tasks import create_task, stop_item_tasks
 from open_webui.utils.redis import get_redis_connection
 from open_webui.utils.access_control import has_permission
@@ -165,12 +164,6 @@ else:
 
     aquire_func = release_func = renew_func = lambda: True
     session_aquire_func = session_release_func = session_renew_func = lambda: True
-
-
-YDOC_MANAGER = YdocManager(
-    redis=REDIS,
-    redis_key_prefix=f"{REDIS_KEY_PREFIX}:ydoc:documents",
-)
 
 
 async def periodic_session_pool_cleanup():
@@ -405,210 +398,6 @@ async def heartbeat(sid, data):
         Users.update_last_active_by_id(user["id"])
 
 
-@sio.on("ydoc:document:join")
-async def ydoc_document_join(sid, data):
-    """Handle user joining a document"""
-    user = SESSION_POOL.get(sid)
-    if not user:
-        return
-
-    try:
-        document_id = data["document_id"]
-
-        user_id = data.get("user_id", sid)
-        user_name = data.get("user_name", "Anonymous")
-        user_color = data.get("user_color", "#000000")
-
-        log.info(f"User {user_id} joining document {document_id}")
-        await YDOC_MANAGER.add_user(document_id=document_id, user_id=sid)
-
-        # Join Socket.IO room
-        await sio.enter_room(sid, f"doc_{document_id}")
-
-        active_session_ids = get_session_ids_from_room(f"doc_{document_id}")
-
-        # Get the Yjs document state
-        ydoc = Y.Doc()
-        updates = await YDOC_MANAGER.get_updates(document_id)
-        for update in updates:
-            ydoc.apply_update(bytes(update))
-
-        # Encode the entire document state as an update
-        state_update = ydoc.get_update()
-        await sio.emit(
-            "ydoc:document:state",
-            {
-                "document_id": document_id,
-                "state": list(state_update),  # Convert bytes to list for JSON
-                "sessions": active_session_ids,
-            },
-            room=sid,
-        )
-
-        # Notify other users about the new user
-        await sio.emit(
-            "ydoc:user:joined",
-            {
-                "document_id": document_id,
-                "user_id": user_id,
-                "user_name": user_name,
-                "user_color": user_color,
-            },
-            room=f"doc_{document_id}",
-            skip_sid=sid,
-        )
-
-        log.info(f"User {user_id} successfully joined document {document_id}")
-
-    except Exception as e:
-        log.error(f"Error in yjs_document_join: {e}")
-        await sio.emit("error", {"message": "Failed to join document"}, room=sid)
-
-
-async def document_save_handler(document_id, data, user):
-    pass
-
-
-@sio.on("ydoc:document:state")
-async def yjs_document_state(sid, data):
-    """Send the current state of the Yjs document to the user"""
-    try:
-        document_id = data["document_id"]
-        room = f"doc_{document_id}"
-
-        active_session_ids = get_session_ids_from_room(room)
-
-        if sid not in active_session_ids:
-            log.warning(f"Session {sid} not in room {room}. Cannot send state.")
-            return
-
-        if not await YDOC_MANAGER.document_exists(document_id):
-            log.warning(f"Document {document_id} not found")
-            return
-
-        # Get the Yjs document state
-        ydoc = Y.Doc()
-        updates = await YDOC_MANAGER.get_updates(document_id)
-        for update in updates:
-            ydoc.apply_update(bytes(update))
-
-        # Encode the entire document state as an update
-        state_update = ydoc.get_update()
-
-        await sio.emit(
-            "ydoc:document:state",
-            {
-                "document_id": document_id,
-                "state": list(state_update),  # Convert bytes to list for JSON
-                "sessions": active_session_ids,
-            },
-            room=sid,
-        )
-    except Exception as e:
-        log.error(f"Error in yjs_document_state: {e}")
-
-
-@sio.on("ydoc:document:update")
-async def yjs_document_update(sid, data):
-    """Handle Yjs document updates"""
-    try:
-        document_id = data["document_id"]
-
-        try:
-            await stop_item_tasks(REDIS, document_id)
-        except:
-            pass
-
-        user_id = data.get("user_id", sid)
-
-        update = data["update"]  # List of bytes from frontend
-
-        await YDOC_MANAGER.append_to_updates(
-            document_id=document_id,
-            update=update,  # Convert list of bytes to bytes
-        )
-
-        # Broadcast update to all other users in the document
-        await sio.emit(
-            "ydoc:document:update",
-            {
-                "document_id": document_id,
-                "user_id": user_id,
-                "update": update,
-                "socket_id": sid,  # Add socket_id to match frontend filtering
-            },
-            room=f"doc_{document_id}",
-            skip_sid=sid,
-        )
-
-        user = SESSION_POOL.get(sid)
-        if not user:
-            return
-
-        async def debounced_save():
-            await asyncio.sleep(0.5)
-            await document_save_handler(document_id, data.get("data", {}), user)
-
-        if data.get("data"):
-            await create_task(REDIS, debounced_save(), document_id)
-
-    except Exception as e:
-        log.error(f"Error in yjs_document_update: {e}")
-
-
-@sio.on("ydoc:document:leave")
-async def yjs_document_leave(sid, data):
-    """Handle user leaving a document"""
-    try:
-        document_id = data["document_id"]
-        user_id = data.get("user_id", sid)
-
-        log.info(f"User {user_id} leaving document {document_id}")
-
-        # Remove user from the document
-        await YDOC_MANAGER.remove_user(document_id=document_id, user_id=sid)
-
-        # Leave Socket.IO room
-        await sio.leave_room(sid, f"doc_{document_id}")
-
-        # Notify other users
-        await sio.emit(
-            "ydoc:user:left",
-            {"document_id": document_id, "user_id": user_id},
-            room=f"doc_{document_id}",
-        )
-
-        if (
-            await YDOC_MANAGER.document_exists(document_id)
-            and len(await YDOC_MANAGER.get_users(document_id)) == 0
-        ):
-            log.info(f"Cleaning up document {document_id} as no users are left")
-            await YDOC_MANAGER.clear_document(document_id)
-
-    except Exception as e:
-        log.error(f"Error in yjs_document_leave: {e}")
-
-
-@sio.on("ydoc:awareness:update")
-async def yjs_awareness_update(sid, data):
-    """Handle awareness updates (cursors, selections, etc.)"""
-    try:
-        document_id = data["document_id"]
-        user_id = data.get("user_id", sid)
-        update = data["update"]
-
-        # Broadcast awareness update to all other users in the document
-        await sio.emit(
-            "ydoc:awareness:update",
-            {"document_id": document_id, "user_id": user_id, "update": update},
-            room=f"doc_{document_id}",
-            skip_sid=sid,
-        )
-
-    except Exception as e:
-        log.error(f"Error in yjs_awareness_update: {e}")
-
-
 @sio.event
 async def disconnect(sid):
     if sid in SESSION_POOL:
@@ -625,7 +414,6 @@ async def disconnect(sid):
                 else:
                     USAGE_POOL[model_id] = connections
 
-        await YDOC_MANAGER.remove_user_from_all_documents(sid)
     else:
         pass
         # print(f"Unknown session ID {sid} disconnected")
