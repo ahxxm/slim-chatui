@@ -149,10 +149,7 @@ class ModelsTable:
 
     def get_all_models(self, db: Optional[Session] = None) -> list[ModelModel]:
         with get_db_context(db) as db:
-            return [
-                ModelModel.model_validate(model)
-                for model in db.query(Model).all()
-            ]
+            return [ModelModel.model_validate(model) for model in db.query(Model).all()]
 
     def get_models(self, db: Optional[Session] = None) -> list[ModelUserResponse]:
         with get_db_context(db) as db:
@@ -370,8 +367,7 @@ class ModelsTable:
                 db.commit()
 
                 return [
-                    ModelModel.model_validate(model)
-                    for model in db.query(Model).all()
+                    ModelModel.model_validate(model) for model in db.query(Model).all()
                 ]
         except Exception as e:
             log.exception(f"Error syncing models for user {user_id}: {e}")

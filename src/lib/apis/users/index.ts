@@ -439,4 +439,3 @@ export const updateUserById = async (token: string, userId: string, user: UserUp
 
 	return res;
 };
-

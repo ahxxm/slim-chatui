@@ -147,7 +147,6 @@ type Config = {
 	features: {
 		auth: boolean;
 		auth_trusted_header: boolean;
-		enable_api_keys: boolean;
 		enable_signup: boolean;
 		enable_admin_export: boolean;
 		enable_admin_chat_access: boolean;

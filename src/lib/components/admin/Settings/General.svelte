@@ -163,48 +163,6 @@
 						/>
 					</div>
 
-					<div class="mb-2.5 flex w-full justify-between pr-2">
-						<div class=" self-center text-xs font-medium">{$i18n.t('Enable API Keys')}</div>
-
-						<Switch bind:state={adminConfig.ENABLE_API_KEYS} />
-					</div>
-
-					{#if adminConfig?.ENABLE_API_KEYS}
-						<div class="mb-2.5 flex w-full justify-between pr-2">
-							<div class=" self-center text-xs font-medium">
-								{$i18n.t('API Key Endpoint Restrictions')}
-							</div>
-
-							<Switch bind:state={adminConfig.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS} />
-						</div>
-
-						{#if adminConfig?.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS}
-							<div class=" flex w-full flex-col pr-2 mb-2.5">
-								<div class=" text-xs font-medium">
-									{$i18n.t('Allowed Endpoints')}
-								</div>
-
-								<input
-									class="w-full mt-1 text-sm dark:text-gray-300 bg-transparent outline-hidden"
-									type="text"
-									placeholder={`e.g.) /api/v1/chats, /api/v1/models`}
-									bind:value={adminConfig.API_KEYS_ALLOWED_ENDPOINTS}
-								/>
-
-								<div class="mt-2 text-xs text-gray-400 dark:text-gray-500">
-									<!-- https://docs.openwebui.com/getting-started/advanced-topics/api-endpoints -->
-									<a
-										href="https://docs.openwebui.com/getting-started/api-endpoints"
-										target="_blank"
-										class=" text-gray-300 font-medium underline"
-									>
-										{$i18n.t('To learn more about available endpoints, visit our documentation.')}
-									</a>
-								</div>
-							</div>
-						{/if}
-					{/if}
-
 					<div class=" mb-2.5 w-full justify-between">
 						<div class="flex w-full justify-between">
 							<div class=" self-center text-xs font-medium">{$i18n.t('JWT Expiration')}</div>

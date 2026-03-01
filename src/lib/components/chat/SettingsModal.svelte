@@ -240,8 +240,6 @@
 				'account settings',
 				'accountpreferences',
 				'accountsettings',
-				'api keys',
-				'apikeys',
 				'change password',
 				'changepassword',
 				'jwt token',

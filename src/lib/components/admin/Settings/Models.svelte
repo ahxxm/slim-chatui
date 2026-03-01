@@ -501,7 +501,6 @@
 									>
 										<div class="font-medium line-clamp-1 flex items-center gap-2">
 											{model.name}
-
 										</div>
 									</Tooltip>
 									<div

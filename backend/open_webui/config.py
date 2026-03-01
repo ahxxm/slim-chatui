@@ -223,29 +223,6 @@ class AppConfig:
 # WEBUI_AUTH (Required for security)
 ####################################
 
-ENABLE_API_KEYS = PersistentConfig(
-    "ENABLE_API_KEYS",
-    "auth.enable_api_keys",
-    os.environ.get("ENABLE_API_KEYS", "False").lower() == "true",
-)
-
-ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS = PersistentConfig(
-    "ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS",
-    "auth.api_key.endpoint_restrictions",
-    os.environ.get(
-        "ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS",
-        os.environ.get("ENABLE_API_KEY_ENDPOINT_RESTRICTIONS", "False"),
-    ).lower()
-    == "true",
-)
-
-API_KEYS_ALLOWED_ENDPOINTS = PersistentConfig(
-    "API_KEYS_ALLOWED_ENDPOINTS",
-    "auth.api_key.allowed_endpoints",
-    os.environ.get(
-        "API_KEYS_ALLOWED_ENDPOINTS", os.environ.get("API_KEY_ALLOWED_ENDPOINTS", "")
-    ),
-)
 
 JWT_EXPIRES_IN = PersistentConfig(
     "JWT_EXPIRES_IN", "auth.jwt_expiry", os.environ.get("JWT_EXPIRES_IN", "4w")
@@ -529,119 +506,32 @@ RESPONSE_WATERMARK = PersistentConfig(
 )
 
 
-USER_PERMISSIONS_CHAT_CONTROLS = (
-    os.environ.get("USER_PERMISSIONS_CHAT_CONTROLS", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_SYSTEM_PROMPT = (
-    os.environ.get("USER_PERMISSIONS_CHAT_SYSTEM_PROMPT", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_PARAMS = (
-    os.environ.get("USER_PERMISSIONS_CHAT_PARAMS", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_FILE_UPLOAD = (
-    os.environ.get("USER_PERMISSIONS_CHAT_FILE_UPLOAD", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_WEB_UPLOAD = (
-    os.environ.get("USER_PERMISSIONS_CHAT_WEB_UPLOAD", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_DELETE = (
-    os.environ.get("USER_PERMISSIONS_CHAT_DELETE", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_DELETE_MESSAGE = (
-    os.environ.get("USER_PERMISSIONS_CHAT_DELETE_MESSAGE", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_CONTINUE_RESPONSE = (
-    os.environ.get("USER_PERMISSIONS_CHAT_CONTINUE_RESPONSE", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_REGENERATE_RESPONSE = (
-    os.environ.get("USER_PERMISSIONS_CHAT_REGENERATE_RESPONSE", "True").lower()
-    == "true"
-)
-
-USER_PERMISSIONS_CHAT_RATE_RESPONSE = (
-    os.environ.get("USER_PERMISSIONS_CHAT_RATE_RESPONSE", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_EDIT = (
-    os.environ.get("USER_PERMISSIONS_CHAT_EDIT", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_SHARE = (
-    os.environ.get("USER_PERMISSIONS_CHAT_SHARE", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_EXPORT = (
-    os.environ.get("USER_PERMISSIONS_CHAT_EXPORT", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_MULTIPLE_MODELS = (
-    os.environ.get("USER_PERMISSIONS_CHAT_MULTIPLE_MODELS", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_TEMPORARY = (
-    os.environ.get("USER_PERMISSIONS_CHAT_TEMPORARY", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED = (
-    os.environ.get("USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED", "False").lower()
-    == "true"
-)
-
-
-USER_PERMISSIONS_FEATURES_FOLDERS = (
-    os.environ.get("USER_PERMISSIONS_FEATURES_FOLDERS", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_FEATURES_API_KEYS = (
-    os.environ.get("USER_PERMISSIONS_FEATURES_API_KEYS", "False").lower() == "true"
-)
-
-USER_PERMISSIONS_SETTINGS_INTERFACE = (
-    os.environ.get("USER_PERMISSIONS_SETTINGS_INTERFACE", "True").lower() == "true"
-)
-
-
-DEFAULT_USER_PERMISSIONS = {
+USER_PERMISSIONS = {
     "chat": {
-        "controls": USER_PERMISSIONS_CHAT_CONTROLS,
-        "system_prompt": USER_PERMISSIONS_CHAT_SYSTEM_PROMPT,
-        "params": USER_PERMISSIONS_CHAT_PARAMS,
-        "file_upload": USER_PERMISSIONS_CHAT_FILE_UPLOAD,
-        "web_upload": USER_PERMISSIONS_CHAT_WEB_UPLOAD,
-        "delete": USER_PERMISSIONS_CHAT_DELETE,
-        "delete_message": USER_PERMISSIONS_CHAT_DELETE_MESSAGE,
-        "continue_response": USER_PERMISSIONS_CHAT_CONTINUE_RESPONSE,
-        "regenerate_response": USER_PERMISSIONS_CHAT_REGENERATE_RESPONSE,
-        "rate_response": USER_PERMISSIONS_CHAT_RATE_RESPONSE,
-        "edit": USER_PERMISSIONS_CHAT_EDIT,
-        "share": USER_PERMISSIONS_CHAT_SHARE,
-        "export": USER_PERMISSIONS_CHAT_EXPORT,
-        "multiple_models": USER_PERMISSIONS_CHAT_MULTIPLE_MODELS,
-        "temporary": USER_PERMISSIONS_CHAT_TEMPORARY,
-        "temporary_enforced": USER_PERMISSIONS_CHAT_TEMPORARY_ENFORCED,
+        "controls": True,
+        "system_prompt": True,
+        "params": True,
+        "file_upload": True,
+        "web_upload": True,
+        "delete": True,
+        "delete_message": True,
+        "continue_response": True,
+        "regenerate_response": True,
+        "rate_response": True,
+        "edit": True,
+        "share": True,
+        "export": True,
+        "multiple_models": True,
+        "temporary": True,
+        "temporary_enforced": False,
     },
     "features": {
-        "api_keys": USER_PERMISSIONS_FEATURES_API_KEYS,
-        "folders": USER_PERMISSIONS_FEATURES_FOLDERS,
+        "folders": True,
     },
     "settings": {
-        "interface": USER_PERMISSIONS_SETTINGS_INTERFACE,
+        "interface": True,
     },
 }
-
-USER_PERMISSIONS = PersistentConfig(
-    "USER_PERMISSIONS",
-    "user.permissions",
-    DEFAULT_USER_PERMISSIONS,
-)
 
 ENABLE_FOLDERS = PersistentConfig(
     "ENABLE_FOLDERS",

@@ -90,9 +90,6 @@ from open_webui.config import (
     SHOW_ADMIN_DETAILS,
     JWT_EXPIRES_IN,
     ENABLE_SIGNUP,
-    ENABLE_API_KEYS,
-    ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS,
-    API_KEYS_ALLOWED_ENDPOINTS,
     ENABLE_FOLDERS,
     FOLDER_MAX_FILE_COUNT,
     ENABLE_USER_STATUS,
@@ -335,12 +332,6 @@ app.state.BASE_MODELS = []
 app.state.config.WEBUI_URL = WEBUI_URL
 app.state.config.ENABLE_SIGNUP = ENABLE_SIGNUP
 
-app.state.config.ENABLE_API_KEYS = ENABLE_API_KEYS
-app.state.config.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS = (
-    ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS
-)
-app.state.config.API_KEYS_ALLOWED_ENDPOINTS = API_KEYS_ALLOWED_ENDPOINTS
-
 app.state.config.JWT_EXPIRES_IN = JWT_EXPIRES_IN
 
 app.state.config.SHOW_ADMIN_DETAILS = SHOW_ADMIN_DETAILS
@@ -474,51 +465,6 @@ app.add_middleware(RedirectMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
 
-class APIKeyRestrictionMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        auth_header = request.headers.get("Authorization")
-        token = None
-
-        if auth_header:
-            parts = auth_header.split(" ", 1)
-            if len(parts) == 2:
-                token = parts[1]
-
-        # Only apply restrictions if an sk- API key is used
-        if token and token.startswith("sk-"):
-            # Check if restrictions are enabled
-            if request.app.state.config.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS:
-                allowed_paths = [
-                    path.strip()
-                    for path in str(
-                        request.app.state.config.API_KEYS_ALLOWED_ENDPOINTS
-                    ).split(",")
-                    if path.strip()
-                ]
-
-                request_path = request.url.path
-
-                # Match exact path or prefix path
-                is_allowed = any(
-                    request_path == allowed or request_path.startswith(allowed + "/")
-                    for allowed in allowed_paths
-                )
-
-                if not is_allowed:
-                    return JSONResponse(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        content={
-                            "detail": "API key not allowed to access this endpoint."
-                        },
-                    )
-
-        response = await call_next(request)
-        return response
-
-
-app.add_middleware(APIKeyRestrictionMiddleware)
-
-
 @app.middleware("http")
 async def commit_session_after_request(request: Request, call_next):
     response = await call_next(request)
@@ -557,7 +503,6 @@ async def check_url(request: Request, call_next):
                 scheme="Bearer", credentials=request.headers.get("x-api-key")
             )
 
-    request.state.enable_api_keys = app.state.config.ENABLE_API_KEYS
     response = await call_next(request)
     process_time = int(time.time()) - start_time
     response.headers["X-Process-Time"] = str(process_time)
@@ -1131,7 +1076,6 @@ async def get_app_config(request: Request):
             "auth": WEBUI_AUTH,
             "auth_trusted_header": bool(app.state.AUTH_TRUSTED_EMAIL_HEADER),
             "enable_signup_password_confirmation": ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
-            "enable_api_keys": app.state.config.ENABLE_API_KEYS,
             "enable_signup": app.state.config.ENABLE_SIGNUP,
             "enable_websocket": ENABLE_WEBSOCKET_SUPPORT,
             "enable_public_active_users_count": ENABLE_PUBLIC_ACTIVE_USERS_COUNT,

@@ -192,9 +192,7 @@ async def search_files(
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
 ):
-    user_id = (
-        None if user.role == "admin" else user.id
-    )
+    user_id = None if user.role == "admin" else user.id
 
     files = Files.search_files(
         user_id=user_id,

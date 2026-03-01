@@ -7,7 +7,7 @@ import io
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import Response, StreamingResponse, FileResponse
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
 
 
 from open_webui.models.auths import Auths
@@ -106,80 +106,6 @@ async def search_users(
         filter["direction"] = direction
 
     return Users.get_users(filter=filter, skip=skip, limit=limit, db=db)
-
-
-############################
-# User Permissions
-############################
-
-
-@router.get("/permissions")
-async def get_user_permissisions(
-    request: Request,
-    user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
-):
-    return request.app.state.config.USER_PERMISSIONS
-
-
-############################
-# User Default Permissions
-############################
-class ChatPermissions(BaseModel):
-    controls: bool = True
-    system_prompt: bool = True
-    params: bool = True
-    file_upload: bool = True
-    web_upload: bool = True
-    delete: bool = True
-    delete_message: bool = True
-    continue_response: bool = True
-    regenerate_response: bool = True
-    rate_response: bool = True
-    edit: bool = True
-    share: bool = True
-    export: bool = True
-    multiple_models: bool = True
-    temporary: bool = True
-    temporary_enforced: bool = False
-
-
-class FeaturesPermissions(BaseModel):
-    api_keys: bool = False
-    folders: bool = True
-
-
-class SettingsPermissions(BaseModel):
-    interface: bool = True
-
-
-class UserPermissions(BaseModel):
-    chat: ChatPermissions
-    features: FeaturesPermissions
-    settings: SettingsPermissions
-
-
-@router.get("/default/permissions", response_model=UserPermissions)
-async def get_default_user_permissions(request: Request, user=Depends(get_admin_user)):
-    return {
-        "chat": ChatPermissions(
-            **request.app.state.config.USER_PERMISSIONS.get("chat", {})
-        ),
-        "features": FeaturesPermissions(
-            **request.app.state.config.USER_PERMISSIONS.get("features", {})
-        ),
-        "settings": SettingsPermissions(
-            **request.app.state.config.USER_PERMISSIONS.get("settings", {})
-        ),
-    }
-
-
-@router.post("/default/permissions")
-async def update_default_user_permissions(
-    request: Request, form_data: UserPermissions, user=Depends(get_admin_user)
-):
-    request.app.state.config.USER_PERMISSIONS = form_data.model_dump()
-    return request.app.state.config.USER_PERMISSIONS
 
 
 ############################
@@ -568,5 +494,3 @@ async def delete_user_by_id(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=ERROR_MESSAGES.ACTION_PROHIBITED,
     )
-
-

@@ -8,7 +8,6 @@ import urllib
 
 from open_webui.models.auths import (
     AddUserForm,
-    ApiKey,
     Auths,
     Token,
     SigninForm,
@@ -42,7 +41,6 @@ from open_webui.utils.auth import (
     validate_password,
     verify_password,
     decode_token,
-    create_api_key,
     create_token,
     get_admin_user,
     get_verified_user,
@@ -53,7 +51,6 @@ from open_webui.utils.auth import (
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
 from open_webui.utils.webhook import post_webhook
-from open_webui.utils.access_control import has_permission
 
 from open_webui.utils.rate_limit import RateLimiter
 
@@ -600,9 +597,6 @@ async def get_admin_config(request: Request, user=Depends(get_admin_user)):
         "ADMIN_EMAIL": request.app.state.config.ADMIN_EMAIL,
         "WEBUI_URL": request.app.state.config.WEBUI_URL,
         "ENABLE_SIGNUP": request.app.state.config.ENABLE_SIGNUP,
-        "ENABLE_API_KEYS": request.app.state.config.ENABLE_API_KEYS,
-        "ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS": request.app.state.config.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS,
-        "API_KEYS_ALLOWED_ENDPOINTS": request.app.state.config.API_KEYS_ALLOWED_ENDPOINTS,
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
         "ENABLE_FOLDERS": request.app.state.config.ENABLE_FOLDERS,
@@ -620,9 +614,6 @@ class AdminConfig(BaseModel):
     ADMIN_EMAIL: Optional[str] = None
     WEBUI_URL: str
     ENABLE_SIGNUP: bool
-    ENABLE_API_KEYS: bool
-    ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS: bool
-    API_KEYS_ALLOWED_ENDPOINTS: str
     DEFAULT_USER_ROLE: str
     JWT_EXPIRES_IN: str
     ENABLE_FOLDERS: bool
@@ -642,14 +633,6 @@ async def update_admin_config(
     request.app.state.config.ADMIN_EMAIL = form_data.ADMIN_EMAIL
     request.app.state.config.WEBUI_URL = form_data.WEBUI_URL
     request.app.state.config.ENABLE_SIGNUP = form_data.ENABLE_SIGNUP
-
-    request.app.state.config.ENABLE_API_KEYS = form_data.ENABLE_API_KEYS
-    request.app.state.config.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS = (
-        form_data.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS
-    )
-    request.app.state.config.API_KEYS_ALLOWED_ENDPOINTS = (
-        form_data.API_KEYS_ALLOWED_ENDPOINTS
-    )
 
     request.app.state.config.ENABLE_FOLDERS = form_data.ENABLE_FOLDERS
     request.app.state.config.FOLDER_MAX_FILE_COUNT = (
@@ -681,9 +664,6 @@ async def update_admin_config(
         "ADMIN_EMAIL": request.app.state.config.ADMIN_EMAIL,
         "WEBUI_URL": request.app.state.config.WEBUI_URL,
         "ENABLE_SIGNUP": request.app.state.config.ENABLE_SIGNUP,
-        "ENABLE_API_KEYS": request.app.state.config.ENABLE_API_KEYS,
-        "ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS": request.app.state.config.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS,
-        "API_KEYS_ALLOWED_ENDPOINTS": request.app.state.config.API_KEYS_ALLOWED_ENDPOINTS,
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
         "ENABLE_FOLDERS": request.app.state.config.ENABLE_FOLDERS,
@@ -694,54 +674,3 @@ async def update_admin_config(
         "PENDING_USER_OVERLAY_CONTENT": request.app.state.config.PENDING_USER_OVERLAY_CONTENT,
         "RESPONSE_WATERMARK": request.app.state.config.RESPONSE_WATERMARK,
     }
-
-
-############################
-# API Key
-############################
-
-
-# create api key
-@router.post("/api_key", response_model=ApiKey)
-async def generate_api_key(
-    request: Request, user=Depends(get_current_user), db: Session = Depends(get_session)
-):
-    if not request.app.state.config.ENABLE_API_KEYS or not has_permission(
-        "features.api_keys", request.app.state.config.USER_PERMISSIONS
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=ERROR_MESSAGES.API_KEY_CREATION_NOT_ALLOWED,
-        )
-
-    api_key = create_api_key()
-    success = Users.update_user_api_key_by_id(user.id, api_key, db=db)
-
-    if success:
-        return {
-            "api_key": api_key,
-        }
-    else:
-        raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_API_KEY_ERROR)
-
-
-# delete api key
-@router.delete("/api_key", response_model=bool)
-async def delete_api_key(
-    user=Depends(get_current_user), db: Session = Depends(get_session)
-):
-    return Users.delete_user_api_key_by_id(user.id, db=db)
-
-
-# get api key
-@router.get("/api_key", response_model=ApiKey)
-async def get_api_key(
-    user=Depends(get_current_user), db: Session = Depends(get_session)
-):
-    api_key = Users.get_user_api_key_by_id(user.id, db=db)
-    if api_key:
-        return {
-            "api_key": api_key,
-        }
-    else:
-        raise HTTPException(404, detail=ERROR_MESSAGES.API_KEY_NOT_FOUND)

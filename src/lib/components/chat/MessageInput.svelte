@@ -106,7 +106,7 @@
 			.map((file) => {
 				return {
 					...file,
-					user: undefined,
+					user: undefined
 				};
 			})
 	});
@@ -690,7 +690,7 @@
 
 					insertTextHandler: insertTextAtCursor
 				})
-			},
+			}
 		];
 		loaded = true;
 

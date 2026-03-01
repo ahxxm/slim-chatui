@@ -96,32 +96,6 @@ class UserModel(BaseModel):
         return self
 
 
-class ApiKey(Base):
-    __tablename__ = "api_key"
-
-    id = Column(Text, primary_key=True, unique=True)
-    user_id = Column(Text, nullable=False)
-    key = Column(Text, unique=True, nullable=False)
-    data = Column(JSON, nullable=True)
-    expires_at = Column(BigInteger, nullable=True)
-    last_used_at = Column(BigInteger, nullable=True)
-    created_at = Column(BigInteger, nullable=False)
-    updated_at = Column(BigInteger, nullable=False)
-
-
-class ApiKeyModel(BaseModel):
-    id: str
-    user_id: str
-    key: str
-    data: Optional[dict] = None
-    expires_at: Optional[int] = None
-    last_used_at: Optional[int] = None
-    created_at: int  # timestamp in epoch
-    updated_at: int  # timestamp in epoch
-
-    model_config = ConfigDict(from_attributes=True)
-
-
 ####################
 # Forms
 ####################
@@ -248,21 +222,6 @@ class UsersTable:
             with get_db_context(db) as db:
                 user = db.query(User).filter_by(id=id).first()
                 return UserModel.model_validate(user)
-        except Exception:
-            return None
-
-    def get_user_by_api_key(
-        self, api_key: str, db: Optional[Session] = None
-    ) -> Optional[UserModel]:
-        try:
-            with get_db_context(db) as db:
-                user = (
-                    db.query(User)
-                    .join(ApiKey, User.id == ApiKey.user_id)
-                    .filter(ApiKey.key == api_key)
-                    .first()
-                )
-                return UserModel.model_validate(user) if user else None
         except Exception:
             return None
 
@@ -538,49 +497,6 @@ class UsersTable:
                 return True
             else:
                 return False
-        except Exception:
-            return False
-
-    def get_user_api_key_by_id(
-        self, id: str, db: Optional[Session] = None
-    ) -> Optional[str]:
-        try:
-            with get_db_context(db) as db:
-                api_key = db.query(ApiKey).filter_by(user_id=id).first()
-                return api_key.key if api_key else None
-        except Exception:
-            return None
-
-    def update_user_api_key_by_id(
-        self, id: str, api_key: str, db: Optional[Session] = None
-    ) -> bool:
-        try:
-            with get_db_context(db) as db:
-                db.query(ApiKey).filter_by(user_id=id).delete()
-                db.commit()
-
-                now = int(time.time())
-                new_api_key = ApiKey(
-                    id=f"key_{id}",
-                    user_id=id,
-                    key=api_key,
-                    created_at=now,
-                    updated_at=now,
-                )
-                db.add(new_api_key)
-                db.commit()
-
-                return True
-
-        except Exception:
-            return False
-
-    def delete_user_api_key_by_id(self, id: str, db: Optional[Session] = None) -> bool:
-        try:
-            with get_db_context(db) as db:
-                db.query(ApiKey).filter_by(user_id=id).delete()
-                db.commit()
-                return True
         except Exception:
             return False
 

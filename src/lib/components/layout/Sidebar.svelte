@@ -693,7 +693,6 @@
 						</button>
 					</Tooltip>
 				</div>
-
 			</div>
 		</button>
 
@@ -867,7 +866,6 @@
 							<HotkeyHint name="search" className=" group-hover:visible invisible" />
 						</button>
 					</div>
-
 				</div>
 
 				{#if ($models ?? []).length > 0 && (($settings?.pinnedModels ?? []).length > 0 || $config?.default_pinned_models)}

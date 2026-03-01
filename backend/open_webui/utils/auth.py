@@ -1,9 +1,5 @@
 import logging
-import uuid
 import jwt
-import base64
-import hmac
-import hashlib
 import bcrypt
 
 
@@ -11,7 +7,6 @@ from datetime import datetime, timedelta
 from pytz import UTC
 from typing import Optional, Union
 
-from open_webui.utils.access_control import has_permission
 from open_webui.models.users import Users
 from open_webui.models.auths import Auths
 
@@ -23,7 +18,6 @@ from open_webui.env import (
     PASSWORD_VALIDATION_HINT,
     PASSWORD_VALIDATION_REGEX_PATTERN,
     WEBUI_SECRET_KEY,
-    TRUSTED_SIGNATURE_KEY,
     WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
 )
 
@@ -38,22 +32,6 @@ ALGORITHM = "HS256"
 ##############
 # Auth Utils
 ##############
-
-
-def verify_signature(payload: str, signature: str) -> bool:
-    """
-    Verifies the HMAC signature of the received payload.
-    """
-    try:
-        expected_signature = base64.b64encode(
-            hmac.new(TRUSTED_SIGNATURE_KEY, payload.encode(), hashlib.sha256).digest()
-        ).decode()
-
-        # Compare securely to prevent timing attacks
-        return hmac.compare_digest(expected_signature, signature)
-
-    except Exception:
-        return False
 
 
 bearer_security = HTTPBearer(auto_error=False)
@@ -113,11 +91,6 @@ def extract_token_from_auth_header(auth_header: str):
     return auth_header[len("Bearer ") :]
 
 
-def create_api_key():
-    key = str(uuid.uuid4()).replace("-", "")
-    return f"sk-{key}"
-
-
 def get_http_authorization_cred(auth_header: Optional[str]):
     if not auth_header:
         return None
@@ -152,12 +125,6 @@ async def get_current_user(
 
     if token is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
-
-    # auth by api key
-    if token.startswith("sk-"):
-        user = get_current_user_by_api_key(request, token)
-
-        return user
 
     # auth by jwt token
     try:
@@ -203,31 +170,6 @@ async def get_current_user(
             response.delete_cookie("token")
 
         raise e
-
-
-def get_current_user_by_api_key(request, api_key: str):
-    # Each function call manages its own short-lived session internally
-    user = Users.get_user_by_api_key(api_key)
-
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.INVALID_TOKEN,
-        )
-
-    if not request.state.enable_api_keys or (
-        user.role != "admin"
-        and not has_permission(
-            "features.api_keys",
-            request.app.state.config.USER_PERMISSIONS,
-        )
-    ):
-        raise HTTPException(
-            status.HTTP_403_FORBIDDEN, detail=ERROR_MESSAGES.API_KEY_NOT_ALLOWED
-        )
-
-    Users.update_last_active_by_id(user.id)
-    return user
 
 
 def get_verified_user(user=Depends(get_current_user)):
