@@ -100,16 +100,7 @@ ddgs==9.10.0
 
 azure-ai-documentintelligence==1.0.2
 azure-identity==1.25.1
-azure-storage-blob==12.28.0
 azure-search-documents==11.6.0
-
-## Google Drive
-google-api-python-client
-google-auth-httplib2
-google-auth-oauthlib
-
-googleapis-common-protos==1.72.0
-google-cloud-storage==3.9.0
 
 ## Databases
 pymongo
@@ -117,8 +108,6 @@ psycopg2-binary==2.9.11
 pgvector==0.4.2
 
 PyMySQL==1.1.2
-boto3==1.42.44
-
 pymilvus==2.6.8
 qdrant-client==1.16.2
 playwright==1.58.0 # Caution: version must match docker-compose.playwright.yaml - Update the docker-compose.yaml if necessary
@@ -135,9 +124,6 @@ colbert-ai==0.2.22
 docker~=7.1.0
 pytest~=8.4.1
 pytest-docker~=3.2.5
-
-## LDAP
-ldap3==2.9.1
 
 ## Firecrawl
 firecrawl-py==4.14.0

@@ -935,33 +935,6 @@ if CUSTOM_NAME:
 
 
 ####################################
-# STORAGE PROVIDER
-####################################
-
-STORAGE_PROVIDER = os.environ.get("STORAGE_PROVIDER", "local")  # defaults to local, s3
-
-S3_ACCESS_KEY_ID = os.environ.get("S3_ACCESS_KEY_ID", None)
-S3_SECRET_ACCESS_KEY = os.environ.get("S3_SECRET_ACCESS_KEY", None)
-S3_REGION_NAME = os.environ.get("S3_REGION_NAME", None)
-S3_BUCKET_NAME = os.environ.get("S3_BUCKET_NAME", None)
-S3_KEY_PREFIX = os.environ.get("S3_KEY_PREFIX", None)
-S3_ENDPOINT_URL = os.environ.get("S3_ENDPOINT_URL", None)
-S3_USE_ACCELERATE_ENDPOINT = (
-    os.environ.get("S3_USE_ACCELERATE_ENDPOINT", "false").lower() == "true"
-)
-S3_ADDRESSING_STYLE = os.environ.get("S3_ADDRESSING_STYLE", None)
-S3_ENABLE_TAGGING = os.getenv("S3_ENABLE_TAGGING", "false").lower() == "true"
-
-GCS_BUCKET_NAME = os.environ.get("GCS_BUCKET_NAME", None)
-GOOGLE_APPLICATION_CREDENTIALS_JSON = os.environ.get(
-    "GOOGLE_APPLICATION_CREDENTIALS_JSON", None
-)
-
-AZURE_STORAGE_ENDPOINT = os.environ.get("AZURE_STORAGE_ENDPOINT", None)
-AZURE_STORAGE_CONTAINER_NAME = os.environ.get("AZURE_STORAGE_CONTAINER_NAME", None)
-AZURE_STORAGE_KEY = os.environ.get("AZURE_STORAGE_KEY", None)
-
-####################################
 # File Upload DIR
 ####################################
 
@@ -2144,7 +2117,7 @@ ENABLE_CODE_EXECUTION = PersistentConfig(
 CODE_EXECUTION_ENGINE = PersistentConfig(
     "CODE_EXECUTION_ENGINE",
     "code_execution.engine",
-    os.environ.get("CODE_EXECUTION_ENGINE", "pyodide"),
+    os.environ.get("CODE_EXECUTION_ENGINE", "jupyter"),
 )
 
 CODE_EXECUTION_JUPYTER_URL = PersistentConfig(
@@ -2193,7 +2166,7 @@ ENABLE_MEMORIES = PersistentConfig(
 CODE_INTERPRETER_ENGINE = PersistentConfig(
     "CODE_INTERPRETER_ENGINE",
     "code_interpreter.engine",
-    os.environ.get("CODE_INTERPRETER_ENGINE", "pyodide"),
+    os.environ.get("CODE_INTERPRETER_ENGINE", "jupyter"),
 )
 
 CODE_INTERPRETER_PROMPT_TEMPLATE = PersistentConfig(
@@ -2549,67 +2522,11 @@ if VECTOR_DB == "oracle23ai":
 
 log.info(f"VECTOR_DB: {VECTOR_DB}")
 
-# S3 Vector
-S3_VECTOR_BUCKET_NAME = os.environ.get("S3_VECTOR_BUCKET_NAME", None)
-S3_VECTOR_REGION = os.environ.get("S3_VECTOR_REGION", None)
 
 ####################################
 # Information Retrieval (RAG)
 ####################################
 
-
-# If configured, Google Drive will be available as an upload option.
-ENABLE_GOOGLE_DRIVE_INTEGRATION = PersistentConfig(
-    "ENABLE_GOOGLE_DRIVE_INTEGRATION",
-    "google_drive.enable",
-    os.getenv("ENABLE_GOOGLE_DRIVE_INTEGRATION", "False").lower() == "true",
-)
-
-GOOGLE_DRIVE_CLIENT_ID = PersistentConfig(
-    "GOOGLE_DRIVE_CLIENT_ID",
-    "google_drive.client_id",
-    os.environ.get("GOOGLE_DRIVE_CLIENT_ID", ""),
-)
-
-GOOGLE_DRIVE_API_KEY = PersistentConfig(
-    "GOOGLE_DRIVE_API_KEY",
-    "google_drive.api_key",
-    os.environ.get("GOOGLE_DRIVE_API_KEY", ""),
-)
-
-ENABLE_ONEDRIVE_INTEGRATION = PersistentConfig(
-    "ENABLE_ONEDRIVE_INTEGRATION",
-    "onedrive.enable",
-    os.getenv("ENABLE_ONEDRIVE_INTEGRATION", "False").lower() == "true",
-)
-
-
-ENABLE_ONEDRIVE_PERSONAL = (
-    os.environ.get("ENABLE_ONEDRIVE_PERSONAL", "True").lower() == "true"
-)
-ENABLE_ONEDRIVE_BUSINESS = (
-    os.environ.get("ENABLE_ONEDRIVE_BUSINESS", "True").lower() == "true"
-)
-
-ONEDRIVE_CLIENT_ID = os.environ.get("ONEDRIVE_CLIENT_ID", "")
-ONEDRIVE_CLIENT_ID_PERSONAL = os.environ.get(
-    "ONEDRIVE_CLIENT_ID_PERSONAL", ONEDRIVE_CLIENT_ID
-)
-ONEDRIVE_CLIENT_ID_BUSINESS = os.environ.get(
-    "ONEDRIVE_CLIENT_ID_BUSINESS", ONEDRIVE_CLIENT_ID
-)
-
-ONEDRIVE_SHAREPOINT_URL = PersistentConfig(
-    "ONEDRIVE_SHAREPOINT_URL",
-    "onedrive.sharepoint_url",
-    os.environ.get("ONEDRIVE_SHAREPOINT_URL", ""),
-)
-
-ONEDRIVE_SHAREPOINT_TENANT_ID = PersistentConfig(
-    "ONEDRIVE_SHAREPOINT_TENANT_ID",
-    "onedrive.sharepoint_tenant_id",
-    os.environ.get("ONEDRIVE_SHAREPOINT_TENANT_ID", ""),
-)
 
 # RAG Content Extraction
 CONTENT_EXTRACTION_ENGINE = PersistentConfig(
@@ -4064,103 +3981,3 @@ AUDIO_TTS_AZURE_SPEECH_OUTPUT_FORMAT = PersistentConfig(
 )
 
 
-####################################
-# LDAP
-####################################
-
-ENABLE_LDAP = PersistentConfig(
-    "ENABLE_LDAP",
-    "ldap.enable",
-    os.environ.get("ENABLE_LDAP", "false").lower() == "true",
-)
-
-LDAP_SERVER_LABEL = PersistentConfig(
-    "LDAP_SERVER_LABEL",
-    "ldap.server.label",
-    os.environ.get("LDAP_SERVER_LABEL", "LDAP Server"),
-)
-
-LDAP_SERVER_HOST = PersistentConfig(
-    "LDAP_SERVER_HOST",
-    "ldap.server.host",
-    os.environ.get("LDAP_SERVER_HOST", "localhost"),
-)
-
-LDAP_SERVER_PORT = PersistentConfig(
-    "LDAP_SERVER_PORT",
-    "ldap.server.port",
-    int(os.environ.get("LDAP_SERVER_PORT", "389")),
-)
-
-LDAP_ATTRIBUTE_FOR_MAIL = PersistentConfig(
-    "LDAP_ATTRIBUTE_FOR_MAIL",
-    "ldap.server.attribute_for_mail",
-    os.environ.get("LDAP_ATTRIBUTE_FOR_MAIL", "mail"),
-)
-
-LDAP_ATTRIBUTE_FOR_USERNAME = PersistentConfig(
-    "LDAP_ATTRIBUTE_FOR_USERNAME",
-    "ldap.server.attribute_for_username",
-    os.environ.get("LDAP_ATTRIBUTE_FOR_USERNAME", "uid"),
-)
-
-LDAP_APP_DN = PersistentConfig(
-    "LDAP_APP_DN", "ldap.server.app_dn", os.environ.get("LDAP_APP_DN", "")
-)
-
-LDAP_APP_PASSWORD = PersistentConfig(
-    "LDAP_APP_PASSWORD",
-    "ldap.server.app_password",
-    os.environ.get("LDAP_APP_PASSWORD", ""),
-)
-
-LDAP_SEARCH_BASE = PersistentConfig(
-    "LDAP_SEARCH_BASE", "ldap.server.users_dn", os.environ.get("LDAP_SEARCH_BASE", "")
-)
-
-LDAP_SEARCH_FILTERS = PersistentConfig(
-    "LDAP_SEARCH_FILTER",
-    "ldap.server.search_filter",
-    os.environ.get("LDAP_SEARCH_FILTER", os.environ.get("LDAP_SEARCH_FILTERS", "")),
-)
-
-LDAP_USE_TLS = PersistentConfig(
-    "LDAP_USE_TLS",
-    "ldap.server.use_tls",
-    os.environ.get("LDAP_USE_TLS", "True").lower() == "true",
-)
-
-LDAP_CA_CERT_FILE = PersistentConfig(
-    "LDAP_CA_CERT_FILE",
-    "ldap.server.ca_cert_file",
-    os.environ.get("LDAP_CA_CERT_FILE", ""),
-)
-
-LDAP_VALIDATE_CERT = PersistentConfig(
-    "LDAP_VALIDATE_CERT",
-    "ldap.server.validate_cert",
-    os.environ.get("LDAP_VALIDATE_CERT", "True").lower() == "true",
-)
-
-LDAP_CIPHERS = PersistentConfig(
-    "LDAP_CIPHERS", "ldap.server.ciphers", os.environ.get("LDAP_CIPHERS", "ALL")
-)
-
-# For LDAP Group Management
-ENABLE_LDAP_GROUP_MANAGEMENT = PersistentConfig(
-    "ENABLE_LDAP_GROUP_MANAGEMENT",
-    "ldap.group.enable_management",
-    os.environ.get("ENABLE_LDAP_GROUP_MANAGEMENT", "False").lower() == "true",
-)
-
-ENABLE_LDAP_GROUP_CREATION = PersistentConfig(
-    "ENABLE_LDAP_GROUP_CREATION",
-    "ldap.group.enable_creation",
-    os.environ.get("ENABLE_LDAP_GROUP_CREATION", "False").lower() == "true",
-)
-
-LDAP_ATTRIBUTE_FOR_GROUPS = PersistentConfig(
-    "LDAP_ATTRIBUTE_FOR_GROUPS",
-    "ldap.server.attribute_for_groups",
-    os.environ.get("LDAP_ATTRIBUTE_FOR_GROUPS", "memberOf"),
-)

@@ -38,7 +38,6 @@ from langchain_core.documents import Document
 
 from open_webui.models.files import FileModel, FileUpdateForm, Files
 from open_webui.models.knowledge import Knowledges
-from open_webui.storage.provider import Storage
 from open_webui.internal.db import get_session, get_db
 from sqlalchemy.orm import Session
 
@@ -526,9 +525,6 @@ async def get_rag_config(request: Request, user=Depends(get_admin_user)):
         "FILE_IMAGE_COMPRESSION_WIDTH": request.app.state.config.FILE_IMAGE_COMPRESSION_WIDTH,
         "FILE_IMAGE_COMPRESSION_HEIGHT": request.app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT,
         "ALLOWED_FILE_EXTENSIONS": request.app.state.config.ALLOWED_FILE_EXTENSIONS,
-        # Integration settings
-        "ENABLE_GOOGLE_DRIVE_INTEGRATION": request.app.state.config.ENABLE_GOOGLE_DRIVE_INTEGRATION,
-        "ENABLE_ONEDRIVE_INTEGRATION": request.app.state.config.ENABLE_ONEDRIVE_INTEGRATION,
         # Web search settings
         "web": {
             "ENABLE_WEB_SEARCH": request.app.state.config.ENABLE_WEB_SEARCH,
@@ -733,10 +729,6 @@ class ConfigForm(BaseModel):
     FILE_IMAGE_COMPRESSION_WIDTH: Optional[int] = None
     FILE_IMAGE_COMPRESSION_HEIGHT: Optional[int] = None
     ALLOWED_FILE_EXTENSIONS: Optional[List[str]] = None
-
-    # Integration settings
-    ENABLE_GOOGLE_DRIVE_INTEGRATION: Optional[bool] = None
-    ENABLE_ONEDRIVE_INTEGRATION: Optional[bool] = None
 
     # Web search settings
     web: Optional[WebConfig] = None
@@ -1080,18 +1072,6 @@ async def update_rag_config(
         else request.app.state.config.ALLOWED_FILE_EXTENSIONS
     )
 
-    # Integration settings
-    request.app.state.config.ENABLE_GOOGLE_DRIVE_INTEGRATION = (
-        form_data.ENABLE_GOOGLE_DRIVE_INTEGRATION
-        if form_data.ENABLE_GOOGLE_DRIVE_INTEGRATION is not None
-        else request.app.state.config.ENABLE_GOOGLE_DRIVE_INTEGRATION
-    )
-    request.app.state.config.ENABLE_ONEDRIVE_INTEGRATION = (
-        form_data.ENABLE_ONEDRIVE_INTEGRATION
-        if form_data.ENABLE_ONEDRIVE_INTEGRATION is not None
-        else request.app.state.config.ENABLE_ONEDRIVE_INTEGRATION
-    )
-
     if form_data.web is not None:
         # Web search settings
         request.app.state.config.ENABLE_WEB_SEARCH = form_data.web.ENABLE_WEB_SEARCH
@@ -1279,9 +1259,6 @@ async def update_rag_config(
         "FILE_IMAGE_COMPRESSION_WIDTH": request.app.state.config.FILE_IMAGE_COMPRESSION_WIDTH,
         "FILE_IMAGE_COMPRESSION_HEIGHT": request.app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT,
         "ALLOWED_FILE_EXTENSIONS": request.app.state.config.ALLOWED_FILE_EXTENSIONS,
-        # Integration settings
-        "ENABLE_GOOGLE_DRIVE_INTEGRATION": request.app.state.config.ENABLE_GOOGLE_DRIVE_INTEGRATION,
-        "ENABLE_ONEDRIVE_INTEGRATION": request.app.state.config.ENABLE_ONEDRIVE_INTEGRATION,
         # Web search settings
         "web": {
             "ENABLE_WEB_SEARCH": request.app.state.config.ENABLE_WEB_SEARCH,
@@ -1738,7 +1715,6 @@ def process_file(
                 # Usage: /files/
                 file_path = file.path
                 if file_path:
-                    file_path = Storage.get_file(file_path)
                     loader = Loader(
                         engine=request.app.state.config.CONTENT_EXTRACTION_ENGINE,
                         user=user,

@@ -62,7 +62,6 @@ dependencies = [
     "chromadb==1.4.1",
     "opensearch-py==3.1.0",
     "PyMySQL==1.1.2",
-    "boto3==1.42.44",
     
     "transformers==5.1.0",
     "sentence-transformers==5.2.2",
@@ -91,6 +90,7 @@ dependencies = [
     "sentencepiece",
     "soundfile==0.13.1",
     "azure-ai-documentintelligence==1.0.2",
+    "azure-identity==1.25.1",
 
     "pillow==12.1.0",
     "opencv-python-headless==4.13.0.92",
@@ -107,17 +107,7 @@ dependencies = [
     "pydub",
     "ddgs==9.10.0",
 
-    "google-api-python-client",
-    "google-auth-httplib2",
-    "google-auth-oauthlib",
 
-    "googleapis-common-protos==1.72.0",
-    "google-cloud-storage==3.9.0",
-
-    "azure-identity==1.25.1",
-    "azure-storage-blob==12.28.0",
-
-    "ldap3==2.9.1",
 ]
 readme = "README.md"
 requires-python = ">= 3.11, < 3.13.0a1"
@@ -142,8 +132,6 @@ all = [
     "pymongo",
     "psycopg2-binary==2.9.11",
     "pgvector==0.4.2",
-    "moto[s3]>=5.0.26",
-    "gcp-storage-emulator>=2024.8.3",
     "docker~=7.1.0",
     "pytest~=8.3.2",
     "pytest-docker~=3.2.5",

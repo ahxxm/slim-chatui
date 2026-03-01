@@ -86,7 +86,6 @@
 				'data',
 				'users',
 				'roles',
-				'ldap',
 				'authentication',
 				'reverse proxy',
 				'webhook',

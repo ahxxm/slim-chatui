@@ -5,7 +5,6 @@
 
 	import Switch from './Switch.svelte';
 	import SensitiveInput from './SensitiveInput.svelte';
-	import MapSelector from './Valves/MapSelector.svelte';
 
 	export let valvesSpec = null;
 	export let valves = {};
@@ -168,32 +167,6 @@
 											dispatch('change');
 										}}
 									/>
-								</div>
-							{:else if valvesSpec.properties[property]?.input?.type === 'map'}
-								<!-- EXPERIMENTAL INPUT TYPE, DO NOT USE IN PRODUCTION -->
-								<div class="flex flex-col items-center gap-1">
-									<MapSelector
-										setViewLocation={((valves[property] ?? '').includes(',') ?? false)
-											? valves[property].split(',')
-											: null}
-										onClick={(value) => {
-											valves[property] = value;
-											dispatch('change');
-										}}
-									/>
-
-									{#if valves[property]}
-										<input
-											type="text"
-											class=" w-full rounded-lg py-1 text-left text-sm dark:text-gray-300 dark:bg-gray-850 outline-hidden border border-gray-100/30 dark:border-gray-850/30"
-											placeholder={$i18n.t('Enter coordinates (e.g. 51.505, -0.09)')}
-											bind:value={valves[property]}
-											autocomplete="off"
-											on:change={() => {
-												dispatch('change');
-											}}
-										/>
-									{/if}
 								</div>
 							{/if}
 						{:else}
