@@ -1,12 +1,10 @@
 import copy
-import time
 import logging
-import asyncio
 import sys
 
 from fastapi import Request
 
-from open_webui.routers import openai, ollama
+from open_webui.routers import openai
 
 from open_webui.models.models import Models
 from open_webui.models.access_grants import AccessGrants
@@ -23,43 +21,15 @@ logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 
 
-async def fetch_ollama_models(request: Request, user: UserModel = None):
-    raw_ollama_models = await ollama.get_all_models(request, user=user)
-    return [
-        {
-            "id": model["model"],
-            "name": model["name"],
-            "object": "model",
-            "created": int(time.time()),
-            "owned_by": "ollama",
-            "ollama": model,
-            "connection_type": model.get("connection_type", "local"),
-            "tags": model.get("tags", []),
-        }
-        for model in raw_ollama_models["models"]
-    ]
-
-
 async def fetch_openai_models(request: Request, user: UserModel = None):
     openai_response = await openai.get_all_models(request, user=user)
     return openai_response["data"]
 
 
 async def get_all_base_models(request: Request, user: UserModel = None):
-    openai_task = (
-        fetch_openai_models(request, user)
-        if request.app.state.config.ENABLE_OPENAI_API
-        else asyncio.sleep(0, result=[])
-    )
-    ollama_task = (
-        fetch_ollama_models(request, user)
-        if request.app.state.config.ENABLE_OLLAMA_API
-        else asyncio.sleep(0, result=[])
-    )
-
-    openai_models, ollama_models = await asyncio.gather(openai_task, ollama_task)
-
-    return openai_models + ollama_models
+    if request.app.state.config.ENABLE_OPENAI_API:
+        return await fetch_openai_models(request, user)
+    return []
 
 
 async def get_all_models(request, refresh: bool = False, user: UserModel = None):
@@ -85,13 +55,7 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
         if custom_model.base_model_id is None:
             # Applied directly to a base model
             for model in models:
-                if custom_model.id == model["id"] or (
-                    model.get("owned_by") == "ollama"
-                    and custom_model.id
-                    == model["id"].split(":")[
-                        0
-                    ]  # Ollama may return model ids in different formats (e.g., 'llama3' vs. 'llama3:7b')
-                ):
+                if custom_model.id == model["id"]:
                     if custom_model.is_active:
                         model["name"] = custom_model.name
                         model["info"] = custom_model.model_dump()
@@ -110,10 +74,7 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
             connection_type = None
 
             for m in models:
-                if (
-                    custom_model.base_model_id == m["id"]
-                    or custom_model.base_model_id == m["id"].split(":")[0]
-                ):
+                if custom_model.base_model_id == m["id"]:
                     owned_by = m.get("owned_by", "unknown")
                     connection_type = m.get("connection_type", None)
                     break

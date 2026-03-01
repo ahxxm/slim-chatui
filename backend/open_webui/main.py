@@ -48,7 +48,6 @@ from open_webui.socket.main import (
     get_models_in_use,
 )
 from open_webui.routers import (
-    ollama,
     openai,
     tasks,
     auths,
@@ -71,10 +70,6 @@ from open_webui.models.users import Users
 from open_webui.models.chats import Chats
 
 from open_webui.config import (
-    # Ollama
-    ENABLE_OLLAMA_API,
-    OLLAMA_BASE_URLS,
-    OLLAMA_API_CONFIGS,
     # OpenAI
     ENABLE_OPENAI_API,
     OPENAI_API_BASE_URLS,
@@ -311,19 +306,6 @@ app.state.config = AppConfig()
 
 app.state.WEBUI_NAME = WEBUI_NAME
 
-
-########################################
-#
-# OLLAMA
-#
-########################################
-
-
-app.state.config.ENABLE_OLLAMA_API = ENABLE_OLLAMA_API
-app.state.config.OLLAMA_BASE_URLS = OLLAMA_BASE_URLS
-app.state.config.OLLAMA_API_CONFIGS = OLLAMA_API_CONFIGS
-
-app.state.OLLAMA_MODELS = {}
 
 ########################################
 #
@@ -625,7 +607,6 @@ app.add_middleware(
 app.mount("/ws", socket_app)
 
 
-app.include_router(ollama.router, prefix="/ollama", tags=["ollama"])
 app.include_router(openai.router, prefix="/openai", tags=["openai"])
 
 
@@ -736,7 +717,7 @@ async def embeddings(
 
     This handler:
       - Performs user/model checks and dispatches to the correct backend.
-      - Supports OpenAI, Ollama, and any compatible provider.
+      - Supports OpenAI and any compatible provider.
 
     Args:
         request (Request): Request context.

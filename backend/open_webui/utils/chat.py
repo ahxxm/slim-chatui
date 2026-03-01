@@ -19,16 +19,7 @@ from open_webui.routers.openai import (
     generate_chat_completion as generate_openai_chat_completion,
 )
 
-from open_webui.routers.ollama import (
-    generate_chat_completion as generate_ollama_chat_completion,
-)
-
 from open_webui.utils.models import get_all_models, check_model_access
-from open_webui.utils.payload import convert_payload_openai_to_ollama
-from open_webui.utils.response import (
-    convert_response_ollama_to_openai,
-    convert_streaming_response_ollama_to_openai,
-)
 
 from open_webui.env import GLOBAL_LOG_LEVEL, BYPASS_MODEL_ACCESS_CONTROL
 
@@ -178,33 +169,13 @@ async def generate_chat_completion(
         if not bypass_filter and user.role == "user":
             check_model_access(user, model)
 
-        if model.get("owned_by") == "ollama":
-            # Using /ollama/api/chat endpoint
-            form_data = convert_payload_openai_to_ollama(form_data)
-            response = await generate_ollama_chat_completion(
-                request=request,
-                form_data=form_data,
-                user=user,
-                bypass_filter=bypass_filter,
-                bypass_system_prompt=bypass_system_prompt,
-            )
-            if form_data.get("stream"):
-                response.headers["content-type"] = "text/event-stream"
-                return StreamingResponse(
-                    convert_streaming_response_ollama_to_openai(response),
-                    headers=dict(response.headers),
-                    background=response.background,
-                )
-            else:
-                return convert_response_ollama_to_openai(response)
-        else:
-            return await generate_openai_chat_completion(
-                request=request,
-                form_data=form_data,
-                user=user,
-                bypass_filter=bypass_filter,
-                bypass_system_prompt=bypass_system_prompt,
-            )
+        return await generate_openai_chat_completion(
+            request=request,
+            form_data=form_data,
+            user=user,
+            bypass_filter=bypass_filter,
+            bypass_system_prompt=bypass_system_prompt,
+        )
 
 
 async def chat_completed(request: Request, form_data: dict, user: Any):
