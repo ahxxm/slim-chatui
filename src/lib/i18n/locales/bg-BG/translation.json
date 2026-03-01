@@ -784,8 +784,6 @@
 	"Set the default models that are automatically selected for all users when a new chat is created.": "",
 	"Set the models that are automatically pinned to the sidebar for all users.": "",
 	"Set your status": "",
-	"Sets a flat bias against tokens that have appeared at least once. A higher value (e.g., 1.5) will penalize repetitions more strongly, while a lower value (e.g., 0.9) will be more lenient. At 0, it is disabled.": "",
-	"Sets a scaling bias against tokens to penalize repetitions, based on how many times they have appeared. A higher value (e.g., 1.5) will penalize repetitions more strongly, while a lower value (e.g., 0.9) will be more lenient. At 0, it is disabled.": "",
 	"Sets the random number seed to use for generation. Setting this to a specific number will make the model generate the same text for the same prompt.": "",
 	"Sets the stop sequences to use. When this pattern is encountered, the LLM will stop generating text and return. Multiple stop patterns may be set by specifying multiple separate stop parameters in a modelfile.": "Задава последователностите за спиране, които да се използват. Когато се срещне този модел, LLM ще спре да генерира текст и ще се върне. Множество модели за спиране могат да бъдат зададени чрез определяне на множество отделни параметри за спиране в моделния файл.",
 	"Setting": "",

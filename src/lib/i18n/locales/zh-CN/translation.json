@@ -784,8 +784,6 @@
 	"Set the default models that are automatically selected for all users when a new chat is created.": "",
 	"Set the models that are automatically pinned to the sidebar for all users.": "",
 	"Set your status": "设置您的状态",
-	"Sets a flat bias against tokens that have appeared at least once. A higher value (e.g., 1.5) will penalize repetitions more strongly, while a lower value (e.g., 0.9) will be more lenient. At 0, it is disabled.": "对至少出现过一次的标记设置固定偏置值。较高的值（例如 1.5）表示严厉惩罚重复，而较低的值（例如 0.9）则表示相对宽松。当值为 0 时，此功能将被禁用。",
-	"Sets a scaling bias against tokens to penalize repetitions, based on how many times they have appeared. A higher value (e.g., 1.5) will penalize repetitions more strongly, while a lower value (e.g., 0.9) will be more lenient. At 0, it is disabled.": "根据标记出现的次数，设置缩放偏置值惩罚重复。较高的值（例如 1.5）表示严厉惩罚重复，而较低的值（例如 0.9）则表示相对宽松。当值为 0 时，此功能将被禁用。",
 	"Sets the random number seed to use for generation. Setting this to a specific number will make the model generate the same text for the same prompt.": "设置用于内容生成的随机数种子。将其设置为特定数字可使模型针对同一提示词生成相同的文本。",
 	"Sets the stop sequences to use. When this pattern is encountered, the LLM will stop generating text and return. Multiple stop patterns may be set by specifying multiple separate stop parameters in a modelfile.": "设置要使用的停止序列。在该模式下，大语言模型将停止生成文本并返回。可以通过在模型文件中指定多个单独的停止参数来设置多个停止模式。",
 	"Setting": "设置",

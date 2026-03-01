@@ -784,8 +784,6 @@
 	"Set the default models that are automatically selected for all users when a new chat is created.": "",
 	"Set the models that are automatically pinned to the sidebar for all users.": "",
 	"Set your status": "ステータスを設定",
-	"Sets a flat bias against tokens that have appeared at least once. A higher value (e.g., 1.5) will penalize repetitions more strongly, while a lower value (e.g., 0.9) will be more lenient. At 0, it is disabled.": "一度でも出現したトークンに対して一定のペナルティを設定します。値が高い（例：1.5）ほど繰り返しを強く抑制し、低い値（例：0.9）では寛容になります。0の場合は無効です。",
-	"Sets a scaling bias against tokens to penalize repetitions, based on how many times they have appeared. A higher value (e.g., 1.5) will penalize repetitions more strongly, while a lower value (e.g., 0.9) will be more lenient. At 0, it is disabled.": "出現回数に応じてトークンにスケーリングされたペナルティを設定します。値が高い（例：1.5）ほど繰り返しを強く抑制し、低い値（例：0.9）では寛容になります。0の場合は無効です。",
 	"Sets the random number seed to use for generation. Setting this to a specific number will make the model generate the same text for the same prompt.": "生成に用いる乱数シードを設定します。特定の数値を設定すると、同じプロンプトで同じテキストが生成されます。",
 	"Sets the stop sequences to use. When this pattern is encountered, the LLM will stop generating text and return. Multiple stop patterns may be set by specifying multiple separate stop parameters in a modelfile.": "停止シーケンスを設定します。このパターンに達するとLLMはテキスト生成を停止し、結果を返します。複数の停止パターンは、モデルファイル内で複数のstopパラメータを指定することで設定可能です。",
 	"Setting": "設定",

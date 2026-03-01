@@ -19,7 +19,7 @@
 		reasoning_effort: null,
 		logit_bias: null,
 		max_tokens: null,
-		top_p: null,
+		top_p: null
 	};
 
 	export let params = defaultParams;
