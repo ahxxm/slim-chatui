@@ -104,67 +104,6 @@
 				</div>
 			{/if}
 		</div>
-
-		<div class="flex flex-col w-full">
-			<Tooltip
-				className="flex w-full justify-between my-1"
-				content={$i18n.t(
-					'Warning: Enabling this will allow users to upload arbitrary code on the server.'
-				)}
-				placement="top-start"
-			>
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Tools Access')}
-				</div>
-				<Switch bind:state={permissions.workspace.tools} />
-			</Tooltip>
-
-			{#if permissions.workspace.tools}
-				<div class="ml-2 flex flex-col gap-2 pt-0.5 pb-1">
-					<div class="flex w-full justify-between">
-						<div class="self-center text-xs">
-							{$i18n.t('Import Tools')}
-						</div>
-						<Switch bind:state={permissions.workspace.tools_import} />
-					</div>
-					<div class="flex w-full justify-between">
-						<div class="self-center text-xs">
-							{$i18n.t('Export Tools')}
-						</div>
-						<Switch bind:state={permissions.workspace.tools_export} />
-					</div>
-				</div>
-			{:else if defaultPermissions?.workspace?.tools}
-				<div class="pb-0.5">
-					<div class="text-xs text-gray-500">
-						{$i18n.t('This is a default user permission and will remain enabled.')}
-					</div>
-				</div>
-			{/if}
-		</div>
-
-		<div class="flex flex-col w-full">
-			<Tooltip
-				className="flex w-full justify-between my-1"
-				content={$i18n.t(
-					'Warning: Enabling this will allow users to upload arbitrary code on the server.'
-				)}
-				placement="top-start"
-			>
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Skills Access')}
-				</div>
-				<Switch bind:state={permissions.workspace.skills} />
-			</Tooltip>
-
-			{#if defaultPermissions?.workspace?.skills && !permissions.workspace.skills}
-				<div class="pb-0.5">
-					<div class="text-xs text-gray-500">
-						{$i18n.t('This is a default user permission and will remain enabled.')}
-					</div>
-				</div>
-			{/if}
-		</div>
 	</div>
 
 	<hr class=" border-gray-100/30 dark:border-gray-850/30" />
@@ -239,74 +178,6 @@
 				{/if}
 			</div>
 		{/if}
-
-		<div class="flex flex-col w-full">
-			<div class="flex w-full justify-between my-1">
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Tools Sharing')}
-				</div>
-				<Switch bind:state={permissions.sharing.tools} />
-			</div>
-			{#if defaultPermissions?.sharing?.tools && !permissions.sharing.tools}
-				<div>
-					<div class="text-xs text-gray-500">
-						{$i18n.t('This is a default user permission and will remain enabled.')}
-					</div>
-				</div>
-			{/if}
-		</div>
-
-		{#if permissions.sharing.tools}
-			<div class="flex flex-col w-full">
-				<div class="flex w-full justify-between my-1">
-					<div class=" self-center text-xs font-medium">
-						{$i18n.t('Tools Public Sharing')}
-					</div>
-					<Switch bind:state={permissions.sharing.public_tools} />
-				</div>
-				{#if defaultPermissions?.sharing?.public_tools && !permissions.sharing.public_tools}
-					<div>
-						<div class="text-xs text-gray-500">
-							{$i18n.t('This is a default user permission and will remain enabled.')}
-						</div>
-					</div>
-				{/if}
-			</div>
-		{/if}
-
-		<div class="flex flex-col w-full">
-			<div class="flex w-full justify-between my-1">
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Skills Sharing')}
-				</div>
-				<Switch bind:state={permissions.sharing.skills} />
-			</div>
-			{#if defaultPermissions?.sharing?.skills && !permissions.sharing.skills}
-				<div>
-					<div class="text-xs text-gray-500">
-						{$i18n.t('This is a default user permission and will remain enabled.')}
-					</div>
-				</div>
-			{/if}
-		</div>
-
-		{#if permissions.sharing.skills}
-			<div class="flex flex-col w-full">
-				<div class="flex w-full justify-between my-1">
-					<div class=" self-center text-xs font-medium">
-						{$i18n.t('Skills Public Sharing')}
-					</div>
-					<Switch bind:state={permissions.sharing.public_skills} />
-				</div>
-				{#if defaultPermissions?.sharing?.public_skills && !permissions.sharing.public_skills}
-					<div>
-						<div class="text-xs text-gray-500">
-							{$i18n.t('This is a default user permission and will remain enabled.')}
-						</div>
-					</div>
-				{/if}
-			</div>
-		{/if}
 	</div>
 
 	<hr class=" border-gray-100/30 dark:border-gray-850/30" />
@@ -363,22 +234,6 @@
 		</div>
 
 		{#if permissions.chat.controls}
-			<div class="flex flex-col w-full">
-				<div class="flex w-full justify-between my-1">
-					<div class=" self-center text-xs font-medium">
-						{$i18n.t('Allow Chat Valves')}
-					</div>
-					<Switch bind:state={permissions.chat.valves} />
-				</div>
-				{#if defaultPermissions?.chat?.valves && !permissions.chat.valves}
-					<div>
-						<div class="text-xs text-gray-500">
-							{$i18n.t('This is a default user permission and will remain enabled.')}
-						</div>
-					</div>
-				{/if}
-			</div>
-
 			<div class="flex flex-col w-full">
 				<div class="flex w-full justify-between my-1">
 					<div class=" self-center text-xs font-medium">

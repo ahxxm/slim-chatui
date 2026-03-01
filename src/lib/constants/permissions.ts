@@ -2,28 +2,19 @@ export const DEFAULT_PERMISSIONS = {
 	workspace: {
 		models: false,
 		prompts: false,
-		tools: false,
-		skills: false,
 		models_import: false,
 		models_export: false,
 		prompts_import: false,
-		prompts_export: false,
-		tools_import: false,
-		tools_export: false
+		prompts_export: false
 	},
 	sharing: {
 		models: false,
 		public_models: false,
 		prompts: false,
-		public_prompts: false,
-		tools: false,
-		public_tools: false,
-		skills: false,
-		public_skills: false
+		public_prompts: false
 	},
 	chat: {
 		controls: true,
-		valves: true,
 		system_prompt: true,
 		params: true,
 		file_upload: true,

@@ -45,9 +45,6 @@
 	export let files = [];
 	export let messageInput = null;
 
-	export let selectedToolIds = [];
-	export let selectedFilterIds = [];
-
 	export let showCommands = false;
 
 	export let onSelect = (e) => {};
@@ -188,8 +185,6 @@
 					bind:files
 					bind:prompt
 					bind:autoScroll
-					bind:selectedToolIds
-					bind:selectedFilterIds
 					bind:atSelectedModel
 					bind:showCommands
 					{stopResponse}

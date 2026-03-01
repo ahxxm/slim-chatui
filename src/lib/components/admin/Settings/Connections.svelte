@@ -45,7 +45,6 @@
 
 	let connectionsConfig = null;
 
-	let pipelineUrls = {};
 	let showAddOpenAIConnectionModal = false;
 	let showAddOllamaConnectionModal = false;
 
@@ -177,10 +176,7 @@
 					if (!(OPENAI_API_CONFIGS[idx]?.enable ?? true)) {
 						return;
 					}
-					const res = await getOpenAIModels(localStorage.token, idx);
-					if (res.pipelines) {
-						pipelineUrls[url] = true;
-					}
+					await getOpenAIModels(localStorage.token, idx);
 				});
 			}
 
@@ -264,7 +260,6 @@
 											bind:url={OPENAI_API_BASE_URLS[idx]}
 											bind:key={OPENAI_API_KEYS[idx]}
 											bind:config={OPENAI_API_CONFIGS[idx]}
-											pipeline={pipelineUrls[url] ? true : false}
 											onSubmit={() => {
 												updateOpenAIHandler();
 											}}

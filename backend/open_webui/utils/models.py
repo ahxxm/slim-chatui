@@ -7,19 +7,11 @@ import sys
 from fastapi import Request
 
 from open_webui.routers import openai, ollama
-from open_webui.functions import get_function_models
 
-
-from open_webui.models.functions import Functions
 from open_webui.models.models import Models
 from open_webui.models.access_grants import AccessGrants
 from open_webui.models.groups import Groups
 
-
-from open_webui.utils.plugin import (
-    load_function_module_by_id,
-    get_function_module_from_cache,
-)
 from open_webui.config import (
     BYPASS_ADMIN_ACCESS_CONTROL,
 )
@@ -64,13 +56,10 @@ async def get_all_base_models(request: Request, user: UserModel = None):
         if request.app.state.config.ENABLE_OLLAMA_API
         else asyncio.sleep(0, result=[])
     )
-    function_task = get_function_models(request)
 
-    openai_models, ollama_models, function_models = await asyncio.gather(
-        openai_task, ollama_task, function_task
-    )
+    openai_models, ollama_models = await asyncio.gather(openai_task, ollama_task)
 
-    return function_models + openai_models + ollama_models
+    return openai_models + ollama_models
 
 
 async def get_all_models(request, refresh: bool = False, user: UserModel = None):
@@ -91,22 +80,6 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
     if len(models) == 0:
         return []
 
-    global_action_ids = [
-        function.id for function in Functions.get_global_action_functions()
-    ]
-    enabled_action_ids = [
-        function.id
-        for function in Functions.get_functions_by_type("action", active_only=True)
-    ]
-
-    global_filter_ids = [
-        function.id for function in Functions.get_global_filter_functions()
-    ]
-    enabled_filter_ids = [
-        function.id
-        for function in Functions.get_functions_by_type("filter", active_only=True)
-    ]
-
     custom_models = Models.get_all_models()
     for custom_model in custom_models:
         if custom_model.base_model_id is None:
@@ -123,25 +96,9 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
                         model["name"] = custom_model.name
                         model["info"] = custom_model.model_dump()
 
-                        # Set action_ids and filter_ids
-                        action_ids = []
-                        filter_ids = []
-
                         if "info" in model:
-                            if "meta" in model["info"]:
-                                action_ids.extend(
-                                    model["info"]["meta"].get("actionIds", [])
-                                )
-                                filter_ids.extend(
-                                    model["info"]["meta"].get("filterIds", [])
-                                )
-
                             if "params" in model["info"]:
-                                # Remove params to avoid exposing sensitive info
                                 del model["info"]["params"]
-
-                        model["action_ids"] = action_ids
-                        model["filter_ids"] = filter_ids
                     else:
                         models.remove(model)
 
@@ -152,17 +109,12 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
             owned_by = "openai"
             connection_type = None
 
-            pipe = None
-
             for m in models:
                 if (
                     custom_model.base_model_id == m["id"]
                     or custom_model.base_model_id == m["id"].split(":")[0]
                 ):
                     owned_by = m.get("owned_by", "unknown")
-                    if "pipe" in m:
-                        pipe = m["pipe"]
-
                     connection_type = m.get("connection_type", None)
                     break
 
@@ -174,98 +126,15 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
                 "owned_by": owned_by,
                 "connection_type": connection_type,
                 "preset": True,
-                **({"pipe": pipe} if pipe is not None else {}),
             }
 
             info = custom_model.model_dump()
             if "params" in info:
-                # Remove params to avoid exposing sensitive info
                 del info["params"]
 
             model["info"] = info
 
-            action_ids = []
-            filter_ids = []
-
-            if custom_model.meta:
-                meta = custom_model.meta.model_dump()
-
-                if "actionIds" in meta:
-                    action_ids.extend(meta["actionIds"])
-
-                if "filterIds" in meta:
-                    filter_ids.extend(meta["filterIds"])
-
-            model["action_ids"] = action_ids
-            model["filter_ids"] = filter_ids
-
             models.append(model)
-
-    # Process action_ids to get the actions
-    def get_action_items_from_module(function, module):
-        actions = []
-        if hasattr(module, "actions"):
-            actions = module.actions
-            return [
-                {
-                    "id": f"{function.id}.{action['id']}",
-                    "name": action.get("name", f"{function.name} ({action['id']})"),
-                    "description": function.meta.description,
-                    "icon": action.get(
-                        "icon_url",
-                        function.meta.manifest.get("icon_url", None)
-                        or getattr(module, "icon_url", None)
-                        or getattr(module, "icon", None),
-                    ),
-                }
-                for action in actions
-            ]
-        else:
-            return [
-                {
-                    "id": function.id,
-                    "name": function.name,
-                    "description": function.meta.description,
-                    "icon": function.meta.manifest.get("icon_url", None)
-                    or getattr(module, "icon_url", None)
-                    or getattr(module, "icon", None),
-                }
-            ]
-
-    # Process filter_ids to get the filters
-    def get_filter_items_from_module(function, module):
-        return [
-            {
-                "id": function.id,
-                "name": function.name,
-                "description": function.meta.description,
-                "icon": function.meta.manifest.get("icon_url", None)
-                or getattr(module, "icon_url", None)
-                or getattr(module, "icon", None),
-                "has_user_valves": hasattr(module, "UserValves"),
-            }
-        ]
-
-    # Batch-prefetch all needed function records to avoid N+1 queries
-    all_function_ids = set()
-    for model in models:
-        all_function_ids.update(model.get("action_ids", []))
-        all_function_ids.update(model.get("filter_ids", []))
-    all_function_ids.update(global_action_ids)
-    all_function_ids.update(global_filter_ids)
-
-    functions_by_id = {
-        f.id: f for f in Functions.get_functions_by_ids(list(all_function_ids))
-    }
-
-    # Pre-warm the function module cache once per unique function ID.
-    # This ensures each function's DB freshness check runs exactly once,
-    # not once per (model × function) pair.
-    for function_id in all_function_ids:
-        try:
-            get_function_module_from_cache(request, function_id)
-        except Exception as e:
-            log.info(f"Failed to load function module for {function_id}: {e}")
 
     # Apply global model defaults to all models
     # Per-model overrides take precedence over global defaults
@@ -289,49 +158,6 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
                     meta["capabilities"] = {**value, **existing}
                 elif meta.get(key) is None:
                     meta[key] = copy.deepcopy(value)
-
-    for model in models:
-        action_ids = [
-            action_id
-            for action_id in list(set(model.pop("action_ids", []) + global_action_ids))
-            if action_id in enabled_action_ids
-        ]
-        filter_ids = [
-            filter_id
-            for filter_id in list(set(model.pop("filter_ids", []) + global_filter_ids))
-            if filter_id in enabled_filter_ids
-        ]
-
-        model["actions"] = []
-        for action_id in action_ids:
-            action_function = functions_by_id.get(action_id)
-            if action_function is None:
-                log.info(f"Action not found: {action_id}")
-                continue
-
-            function_module = request.app.state.FUNCTIONS.get(action_id)
-            if function_module is None:
-                log.info(f"Failed to load action module: {action_id}")
-                continue
-            model["actions"].extend(
-                get_action_items_from_module(action_function, function_module)
-            )
-
-        model["filters"] = []
-        for filter_id in filter_ids:
-            filter_function = functions_by_id.get(filter_id)
-            if filter_function is None:
-                log.info(f"Filter not found: {filter_id}")
-                continue
-
-            function_module = request.app.state.FUNCTIONS.get(filter_id)
-            if function_module is None:
-                log.info(f"Failed to load filter module: {filter_id}")
-                continue
-            if getattr(function_module, "toggle", None):
-                model["filters"].extend(
-                    get_filter_items_from_module(filter_function, function_module)
-                )
 
     log.debug(f"get_all_models() returned {len(models)} models")
 

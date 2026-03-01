@@ -50,7 +50,6 @@ from open_webui.socket.main import (
 from open_webui.routers import (
     ollama,
     openai,
-    pipelines,
     tasks,
     auths,
     chats,
@@ -58,10 +57,8 @@ from open_webui.routers import (
     configs,
     groups,
     files,
-    functions,
     models,
     prompts,
-    skills,
     users,
     utils,
 )
@@ -69,7 +66,6 @@ from open_webui.routers import (
 from sqlalchemy.orm import Session
 from open_webui.internal.db import ScopedSession, get_session
 
-from open_webui.models.functions import Functions
 from open_webui.models.models import Models
 from open_webui.models.users import Users
 from open_webui.models.chats import Chats
@@ -144,7 +140,6 @@ from open_webui.config import (
     TITLE_GENERATION_PROMPT_TEMPLATE,
     FOLLOW_UP_GENERATION_PROMPT_TEMPLATE,
     TAGS_GENERATION_PROMPT_TEMPLATE,
-    TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE,
     AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE,
     AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH,
     AppConfig,
@@ -189,7 +184,6 @@ from open_webui.utils.chat import (
     generate_chat_completion as chat_completion_handler,
     chat_completed as chat_completed_handler,
 )
-from open_webui.utils.actions import chat_action as chat_action_handler
 from open_webui.utils.embeddings import generate_embeddings
 from open_webui.utils.middleware import (
     build_chat_response_context,
@@ -203,7 +197,6 @@ from open_webui.utils.auth import (
     get_verified_user,
     create_admin_user,
 )
-from open_webui.utils.plugin import install_tool_and_function_dependencies
 from open_webui.utils.security_headers import SecurityHeadersMiddleware
 from open_webui.tasks import (
     list_task_ids_by_item_id,
@@ -217,7 +210,6 @@ from open_webui.constants import ERROR_MESSAGES
 
 if SAFE_MODE:
     print("SAFE MODE ENABLED")
-    Functions.deactivate_all_functions()
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
@@ -271,11 +263,6 @@ async def lifespan(app: FastAPI):
         if create_admin_user(WEBUI_ADMIN_EMAIL, WEBUI_ADMIN_PASSWORD, WEBUI_ADMIN_NAME):
             # Disable signup since we now have an admin
             app.state.config.ENABLE_SIGNUP = False
-
-    # This should be blocking (sync) so functions are not deactivated on first /get_models calls
-    # when the first user lands on the / route.
-    log.info("Installing external dependencies of functions...")
-    install_tool_and_function_dependencies()
 
     if THREAD_POOL_SIZE and THREAD_POOL_SIZE > 0:
         limiter = anyio.to_thread.current_default_thread_limiter()
@@ -420,9 +407,6 @@ app.state.AUTH_TRUSTED_NAME_HEADER = WEBUI_AUTH_TRUSTED_NAME_HEADER
 app.state.EXTERNAL_PWA_MANIFEST_URL = EXTERNAL_PWA_MANIFEST_URL
 
 
-app.state.FUNCTIONS = {}
-app.state.FUNCTION_CONTENTS = {}
-
 ########################################
 #
 # FILES
@@ -455,9 +439,6 @@ app.state.config.FOLLOW_UP_GENERATION_PROMPT_TEMPLATE = (
     FOLLOW_UP_GENERATION_PROMPT_TEMPLATE
 )
 
-app.state.config.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE = (
-    TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE
-)
 app.state.config.AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE = (
     AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE
 )
@@ -648,7 +629,6 @@ app.include_router(ollama.router, prefix="/ollama", tags=["ollama"])
 app.include_router(openai.router, prefix="/openai", tags=["openai"])
 
 
-app.include_router(pipelines.router, prefix="/api/v1/pipelines", tags=["pipelines"])
 app.include_router(tasks.router, prefix="/api/v1/tasks", tags=["tasks"])
 app.include_router(configs.router, prefix="/api/v1/configs", tags=["configs"])
 
@@ -660,12 +640,10 @@ app.include_router(chats.router, prefix="/api/v1/chats", tags=["chats"])
 
 app.include_router(models.router, prefix="/api/v1/models", tags=["models"])
 app.include_router(prompts.router, prefix="/api/v1/prompts", tags=["prompts"])
-app.include_router(skills.router, prefix="/api/v1/skills", tags=["skills"])
 
 app.include_router(folders.router, prefix="/api/v1/folders", tags=["folders"])
 app.include_router(groups.router, prefix="/api/v1/groups", tags=["groups"])
 app.include_router(files.router, prefix="/api/v1/files", tags=["files"])
-app.include_router(functions.router, prefix="/api/v1/functions", tags=["functions"])
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 
 
@@ -878,7 +856,6 @@ async def chat_completion(
             "parent_message": form_data.pop("parent_message", None),
             "parent_message_id": form_data.pop("parent_id", None),
             "session_id": form_data.pop("session_id", None),
-            "filter_ids": form_data.pop("filter_ids", []),
             "files": form_data.get("files", None),
             "features": form_data.get("features", {}),
             "variables": form_data.get("variables", {}),
@@ -887,14 +864,6 @@ async def chat_completion(
             "params": {
                 "stream_delta_chunk_size": stream_delta_chunk_size,
                 "reasoning_tags": reasoning_tags,
-                "function_calling": (
-                    "native"
-                    if (
-                        form_data.get("params", {}).get("function_calling") == "native"
-                        or model_info_params.get("function_calling") == "native"
-                    )
-                    else "default"
-                ),
             },
         }
 
@@ -1120,25 +1089,6 @@ async def chat_completed(
             request.state.model = model_item
 
         return await chat_completed_handler(request, form_data, user)
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
-
-
-@app.post("/api/chat/actions/{action_id}")
-async def chat_action(
-    request: Request, action_id: str, form_data: dict, user=Depends(get_verified_user)
-):
-    try:
-        model_item = form_data.pop("model_item", {})
-
-        if model_item.get("direct", False):
-            request.state.direct = True
-            request.state.model = model_item
-
-        return await chat_action_handler(request, action_id, form_data, user)
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

@@ -98,8 +98,7 @@ export const DEFAULT_CAPABILITIES = {
 	file_upload: true,
 	citations: true,
 	status_updates: true,
-	usage: undefined,
-	builtin_tools: true
+	usage: undefined
 };
 
 export const PASTED_TEXT_CHARACTER_LIMIT = 1000;

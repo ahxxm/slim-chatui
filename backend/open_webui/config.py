@@ -639,15 +639,6 @@ USER_PERMISSIONS_WORKSPACE_PROMPTS_ACCESS = (
     == "true"
 )
 
-USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS", "False").lower() == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS", "False").lower()
-    == "true"
-)
-
 USER_PERMISSIONS_WORKSPACE_MODELS_IMPORT = (
     os.environ.get("USER_PERMISSIONS_WORKSPACE_MODELS_IMPORT", "False").lower()
     == "true"
@@ -667,15 +658,6 @@ USER_PERMISSIONS_WORKSPACE_PROMPTS_EXPORT = (
     os.environ.get("USER_PERMISSIONS_WORKSPACE_PROMPTS_EXPORT", "False").lower()
     == "true"
 )
-
-USER_PERMISSIONS_WORKSPACE_TOOLS_IMPORT = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_TOOLS_IMPORT", "False").lower() == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_TOOLS_EXPORT = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_TOOLS_EXPORT", "False").lower() == "true"
-)
-
 
 USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_SHARING = (
     os.environ.get("USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_SHARING", "False").lower()
@@ -702,37 +684,8 @@ USER_PERMISSIONS_WORKSPACE_PROMPTS_ALLOW_PUBLIC_SHARING = (
 )
 
 
-USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_SHARING = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_SHARING", "False").lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_PUBLIC_SHARING = (
-    os.environ.get(
-        "USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_PUBLIC_SHARING", "False"
-    ).lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_SHARING = (
-    os.environ.get("USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_SHARING", "False").lower()
-    == "true"
-)
-
-USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_PUBLIC_SHARING = (
-    os.environ.get(
-        "USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_PUBLIC_SHARING", "False"
-    ).lower()
-    == "true"
-)
-
-
 USER_PERMISSIONS_CHAT_CONTROLS = (
     os.environ.get("USER_PERMISSIONS_CHAT_CONTROLS", "True").lower() == "true"
-)
-
-USER_PERMISSIONS_CHAT_VALVES = (
-    os.environ.get("USER_PERMISSIONS_CHAT_VALVES", "True").lower() == "true"
 )
 
 USER_PERMISSIONS_CHAT_SYSTEM_PROMPT = (
@@ -815,28 +768,19 @@ DEFAULT_USER_PERMISSIONS = {
     "workspace": {
         "models": USER_PERMISSIONS_WORKSPACE_MODELS_ACCESS,
         "prompts": USER_PERMISSIONS_WORKSPACE_PROMPTS_ACCESS,
-        "tools": USER_PERMISSIONS_WORKSPACE_TOOLS_ACCESS,
-        "skills": USER_PERMISSIONS_WORKSPACE_SKILLS_ACCESS,
         "models_import": USER_PERMISSIONS_WORKSPACE_MODELS_IMPORT,
         "models_export": USER_PERMISSIONS_WORKSPACE_MODELS_EXPORT,
         "prompts_import": USER_PERMISSIONS_WORKSPACE_PROMPTS_IMPORT,
         "prompts_export": USER_PERMISSIONS_WORKSPACE_PROMPTS_EXPORT,
-        "tools_import": USER_PERMISSIONS_WORKSPACE_TOOLS_IMPORT,
-        "tools_export": USER_PERMISSIONS_WORKSPACE_TOOLS_EXPORT,
     },
     "sharing": {
         "models": USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_SHARING,
         "public_models": USER_PERMISSIONS_WORKSPACE_MODELS_ALLOW_PUBLIC_SHARING,
         "prompts": USER_PERMISSIONS_WORKSPACE_PROMPTS_ALLOW_SHARING,
         "public_prompts": USER_PERMISSIONS_WORKSPACE_PROMPTS_ALLOW_PUBLIC_SHARING,
-        "tools": USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_SHARING,
-        "public_tools": USER_PERMISSIONS_WORKSPACE_TOOLS_ALLOW_PUBLIC_SHARING,
-        "skills": USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_SHARING,
-        "public_skills": USER_PERMISSIONS_WORKSPACE_SKILLS_ALLOW_PUBLIC_SHARING,
     },
     "chat": {
         "controls": USER_PERMISSIONS_CHAT_CONTROLS,
-        "valves": USER_PERMISSIONS_CHAT_VALVES,
         "system_prompt": USER_PERMISSIONS_CHAT_SYSTEM_PROMPT,
         "params": USER_PERMISSIONS_CHAT_PARAMS,
         "file_upload": USER_PERMISSIONS_CHAT_FILE_UPLOAD,
@@ -1162,37 +1106,6 @@ Output:
 <text>{{PROMPT}}</text>  
 #### Output:
 """
-
-
-TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE = PersistentConfig(
-    "TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE",
-    "task.tools.prompt_template",
-    os.environ.get("TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE", ""),
-)
-
-
-DEFAULT_TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE = """Available Tools: {{TOOLS}}
-
-Your task is to choose and return the correct tool(s) from the list of available tools based on the query. Follow these guidelines:
-
-- Return only the JSON object, without any additional text or explanation.
-
-- If no tools match the query, return an empty array: 
-   {
-     "tool_calls": []
-   }
-
-- If one or more tools match the query, construct a JSON response containing a "tool_calls" array with objects that include:
-   - "name": The tool's name.
-   - "parameters": A dictionary of required parameters and their corresponding values.
-
-The format for the JSON response is strictly:
-{
-  "tool_calls": [
-    {"name": "toolName1", "parameters": {"key1": "value1"}},
-    {"name": "toolName2", "parameters": {"key2": "value2"}}
-  ]
-}"""
 
 
 DEFAULT_EMOJI_GENERATION_PROMPT_TEMPLATE = """Your task is to reflect the speaker's likely facial expression through a fitting emoji. Interpret emotions from the message and reflect their facial expression using fitting, diverse emojis (e.g., 😊, 😢, 😡, 😱).

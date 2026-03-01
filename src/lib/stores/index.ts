@@ -58,10 +58,6 @@ export const selectedFolder = writable(null);
 
 export const models: Writable<Model[]> = writable([]);
 
-export const tools = writable(null);
-export const skills = writable(null);
-export const functions = writable(null);
-
 export const banners: Writable<Banner[]> = writable([]);
 
 export const settings: Writable<Settings> = writable({});

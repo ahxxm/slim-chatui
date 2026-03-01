@@ -35,7 +35,6 @@
 		chatTitle,
 		showArtifacts,
 		artifactContents,
-		functions,
 		selectedFolder,
 		pinnedChats,
 		showEmbeds
@@ -70,7 +69,6 @@
 		getTaskIdsByChatId
 	} from '$lib/apis';
 	import { createOpenAITextStream } from '$lib/apis/streaming';
-	import { getFunctions } from '$lib/apis/functions';
 	import { updateFolderById } from '$lib/apis/folders';
 
 	import Banner from '../common/Banner.svelte';
@@ -122,9 +120,6 @@
 		selectedModelIds = selectedModels;
 	}
 
-	let selectedToolIds = [];
-	let selectedFilterIds = [];
-
 	let showCommands = false;
 
 	let generating = false;
@@ -166,8 +161,6 @@
 
 		files = [];
 		messageQueue = [];
-		selectedToolIds = [];
-		selectedFilterIds = [];
 
 		const storageChatInput = sessionStorage.getItem(
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
@@ -211,8 +204,6 @@
 					if (!$temporaryChatEnabled) {
 						messageInput?.setText(input.prompt);
 						files = input.files;
-						selectedToolIds = input.selectedToolIds;
-						selectedFilterIds = input.selectedFilterIds;
 					}
 				} catch (e) {}
 			} else {
@@ -263,36 +254,7 @@
 	}
 
 	const onSelectedModelIdsChange = () => {
-		resetInput();
 		oldSelectedModelIds = JSON.parse(JSON.stringify(selectedModelIds));
-	};
-
-	const resetInput = () => {
-		selectedToolIds = [];
-		selectedFilterIds = [];
-
-		if (selectedModelIds.filter((id) => id).length > 0) {
-			setDefaults();
-		}
-	};
-
-	const setDefaults = async () => {
-		if (!$functions) {
-			functions.set(await getFunctions(localStorage.token));
-		}
-		if (selectedModels.length !== 1 && !atSelectedModel) {
-			return;
-		}
-
-		const model = atSelectedModel ?? $models.find((m) => m.id === selectedModels[0]);
-		if (model) {
-			// Set Default Filters (Toggleable only)
-			if (model?.info?.meta?.defaultFilterIds) {
-				selectedFilterIds = model.info.meta.defaultFilterIds.filter((id) =>
-					model?.filters?.find((f) => f.id === id)
-				);
-			}
-		}
 	};
 
 	const showMessage = async (message, scroll = true) => {
@@ -541,8 +503,6 @@
 			messageInput?.setText('');
 
 			files = [];
-			selectedToolIds = [];
-			selectedFilterIds = [];
 
 			try {
 				const input = JSON.parse(storageChatInput);
@@ -550,8 +510,6 @@
 				if (!$temporaryChatEnabled) {
 					messageInput?.setText(input.prompt);
 					files = input.files;
-					selectedToolIds = input.selectedToolIds;
-					selectedFilterIds = input.selectedFilterIds;
 				}
 			} catch (e) {}
 		}
@@ -794,20 +752,6 @@
 		taskIds = null;
 		messageQueue = [];
 
-		if ($page.url.searchParams.get('tools')) {
-			selectedToolIds = $page.url.searchParams
-				.get('tools')
-				?.split(',')
-				.map((id) => id.trim())
-				.filter((id) => id);
-		} else if ($page.url.searchParams.get('tool-ids')) {
-			selectedToolIds = $page.url.searchParams
-				.get('tool-ids')
-				?.split(',')
-				.map((id) => id.trim())
-				.filter((id) => id);
-		}
-
 		if ($page.url.searchParams.get('q')) {
 			const q = $page.url.searchParams.get('q') ?? '';
 			messageInput?.setText(q);
@@ -920,7 +864,6 @@
 				...(m.usage ? { usage: m.usage } : {}),
 				...(m.sources ? { sources: m.sources } : {})
 			})),
-			filter_ids: selectedFilterIds.length > 0 ? selectedFilterIds : undefined,
 			model_item: $models.find((m) => m.id === modelId),
 			chat_id: _chatId,
 			session_id: $socket?.id,
@@ -1611,41 +1554,6 @@
 			})
 			.filter((message) => message?.role === 'user' || message?.content?.trim());
 
-		// Parse skill mentions (<$skillId|label>) from user messages
-		const skillMentionRegex = /<\$([^|>]+)\|?[^>]*>/g;
-		const skillIds = [];
-		for (const message of messages) {
-			const content =
-				typeof message.content === 'string' ? message.content : (message.content?.[0]?.text ?? '');
-			for (const match of content.matchAll(skillMentionRegex)) {
-				if (!skillIds.includes(match[1])) {
-					skillIds.push(match[1]);
-				}
-			}
-		}
-
-		// Strip skill mentions from message content
-		if (skillIds.length > 0) {
-			messages = messages.map((message) => {
-				if (typeof message.content === 'string') {
-					return {
-						...message,
-						content: message.content.replace(/<\$[^>]+>/g, '').trim()
-					};
-				} else if (Array.isArray(message.content)) {
-					return {
-						...message,
-						content: message.content.map((part) =>
-							part.type === 'text'
-								? { ...part, text: part.text.replace(/<\$[^>]+>/g, '').trim() }
-								: part
-						)
-					};
-				}
-				return message;
-			});
-		}
-
 		const res = await generateOpenAIChatCompletion(
 			localStorage.token,
 			{
@@ -1665,8 +1573,6 @@
 
 				files: (files?.length ?? 0) > 0 ? files : undefined,
 
-				filter_ids: selectedFilterIds.length > 0 ? selectedFilterIds : undefined,
-				skill_ids: skillIds.length > 0 ? skillIds : undefined,
 				features: getFeatures(),
 				variables: {
 					...getPromptVariables(
@@ -2238,8 +2144,6 @@
 									bind:files
 									bind:prompt
 									bind:autoScroll
-									bind:selectedToolIds
-									bind:selectedFilterIds
 									bind:atSelectedModel
 									bind:showCommands
 									{generating}
@@ -2303,8 +2207,6 @@
 									bind:files
 									bind:prompt
 									bind:autoScroll
-									bind:selectedToolIds
-									bind:selectedFilterIds
 									bind:atSelectedModel
 									bind:showCommands
 									{stopResponse}

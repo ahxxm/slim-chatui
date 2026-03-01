@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, getContext } from 'svelte';
-	import { WEBUI_NAME, showSidebar, functions, user, mobile, models } from '$lib/stores';
+	import { WEBUI_NAME, showSidebar, user, mobile, models } from '$lib/stores';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
@@ -18,8 +18,6 @@
 				$page.url.pathname.includes('/prompts') &&
 				!$user?.permissions?.workspace?.prompts
 			) {
-				goto('/');
-			} else if ($page.url.pathname.includes('/skills') && !$user?.permissions?.workspace?.skills) {
 				goto('/');
 			}
 		}
@@ -88,19 +86,6 @@
 									: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition select-none"
 								href="/workspace/prompts">{$i18n.t('Prompts')}</a
 							>
-						{/if}
-
-						{#if $user?.role === 'admin' || $user?.permissions?.workspace?.skills}
-							<a
-								draggable="false"
-								aria-current={$page.url.pathname.includes('/workspace/skills') ? 'page' : null}
-								class="min-w-fit p-1.5 {$page.url.pathname.includes('/workspace/skills')
-									? ''
-									: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition select-none"
-								href="/workspace/skills"
-							>
-								{$i18n.t('Skills')}
-							</a>
 						{/if}
 					</div>
 				</div>

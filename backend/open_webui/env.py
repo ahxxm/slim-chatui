@@ -480,19 +480,6 @@ else:
         CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE = 1
 
 
-CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES = os.environ.get(
-    "CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES", "30"
-)
-
-if CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES == "":
-    CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES = 30
-else:
-    try:
-        CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES = int(CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES)
-    except Exception:
-        CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES = 30
-
-
 CHAT_STREAM_RESPONSE_CHUNK_MAX_BUFFER_SIZE = os.environ.get(
     "CHAT_STREAM_RESPONSE_CHUNK_MAX_BUFFER_SIZE", ""
 )
@@ -615,19 +602,6 @@ AUDIT_EXCLUDED_PATHS = os.getenv("AUDIT_EXCLUDED_PATHS", "/chats,/chat,/folders"
 )
 AUDIT_EXCLUDED_PATHS = [path.strip() for path in AUDIT_EXCLUDED_PATHS]
 AUDIT_EXCLUDED_PATHS = [path.lstrip("/") for path in AUDIT_EXCLUDED_PATHS]
-
-
-####################################
-# TOOLS/FUNCTIONS PIP OPTIONS
-####################################
-
-ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS = (
-    os.environ.get("ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS", "True").lower()
-    == "true"
-)
-
-PIP_OPTIONS = os.getenv("PIP_OPTIONS", "").split()
-PIP_PACKAGE_INDEX_OPTIONS = os.getenv("PIP_PACKAGE_INDEX_OPTIONS", "").split()
 
 
 ####################################

@@ -19,7 +19,6 @@
 		settings,
 		models,
 		config,
-		tools,
 		user as _user,
 		showControls,
 		temporaryChatEnabled
@@ -56,17 +55,11 @@
 	import Image from '../common/Image.svelte';
 
 	import XMark from '../icons/XMark.svelte';
-	import Wrench from '../icons/Wrench.svelte';
-	import Sparkles from '../icons/Sparkles.svelte';
 
 	import InputVariablesModal from './MessageInput/InputVariablesModal.svelte';
-	import IntegrationsMenu from './MessageInput/IntegrationsMenu.svelte';
-	import Component from '../icons/Component.svelte';
 	import PlusAlt from '../icons/PlusAlt.svelte';
 
 	import CommandSuggestionList from './MessageInput/CommandSuggestionList.svelte';
-	import Knobs from '../icons/Knobs.svelte';
-	import ValvesModal from '../workspace/common/ValvesModal.svelte';
 	import { goto } from '$app/navigation';
 	import InputModal from '../common/InputModal.svelte';
 	import Expand from '../icons/Expand.svelte';
@@ -94,9 +87,6 @@
 	export let prompt = '';
 	export let files = [];
 
-	export let selectedToolIds = [];
-	export let selectedFilterIds = [];
-
 	export let messageQueue: { id: string; prompt: string; files: any[] }[] = [];
 	export let onQueueSendNow: (id: string) => void = () => {};
 	export let onQueueEdit: (id: string) => void = () => {};
@@ -109,15 +99,6 @@
 	let inputVariables = {};
 	let inputVariableValues = {};
 
-	let showValvesModal = false;
-	let selectedValvesType = 'tool'; // 'tool' or 'function'
-	let selectedValvesItemId = null;
-	let integrationsMenuCloseOnOutsideClick = true;
-
-	$: if (!showValvesModal) {
-		integrationsMenuCloseOnOutsideClick = true;
-	}
-
 	$: onChange({
 		prompt,
 		files: files
@@ -128,9 +109,7 @@
 					user: undefined,
 					access_grants: undefined
 				};
-			}),
-		selectedToolIds,
-		selectedFilterIds
+			})
 	});
 
 	const inputVariableHandler = async (text: string): Promise<string> => {
@@ -418,14 +397,6 @@
 	$: fileUploadCapableModels = (atSelectedModel?.id ? [atSelectedModel.id] : selectedModels).filter(
 		(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.file_upload ?? true
 	);
-
-	let toggleFilters = [];
-	$: toggleFilters = (atSelectedModel?.id ? [atSelectedModel.id] : selectedModels)
-		.map((id) => ($models.find((model) => model.id === id) || {})?.filters ?? [])
-		.reduce((acc, filters) => acc.filter((f1) => filters.some((f2) => f2.id === f1.id)));
-
-	let showToolsButton = false;
-	$: showToolsButton = ($tools ?? []).length > 0;
 
 	const scrollToBottom = () => {
 		const element = document.getElementById('messages-container');
@@ -772,17 +743,6 @@
 						}
 					}
 				})
-			},
-			{
-				char: '$',
-				render: getSuggestionRenderer(CommandSuggestionList, {
-					i18n,
-					onSelect: (e) => {
-						document.getElementById('chat-input')?.focus();
-					},
-
-					insertTextHandler: insertTextAtCursor
-				})
 			}
 		];
 		loaded = true;
@@ -831,19 +791,6 @@
 	bind:show={showInputVariablesModal}
 	variables={inputVariables}
 	onSave={inputVariablesModalCallback}
-/>
-
-<ValvesModal
-	bind:show={showValvesModal}
-	userValves={true}
-	type={selectedValvesType}
-	id={selectedValvesItemId ?? null}
-	on:save={async () => {
-		await tick();
-	}}
-	on:close={() => {
-		integrationsMenuCloseOnOutsideClick = true;
-	}}
 />
 
 <InputModal
@@ -1228,8 +1175,6 @@
 														if (e.key === 'Escape') {
 															console.log('Escape');
 															atSelectedModel = undefined;
-															selectedToolIds = [];
-															selectedFilterIds = [];
 														}
 													}}
 													on:paste={async (e) => {
@@ -1300,98 +1245,6 @@
 											<PlusAlt className="size-5.5" />
 										</div>
 									</InputMenu>
-
-									{#if showToolsButton || (toggleFilters && toggleFilters.length > 0)}
-										<div
-											class="flex self-center w-[1px] h-4 mx-1 bg-gray-200/50 dark:bg-gray-800/50"
-										/>
-
-										<IntegrationsMenu
-											selectedModels={atSelectedModel ? [atSelectedModel.id] : selectedModels}
-											{toggleFilters}
-											bind:selectedToolIds
-											bind:selectedFilterIds
-											closeOnOutsideClick={integrationsMenuCloseOnOutsideClick}
-											onShowValves={(e) => {
-												const { type, id } = e;
-												selectedValvesType = type;
-												selectedValvesItemId = id;
-												showValvesModal = true;
-												integrationsMenuCloseOnOutsideClick = false;
-											}}
-											onClose={async () => {
-												await tick();
-
-												const chatInput = document.getElementById('chat-input');
-												chatInput?.focus();
-											}}
-										>
-											<div
-												id="integration-menu-button"
-												class="bg-transparent hover:bg-gray-100 text-gray-700 dark:text-white dark:hover:bg-gray-800 rounded-full size-8 flex justify-center items-center outline-hidden focus:outline-hidden"
-											>
-												<Component className="size-4.5" strokeWidth="1.5" />
-											</div>
-										</IntegrationsMenu>
-									{/if}
-
-									{#if selectedModelIds.length === 1 && $models.find((m) => m.id === selectedModelIds[0])?.has_user_valves}
-										<div class="ml-1 flex gap-1.5">
-											<Tooltip content={$i18n.t('Valves')} placement="top">
-												<button
-													type="button"
-													id="model-valves-button"
-													class="bg-transparent hover:bg-gray-100 text-gray-700 dark:text-white dark:hover:bg-gray-800 rounded-full size-8 flex justify-center items-center outline-hidden focus:outline-hidden"
-													on:click={() => {
-														selectedValvesType = 'function';
-														selectedValvesItemId = selectedModelIds[0]?.split('.')[0];
-														showValvesModal = true;
-													}}
-												>
-													<Knobs className="size-4" strokeWidth="1.5" />
-												</button>
-											</Tooltip>
-										</div>
-									{/if}
-
-									<div class="ml-1 flex gap-1.5">
-										{#each selectedFilterIds as filterId}
-											{@const filter = toggleFilters.find((f) => f.id === filterId)}
-											{#if filter}
-												<Tooltip content={filter?.name} placement="top">
-													<button
-														on:click|preventDefault={() => {
-															selectedFilterIds = selectedFilterIds.filter((id) => id !== filterId);
-														}}
-														type="button"
-														class="group p-[7px] flex gap-1.5 items-center text-sm rounded-full transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden {selectedFilterIds.includes(
-															filterId
-														)
-															? 'text-sky-500 dark:text-sky-300 bg-sky-50 hover:bg-sky-100 dark:bg-sky-400/10 dark:hover:bg-sky-600/10 border border-sky-200/40 dark:border-sky-500/20'
-															: 'bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 '} capitalize"
-													>
-														{#if filter?.icon}
-															<div class="size-4 items-center flex justify-center">
-																<img
-																	src={filter.icon}
-																	class="size-3.5 {filter.icon.includes('data:image/svg')
-																		? 'dark:invert-[80%]'
-																		: ''}"
-																	style="fill: currentColor;"
-																	alt={filter.name}
-																/>
-															</div>
-														{:else}
-															<Sparkles className="size-4" strokeWidth="1.75" />
-														{/if}
-														<div class="hidden group-hover:block">
-															<XMark className="size-4" strokeWidth="1.75" />
-														</div>
-													</button>
-												</Tooltip>
-											{/if}
-										{/each}
-									</div>
 								</div>
 
 								<div class="self-end flex space-x-1 mr-1 shrink-0 gap-[0.5px]">

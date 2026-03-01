@@ -1109,7 +1109,6 @@ export const getLineCount = (text) => {
 	return text ? text.split('\n').length : 0;
 };
 
-
 export const slugify = (str: string): string => {
 	return (
 		str

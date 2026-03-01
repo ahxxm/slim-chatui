@@ -2,22 +2,14 @@
 	import { toast } from 'svelte-sonner';
 
 	import { onMount, getContext, tick } from 'svelte';
-	import { models, functions, user } from '$lib/stores';
+	import { models, user } from '$lib/stores';
 	import { WEBUI_BASE_URL, DEFAULT_CAPABILITIES } from '$lib/constants';
-
-	import { getFunctions } from '$lib/apis/functions';
 
 	import AdvancedParams from '$lib/components/chat/Settings/Advanced/AdvancedParams.svelte';
 	import Tags from '$lib/components/common/Tags.svelte';
-	import SkillsSelector from '$lib/components/workspace/Models/SkillsSelector.svelte';
-	import FiltersSelector from '$lib/components/workspace/Models/FiltersSelector.svelte';
-	import ActionsSelector from '$lib/components/workspace/Models/ActionsSelector.svelte';
 	import Capabilities from '$lib/components/workspace/Models/Capabilities.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
-	import AccessControl from '../common/AccessControl.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
-	import DefaultFiltersSelector from './DefaultFiltersSelector.svelte';
 	import PromptSuggestions from './PromptSuggestions.svelte';
 	import AccessControlModal from '../common/AccessControlModal.svelte';
 	import LockClosed from '$lib/components/icons/LockClosed.svelte';
@@ -83,14 +75,8 @@
 		system: ''
 	};
 
-	let skillIds = [];
-
-	let filterIds = [];
-	let defaultFilterIds = [];
-
 	let capabilities = { ...DEFAULT_CAPABILITIES };
 
-	let actionIds = [];
 	let accessGrants = [];
 
 	const submitHandler = async () => {
@@ -124,38 +110,10 @@
 			info.meta.description = null;
 		}
 
-		if (skillIds.length > 0) {
-			info.meta.skillIds = skillIds;
-		} else {
-			if (info.meta.skillIds) {
-				delete info.meta.skillIds;
-			}
-		}
-
-		if (filterIds.length > 0) {
-			info.meta.filterIds = filterIds;
-		} else {
-			if (info.meta.filterIds) {
-				delete info.meta.filterIds;
-			}
-		}
-
-		if (defaultFilterIds.length > 0) {
-			info.meta.defaultFilterIds = defaultFilterIds;
-		} else {
-			if (info.meta.defaultFilterIds) {
-				delete info.meta.defaultFilterIds;
-			}
-		}
-
-		if (actionIds.length > 0) {
-			info.meta.actionIds = actionIds;
-		} else {
-			if (info.meta.actionIds) {
-				delete info.meta.actionIds;
-			}
-		}
-
+		delete info.meta.skillIds;
+		delete info.meta.filterIds;
+		delete info.meta.defaultFilterIds;
+		delete info.meta.actionIds;
 		delete info.meta.defaultFeatureIds;
 		delete info.meta.builtinTools;
 
@@ -174,8 +132,6 @@
 	};
 
 	onMount(async () => {
-		await functions.set(await getFunctions(localStorage.token));
-
 		// Scroll to top 'workspace-container' element
 		const workspaceContainer = document.getElementById('workspace-container');
 		if (workspaceContainer) {
@@ -212,11 +168,6 @@
 						','
 					)
 				: null;
-
-			skillIds = model?.meta?.skillIds ?? [];
-			filterIds = model?.meta?.filterIds ?? [];
-			defaultFilterIds = model?.meta?.defaultFilterIds ?? [];
-			actionIds = model?.meta?.actionIds ?? [];
 
 			capabilities = { ...capabilities, ...(model?.meta?.capabilities ?? {}) };
 
@@ -651,48 +602,6 @@
 							<PromptSuggestions bind:promptSuggestions={info.meta.suggestion_prompts} />
 						{/if}
 					</div>
-
-					<div class="my-4">
-						<SkillsSelector bind:selectedSkillIds={skillIds} />
-					</div>
-
-					{#if ($functions ?? []).filter((func) => func.type === 'filter').length > 0 || ($functions ?? []).filter((func) => func.type === 'action').length > 0}
-						<hr class=" border-gray-100/30 dark:border-gray-850/30 my-4" />
-
-						{#if ($functions ?? []).filter((func) => func.type === 'filter').length > 0}
-							<div class="my-4">
-								<FiltersSelector
-									bind:selectedFilterIds={filterIds}
-									filters={($functions ?? []).filter((func) => func.type === 'filter')}
-								/>
-							</div>
-
-							{@const toggleableFilters = $functions.filter(
-								(func) =>
-									func.type === 'filter' &&
-									(filterIds.includes(func.id) || func?.is_global) &&
-									func?.meta?.toggle
-							)}
-
-							{#if toggleableFilters.length > 0}
-								<div class="my-4">
-									<DefaultFiltersSelector
-										bind:selectedFilterIds={defaultFilterIds}
-										filters={toggleableFilters}
-									/>
-								</div>
-							{/if}
-						{/if}
-
-						{#if ($functions ?? []).filter((func) => func.type === 'action').length > 0}
-							<div class="my-4">
-								<ActionsSelector
-									bind:selectedActionIds={actionIds}
-									actions={($functions ?? []).filter((func) => func.type === 'action')}
-								/>
-							</div>
-						{/if}
-					{/if}
 
 					<hr class=" border-gray-100/30 dark:border-gray-850/30 my-4" />
 

@@ -25,10 +25,6 @@ from open_webui.routers.tasks import (
     generate_follow_ups,
     generate_chat_tags,
 )
-from open_webui.routers.pipelines import (
-    process_pipeline_inlet_filter,
-)
-
 from open_webui.utils.webhook import post_webhook
 from open_webui.utils.files import (
     convert_markdown_base64_images,
@@ -37,26 +33,15 @@ from open_webui.utils.files import (
 )
 
 
-from open_webui.models.users import UserModel
-from open_webui.models.functions import Functions
-
-from open_webui.utils.task import (
-    get_task_model_id,
-)
 from open_webui.utils.misc import (
     deep_update,
     get_message_list,
-    add_or_update_system_message,
     get_last_user_message,
     get_last_user_message_item,
     get_last_assistant_message,
     get_system_message,
     convert_logit_bias_input_to_json,
     convert_output_to_messages,
-)
-from open_webui.utils.filter import (
-    get_sorted_filter_ids,
-    process_filter_functions,
 )
 from open_webui.utils.payload import apply_system_prompt_to_body
 from open_webui.utils.response import normalize_usage
@@ -530,7 +515,6 @@ def apply_params_to_form_data(form_data, model):
     open_webui_params = {
         "stream_response": bool,
         "stream_delta_chunk_size": int,
-        "function_calling": str,
         "reasoning_tags": list,
         "system": str,
     }
@@ -657,9 +641,6 @@ def process_messages_with_output(messages: list[dict]) -> list[dict]:
 
 
 async def process_chat_payload(request, form_data, user, metadata, model):
-    # Pipeline Inlet -> Filter Inlet -> Chat Code Interpreter (Form Data Update)
-    # -> (Default) Chat Tools Function Calling
-
     form_data = apply_params_to_form_data(form_data, model)
     log.debug(f"form_data: {form_data}")
 
@@ -715,37 +696,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
 
     form_data = await convert_url_images_to_base64(form_data)
 
-    event_emitter = get_event_emitter(metadata)
-    event_caller = get_event_call(metadata)
-
-    extra_params = {
-        "__event_emitter__": event_emitter,
-        "__event_call__": event_caller,
-        "__user__": user.model_dump() if isinstance(user, UserModel) else {},
-        "__metadata__": metadata,
-        "__request__": request,
-        "__model__": model,
-        "__chat_id__": metadata.get("chat_id"),
-        "__message_id__": metadata.get("message_id"),
-    }
-    # Initialize events to store additional event to be sent to the client
-    # Initialize contexts and citation
-    if getattr(request.state, "direct", False) and hasattr(request.state, "model"):
-        models = {
-            request.state.model["id"]: request.state.model,
-        }
-    else:
-        models = request.app.state.MODELS
-
-    task_model_id = get_task_model_id(
-        form_data["model"],
-        request.app.state.config.TASK_MODEL,
-        request.app.state.config.TASK_MODEL_EXTERNAL,
-        models,
-    )
-
     events = []
-    sources = []
 
     # Folder "Project" handling
     # Check if the request has chat_id and is inside of a folder
@@ -769,75 +720,11 @@ async def process_chat_payload(request, form_data, user, metadata, model):
 
     variables = form_data.pop("variables", None)
 
-    # Process the form_data through the pipeline
-    try:
-        form_data = await process_pipeline_inlet_filter(
-            request, form_data, user, models
-        )
-    except Exception as e:
-        raise e
-
-    try:
-        filter_ids = get_sorted_filter_ids(
-            request, model, metadata.get("filter_ids", [])
-        )
-        filter_functions = Functions.get_functions_by_ids(filter_ids)
-
-        form_data, flags = await process_filter_functions(
-            request=request,
-            filter_functions=filter_functions,
-            filter_type="inlet",
-            form_data=form_data,
-            extra_params=extra_params,
-        )
-    except Exception as e:
-        raise Exception(f"{e}")
-
-    features = form_data.pop("features", None) or {}
-    extra_params["__features__"] = features
-
+    form_data.pop("features", None)
+    form_data.pop("filter_ids", None)
     form_data.pop("tool_ids", None)
+    form_data.pop("skill_ids", None)
     files = form_data.pop("files", None)
-
-    # Skills
-    user_skill_ids = set(form_data.pop("skill_ids", None) or [])
-    model_skill_ids = set(model.get("info", {}).get("meta", {}).get("skillIds", []))
-
-    all_skill_ids = user_skill_ids | model_skill_ids
-    available_skills = []
-    if all_skill_ids:
-        from open_webui.models.skills import Skills as SkillsModel
-
-        accessible_skill_ids = {
-            s.id for s in SkillsModel.get_skills_by_user_id(user.id, "read")
-        }
-        available_skills = [
-            s
-            for sid in all_skill_ids
-            if sid in accessible_skill_ids
-            and (s := SkillsModel.get_skill_by_id(sid))
-            and s.is_active
-        ]
-
-        skill_descriptions = ""
-        for skill in available_skills:
-            if skill.id in user_skill_ids:
-                # User-selected: inject full content
-                form_data["messages"] = add_or_update_system_message(
-                    f'<skill name="{skill.name}">\n{skill.content}\n</skill>',
-                    form_data["messages"],
-                    append=True,
-                )
-            else:
-                # Model-attached: name+description only
-                skill_descriptions += f"<skill>\n<name>{skill.name}</name>\n<description>{skill.description or ''}</description>\n</skill>\n"
-
-        if skill_descriptions:
-            form_data["messages"] = add_or_update_system_message(
-                f"<available_skills>\n{skill_descriptions}</available_skills>",
-                form_data["messages"],
-                append=True,
-            )
 
     if files:
         if not files:
@@ -862,17 +749,6 @@ async def process_chat_payload(request, form_data, user, metadata, model):
         "files": files,
     }
     form_data["metadata"] = metadata
-
-    # If there are citations, add them to the data_items
-    sources = [
-        source
-        for source in sources
-        if source.get("source", {}).get("name", "")
-        or source.get("source", {}).get("id", "")
-    ]
-
-    if len(sources) > 0:
-        events.append({"sources": sources})
 
     return form_data, metadata, events
 
@@ -1318,7 +1194,6 @@ async def streaming_chat_response_handler(response, ctx):
     form_data = ctx["form_data"]
 
     user = ctx["user"]
-    model = ctx["model"]
 
     metadata = ctx["metadata"]
     events = ctx["events"]
@@ -1326,25 +1201,8 @@ async def streaming_chat_response_handler(response, ctx):
     event_emitter = ctx["event_emitter"]
     event_caller = ctx["event_caller"]
 
-    extra_params = {
-        "__event_emitter__": event_emitter,
-        "__event_call__": event_caller,
-        "__user__": user.model_dump() if isinstance(user, UserModel) else {},
-        "__metadata__": metadata,
-        "__request__": request,
-        "__model__": model,
-    }
-
-    filter_functions = [
-        Functions.get_function_by_id(filter_id)
-        for filter_id in get_sorted_filter_ids(
-            request, model, metadata.get("filter_ids", [])
-        )
-    ]
-
     # Standard streaming response handler
     if event_emitter and event_caller:
-        task_id = str(uuid4())  # Create a unique task ID.
         model_id = form_data.get("model", "")
 
         # Handle as a background task
@@ -1691,14 +1549,6 @@ async def streaming_chat_response_handler(response, ctx):
 
                         try:
                             data = json.loads(data)
-
-                            data, _ = await process_filter_functions(
-                                request=request,
-                                filter_functions=filter_functions,
-                                filter_type="stream",
-                                form_data=data,
-                                extra_params={"__body__": form_data, **extra_params},
-                            )
 
                             if data:
                                 if "event" in data and not getattr(
@@ -2197,28 +2047,10 @@ async def streaming_chat_response_handler(response, ctx):
                 return f"data: {item}\n\n"
 
             for event in events:
-                event, _ = await process_filter_functions(
-                    request=request,
-                    filter_functions=filter_functions,
-                    filter_type="stream",
-                    form_data=event,
-                    extra_params=extra_params,
-                )
-
-                if event:
-                    yield wrap_item(json.dumps(event))
+                yield wrap_item(json.dumps(event))
 
             async for data in original_generator:
-                data, _ = await process_filter_functions(
-                    request=request,
-                    filter_functions=filter_functions,
-                    filter_type="stream",
-                    form_data=data,
-                    extra_params=extra_params,
-                )
-
-                if data:
-                    yield data
+                yield data
 
         return StreamingResponse(
             stream_wrapper(response.body_iterator, events),

@@ -169,14 +169,10 @@ async def get_user_permissisions(
 class WorkspacePermissions(BaseModel):
     models: bool = False
     prompts: bool = False
-    tools: bool = False
-    skills: bool = False
     models_import: bool = False
     models_export: bool = False
     prompts_import: bool = False
     prompts_export: bool = False
-    tools_import: bool = False
-    tools_export: bool = False
 
 
 class SharingPermissions(BaseModel):
@@ -184,15 +180,10 @@ class SharingPermissions(BaseModel):
     public_models: bool = False
     prompts: bool = False
     public_prompts: bool = False
-    tools: bool = False
-    public_tools: bool = True
-    skills: bool = False
-    public_skills: bool = False
 
 
 class ChatPermissions(BaseModel):
     controls: bool = True
-    valves: bool = True
     system_prompt: bool = True
     params: bool = True
     file_upload: bool = True

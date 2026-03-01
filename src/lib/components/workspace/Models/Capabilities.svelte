@@ -32,12 +32,6 @@
 		status_updates: {
 			label: $i18n.t('Status Updates'),
 			description: $i18n.t('Displays status updates (e.g., tool call progress) in the response')
-		},
-		builtin_tools: {
-			label: $i18n.t('Builtin Tools'),
-			description: $i18n.t(
-				'Automatically inject system tools in native function calling mode (e.g., timestamps, chat history, etc.)'
-			)
 		}
 	};
 
@@ -48,7 +42,6 @@
 		usage?: boolean;
 		citations?: boolean;
 		status_updates?: boolean;
-		builtin_tools?: boolean;
 	} = {};
 
 	// Hide file_context when file_upload is disabled
