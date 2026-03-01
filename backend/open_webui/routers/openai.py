@@ -348,9 +348,6 @@ async def get_all_models_responses(request: Request, user: UserModel) -> list:
     if not request.app.state.config.ENABLE_OPENAI_API:
         return []
 
-    # Cache config values locally to avoid repeated Redis lookups.
-    # Each access to request.app.state.config.<KEY> triggers a Redis GET;
-    # caching here avoids hundreds of redundant round-trips.
     api_base_urls = request.app.state.config.OPENAI_API_BASE_URLS
     api_keys = list(request.app.state.config.OPENAI_API_KEYS)
     api_configs = request.app.state.config.OPENAI_API_CONFIGS
@@ -489,8 +486,6 @@ async def get_all_models(request: Request, user: UserModel) -> dict[str, list]:
     if not request.app.state.config.ENABLE_OPENAI_API:
         return {"data": []}
 
-    # Cache config value locally to avoid repeated Redis lookups inside
-    # the nested loop in get_merged_models (one GET per model otherwise).
     api_base_urls = request.app.state.config.OPENAI_API_BASE_URLS
 
     responses = await get_all_models_responses(request, user=user)

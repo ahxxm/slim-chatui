@@ -1,19 +1,12 @@
 import asyncio
-import random
 
 import socketio
 import logging
 import sys
 import time
 
-from redis import asyncio as aioredis
-
 from open_webui.models.users import Users
 from open_webui.models.chats import Chats
-from open_webui.utils.redis import (
-    get_sentinels_from_env,
-    get_sentinel_url_from_env,
-)
 
 from open_webui.config import (
     CORS_ALLOW_ORIGIN,
@@ -21,23 +14,12 @@ from open_webui.config import (
 
 from open_webui.env import (
     ENABLE_WEBSOCKET_SUPPORT,
-    WEBSOCKET_MANAGER,
-    WEBSOCKET_REDIS_URL,
-    WEBSOCKET_REDIS_CLUSTER,
-    WEBSOCKET_REDIS_LOCK_TIMEOUT,
-    WEBSOCKET_SENTINEL_PORT,
-    WEBSOCKET_SENTINEL_HOSTS,
-    REDIS_KEY_PREFIX,
-    WEBSOCKET_REDIS_OPTIONS,
     WEBSOCKET_SERVER_PING_TIMEOUT,
     WEBSOCKET_SERVER_PING_INTERVAL,
     WEBSOCKET_SERVER_LOGGING,
     WEBSOCKET_SERVER_ENGINEIO_LOGGING,
 )
 from open_webui.utils.auth import decode_token
-from open_webui.socket.utils import RedisDict, RedisLock
-
-from open_webui.utils.redis import get_redis_connection
 
 
 from open_webui.env import (
@@ -48,47 +30,20 @@ logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 
 
-REDIS = None
-
 # Configure CORS for Socket.IO
 SOCKETIO_CORS_ORIGINS = "*" if CORS_ALLOW_ORIGIN == ["*"] else CORS_ALLOW_ORIGIN
 
-if WEBSOCKET_MANAGER == "redis":
-    if WEBSOCKET_SENTINEL_HOSTS:
-        mgr = socketio.AsyncRedisManager(
-            get_sentinel_url_from_env(
-                WEBSOCKET_REDIS_URL, WEBSOCKET_SENTINEL_HOSTS, WEBSOCKET_SENTINEL_PORT
-            ),
-            redis_options=WEBSOCKET_REDIS_OPTIONS,
-        )
-    else:
-        mgr = socketio.AsyncRedisManager(
-            WEBSOCKET_REDIS_URL, redis_options=WEBSOCKET_REDIS_OPTIONS
-        )
-    sio = socketio.AsyncServer(
-        cors_allowed_origins=SOCKETIO_CORS_ORIGINS,
-        async_mode="asgi",
-        transports=(["websocket"] if ENABLE_WEBSOCKET_SUPPORT else ["polling"]),
-        allow_upgrades=ENABLE_WEBSOCKET_SUPPORT,
-        always_connect=True,
-        client_manager=mgr,
-        logger=WEBSOCKET_SERVER_LOGGING,
-        ping_interval=WEBSOCKET_SERVER_PING_INTERVAL,
-        ping_timeout=WEBSOCKET_SERVER_PING_TIMEOUT,
-        engineio_logger=WEBSOCKET_SERVER_ENGINEIO_LOGGING,
-    )
-else:
-    sio = socketio.AsyncServer(
-        cors_allowed_origins=SOCKETIO_CORS_ORIGINS,
-        async_mode="asgi",
-        transports=(["websocket"] if ENABLE_WEBSOCKET_SUPPORT else ["polling"]),
-        allow_upgrades=ENABLE_WEBSOCKET_SUPPORT,
-        always_connect=True,
-        logger=WEBSOCKET_SERVER_LOGGING,
-        ping_interval=WEBSOCKET_SERVER_PING_INTERVAL,
-        ping_timeout=WEBSOCKET_SERVER_PING_TIMEOUT,
-        engineio_logger=WEBSOCKET_SERVER_ENGINEIO_LOGGING,
-    )
+sio = socketio.AsyncServer(
+    cors_allowed_origins=SOCKETIO_CORS_ORIGINS,
+    async_mode="asgi",
+    transports=(["websocket"] if ENABLE_WEBSOCKET_SUPPORT else ["polling"]),
+    allow_upgrades=ENABLE_WEBSOCKET_SUPPORT,
+    always_connect=True,
+    logger=WEBSOCKET_SERVER_LOGGING,
+    ping_interval=WEBSOCKET_SERVER_PING_INTERVAL,
+    ping_timeout=WEBSOCKET_SERVER_PING_TIMEOUT,
+    engineio_logger=WEBSOCKET_SERVER_ENGINEIO_LOGGING,
+)
 
 
 # Timeout duration in seconds
@@ -97,147 +52,40 @@ SESSION_POOL_TIMEOUT = 120  # seconds without heartbeat before session is reaped
 
 # Dictionary to maintain the user pool
 
-if WEBSOCKET_MANAGER == "redis":
-    log.debug("Using Redis to manage websockets.")
-    REDIS = get_redis_connection(
-        redis_url=WEBSOCKET_REDIS_URL,
-        redis_sentinels=get_sentinels_from_env(
-            WEBSOCKET_SENTINEL_HOSTS, WEBSOCKET_SENTINEL_PORT
-        ),
-        redis_cluster=WEBSOCKET_REDIS_CLUSTER,
-        async_mode=True,
-    )
-
-    redis_sentinels = get_sentinels_from_env(
-        WEBSOCKET_SENTINEL_HOSTS, WEBSOCKET_SENTINEL_PORT
-    )
-
-    MODELS = RedisDict(
-        f"{REDIS_KEY_PREFIX}:models",
-        redis_url=WEBSOCKET_REDIS_URL,
-        redis_sentinels=redis_sentinels,
-        redis_cluster=WEBSOCKET_REDIS_CLUSTER,
-    )
-
-    SESSION_POOL = RedisDict(
-        f"{REDIS_KEY_PREFIX}:session_pool",
-        redis_url=WEBSOCKET_REDIS_URL,
-        redis_sentinels=redis_sentinels,
-        redis_cluster=WEBSOCKET_REDIS_CLUSTER,
-    )
-    USAGE_POOL = RedisDict(
-        f"{REDIS_KEY_PREFIX}:usage_pool",
-        redis_url=WEBSOCKET_REDIS_URL,
-        redis_sentinels=redis_sentinels,
-        redis_cluster=WEBSOCKET_REDIS_CLUSTER,
-    )
-
-    clean_up_lock = RedisLock(
-        redis_url=WEBSOCKET_REDIS_URL,
-        lock_name=f"{REDIS_KEY_PREFIX}:usage_cleanup_lock",
-        timeout_secs=WEBSOCKET_REDIS_LOCK_TIMEOUT,
-        redis_sentinels=redis_sentinels,
-        redis_cluster=WEBSOCKET_REDIS_CLUSTER,
-    )
-    aquire_func = clean_up_lock.aquire_lock
-    renew_func = clean_up_lock.renew_lock
-    release_func = clean_up_lock.release_lock
-
-    session_cleanup_lock = RedisLock(
-        redis_url=WEBSOCKET_REDIS_URL,
-        lock_name=f"{REDIS_KEY_PREFIX}:session_cleanup_lock",
-        timeout_secs=WEBSOCKET_REDIS_LOCK_TIMEOUT,
-        redis_sentinels=redis_sentinels,
-        redis_cluster=WEBSOCKET_REDIS_CLUSTER,
-    )
-    session_aquire_func = session_cleanup_lock.aquire_lock
-    session_renew_func = session_cleanup_lock.renew_lock
-    session_release_func = session_cleanup_lock.release_lock
-else:
-    MODELS = {}
-
-    SESSION_POOL = {}
-    USAGE_POOL = {}
-
-    aquire_func = release_func = renew_func = lambda: True
-    session_aquire_func = session_release_func = session_renew_func = lambda: True
+MODELS = {}
+SESSION_POOL = {}
+USAGE_POOL = {}
 
 
 async def periodic_session_pool_cleanup():
-    """Reap orphaned SESSION_POOL entries that missed heartbeats (e.g. crashed instance)."""
-    if not session_aquire_func():
-        log.debug("Session cleanup lock held by another node. Skipping.")
-        return
-
-    try:
-        while True:
-            if not session_renew_func():
-                log.error("Unable to renew session cleanup lock. Exiting.")
-                return
-
-            now = int(time.time())
-            for sid in list(SESSION_POOL.keys()):
-                entry = SESSION_POOL.get(sid)
-                if entry and now - entry.get("last_seen_at", 0) > SESSION_POOL_TIMEOUT:
-                    log.warning(
-                        f"Reaping orphaned session {sid} (user {entry.get('id')})"
-                    )
-                    del SESSION_POOL[sid]
-            await asyncio.sleep(SESSION_POOL_TIMEOUT)
-    finally:
-        session_release_func()
+    while True:
+        now = int(time.time())
+        for sid in list(SESSION_POOL.keys()):
+            entry = SESSION_POOL.get(sid)
+            if entry and now - entry.get("last_seen_at", 0) > SESSION_POOL_TIMEOUT:
+                log.warning(f"Reaping orphaned session {sid} (user {entry.get('id')})")
+                del SESSION_POOL[sid]
+        await asyncio.sleep(SESSION_POOL_TIMEOUT)
 
 
 async def periodic_usage_pool_cleanup():
-    max_retries = 2
-    retry_delay = random.uniform(
-        WEBSOCKET_REDIS_LOCK_TIMEOUT / 2, WEBSOCKET_REDIS_LOCK_TIMEOUT
-    )
-    for attempt in range(max_retries + 1):
-        if aquire_func():
-            break
-        else:
-            if attempt < max_retries:
-                log.debug(
-                    f"Cleanup lock already exists. Retry {attempt + 1} after {retry_delay}s..."
-                )
-                await asyncio.sleep(retry_delay)
-            else:
-                log.warning(
-                    "Failed to acquire cleanup lock after retries. Skipping cleanup."
-                )
-                return
+    while True:
+        now = int(time.time())
+        for model_id, connections in list(USAGE_POOL.items()):
+            expired_sids = [
+                sid
+                for sid, details in connections.items()
+                if now - details["updated_at"] > TIMEOUT_DURATION
+            ]
 
-    log.debug("Running periodic_cleanup")
-    try:
-        while True:
-            if not renew_func():
-                log.error(f"Unable to renew cleanup lock. Exiting usage pool cleanup.")
-                raise Exception("Unable to renew usage pool cleanup lock.")
+            for sid in expired_sids:
+                del connections[sid]
 
-            now = int(time.time())
-            send_usage = False
-            for model_id, connections in list(USAGE_POOL.items()):
-                # Creating a list of sids to remove if they have timed out
-                expired_sids = [
-                    sid
-                    for sid, details in connections.items()
-                    if now - details["updated_at"] > TIMEOUT_DURATION
-                ]
+            if not connections:
+                log.debug(f"Cleaning up model {model_id} from usage pool")
+                del USAGE_POOL[model_id]
 
-                for sid in expired_sids:
-                    del connections[sid]
-
-                if not connections:
-                    log.debug(f"Cleaning up model {model_id} from usage pool")
-                    del USAGE_POOL[model_id]
-                else:
-                    USAGE_POOL[model_id] = connections
-
-                send_usage = True
-            await asyncio.sleep(TIMEOUT_DURATION)
-    finally:
-        release_func()
+        await asyncio.sleep(TIMEOUT_DURATION)
 
 
 app = socketio.ASGIApp(
@@ -552,6 +400,3 @@ def get_event_call(request_info):
         return __event_caller__
     else:
         return None
-
-
-get_event_caller = get_event_call

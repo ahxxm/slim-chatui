@@ -12,10 +12,7 @@ from open_webui.models.access_grants import AccessGrantModel, AccessGrants
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from sqlalchemy import String, cast, or_, and_, func
-from sqlalchemy.dialects import postgresql, sqlite
-
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy import String, cast, or_, func
 from sqlalchemy import BigInteger, Column, Text, Boolean
 
 log = logging.getLogger(__name__)

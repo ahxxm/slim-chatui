@@ -38,10 +38,9 @@ from open_webui.env import (
     WEBUI_AUTH_SIGNOUT_REDIRECT_URL,
     ENABLE_INITIAL_ADMIN_SIGNUP,
     ENABLE_OAUTH_TOKEN_EXCHANGE,
-    AIOHTTP_CLIENT_SESSION_SSL,
 )
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import RedirectResponse, Response, JSONResponse
+from fastapi.responses import Response, JSONResponse
 from open_webui.config import (
     OPENID_PROVIDER_URL,
     ENABLE_OAUTH_SIGNUP,
@@ -56,7 +55,6 @@ from open_webui.utils.auth import (
     validate_password,
     verify_password,
     decode_token,
-    invalidate_token,
     create_api_key,
     create_token,
     get_admin_user,
@@ -71,19 +69,16 @@ from open_webui.utils.webhook import post_webhook
 from open_webui.utils.access_control import get_permissions, has_permission
 from open_webui.utils.groups import apply_default_group_assignment
 
-from open_webui.utils.redis import get_redis_client
 from open_webui.utils.rate_limit import RateLimiter
 
 
-from typing import Optional, List
+from typing import Optional
 
 router = APIRouter()
 
 log = logging.getLogger(__name__)
 
-signin_rate_limiter = RateLimiter(
-    redis_client=get_redis_client(), limit=5 * 3, window=60 * 3
-)
+signin_rate_limiter = RateLimiter(limit=5 * 3, window=60 * 3)
 
 
 def create_session_response(
@@ -532,19 +527,6 @@ async def signup(
 async def signout(
     request: Request, response: Response, db: Session = Depends(get_session)
 ):
-
-    # get auth token from headers or cookies
-    token = None
-    auth_header = request.headers.get("Authorization")
-    if auth_header:
-        auth_cred = get_http_authorization_cred(auth_header)
-        token = auth_cred.credentials
-    else:
-        token = request.cookies.get("token")
-
-    if token:
-        await invalidate_token(request, token)
-
     response.delete_cookie("token")
     response.delete_cookie("oui-session")
     response.delete_cookie("oauth_id_token")

@@ -199,11 +199,6 @@ FORWARD_SESSION_INFO_HEADER_CHAT_ID = os.environ.get(
     "FORWARD_SESSION_INFO_HEADER_CHAT_ID", "X-OpenWebUI-Chat-Id"
 )
 
-# Experimental feature, may be removed in future
-ENABLE_STAR_SESSIONS_MIDDLEWARE = (
-    os.environ.get("ENABLE_STAR_SESSIONS_MIDDLEWARE", "False").lower() == "true"
-)
-
 ENABLE_EASTER_EGGS = os.environ.get("ENABLE_EASTER_EGGS", "True").lower() == "true"
 
 ####################################
@@ -369,46 +364,6 @@ ENABLE_REALTIME_CHAT_SAVE = (
 ENABLE_QUERIES_CACHE = os.environ.get("ENABLE_QUERIES_CACHE", "False").lower() == "true"
 
 RAG_SYSTEM_CONTEXT = os.environ.get("RAG_SYSTEM_CONTEXT", "False").lower() == "true"
-
-####################################
-# REDIS
-####################################
-
-REDIS_URL = os.environ.get("REDIS_URL", "")
-REDIS_CLUSTER = os.environ.get("REDIS_CLUSTER", "False").lower() == "true"
-
-REDIS_KEY_PREFIX = os.environ.get("REDIS_KEY_PREFIX", "open-webui")
-
-REDIS_SENTINEL_HOSTS = os.environ.get("REDIS_SENTINEL_HOSTS", "")
-REDIS_SENTINEL_PORT = os.environ.get("REDIS_SENTINEL_PORT", "26379")
-
-# Maximum number of retries for Redis operations when using Sentinel fail-over
-REDIS_SENTINEL_MAX_RETRY_COUNT = os.environ.get("REDIS_SENTINEL_MAX_RETRY_COUNT", "2")
-try:
-    REDIS_SENTINEL_MAX_RETRY_COUNT = int(REDIS_SENTINEL_MAX_RETRY_COUNT)
-    if REDIS_SENTINEL_MAX_RETRY_COUNT < 1:
-        REDIS_SENTINEL_MAX_RETRY_COUNT = 2
-except ValueError:
-    REDIS_SENTINEL_MAX_RETRY_COUNT = 2
-
-
-REDIS_SOCKET_CONNECT_TIMEOUT = os.environ.get("REDIS_SOCKET_CONNECT_TIMEOUT", "")
-try:
-    REDIS_SOCKET_CONNECT_TIMEOUT = float(REDIS_SOCKET_CONNECT_TIMEOUT)
-except ValueError:
-    REDIS_SOCKET_CONNECT_TIMEOUT = None
-
-REDIS_RECONNECT_DELAY = os.environ.get("REDIS_RECONNECT_DELAY", "")
-
-if REDIS_RECONNECT_DELAY == "":
-    REDIS_RECONNECT_DELAY = None
-else:
-    try:
-        REDIS_RECONNECT_DELAY = float(REDIS_RECONNECT_DELAY)
-        if REDIS_RECONNECT_DELAY < 0:
-            REDIS_RECONNECT_DELAY = None
-    except Exception:
-        REDIS_RECONNECT_DELAY = None
 
 ####################################
 # UVICORN WORKERS
@@ -653,40 +608,6 @@ ENABLE_WEBSOCKET_SUPPORT = (
 )
 
 
-WEBSOCKET_MANAGER = os.environ.get("WEBSOCKET_MANAGER", "")
-
-WEBSOCKET_REDIS_OPTIONS = os.environ.get("WEBSOCKET_REDIS_OPTIONS", "")
-
-
-if WEBSOCKET_REDIS_OPTIONS == "":
-    if REDIS_SOCKET_CONNECT_TIMEOUT:
-        WEBSOCKET_REDIS_OPTIONS = {
-            "socket_connect_timeout": REDIS_SOCKET_CONNECT_TIMEOUT
-        }
-    else:
-        log.debug("No WEBSOCKET_REDIS_OPTIONS provided, defaulting to None")
-        WEBSOCKET_REDIS_OPTIONS = None
-else:
-    try:
-        WEBSOCKET_REDIS_OPTIONS = json.loads(WEBSOCKET_REDIS_OPTIONS)
-    except Exception:
-        log.warning("Invalid WEBSOCKET_REDIS_OPTIONS, defaulting to None")
-        WEBSOCKET_REDIS_OPTIONS = None
-
-WEBSOCKET_REDIS_URL = os.environ.get("WEBSOCKET_REDIS_URL", REDIS_URL)
-WEBSOCKET_REDIS_CLUSTER = (
-    os.environ.get("WEBSOCKET_REDIS_CLUSTER", str(REDIS_CLUSTER)).lower() == "true"
-)
-
-websocket_redis_lock_timeout = os.environ.get("WEBSOCKET_REDIS_LOCK_TIMEOUT", "60")
-
-try:
-    WEBSOCKET_REDIS_LOCK_TIMEOUT = int(websocket_redis_lock_timeout)
-except ValueError:
-    WEBSOCKET_REDIS_LOCK_TIMEOUT = 60
-
-WEBSOCKET_SENTINEL_HOSTS = os.environ.get("WEBSOCKET_SENTINEL_HOSTS", "")
-WEBSOCKET_SENTINEL_PORT = os.environ.get("WEBSOCKET_SENTINEL_PORT", "26379")
 WEBSOCKET_SERVER_LOGGING = (
     os.environ.get("WEBSOCKET_SERVER_LOGGING", "False").lower() == "true"
 )
@@ -871,74 +792,6 @@ AUDIT_EXCLUDED_PATHS = os.getenv("AUDIT_EXCLUDED_PATHS", "/chats,/chat,/folders"
 AUDIT_EXCLUDED_PATHS = [path.strip() for path in AUDIT_EXCLUDED_PATHS]
 AUDIT_EXCLUDED_PATHS = [path.lstrip("/") for path in AUDIT_EXCLUDED_PATHS]
 
-
-####################################
-# OPENTELEMETRY
-####################################
-
-ENABLE_OTEL = os.environ.get("ENABLE_OTEL", "False").lower() == "true"
-ENABLE_OTEL_TRACES = os.environ.get("ENABLE_OTEL_TRACES", "False").lower() == "true"
-ENABLE_OTEL_METRICS = os.environ.get("ENABLE_OTEL_METRICS", "False").lower() == "true"
-ENABLE_OTEL_LOGS = os.environ.get("ENABLE_OTEL_LOGS", "False").lower() == "true"
-
-OTEL_EXPORTER_OTLP_ENDPOINT = os.environ.get(
-    "OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317"
-)
-OTEL_METRICS_EXPORTER_OTLP_ENDPOINT = os.environ.get(
-    "OTEL_METRICS_EXPORTER_OTLP_ENDPOINT", OTEL_EXPORTER_OTLP_ENDPOINT
-)
-OTEL_LOGS_EXPORTER_OTLP_ENDPOINT = os.environ.get(
-    "OTEL_LOGS_EXPORTER_OTLP_ENDPOINT", OTEL_EXPORTER_OTLP_ENDPOINT
-)
-OTEL_EXPORTER_OTLP_INSECURE = (
-    os.environ.get("OTEL_EXPORTER_OTLP_INSECURE", "False").lower() == "true"
-)
-OTEL_METRICS_EXPORTER_OTLP_INSECURE = (
-    os.environ.get(
-        "OTEL_METRICS_EXPORTER_OTLP_INSECURE", str(OTEL_EXPORTER_OTLP_INSECURE)
-    ).lower()
-    == "true"
-)
-OTEL_LOGS_EXPORTER_OTLP_INSECURE = (
-    os.environ.get(
-        "OTEL_LOGS_EXPORTER_OTLP_INSECURE", str(OTEL_EXPORTER_OTLP_INSECURE)
-    ).lower()
-    == "true"
-)
-OTEL_SERVICE_NAME = os.environ.get("OTEL_SERVICE_NAME", "open-webui")
-OTEL_RESOURCE_ATTRIBUTES = os.environ.get(
-    "OTEL_RESOURCE_ATTRIBUTES", ""
-)  # e.g. key1=val1,key2=val2
-OTEL_TRACES_SAMPLER = os.environ.get(
-    "OTEL_TRACES_SAMPLER", "parentbased_always_on"
-).lower()
-OTEL_BASIC_AUTH_USERNAME = os.environ.get("OTEL_BASIC_AUTH_USERNAME", "")
-OTEL_BASIC_AUTH_PASSWORD = os.environ.get("OTEL_BASIC_AUTH_PASSWORD", "")
-
-OTEL_METRICS_BASIC_AUTH_USERNAME = os.environ.get(
-    "OTEL_METRICS_BASIC_AUTH_USERNAME", OTEL_BASIC_AUTH_USERNAME
-)
-OTEL_METRICS_BASIC_AUTH_PASSWORD = os.environ.get(
-    "OTEL_METRICS_BASIC_AUTH_PASSWORD", OTEL_BASIC_AUTH_PASSWORD
-)
-OTEL_LOGS_BASIC_AUTH_USERNAME = os.environ.get(
-    "OTEL_LOGS_BASIC_AUTH_USERNAME", OTEL_BASIC_AUTH_USERNAME
-)
-OTEL_LOGS_BASIC_AUTH_PASSWORD = os.environ.get(
-    "OTEL_LOGS_BASIC_AUTH_PASSWORD", OTEL_BASIC_AUTH_PASSWORD
-)
-
-OTEL_OTLP_SPAN_EXPORTER = os.environ.get(
-    "OTEL_OTLP_SPAN_EXPORTER", "grpc"
-).lower()  # grpc or http
-
-OTEL_METRICS_OTLP_SPAN_EXPORTER = os.environ.get(
-    "OTEL_METRICS_OTLP_SPAN_EXPORTER", OTEL_OTLP_SPAN_EXPORTER
-).lower()  # grpc or http
-
-OTEL_LOGS_OTLP_SPAN_EXPORTER = os.environ.get(
-    "OTEL_LOGS_OTLP_SPAN_EXPORTER", OTEL_OTLP_SPAN_EXPORTER
-).lower()  # grpc or http
 
 ####################################
 # TOOLS/FUNCTIONS PIP OPTIONS

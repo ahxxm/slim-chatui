@@ -9,18 +9,12 @@ import os
 import bcrypt
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
-from cryptography.hazmat.primitives.asymmetric import ed25519
-from cryptography.hazmat.primitives import serialization
 import json
 
 
 from datetime import datetime, timedelta
-import pytz
 from pytz import UTC
-from typing import Optional, Union, List, Dict
-
-from opentelemetry import trace
-
+from typing import Optional, Union
 
 from open_webui.utils.access_control import has_permission
 from open_webui.models.users import Users
@@ -35,7 +29,6 @@ from open_webui.env import (
     LICENSE_BLOB,
     PASSWORD_VALIDATION_HINT,
     PASSWORD_VALIDATION_REGEX_PATTERN,
-    REDIS_KEY_PREFIX,
     pk,
     WEBUI_SECRET_KEY,
     TRUSTED_SIGNATURE_KEY,
@@ -197,9 +190,6 @@ def create_token(data: dict, expires_delta: Union[timedelta, None] = None) -> st
         expire = datetime.now(UTC) + expires_delta
         payload.update({"exp": expire})
 
-    jti = str(uuid.uuid4())
-    payload.update({"jti": jti})
-
     encoded_jwt = jwt.encode(payload, SESSION_SECRET, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -210,47 +200,6 @@ def decode_token(token: str) -> Optional[dict]:
         return decoded
     except Exception:
         return None
-
-
-async def is_valid_token(request, decoded) -> bool:
-    # Require Redis to check revoked tokens
-    if request.app.state.redis:
-        jti = decoded.get("jti")
-
-        if jti:
-            revoked = await request.app.state.redis.get(
-                f"{REDIS_KEY_PREFIX}:auth:token:{jti}:revoked"
-            )
-            if revoked:
-                return False
-
-    return True
-
-
-async def invalidate_token(request, token):
-    decoded = decode_token(token)
-
-    # If token is invalid/expired, nothing to revoke
-    if not decoded:
-        return
-
-    # Require Redis to store revoked tokens
-    if request.app.state.redis:
-        jti = decoded.get("jti")
-        exp = decoded.get("exp")
-
-        if jti and exp:
-            ttl = exp - int(
-                datetime.now(UTC).timestamp()
-            )  # Calculate time-to-live for the token
-
-            if ttl > 0:
-                # Store the revoked token in Redis with an expiration time
-                await request.app.state.redis.set(
-                    f"{REDIS_KEY_PREFIX}:auth:token:{jti}:revoked",
-                    "1",
-                    ex=ttl,
-                )
 
 
 def extract_token_from_auth_header(auth_header: str):
@@ -301,14 +250,6 @@ async def get_current_user(
     if token.startswith("sk-"):
         user = get_current_user_by_api_key(request, token)
 
-        # Add user info to current span
-        current_span = trace.get_current_span()
-        if current_span:
-            current_span.set_attribute("client.user.id", user.id)
-            current_span.set_attribute("client.user.email", user.email)
-            current_span.set_attribute("client.user.role", user.role)
-            current_span.set_attribute("client.auth.type", "api_key")
-
         return user
 
     # auth by jwt token
@@ -322,12 +263,6 @@ async def get_current_user(
             )
 
         if data is not None and "id" in data:
-            if data.get("jti") and not await is_valid_token(request, data):
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid token",
-                )
-
             user = Users.get_user_by_id(data["id"])
             if user is None:
                 raise HTTPException(
@@ -344,14 +279,6 @@ async def get_current_user(
                             status_code=status.HTTP_401_UNAUTHORIZED,
                             detail="User mismatch. Please sign in again.",
                         )
-
-                # Add user info to current span
-                current_span = trace.get_current_span()
-                if current_span:
-                    current_span.set_attribute("client.user.id", user.id)
-                    current_span.set_attribute("client.user.email", user.email)
-                    current_span.set_attribute("client.user.role", user.role)
-                    current_span.set_attribute("client.auth.type", "jwt")
 
                 # Refresh the user's last active timestamp asynchronously
                 # to prevent blocking the request
@@ -399,14 +326,6 @@ def get_current_user_by_api_key(request, api_key: str):
         raise HTTPException(
             status.HTTP_403_FORBIDDEN, detail=ERROR_MESSAGES.API_KEY_NOT_ALLOWED
         )
-
-    # Add user info to current span
-    current_span = trace.get_current_span()
-    if current_span:
-        current_span.set_attribute("client.user.id", user.id)
-        current_span.set_attribute("client.user.email", user.email)
-        current_span.set_attribute("client.user.role", user.role)
-        current_span.set_attribute("client.auth.type", "api_key")
 
     Users.update_last_active_by_id(user.id)
     return user

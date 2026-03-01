@@ -56,7 +56,7 @@ async def check_active_chats(
     """Check which chat IDs have active tasks."""
     from open_webui.tasks import get_active_chat_ids
 
-    active = await get_active_chat_ids(request.app.state.redis, form_data.chat_ids)
+    active = get_active_chat_ids(form_data.chat_ids)
     return {"active_chat_ids": active}
 
 
