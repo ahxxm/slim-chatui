@@ -4342,22 +4342,6 @@ async def streaming_chat_response_handler(response, ctx):
 
                                 if (
                                     request.app.state.config.CODE_INTERPRETER_ENGINE
-                                    == "pyodide"
-                                ):
-                                    ci_output = await event_caller(
-                                        {
-                                            "type": "execute:python",
-                                            "data": {
-                                                "id": str(uuid4()),
-                                                "code": code,
-                                                "session_id": metadata.get(
-                                                    "session_id", None
-                                                ),
-                                            },
-                                        }
-                                    )
-                                elif (
-                                    request.app.state.config.CODE_INTERPRETER_ENGINE
                                     == "jupyter"
                                 ):
                                     ci_output = await execute_code_jupyter(

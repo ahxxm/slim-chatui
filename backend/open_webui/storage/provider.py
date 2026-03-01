@@ -3,10 +3,7 @@ import shutil
 import logging
 from typing import BinaryIO, Tuple, Dict
 
-from open_webui.config import (
-    STORAGE_PROVIDER,
-    UPLOAD_DIR,
-)
+from open_webui.config import UPLOAD_DIR
 from open_webui.constants import ERROR_MESSAGES
 
 log = logging.getLogger(__name__)

@@ -938,8 +938,6 @@ if CUSTOM_NAME:
 # STORAGE PROVIDER
 ####################################
 
-STORAGE_PROVIDER = "local"
-
 ####################################
 # File Upload DIR
 ####################################

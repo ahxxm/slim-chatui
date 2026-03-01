@@ -92,7 +92,7 @@ def create_session_response(
 ) -> dict:
     """
     Create JWT token and build session response for a user.
-    Shared helper for signin, signup, ldap_auth, add_user, and token_exchange endpoints.
+    Shared helper for signin, signup, add_user, and token_exchange endpoints.
 
     Args:
         request: FastAPI request object
