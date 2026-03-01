@@ -29,9 +29,6 @@
 	import Plus from '$lib/components/icons/Plus.svelte';
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
-	import About from '$lib/components/chat/Settings/About.svelte';
-	import Banner from '$lib/components/common/Banner.svelte';
-	import Markdown from '$lib/components/chat/Messages/Markdown.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import ProfilePreview from '$lib/components/common/ProfilePreview.svelte';
 
@@ -142,20 +139,6 @@
 	<UserChatsModal bind:show={showUserChatsModal} user={selectedUser} />
 {/if}
 
-{#if ($config?.license_metadata?.seats ?? null) !== null && total && total > $config?.license_metadata?.seats}
-	<div class=" mt-1 mb-2 text-xs text-red-500">
-		<Banner
-			className="mx-0"
-			banner={{
-				type: 'error',
-				title: 'License Error',
-				content:
-					'Exceeded the number of seats in your license. Please contact support to increase the number of seats.'
-			}}
-		/>
-	</div>
-{/if}
-
 {#if users === null || total === null}
 	<div class="my-10">
 		<Spinner className="size-5" />
@@ -170,21 +153,7 @@
 			</div>
 
 			<div>
-				{#if ($config?.license_metadata?.seats ?? null) !== null}
-					{#if total > $config?.license_metadata?.seats}
-						<span class="text-lg font-medium text-red-500"
-							>{total} of {$config?.license_metadata?.seats}
-							<span class="text-sm font-normal">{$i18n.t('available users')}</span></span
-						>
-					{:else}
-						<span class="text-lg font-medium text-gray-500 dark:text-gray-300"
-							>{total} of {$config?.license_metadata?.seats}
-							<span class="text-sm font-normal">{$i18n.t('available users')}</span></span
-						>
-					{/if}
-				{:else}
-					<span class="text-lg font-medium text-gray-500 dark:text-gray-300">{total}</span>
-				{/if}
+				<span class="text-lg font-medium text-gray-500 dark:text-gray-300">{total}</span>
 			</div>
 		</div>
 
@@ -491,26 +460,3 @@
 	{/if}
 {/if}
 
-{#if !$config?.license_metadata}
-	{#if total > 50}
-		<div class="text-sm">
-			<Markdown
-				content={`
-> [!NOTE]
-> # **Hey there! 👋**
->
-> It looks like you have over 50 users, that usually falls under organizational usage.
-> 
-> Open WebUI is completely free to use as-is, with no restrictions or hidden limits, and we'd love to keep it that way. 🌱  
->
-> By supporting the project through sponsorship or an enterprise license, you’re not only helping us stay independent, you’re also helping us ship new features faster, improve stability, and grow the project for the long haul. With an *enterprise license*, you also get additional perks like dedicated support, customization options, and more, all at a fraction of what it would cost to build and maintain internally.  
-> 
-> Your support helps us stay independent and continue building great tools for everyone. 💛
-> 
-> - 👉 **[Click here to learn more about enterprise licensing](https://docs.openwebui.com/enterprise)**
-> - 👉 *[Click here to sponsor the project on GitHub](https://github.com/sponsors/tjbck)*
-`}
-			/>
-		</div>
-	{/if}
-{/if}

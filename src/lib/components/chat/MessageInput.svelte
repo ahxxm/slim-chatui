@@ -1,8 +1,6 @@
 <script lang="ts">
-	import DOMPurify from 'dompurify';
 	import { toast } from 'svelte-sonner';
 
-	import { marked } from 'marked';
 	import { v4 as uuidv4 } from 'uuid';
 	import dayjs from '$lib/dayjs';
 	import duration from 'dayjs/plugin/duration';
@@ -1534,13 +1532,7 @@
 							</div>
 						</div>
 
-						{#if $config?.license_metadata?.input_footer}
-							<div class=" text-xs text-gray-500 text-center line-clamp-1 marked">
-								{@html DOMPurify.sanitize(marked($config?.license_metadata?.input_footer))}
-							</div>
-						{:else}
-							<div class="mb-1" />
-						{/if}
+						<div class="mb-1" />
 					</form>
 				</div>
 			</div>

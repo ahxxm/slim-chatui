@@ -182,7 +182,6 @@ from open_webui.config import (
 )
 from open_webui.env import (
     ENABLE_CUSTOM_MODEL_FALLBACK,
-    LICENSE_KEY,
     AUDIT_EXCLUDED_PATHS,
     AUDIT_LOG_LEVEL,
     GLOBAL_LOG_LEVEL,
@@ -234,7 +233,6 @@ from open_webui.utils.middleware import (
 from open_webui.utils.tools import set_tool_servers
 
 from open_webui.utils.auth import (
-    get_license_data,
     get_http_authorization_cred,
     decode_token,
     get_admin_user,
@@ -311,9 +309,6 @@ async def lifespan(app: FastAPI):
 
     if RESET_CONFIG_ON_START:
         reset_config()
-
-    if LICENSE_KEY:
-        get_license_data(app, LICENSE_KEY)
 
     # Create admin account from env vars if specified and no users exist
     if WEBUI_ADMIN_EMAIL and WEBUI_ADMIN_PASSWORD:
@@ -404,7 +399,6 @@ app.state.instance_id = None
 app.state.config = AppConfig()
 
 app.state.WEBUI_NAME = WEBUI_NAME
-app.state.LICENSE_METADATA = None
 
 
 ########################################
@@ -530,7 +524,6 @@ app.state.AUTH_TRUSTED_NAME_HEADER = WEBUI_AUTH_TRUSTED_NAME_HEADER
 app.state.WEBUI_AUTH_SIGNOUT_REDIRECT_URL = WEBUI_AUTH_SIGNOUT_REDIRECT_URL
 app.state.EXTERNAL_PWA_MANIFEST_URL = EXTERNAL_PWA_MANIFEST_URL
 
-app.state.USER_COUNT = None
 
 app.state.TOOLS = {}
 app.state.TOOL_CONTENTS = {}
@@ -1431,14 +1424,6 @@ async def get_app_config(request: Request):
                     "pending_user_overlay_content": app.state.config.PENDING_USER_OVERLAY_CONTENT,
                     "response_watermark": app.state.config.RESPONSE_WATERMARK,
                 },
-                "license_metadata": app.state.LICENSE_METADATA,
-                **(
-                    {
-                        "active_entries": app.state.USER_COUNT,
-                    }
-                    if user.role == "admin"
-                    else {}
-                ),
             }
             if user is not None and (user.role in ["admin", "user"])
             else {
@@ -1450,20 +1435,6 @@ async def get_app_config(request: Request):
                         }
                     }
                     if user and user.role == "pending"
-                    else {}
-                ),
-                **(
-                    {
-                        "metadata": {
-                            "login_footer": app.state.LICENSE_METADATA.get(
-                                "login_footer", ""
-                            ),
-                            "auth_logo_position": app.state.LICENSE_METADATA.get(
-                                "auth_logo_position", ""
-                            ),
-                        }
-                    }
-                    if app.state.LICENSE_METADATA
                     else {}
                 ),
             }
