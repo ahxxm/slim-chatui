@@ -134,34 +134,6 @@ export const getFileById = async (token: string, id: string) => {
 	return res;
 };
 
-export const getFileContentById = async (id: string) => {
-	let error = null;
-
-	const res = await fetch(`${WEBUI_API_BASE_URL}/files/${id}/content`, {
-		method: 'GET',
-		headers: {
-			Accept: 'application/json'
-		},
-		credentials: 'include'
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return await res.arrayBuffer();
-		})
-		.catch((err) => {
-			error = err.detail;
-			console.error(err);
-
-			return null;
-		});
-
-	if (error) {
-		throw error;
-	}
-
-	return res;
-};
-
 export const deleteFileById = async (token: string, id: string) => {
 	let error = null;
 

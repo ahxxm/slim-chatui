@@ -77,7 +77,7 @@ async def get_folders(
                             file.get("id"), user.id, "read", db=db
                         ):
                             valid_files.append(file)
-                    elif file.get("type") != "collection":
+                    else:
                         valid_files.append(file)
 
                 folder.data["files"] = valid_files
