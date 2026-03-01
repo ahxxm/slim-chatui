@@ -34,11 +34,11 @@ async def create_task(coroutine, id=None):
     return task_id, task
 
 
-async def list_tasks():
+def list_tasks():
     return list(tasks.keys())
 
 
-async def list_task_ids_by_item_id(id):
+def list_task_ids_by_item_id(id):
     return item_tasks.get(id, [])
 
 
@@ -59,27 +59,9 @@ async def stop_task(task_id: str):
     return {"status": True, "message": f"Cancellation requested for {task_id}."}
 
 
-async def stop_item_tasks(item_id: str):
-    task_ids = await list_task_ids_by_item_id(item_id)
-    if not task_ids:
-        return {"status": True, "message": f"No tasks found for item {item_id}."}
-
-    for task_id in task_ids:
-        result = await stop_task(task_id)
-        if not result["status"]:
-            return result
-
-    return {"status": True, "message": f"All tasks for item {item_id} stopped."}
+def has_active_tasks(chat_id: str) -> bool:
+    return len(list_task_ids_by_item_id(chat_id)) > 0
 
 
-async def has_active_tasks(chat_id: str) -> bool:
-    task_ids = await list_task_ids_by_item_id(chat_id)
-    return len(task_ids) > 0
-
-
-async def get_active_chat_ids(chat_ids: List[str]) -> List[str]:
-    active = []
-    for chat_id in chat_ids:
-        if await has_active_tasks(chat_id):
-            active.append(chat_id)
-    return active
+def get_active_chat_ids(chat_ids: List[str]) -> List[str]:
+    return [cid for cid in chat_ids if has_active_tasks(cid)]

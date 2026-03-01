@@ -190,9 +190,6 @@ def create_token(data: dict, expires_delta: Union[timedelta, None] = None) -> st
         expire = datetime.now(UTC) + expires_delta
         payload.update({"exp": expire})
 
-    jti = str(uuid.uuid4())
-    payload.update({"jti": jti})
-
     encoded_jwt = jwt.encode(payload, SESSION_SECRET, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -203,14 +200,6 @@ def decode_token(token: str) -> Optional[dict]:
         return decoded
     except Exception:
         return None
-
-
-async def is_valid_token(request, decoded) -> bool:
-    return True
-
-
-async def invalidate_token(request, token):
-    pass
 
 
 def extract_token_from_auth_header(auth_header: str):
@@ -274,12 +263,6 @@ async def get_current_user(
             )
 
         if data is not None and "id" in data:
-            if data.get("jti") and not await is_valid_token(request, data):
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid token",
-                )
-
             user = Users.get_user_by_id(data["id"])
             if user is None:
                 raise HTTPException(

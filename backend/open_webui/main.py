@@ -13,7 +13,6 @@ from urllib.parse import urlencode, parse_qs, urlparse
 from pydantic import BaseModel
 from sqlalchemy import text
 
-from aiocache import cached
 import anyio.to_thread
 import requests
 from fastapi import (
@@ -354,7 +353,6 @@ from open_webui.env import (
     BYPASS_MODEL_ACCESS_CONTROL,
     RESET_CONFIG_ON_START,
     EXTERNAL_PWA_MANIFEST_URL,
-    AIOHTTP_CLIENT_SESSION_SSL,
     ENABLE_PUBLIC_ACTIVE_USERS_COUNT,
     # Admin Account Runtime Creation
     WEBUI_ADMIN_EMAIL,
@@ -1702,7 +1700,7 @@ async def stop_task_endpoint(
 
 @app.get("/api/tasks")
 async def list_tasks_endpoint(request: Request, user=Depends(get_verified_user)):
-    return {"tasks": await list_tasks()}
+    return {"tasks": list_tasks()}
 
 
 @app.get("/api/tasks/chat/{chat_id}")
@@ -1713,7 +1711,7 @@ async def list_tasks_by_chat_id_endpoint(
     if chat is None or chat.user_id != user.id:
         return {"task_ids": []}
 
-    task_ids = await list_task_ids_by_item_id(chat_id)
+    task_ids = list_task_ids_by_item_id(chat_id)
 
     log.debug(f"Task IDs for chat {chat_id}: {task_ids}")
     return {"task_ids": task_ids}

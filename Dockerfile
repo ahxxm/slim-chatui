@@ -37,8 +37,6 @@ ENV OLLAMA_BASE_URL="/ollama" \
 
 ENV OPENAI_API_KEY="" \
     WEBUI_SECRET_KEY="" \
-    SCARF_NO_ANALYTICS=true \
-    DO_NOT_TRACK=true \
     ANONYMIZED_TELEMETRY=false
 
 ENV RAG_EMBEDDING_MODEL="sentence-transformers/all-MiniLM-L6-v2" \
