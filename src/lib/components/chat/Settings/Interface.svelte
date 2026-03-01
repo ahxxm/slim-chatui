@@ -81,9 +81,6 @@
 		width: '',
 		height: ''
 	};
-	// Admin - Show Update Available Toast
-	let showUpdateToast = true;
-
 	let hapticFeedback = false;
 
 	let webSearch = null;
@@ -199,8 +196,6 @@
 		responseAutoCopy = $settings?.responseAutoCopy ?? false;
 
 		showUsername = $settings?.showUsername ?? false;
-		showUpdateToast = $settings?.showUpdateToast ?? true;
-
 		displayMultiModelResponsesInTabs = $settings?.displayMultiModelResponsesInTabs ?? false;
 		chatFadeStreamingText = $settings?.chatFadeStreamingText ?? true;
 
@@ -529,27 +524,6 @@
 					</div>
 				</div>
 			</div>
-
-			{#if $user?.role === 'admin'}
-				<div>
-					<div class=" py-0.5 flex w-full justify-between">
-						<div id="toast-notifications-label" class=" self-center text-xs">
-							{$i18n.t('Toast notifications for new updates')}
-						</div>
-
-						<div class="flex items-center gap-2 p-1">
-							<Switch
-								ariaLabelledbyId="toast-notifications-label"
-								tooltip={true}
-								bind:state={showUpdateToast}
-								on:change={() => {
-									saveSettings({ showUpdateToast });
-								}}
-							/>
-						</div>
-					</div>
-				</div>
-			{/if}
 
 			<div class=" my-2 text-sm font-medium">{$i18n.t('Chat')}</div>
 

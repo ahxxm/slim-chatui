@@ -1,9 +1,7 @@
 <script lang="ts">
-	import { getVersionUpdates } from '$lib/apis';
 	import { getOllamaVersion } from '$lib/apis/ollama';
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
 	import { WEBUI_NAME, config } from '$lib/stores';
-	import { compareVersion } from '$lib/utils';
 	import { onMount, getContext } from 'svelte';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
@@ -12,35 +10,10 @@
 
 	let ollamaVersion = '';
 
-	let updateAvailable = null;
-	let version = {
-		current: '',
-		latest: ''
-	};
-
-	const checkForVersionUpdates = async () => {
-		updateAvailable = null;
-		version = await getVersionUpdates(localStorage.token).catch((error) => {
-			return {
-				current: WEBUI_VERSION,
-				latest: WEBUI_VERSION
-			};
-		});
-
-		console.log(version);
-
-		updateAvailable = compareVersion(version.latest, version.current);
-		console.log(updateAvailable);
-	};
-
 	onMount(async () => {
 		ollamaVersion = await getOllamaVersion(localStorage.token).catch((error) => {
 			return '';
 		});
-
-		if ($config?.features?.enable_version_update_check) {
-			checkForVersionUpdates();
-		}
 	});
 </script>
 
@@ -59,32 +32,8 @@
 						<Tooltip content={WEBUI_BUILD_HASH}>
 							v{WEBUI_VERSION}
 						</Tooltip>
-
-						{#if $config?.features?.enable_version_update_check}
-							<a
-								href="https://github.com/open-webui/open-webui/releases/tag/v{version.latest}"
-								target="_blank"
-							>
-								{updateAvailable === null
-									? $i18n.t('Checking for updates...')
-									: updateAvailable
-										? `(v${version.latest} ${$i18n.t('available!')})`
-										: $i18n.t('(latest)')}
-							</a>
-						{/if}
 					</div>
 				</div>
-
-				{#if $config?.features?.enable_version_update_check}
-					<button
-						class=" text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 dark:bg-gray-850 dark:hover:bg-gray-800 transition rounded-lg font-medium"
-						on:click={() => {
-							checkForVersionUpdates();
-						}}
-					>
-						{$i18n.t('Check for updates')}
-					</button>
-				{/if}
 			</div>
 		</div>
 

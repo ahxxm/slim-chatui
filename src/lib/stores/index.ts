@@ -146,7 +146,7 @@ type Settings = {
 	pinnedModels?: never[];
 	toolServers?: never[];
 	detectArtifacts?: boolean;
-	showUpdateToast?: boolean;
+
 	collapseCodeBlocks?: boolean;
 	expandDetails?: boolean;
 	notificationSound?: boolean;
