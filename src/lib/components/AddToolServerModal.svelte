@@ -18,7 +18,7 @@
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tags from './common/Tags.svelte';
 	import { getToolServerData } from '$lib/apis';
-	import { verifyToolServerConnection, registerOAuthClient } from '$lib/apis/configs';
+	import { verifyToolServerConnection } from '$lib/apis/configs';
 	import AccessControl from './workspace/common/AccessControl.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
@@ -54,46 +54,8 @@
 	let name = '';
 	let description = '';
 
-	let oauthClientInfo = null;
-
 	let enable = true;
 	let loading = false;
-
-	const registerOAuthClientHandler = async () => {
-		if (url === '') {
-			toast.error($i18n.t('Please enter a valid URL'));
-			return;
-		}
-
-		if (id === '') {
-			toast.error($i18n.t('Please enter a valid ID'));
-			return;
-		}
-
-		const res = await registerOAuthClient(
-			localStorage.token,
-			{
-				url: url,
-				client_id: id
-			},
-			'mcp'
-		).catch((err) => {
-			toast.error($i18n.t('Registration failed'));
-			return null;
-		});
-
-		if (res) {
-			toast.warning(
-				$i18n.t(
-					'Please save the connection to persist the OAuth client information and do not change the ID'
-				)
-			);
-			toast.success($i18n.t('Registration successful'));
-
-			console.debug('Registration successful', res);
-			oauthClientInfo = res?.oauth_client_info ?? null;
-		}
-	};
 
 	const verifyHandler = async () => {
 		if (url === '') {
@@ -262,12 +224,6 @@
 			return;
 		}
 
-		if (type === 'mcp' && auth_type === 'oauth_2.1' && !oauthClientInfo) {
-			toast.error($i18n.t('Please register the OAuth client'));
-			loading = false;
-			return;
-		}
-
 		// validate spec
 		if (spec_type === 'json') {
 			try {
@@ -314,8 +270,7 @@
 			info: {
 				id: id,
 				name: name,
-				description: description,
-				...(oauthClientInfo ? { oauth_client_info: oauthClientInfo } : {})
+				description: description
 			}
 		};
 
@@ -339,8 +294,6 @@
 		name = '';
 		description = '';
 
-		oauthClientInfo = null;
-
 		enable = true;
 		functionNameFilterList = '';
 		accessGrants = [];
@@ -363,7 +316,6 @@
 			id = connection.info?.id ?? '';
 			name = connection.info?.name ?? '';
 			description = connection.info?.description ?? '';
-			oauthClientInfo = connection.info?.oauth_client_info ?? null;
 
 			enable = connection.config?.enable ?? true;
 			functionNameFilterList = connection.config?.function_name_filter_list ?? '';
@@ -606,42 +558,6 @@
 											{$i18n.t('Auth')}
 										</div>
 									</div>
-
-									{#if auth_type === 'oauth_2.1'}
-										<div class="flex items-center gap-2">
-											<div class="flex flex-col justify-end items-center shrink-0">
-												<Tooltip
-													content={oauthClientInfo
-														? $i18n.t('Register Again')
-														: $i18n.t('Register Client')}
-												>
-													<button
-														class=" text-xs underline dark:text-gray-500 dark:hover:text-gray-200 text-gray-700 hover:text-gray-900 transition"
-														type="button"
-														on:click={() => {
-															registerOAuthClientHandler();
-														}}
-													>
-														{$i18n.t('Register Client')}
-													</button>
-												</Tooltip>
-											</div>
-
-											{#if !oauthClientInfo}
-												<div
-													class="text-xs font-medium px-1.5 rounded-md bg-yellow-500/20 text-yellow-700 dark:text-yellow-200"
-												>
-													{$i18n.t('Not Registered')}
-												</div>
-											{:else}
-												<div
-													class="text-xs font-medium px-1.5 rounded-md bg-green-500/20 text-green-700 dark:text-green-200"
-												>
-													{$i18n.t('Registered')}
-												</div>
-											{/if}
-										</div>
-									{/if}
 								</div>
 
 								<div class="flex gap-2">
@@ -655,13 +571,6 @@
 
 											<option value="bearer">{$i18n.t('Bearer')}</option>
 											<option value="session">{$i18n.t('Session')}</option>
-
-											{#if !direct}
-												<option value="system_oauth">{$i18n.t('OAuth')}</option>
-												{#if type === 'mcp'}
-													<option value="oauth_2.1">{$i18n.t('OAuth 2.1')}</option>
-												{/if}
-											{/if}
 										</select>
 									</div>
 
@@ -683,18 +592,6 @@
 												class={`text-xs self-center translate-y-[1px] ${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500'}`}
 											>
 												{$i18n.t('Forwards system user session credentials to authenticate')}
-											</div>
-										{:else if auth_type === 'system_oauth'}
-											<div
-												class={`text-xs self-center translate-y-[1px] ${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500'}`}
-											>
-												{$i18n.t('Forwards system user OAuth access token to authenticate')}
-											</div>
-										{:else if auth_type === 'oauth_2.1'}
-											<div
-												class={`flex items-center text-xs self-center translate-y-[1px] ${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500'}`}
-											>
-												{$i18n.t('Uses OAuth 2.1 Dynamic Client Registration')}
 											</div>
 										{/if}
 									</div>

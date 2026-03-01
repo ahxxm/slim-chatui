@@ -156,22 +156,6 @@ async def get_headers_and_cookies(
     elif auth_type == "session":
         cookies = request.cookies
         token = request.state.token.credentials
-    elif auth_type == "system_oauth":
-        cookies = request.cookies
-
-        oauth_token = None
-        try:
-            if request.cookies.get("oauth_session_id", None):
-                oauth_token = await request.app.state.oauth_manager.get_oauth_token(
-                    user.id,
-                    request.cookies.get("oauth_session_id", None),
-                )
-        except Exception as e:
-            log.error(f"Error getting OAuth token: {e}")
-
-        if oauth_token:
-            token = f"{oauth_token.get('access_token', '')}"
-
     elif auth_type in ("azure_ad", "microsoft_entra_id"):
         token = get_microsoft_entra_id_access_token()
 

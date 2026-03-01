@@ -227,11 +227,6 @@ type Config = {
 		enable_version_update_check: boolean;
 		folder_max_file_count?: number;
 	};
-	oauth: {
-		providers: {
-			[key: string]: string;
-		};
-	};
 	ui?: {
 		pending_user_overlay_title?: string;
 		pending_user_overlay_content?: string;

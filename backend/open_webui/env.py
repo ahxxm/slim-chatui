@@ -437,35 +437,6 @@ ENABLE_COMPRESSION_MIDDLEWARE = (
     os.environ.get("ENABLE_COMPRESSION_MIDDLEWARE", "True").lower() == "true"
 )
 
-####################################
-# OAUTH Configuration
-####################################
-ENABLE_OAUTH_EMAIL_FALLBACK = (
-    os.environ.get("ENABLE_OAUTH_EMAIL_FALLBACK", "False").lower() == "true"
-)
-
-ENABLE_OAUTH_ID_TOKEN_COOKIE = (
-    os.environ.get("ENABLE_OAUTH_ID_TOKEN_COOKIE", "True").lower() == "true"
-)
-
-OAUTH_CLIENT_INFO_ENCRYPTION_KEY = os.environ.get(
-    "OAUTH_CLIENT_INFO_ENCRYPTION_KEY", WEBUI_SECRET_KEY
-)
-
-OAUTH_SESSION_TOKEN_ENCRYPTION_KEY = os.environ.get(
-    "OAUTH_SESSION_TOKEN_ENCRYPTION_KEY", WEBUI_SECRET_KEY
-)
-
-# Maximum number of concurrent OAuth sessions per user per provider
-# This prevents unbounded session growth while allowing multi-device usage
-OAUTH_MAX_SESSIONS_PER_USER = int(os.environ.get("OAUTH_MAX_SESSIONS_PER_USER", "10"))
-
-# Token Exchange Configuration
-# Allows external apps to exchange OAuth tokens for OpenWebUI tokens
-ENABLE_OAUTH_TOKEN_EXCHANGE = (
-    os.environ.get("ENABLE_OAUTH_TOKEN_EXCHANGE", "False").lower() == "true"
-)
-
 
 ####################################
 # MODELS

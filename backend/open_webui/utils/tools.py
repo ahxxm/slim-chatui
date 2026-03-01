@@ -336,14 +336,6 @@ async def get_tools(
                             headers["Authorization"] = (
                                 f"Bearer {request.state.token.credentials}"
                             )
-                        elif auth_type == "system_oauth":
-                            cookies = request.cookies
-                            oauth_token = extra_params.get("__oauth_token__", None)
-                            if oauth_token:
-                                headers["Authorization"] = (
-                                    f"Bearer {oauth_token.get('access_token', '')}"
-                                )
-
                         connection_headers = tool_server_connection.get("headers", None)
                         if connection_headers and isinstance(connection_headers, dict):
                             for key, value in connection_headers.items():

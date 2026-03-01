@@ -1265,7 +1265,6 @@ async def process_chat_payload(request, form_data, user, metadata, model):
         "__event_call__": event_caller,
         "__user__": user.model_dump() if isinstance(user, UserModel) else {},
         "__metadata__": metadata,
-        "__oauth_token__": await get_system_oauth_token(request, user),
         "__request__": request,
         "__model__": model,
         "__chat_id__": metadata.get("chat_id"),
@@ -1492,29 +1491,6 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                             headers["Authorization"] = (
                                 f"Bearer {request.state.token.credentials}"
                             )
-                        elif auth_type == "system_oauth":
-                            oauth_token = extra_params.get("__oauth_token__", None)
-                            if oauth_token:
-                                headers["Authorization"] = (
-                                    f"Bearer {oauth_token.get('access_token', '')}"
-                                )
-                        elif auth_type == "oauth_2.1":
-                            try:
-                                splits = server_id.split(":")
-                                server_id = splits[-1] if len(splits) > 1 else server_id
-
-                                oauth_token = await request.app.state.oauth_client_manager.get_oauth_token(
-                                    user.id, f"mcp:{server_id}"
-                                )
-
-                                if oauth_token:
-                                    headers["Authorization"] = (
-                                        f"Bearer {oauth_token.get('access_token', '')}"
-                                    )
-                            except Exception as e:
-                                log.error(f"Error getting OAuth token: {e}")
-                                oauth_token = None
-
                         connection_headers = mcp_server_connection.get("headers", None)
                         if connection_headers and isinstance(connection_headers, dict):
                             for key, value in connection_headers.items():
@@ -1784,19 +1760,6 @@ def build_response_object(response, response_data):
             status_code=response.status_code,
         )
     return response
-
-
-async def get_system_oauth_token(request, user):
-    oauth_token = None
-    try:
-        if request.cookies.get("oauth_session_id", None):
-            oauth_token = await request.app.state.oauth_manager.get_oauth_token(
-                user.id,
-                request.cookies.get("oauth_session_id", None),
-            )
-    except Exception as e:
-        log.error(f"Error getting OAuth token: {e}")
-    return oauth_token
 
 
 async def background_tasks_handler(ctx):
@@ -2171,7 +2134,6 @@ async def streaming_chat_response_handler(response, ctx):
         "__event_call__": event_caller,
         "__user__": user.model_dump() if isinstance(user, UserModel) else {},
         "__metadata__": metadata,
-        "__oauth_token__": await get_system_oauth_token(request, user),
         "__request__": request,
         "__model__": model,
     }

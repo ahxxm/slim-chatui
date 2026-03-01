@@ -142,14 +142,6 @@ from open_webui.config import (
     MODEL_ORDER_LIST,
     DEFAULT_MODEL_METADATA,
     DEFAULT_MODEL_PARAMS,
-    # WebUI (OAuth)
-    ENABLE_OAUTH_ROLE_MANAGEMENT,
-    OAUTH_ROLES_CLAIM,
-    OAUTH_EMAIL_CLAIM,
-    OAUTH_PICTURE_CLAIM,
-    OAUTH_USERNAME_CLAIM,
-    OAUTH_ALLOWED_ROLES,
-    OAUTH_ADMIN_ROLES,
     # Misc
     ENV,
     CACHE_DIR,
@@ -157,7 +149,6 @@ from open_webui.config import (
     FRONTEND_BUILD_DIR,
     CORS_ALLOW_ORIGIN,
     DEFAULT_LOCALE,
-    OAUTH_PROVIDERS,
     WEBUI_URL,
     RESPONSE_WATERMARK,
     # Admin
@@ -240,14 +231,6 @@ from open_webui.utils.auth import (
     create_admin_user,
 )
 from open_webui.utils.plugin import install_tool_and_function_dependencies
-from open_webui.utils.oauth import (
-    get_oauth_client_info_with_dynamic_client_registration,
-    encrypt_data,
-    decrypt_data,
-    OAuthManager,
-    OAuthClientManager,
-    OAuthClientInformationFull,
-)
 from open_webui.utils.security_headers import SecurityHeadersMiddleware
 from open_webui.tasks import (
     list_task_ids_by_item_id,
@@ -387,14 +370,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# For Open WebUI OIDC/OAuth2
-oauth_manager = OAuthManager(app)
-app.state.oauth_manager = oauth_manager
-
-# For Integrations
-oauth_client_manager = OAuthClientManager(app)
-app.state.oauth_client_manager = oauth_client_manager
-
 app.state.instance_id = None
 app.state.config = AppConfig()
 
@@ -509,15 +484,6 @@ if any("access_control" in c.get("config", {}) for c in connections):
     for connection in connections:
         migrate_access_control(connection.get("config", {}))
     app.state.config.TOOL_SERVER_CONNECTIONS = connections
-
-app.state.config.OAUTH_USERNAME_CLAIM = OAUTH_USERNAME_CLAIM
-app.state.config.OAUTH_PICTURE_CLAIM = OAUTH_PICTURE_CLAIM
-app.state.config.OAUTH_EMAIL_CLAIM = OAUTH_EMAIL_CLAIM
-
-app.state.config.ENABLE_OAUTH_ROLE_MANAGEMENT = ENABLE_OAUTH_ROLE_MANAGEMENT
-app.state.config.OAUTH_ROLES_CLAIM = OAUTH_ROLES_CLAIM
-app.state.config.OAUTH_ALLOWED_ROLES = OAUTH_ALLOWED_ROLES
-app.state.config.OAUTH_ADMIN_ROLES = OAUTH_ADMIN_ROLES
 
 app.state.AUTH_TRUSTED_EMAIL_HEADER = WEBUI_AUTH_TRUSTED_EMAIL_HEADER
 app.state.AUTH_TRUSTED_NAME_HEADER = WEBUI_AUTH_TRUSTED_NAME_HEADER
@@ -1370,12 +1336,6 @@ async def get_app_config(request: Request):
         "name": app.state.WEBUI_NAME,
         "version": VERSION,
         "default_locale": str(DEFAULT_LOCALE),
-        "oauth": {
-            "providers": {
-                name: config.get("name", name)
-                for name, config in OAUTH_PROVIDERS.items()
-            }
-        },
         "features": {
             "auth": WEBUI_AUTH,
             "auth_trusted_header": bool(app.state.AUTH_TRUSTED_EMAIL_HEADER),
@@ -1493,35 +1453,6 @@ async def get_current_usage(user=Depends(get_verified_user)):
         raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
-############################
-# OAuth Login & Callback
-############################
-
-
-# Initialize OAuth client manager with any MCP tool servers using OAuth 2.1
-if len(app.state.config.TOOL_SERVER_CONNECTIONS) > 0:
-    for tool_server_connection in app.state.config.TOOL_SERVER_CONNECTIONS:
-        if tool_server_connection.get("type", "openapi") == "mcp":
-            server_id = tool_server_connection.get("info", {}).get("id")
-            auth_type = tool_server_connection.get("auth_type", "none")
-
-            if server_id and auth_type == "oauth_2.1":
-                oauth_client_info = tool_server_connection.get("info", {}).get(
-                    "oauth_client_info", ""
-                )
-
-                try:
-                    oauth_client_info = decrypt_data(oauth_client_info)
-                    app.state.oauth_client_manager.add_client(
-                        f"mcp:{server_id}",
-                        OAuthClientInformationFull(**oauth_client_info),
-                    )
-                except Exception as e:
-                    log.error(
-                        f"Error adding OAuth client for MCP tool server {server_id}: {e}"
-                    )
-                    pass
-
 app.add_middleware(
     SessionMiddleware,
     secret_key=WEBUI_SECRET_KEY,
@@ -1529,146 +1460,6 @@ app.add_middleware(
     same_site=WEBUI_SESSION_COOKIE_SAME_SITE,
     https_only=WEBUI_SESSION_COOKIE_SECURE,
 )
-
-
-async def register_client(request, client_id: str) -> bool:
-    server_type, server_id = client_id.split(":", 1)
-
-    connection = None
-    connection_idx = None
-
-    for idx, conn in enumerate(request.app.state.config.TOOL_SERVER_CONNECTIONS or []):
-        if conn.get("type", "openapi") == server_type:
-            info = conn.get("info", {})
-            if info.get("id") == server_id:
-                connection = conn
-                connection_idx = idx
-                break
-
-    if connection is None or connection_idx is None:
-        log.warning(
-            f"Unable to locate MCP tool server configuration for client {client_id} during re-registration"
-        )
-        return False
-
-    server_url = connection.get("url")
-    oauth_server_key = (connection.get("config") or {}).get("oauth_server_key")
-
-    try:
-        oauth_client_info = (
-            await get_oauth_client_info_with_dynamic_client_registration(
-                request,
-                client_id,
-                server_url,
-                oauth_server_key,
-            )
-        )
-    except Exception as e:
-        log.error(f"Dynamic client re-registration failed for {client_id}: {e}")
-        return False
-
-    try:
-        request.app.state.config.TOOL_SERVER_CONNECTIONS[connection_idx] = {
-            **connection,
-            "info": {
-                **connection.get("info", {}),
-                "oauth_client_info": encrypt_data(
-                    oauth_client_info.model_dump(mode="json")
-                ),
-            },
-        }
-    except Exception as e:
-        log.error(
-            f"Failed to persist updated OAuth client info for tool server {client_id}: {e}"
-        )
-        return False
-
-    oauth_client_manager.remove_client(client_id)
-    oauth_client_manager.add_client(client_id, oauth_client_info)
-    log.info(f"Re-registered OAuth client {client_id} for tool server")
-    return True
-
-
-@app.get("/oauth/clients/{client_id}/authorize")
-async def oauth_client_authorize(
-    client_id: str,
-    request: Request,
-    response: Response,
-    user=Depends(get_verified_user),
-):
-    # ensure_valid_client_registration
-    client = oauth_client_manager.get_client(client_id)
-    client_info = oauth_client_manager.get_client_info(client_id)
-    if client is None or client_info is None:
-        raise HTTPException(status.HTTP_404_NOT_FOUND)
-
-    if not await oauth_client_manager._preflight_authorization_url(client, client_info):
-        log.info(
-            "Detected invalid OAuth client %s; attempting re-registration",
-            client_id,
-        )
-
-        registered = await register_client(request, client_id)
-        if not registered:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Failed to re-register OAuth client",
-            )
-
-        client = oauth_client_manager.get_client(client_id)
-        client_info = oauth_client_manager.get_client_info(client_id)
-        if client is None or client_info is None:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="OAuth client unavailable after re-registration",
-            )
-
-        if not await oauth_client_manager._preflight_authorization_url(
-            client, client_info
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="OAuth client registration is still invalid after re-registration",
-            )
-
-    return await oauth_client_manager.handle_authorize(request, client_id=client_id)
-
-
-@app.get("/oauth/clients/{client_id}/callback")
-async def oauth_client_callback(
-    client_id: str,
-    request: Request,
-    response: Response,
-    user=Depends(get_verified_user),
-):
-    return await oauth_client_manager.handle_callback(
-        request,
-        client_id=client_id,
-        user_id=user.id if user else None,
-        response=response,
-    )
-
-
-@app.get("/oauth/{provider}/login")
-async def oauth_login(provider: str, request: Request):
-    return await oauth_manager.handle_login(request, provider)
-
-
-# OAuth login logic is as follows:
-# 1. Attempt to find a user with matching subject ID, tied to the provider
-# 2. If OAUTH_MERGE_ACCOUNTS_BY_EMAIL is true, find a user with the email address provided via OAuth
-#    - This is considered insecure in general, as OAuth providers do not always verify email addresses
-# 3. If there is no user, and ENABLE_OAUTH_SIGNUP is true, create a user
-#    - Email addresses are considered unique, so we fail registration if the email address is already taken
-@app.get("/oauth/{provider}/login/callback")
-@app.get("/oauth/{provider}/callback")  # Legacy endpoint
-async def oauth_login_callback(
-    provider: str,
-    request: Request,
-    response: Response,
-    db: Session = Depends(get_session),
-):
-    return await oauth_manager.handle_callback(request, provider, response, db=db)
 
 
 @app.get("/manifest.json")

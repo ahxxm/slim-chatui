@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 from open_webui.internal.db import get_session
 
 
-from open_webui.models.oauth_sessions import OAuthSessions
 from open_webui.models.tools import (
     ToolForm,
     ToolModel,
@@ -116,20 +115,6 @@ async def get_tools(
         if server.get("type", "openapi") == "mcp" and server.get("config", {}).get(
             "enable"
         ):
-            server_id = server.get("info", {}).get("id")
-            auth_type = server.get("auth_type", "none")
-
-            session_token = None
-            if auth_type == "oauth_2.1":
-                splits = server_id.split(":")
-                server_id = splits[-1] if len(splits) > 1 else server_id
-
-                session_token = (
-                    await request.app.state.oauth_client_manager.get_oauth_token(
-                        user.id, f"mcp:{server_id}"
-                    )
-                )
-
             server_config = server.get("config", {})
 
             tool_id = f"server:mcp:{server.get('info', {}).get('id')}"
@@ -148,13 +133,6 @@ async def get_tools(
                         },
                         "updated_at": int(time.time()),
                         "created_at": int(time.time()),
-                        **(
-                            {
-                                "authenticated": session_token is not None,
-                            }
-                            if auth_type == "oauth_2.1"
-                            else {}
-                        ),
                     }
                 )
             )

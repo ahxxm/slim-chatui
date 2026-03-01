@@ -205,13 +205,6 @@ async def get_current_user(
         if request.cookies.get("token"):
             response.delete_cookie("token")
 
-        if request.cookies.get("oauth_id_token"):
-            response.delete_cookie("oauth_id_token")
-
-        # Delete OAuth session if present
-        if request.cookies.get("oauth_session_id"):
-            response.delete_cookie("oauth_session_id")
-
         raise e
 
 
