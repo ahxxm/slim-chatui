@@ -7,12 +7,10 @@ export const WEBUI_HOSTNAME = browser ? (dev ? `${location.hostname}:8080` : ``)
 export const WEBUI_BASE_URL = browser ? (dev ? `http://${WEBUI_HOSTNAME}` : ``) : ``;
 export const WEBUI_API_BASE_URL = `${WEBUI_BASE_URL}/api/v1`;
 
-export const OLLAMA_API_BASE_URL = `${WEBUI_BASE_URL}/ollama`;
 export const OPENAI_API_BASE_URL = `${WEBUI_BASE_URL}/openai`;
 
 export const WEBUI_VERSION = APP_VERSION;
 export const WEBUI_BUILD_HASH = APP_BUILD_HASH;
-export const REQUIRED_OLLAMA_VERSION = '0.1.16';
 
 export const SUPPORTED_FILE_TYPE = [
 	'application/epub+zip',
@@ -89,12 +87,12 @@ export const SUPPORTED_FILE_EXTENSIONS = [
 ];
 
 export const DEFAULT_CAPABILITIES = {
-	file_context: true,
+	file_context: false,
 	vision: true,
 	file_upload: true,
 	citations: true,
 	status_updates: true,
-	usage: undefined
+	usage: true
 };
 
 export const PASTED_TEXT_CHARACTER_LIMIT = 1000;

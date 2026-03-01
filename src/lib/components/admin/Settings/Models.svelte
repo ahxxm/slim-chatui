@@ -30,7 +30,6 @@
 	import { toast } from 'svelte-sonner';
 	import Badge from '$lib/components/common/Badge.svelte';
 	import ModelSettingsModal from './Models/ModelSettingsModal.svelte';
-	import ManageModelsModal from './Models/ManageModelsModal.svelte';
 	import ModelMenu from '$lib/components/admin/Settings/Models/ModelMenu.svelte';
 	import EllipsisHorizontal from '$lib/components/icons/EllipsisHorizontal.svelte';
 	import EyeSlash from '$lib/components/icons/EyeSlash.svelte';
@@ -58,7 +57,6 @@
 	let selectedModelId = null;
 
 	let showConfigModal = false;
-	let showManageModal = false;
 
 	let viewOption = ''; // '' = All, 'enabled', 'disabled', 'visible', 'hidden'
 
@@ -302,8 +300,6 @@
 </script>
 
 <ModelSettingsModal bind:show={showConfigModal} initHandler={init} />
-<ManageModelsModal bind:show={showManageModal} />
-
 {#if models !== null}
 	{#if selectedModelId === null}
 		<div class="flex flex-col gap-1 mt-1.5 mb-2">
@@ -381,18 +377,6 @@
 							</div>
 						</button>
 					{/if}
-
-					<button
-						class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-gray-200 transition"
-						type="button"
-						on:click={() => {
-							showManageModal = true;
-						}}
-					>
-						<div class=" self-center font-medium line-clamp-1">
-							{$i18n.t('Manage')}
-						</div>
-					</button>
 
 					<button
 						class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-black hover:bg-gray-900 text-white dark:bg-white dark:hover:bg-gray-100 dark:text-black transition font-medium"
@@ -524,11 +508,7 @@
 								>
 									<Tooltip
 										content={marked.parse(
-											!!model?.meta?.description
-												? model?.meta?.description
-												: model?.ollama?.digest
-													? `${model?.ollama?.digest} **(${model?.ollama?.modified_at})**`
-													: model.id
+											!!model?.meta?.description ? model?.meta?.description : model.id
 										)}
 										className=" w-fit"
 										placement="top-start"
@@ -560,11 +540,7 @@
 										class=" text-xs overflow-hidden text-ellipsis line-clamp-1 flex items-center gap-1 text-gray-500"
 									>
 										<span class=" line-clamp-1">
-											{!!model?.meta?.description
-												? model?.meta?.description
-												: model?.ollama?.digest
-													? `${model.id} (${model?.ollama?.digest})`
-													: model.id}
+											{!!model?.meta?.description ? model?.meta?.description : model.id}
 										</span>
 									</div>
 								</div>

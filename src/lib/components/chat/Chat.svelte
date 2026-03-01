@@ -1437,11 +1437,7 @@
 			});
 		}
 
-		const stream =
-			model?.info?.params?.stream_response ??
-			$settings?.params?.stream_response ??
-			params?.stream_response ??
-			true;
+		const stream = model?.info?.params?.stream_response ?? true;
 
 		let messages = [
 			params?.system || $settings.system
@@ -1538,7 +1534,7 @@
 					follow_up_generation: $settings?.autoFollowUps ?? true
 				},
 
-				...(stream && (model.info?.meta?.capabilities?.usage ?? false)
+				...(stream && (model.info?.meta?.capabilities?.usage ?? true)
 					? {
 							stream_options: {
 								include_usage: true

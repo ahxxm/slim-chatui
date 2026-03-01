@@ -505,20 +505,13 @@ def get_image_urls(delta_images, request, metadata, user) -> list[str]:
     return image_urls
 
 
-def apply_params_to_form_data(form_data, model):
+def apply_params_to_form_data(form_data):
     params = form_data.pop("params", {})
     custom_params = params.pop("custom_params", {})
 
-    open_webui_params = {
-        "stream_response": bool,
-        "stream_delta_chunk_size": int,
-        "reasoning_tags": list,
-        "system": str,
-    }
-
-    for key in list(params.keys()):
-        if key in open_webui_params:
-            del params[key]
+    open_webui_only_keys = {"stream_delta_chunk_size", "reasoning_tags", "system"}
+    for key in open_webui_only_keys:
+        params.pop(key, None)
 
     if custom_params:
         # Attempt to parse custom_params if they are strings
@@ -534,23 +527,19 @@ def apply_params_to_form_data(form_data, model):
         # If custom_params are provided, merge them into params
         params = deep_update(params, custom_params)
 
-    if model.get("owned_by") == "ollama":
-        # Ollama specific parameters
-        form_data["options"] = params
-    else:
-        if isinstance(params, dict):
-            for key, value in params.items():
-                if value is not None:
-                    form_data[key] = value
+    if isinstance(params, dict):
+        for key, value in params.items():
+            if value is not None:
+                form_data[key] = value
 
-        if "logit_bias" in params and params["logit_bias"] is not None:
-            try:
-                logit_bias = convert_logit_bias_input_to_json(params["logit_bias"])
+    if "logit_bias" in params and params["logit_bias"] is not None:
+        try:
+            logit_bias = convert_logit_bias_input_to_json(params["logit_bias"])
 
-                if logit_bias:
-                    form_data["logit_bias"] = json.loads(logit_bias)
-            except Exception as e:
-                log.exception(f"Error parsing logit_bias: {e}")
+            if logit_bias:
+                form_data["logit_bias"] = json.loads(logit_bias)
+        except Exception as e:
+            log.exception(f"Error parsing logit_bias: {e}")
 
     return form_data
 
@@ -638,7 +627,7 @@ def process_messages_with_output(messages: list[dict]) -> list[dict]:
 
 
 async def process_chat_payload(request, form_data, user, metadata, model):
-    form_data = apply_params_to_form_data(form_data, model)
+    form_data = apply_params_to_form_data(form_data)
     log.debug(f"form_data: {form_data}")
 
     # Load messages from DB when available — DB preserves structured 'output' items

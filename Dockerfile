@@ -32,8 +32,7 @@ ENV PYTHONUNBUFFERED=1
 ENV ENV=prod \
     PORT=8080
 
-ENV OLLAMA_BASE_URL="/ollama" \
-    OPENAI_API_BASE_URL=""
+ENV OPENAI_API_BASE_URL=""
 
 ENV OPENAI_API_KEY="" \
     WEBUI_SECRET_KEY="" \
@@ -57,17 +56,13 @@ RUN apt-get update && \
     python3-dev zstd \
     && rm -rf /var/lib/apt/lists/*
 
-COPY --chown=$UID:$GID ./pyproject.toml /app/pyproject.toml
-COPY --chown=$UID:$GID ./hatch_build.py /app/hatch_build.py
+COPY --chown=$UID:$GID ./package.json ./LICENSE ./README.md ./pyproject.toml ./hatch_build.py /app/
 COPY --chown=$UID:$GID ./backend .
-
-RUN pip3 install --no-cache-dir uv && \
-    uv pip install --system --no-cache-dir '/app[all]' && \
-    mkdir -p /app/backend/data && chown -R $UID:$GID /app/backend/data/
-
-# copy built frontend files
 COPY --chown=$UID:$GID --from=build /app/build /app/build
-COPY --chown=$UID:$GID --from=build /app/package.json /app/package.json
+
+RUN SKIP_FRONTEND_BUILD=1 pip3 install --no-cache-dir uv && \
+    SKIP_FRONTEND_BUILD=1 uv pip install --system --no-cache-dir '/app[all]' && \
+    mkdir -p /app/backend/data && chown -R $UID:$GID /app/backend/data/
 
 EXPOSE 8080
 

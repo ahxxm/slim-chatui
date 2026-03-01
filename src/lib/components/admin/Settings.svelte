@@ -71,16 +71,7 @@
 			id: 'connections',
 			title: 'Connections',
 			route: '/admin/settings/connections',
-			keywords: [
-				'connections',
-				'ollama',
-				'openai',
-				'api',
-				'base url',
-				'direct connections',
-				'proxy',
-				'key'
-			]
+			keywords: ['connections', 'openai', 'api', 'base url', 'direct connections', 'proxy', 'key']
 		},
 		{
 			id: 'models',
