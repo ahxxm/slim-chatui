@@ -247,5 +247,3 @@ def moa_response_generation_template(
     formatted = "\n\n".join(f'"""{r}"""' for r in responses)
     template = template.replace("{{responses}}", formatted)
     return template
-
-

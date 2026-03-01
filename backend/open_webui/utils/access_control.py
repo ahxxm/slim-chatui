@@ -104,5 +104,3 @@ def has_permission(
         default_permissions, DEFAULT_USER_PERMISSIONS
     )
     return get_permission(default_permissions, permission_hierarchy)
-
-

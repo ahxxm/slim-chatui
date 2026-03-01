@@ -23,10 +23,6 @@ from open_webui.routers.ollama import (
     generate_chat_completion as generate_ollama_chat_completion,
 )
 
-from open_webui.routers.pipelines import (
-    process_pipeline_outlet_filter,
-)
-
 from open_webui.utils.models import get_all_models, check_model_access
 from open_webui.utils.payload import convert_payload_openai_to_ollama
 from open_webui.utils.response import (
@@ -231,10 +227,5 @@ async def chat_completed(request: Request, form_data: dict, user: Any):
         raise Exception("Model not found")
 
     model = models[model_id]
-
-    try:
-        data = await process_pipeline_outlet_filter(request, data, user, models)
-    except Exception as e:
-        raise Exception(f"Error: {e}")
 
     return data
