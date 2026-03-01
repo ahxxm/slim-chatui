@@ -755,11 +755,7 @@
 	};
 
 	const onUpload = async (event) => {
-		const { type, data } = event;
-
-		if (type === 'web') {
-			await uploadWeb(data);
-		}
+		await uploadWeb(event.data);
 	};
 
 	$: if (history) {

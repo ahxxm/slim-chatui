@@ -370,7 +370,6 @@ async def execute_code(
     :param code: The Python code to execute
     :return: JSON with stdout, stderr, and result from execution
     """
-    from uuid import uuid4
 
     if __request__ is None:
         return json.dumps({"error": "Request context not available"})

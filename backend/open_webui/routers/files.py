@@ -128,7 +128,7 @@ def _is_text_file(file_path: str, chunk_size: int = 8192) -> bool:
     (e.g. TypeScript .ts → video/mp2t) without maintaining an extension whitelist.
     """
     try:
-        resolved = Storage.get_file(file_path)
+        resolved = file_path
         with open(resolved, "rb") as f:
             chunk = f.read(chunk_size)
         if not chunk:
@@ -166,7 +166,7 @@ def process_uploaded_file(
                 )
 
                 if strict_match_mime_type(stt_supported_content_types, content_type):
-                    file_path_processed = Storage.get_file(file_path)
+                    file_path_processed = file_path
                     result = transcribe(
                         request, file_path_processed, file_metadata, user
                     )
@@ -291,16 +291,7 @@ def upload_file_handler(
         id = str(uuid.uuid4())
         name = filename
         filename = f"{id}_{filename}"
-        contents, file_path = Storage.upload_file(
-            file.file,
-            filename,
-            {
-                "OpenWebUI-User-Email": user.email,
-                "OpenWebUI-User-Id": user.id,
-                "OpenWebUI-User-Name": user.name,
-                "OpenWebUI-File-Id": id,
-            },
-        )
+        contents, file_path = Storage.upload_file(file.file, filename)
 
         file_item = Files.insert_new_file(
             user.id,
@@ -680,8 +671,7 @@ async def get_file_content_by_id(
         or has_access_to_file(id, "read", user, db=db)
     ):
         try:
-            file_path = Storage.get_file(file.path)
-            file_path = Path(file_path)
+            file_path = Path(file.path)
 
             # Check if the file already exists in the cache
             if file_path.is_file():
@@ -759,8 +749,7 @@ async def get_html_file_content_by_id(
         or has_access_to_file(id, "read", user, db=db)
     ):
         try:
-            file_path = Storage.get_file(file.path)
-            file_path = Path(file_path)
+            file_path = Path(file.path)
 
             # Check if the file already exists in the cache
             if file_path.is_file():
@@ -814,7 +803,6 @@ async def get_file_content_by_id(
         }
 
         if file_path:
-            file_path = Storage.get_file(file_path)
             file_path = Path(file_path)
 
             # Check if the file already exists in the cache

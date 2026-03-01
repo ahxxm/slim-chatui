@@ -38,7 +38,6 @@ from langchain_core.documents import Document
 
 from open_webui.models.files import FileModel, FileUpdateForm, Files
 from open_webui.models.knowledge import Knowledges
-from open_webui.storage.provider import Storage
 from open_webui.internal.db import get_session, get_db
 from sqlalchemy.orm import Session
 
@@ -1716,7 +1715,6 @@ def process_file(
                 # Usage: /files/
                 file_path = file.path
                 if file_path:
-                    file_path = Storage.get_file(file_path)
                     loader = Loader(
                         engine=request.app.state.config.CONTENT_EXTRACTION_ENGINE,
                         user=user,

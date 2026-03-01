@@ -4340,31 +4340,23 @@ async def streaming_chat_response_handler(response, ctx):
                                     """)
                                     code = blocking_code + "\n" + code
 
-                                if (
-                                    request.app.state.config.CODE_INTERPRETER_ENGINE
-                                    == "jupyter"
-                                ):
-                                    ci_output = await execute_code_jupyter(
-                                        request.app.state.config.CODE_INTERPRETER_JUPYTER_URL,
-                                        code,
-                                        (
-                                            request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_TOKEN
-                                            if request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH
-                                            == "token"
-                                            else None
-                                        ),
-                                        (
-                                            request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD
-                                            if request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH
-                                            == "password"
-                                            else None
-                                        ),
-                                        request.app.state.config.CODE_INTERPRETER_JUPYTER_TIMEOUT,
-                                    )
-                                else:
-                                    ci_output = {
-                                        "stdout": "Code interpreter engine not configured."
-                                    }
+                                ci_output = await execute_code_jupyter(
+                                    request.app.state.config.CODE_INTERPRETER_JUPYTER_URL,
+                                    code,
+                                    (
+                                        request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_TOKEN
+                                        if request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH
+                                        == "token"
+                                        else None
+                                    ),
+                                    (
+                                        request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD
+                                        if request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH
+                                        == "password"
+                                        else None
+                                    ),
+                                    request.app.state.config.CODE_INTERPRETER_JUPYTER_TIMEOUT,
+                                )
 
                                 log.debug(f"Code interpreter output: {ci_output}")
 

@@ -17,10 +17,7 @@
 	import CodeEditor from '$lib/components/common/CodeEditor.svelte';
 	import SvgPanZoom from '$lib/components/common/SVGPanZoom.svelte';
 
-	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
 	import ChevronUpDown from '$lib/components/icons/ChevronUpDown.svelte';
-	import CommandLine from '$lib/components/icons/CommandLine.svelte';
-	import Cube from '$lib/components/icons/Cube.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -140,7 +137,7 @@
 
 		executing = true;
 
-		if ($config?.code?.engine === 'jupyter') {
+		try {
 			const output = await executeCode(localStorage.token, code).catch((error) => {
 				toast.error(`${error}`);
 				return null;
@@ -207,7 +204,7 @@
 
 				output['stderr'] && (stderr = output['stderr']);
 			}
-
+		} finally {
 			executing = false;
 		}
 	};

@@ -1,4 +1,3 @@
-import asyncio
 import re
 import uuid
 import time
@@ -302,8 +301,6 @@ async def update_password(
             raise HTTPException(400, detail=ERROR_MESSAGES.INCORRECT_PASSWORD)
     else:
         raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
-
-
 
 
 ############################
@@ -710,7 +707,7 @@ async def get_admin_details(
 
 
 ############################
-# ToggleSignUp
+# AdminConfig
 ############################
 
 
