@@ -1,27 +1,20 @@
 import inspect
 import logging
 import re
-import inspect
 import aiohttp
 import asyncio
 import yaml
 import json
 
-from pydantic import BaseModel
-from pydantic.fields import FieldInfo
 from typing import (
     Any,
     Awaitable,
     Callable,
     get_type_hints,
-    get_args,
-    get_origin,
     Dict,
     List,
     Tuple,
-    Union,
     Optional,
-    Type,
 )
 from functools import update_wrapper, partial
 
@@ -761,28 +754,13 @@ async def set_tool_servers(request: Request):
     request.app.state.TOOL_SERVERS = await get_tool_servers_data(
         request.app.state.config.TOOL_SERVER_CONNECTIONS
     )
-
-    if request.app.state.redis is not None:
-        await request.app.state.redis.set(
-            "tool_servers", json.dumps(request.app.state.TOOL_SERVERS)
-        )
-
     return request.app.state.TOOL_SERVERS
 
 
 async def get_tool_servers(request: Request):
-    tool_servers = []
-    if request.app.state.redis is not None:
-        try:
-            tool_servers = json.loads(await request.app.state.redis.get("tool_servers"))
-            request.app.state.TOOL_SERVERS = tool_servers
-        except Exception as e:
-            log.error(f"Error fetching tool_servers from Redis: {e}")
-
-    if not tool_servers:
-        tool_servers = await set_tool_servers(request)
-
-    return tool_servers
+    if getattr(request.app.state, "TOOL_SERVERS", None):
+        return request.app.state.TOOL_SERVERS
+    return await set_tool_servers(request)
 
 
 async def get_tool_server_data(url: str, headers: Optional[dict]) -> Dict[str, Any]:

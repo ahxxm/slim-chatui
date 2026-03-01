@@ -3,13 +3,10 @@ import logging
 import os
 import shutil
 import socket
-import base64
 from concurrent.futures import ThreadPoolExecutor
-import redis
-
 from datetime import datetime
 from pathlib import Path
-from typing import Generic, Union, Optional, TypeVar
+from typing import Generic, Optional, TypeVar
 from urllib.parse import urlparse
 
 import requests
@@ -23,10 +20,6 @@ from open_webui.env import (
     DATABASE_URL,
     ENABLE_DB_MIGRATIONS,
     ENV,
-    REDIS_URL,
-    REDIS_KEY_PREFIX,
-    REDIS_SENTINEL_HOSTS,
-    REDIS_SENTINEL_PORT,
     FRONTEND_BUILD_DIR,
     OFFLINE_MODE,
     OPEN_WEBUI_DIR,
@@ -36,7 +29,6 @@ from open_webui.env import (
     log,
 )
 from open_webui.internal.db import Base, get_db
-from open_webui.utils.redis import get_redis_connection
 
 
 class EndpointFilter(logging.Filter):
@@ -226,30 +218,9 @@ class PersistentConfig(Generic[T]):
 
 
 class AppConfig:
-    _redis: Union[redis.Redis, redis.cluster.RedisCluster] = None
-    _redis_key_prefix: str
-
     _state: dict[str, PersistentConfig]
 
-    def __init__(
-        self,
-        redis_url: Optional[str] = None,
-        redis_sentinels: Optional[list] = [],
-        redis_cluster: Optional[bool] = False,
-        redis_key_prefix: str = "open-webui",
-    ):
-        if redis_url:
-            super().__setattr__("_redis_key_prefix", redis_key_prefix)
-            super().__setattr__(
-                "_redis",
-                get_redis_connection(
-                    redis_url,
-                    redis_sentinels,
-                    redis_cluster,
-                    decode_responses=True,
-                ),
-            )
-
+    def __init__(self):
         super().__setattr__("_state", {})
 
     def __setattr__(self, key, value):
@@ -259,31 +230,9 @@ class AppConfig:
             self._state[key].value = value
             self._state[key].save()
 
-            if self._redis and ENABLE_PERSISTENT_CONFIG:
-                redis_key = f"{self._redis_key_prefix}:config:{key}"
-                self._redis.set(redis_key, json.dumps(self._state[key].value))
-
     def __getattr__(self, key):
         if key not in self._state:
             raise AttributeError(f"Config key '{key}' not found")
-
-        # If Redis is available and persistent config is enabled, check for an updated value
-        if self._redis and ENABLE_PERSISTENT_CONFIG:
-            redis_key = f"{self._redis_key_prefix}:config:{key}"
-            redis_value = self._redis.get(redis_key)
-
-            if redis_value is not None:
-                try:
-                    decoded_value = json.loads(redis_value)
-
-                    # Update the in-memory value if different
-                    if self._state[key].value != decoded_value:
-                        self._state[key].value = decoded_value
-                        log.info(f"Updated {key} from Redis: {decoded_value}")
-
-                except json.JSONDecodeError:
-                    log.error(f"Invalid JSON format in Redis for {key}: {redis_value}")
-
         return self._state[key].value
 
 

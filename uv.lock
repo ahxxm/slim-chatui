@@ -167,15 +167,6 @@ wheels = [
 ]
 
 [[package]]
-name = "async-timeout"
-version = "5.0.1"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a5/ae/136395dfbfe00dfc94da3f3e136d0b13f394cba8f4841120e34226265780/async_timeout-5.0.1.tar.gz", hash = "sha256:d9321a7a3d5a6a5e187e824d2fa0793ce379a202935782d555d6e9d2735677d3", size = 9274 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/fe/ba/e2081de779ca30d473f21f5b30e0e737c438205440784c7dfc81efc2b029/async_timeout-5.0.1-py3-none-any.whl", hash = "sha256:39e3809566ff85354557ec2398b55e096c8364bacac9405a7a1fa429e77fe76c", size = 6233 },
-]
-
-[[package]]
 name = "attrs"
 version = "24.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3297,18 +3288,6 @@ wheels = [
 ]
 
 [[package]]
-name = "redis"
-version = "5.2.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "async-timeout", marker = "python_full_version < '3.11.3'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/47/da/d283a37303a995cd36f8b92db85135153dc4f7a8e4441aa827721b442cfb/redis-5.2.1.tar.gz", hash = "sha256:16f2e22dff21d5125e8481515e386711a34cbec50f0e44413dd7d9c060a54e0f", size = 4608355 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3c/5f/fa26b9b2672cbe30e07d9a5bdf39cf16e3b80b42916757c5f92bca88e4ba/redis-5.2.1-py3-none-any.whl", hash = "sha256:ee7e1056b9aea0f04c6c2ed59452947f34c4940ee025f5dd83e6a6418b6989e4", size = 261502 },
-]
-
-[[package]]
 name = "referencing"
 version = "0.37.0"
 source = { registry = "https://pypi.org/simple" }
@@ -3646,12 +3625,10 @@ dependencies = [
     { name = "python-pptx" },
     { name = "python-socketio" },
     { name = "pytz" },
-    { name = "redis" },
     { name = "requests" },
     { name = "sentence-transformers" },
     { name = "sqlalchemy" },
     { name = "starlette-compress" },
-    { name = "starsessions", extra = ["redis"] },
     { name = "tiktoken" },
     { name = "transformers" },
     { name = "unstructured" },
@@ -3744,12 +3721,10 @@ requires-dist = [
     { name = "python-socketio", specifier = "==5.16.1" },
     { name = "pytz", specifier = "==2025.2" },
     { name = "qdrant-client", marker = "extra == 'all'", specifier = "==1.16.2" },
-    { name = "redis" },
     { name = "requests", specifier = "==2.32.5" },
     { name = "sentence-transformers", specifier = "==5.2.2" },
     { name = "sqlalchemy", specifier = "==2.0.46" },
     { name = "starlette-compress", specifier = "==1.7.0" },
-    { name = "starsessions", extras = ["redis"], specifier = "==2.2.1" },
     { name = "tiktoken" },
     { name = "transformers", specifier = "==5.1.0" },
     { name = "unstructured", specifier = "==0.18.31" },
@@ -3865,24 +3840,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/a4/6e/204f5ee566b1e3a7461e14698c64facc85a00f3b0aceb67b2af02d16246f/starlette_compress-1.7.0.tar.gz", hash = "sha256:7ebfb0555109341f192a773c660e66737c82ca42e7c5ff1cb2a057af0aea3716", size = 11045 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/9d/de/1334ae6a1c011f94a4cfddffdabef4ee3e17496f71f2c4bb8c6b92d089a7/starlette_compress-1.7.0-py3-none-any.whl", hash = "sha256:ec811d9ca69cfa9d1cefc464223bd1e27e14b1f48a9091f4bd056304765fa6d0", size = 11101 },
-]
-
-[[package]]
-name = "starsessions"
-version = "2.2.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "itsdangerous" },
-    { name = "starlette" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/86/a1/dd738cd47b7a1c681cae49c4f7c88cc953b2aca4de455c2aacda6652e7ce/starsessions-2.2.1.tar.gz", hash = "sha256:ce5e4448d9bf2c76222e56cd099ad92d22313e8a4def612e22b71a122cc11da0", size = 15048 }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/d2/ce/fc699345a3cdfb4425b5dc1e446f1b49702ac55907a6a4d5d806f2512dae/starsessions-2.2.1-py3-none-any.whl", hash = "sha256:8097b33d70017b2d2331307f0ea923620b5bfb847118d2e5872805d0c1c16f83", size = 14621 },
-]
-
-[package.optional-dependencies]
-redis = [
-    { name = "redis" },
 ]
 
 [[package]]
