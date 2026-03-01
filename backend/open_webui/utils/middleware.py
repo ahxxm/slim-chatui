@@ -1,31 +1,24 @@
 import time
 import logging
 import sys
-import os
-import base64
 import textwrap
 
 import asyncio
-from aiocache import cached
 from typing import Any, Optional
-import random
 import json
 import html
-import inspect
 import re
 import ast
 
 from uuid import uuid4
-from concurrent.futures import ThreadPoolExecutor
 
 
-from fastapi import Request, HTTPException
+from fastapi import Request
 from fastapi.responses import HTMLResponse
-from starlette.responses import Response, StreamingResponse, JSONResponse
+from starlette.responses import StreamingResponse, JSONResponse
 
 
 from open_webui.utils.misc import is_string_allowed
-from open_webui.models.oauth_sessions import OAuthSessions
 from open_webui.models.chats import Chats
 from open_webui.models.folders import Folders
 from open_webui.models.users import Users
@@ -55,7 +48,6 @@ from open_webui.utils.files import (
 
 from open_webui.models.users import UserModel
 from open_webui.models.functions import Functions
-from open_webui.models.models import Models
 
 from open_webui.utils.sanitize import sanitize_code
 from open_webui.utils.chat import generate_chat_completion
@@ -72,7 +64,6 @@ from open_webui.utils.misc import (
     get_last_user_message_item,
     get_last_assistant_message,
     get_system_message,
-    prepend_to_first_user_message_content,
     convert_logit_bias_input_to_json,
     get_content_from_message,
     convert_output_to_messages,
@@ -82,7 +73,6 @@ from open_webui.utils.tools import (
     get_updated_tool_function,
     has_tool_server_access,
 )
-from open_webui.utils.plugin import load_function_module_by_id
 from open_webui.utils.filter import (
     get_sorted_filter_ids,
     process_filter_functions,
@@ -94,7 +84,6 @@ from open_webui.utils.mcp.client import MCPClient
 
 
 from open_webui.config import (
-    CACHE_DIR,
     DEFAULT_TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE,
     DEFAULT_CODE_INTERPRETER_PROMPT,
     CODE_INTERPRETER_BLOCKED_MODULES,
@@ -134,17 +123,6 @@ DEFAULT_CODE_INTERPRETER_TAGS = [("<code_interpreter>", "</code_interpreter>")]
 def output_id(prefix: str) -> str:
     """Generate OR-style ID: prefix + 24-char hex UUID."""
     return f"{prefix}_{uuid4().hex[:24]}"
-
-
-    except Exception as e:
-        log.exception(f"Error parsing tool result for {tool_name}: {e}")
-        return [
-            {
-                "source": {"name": tool_name, "type": "tool"},
-                "document": [str(tool_result)],
-                "metadata": [{"source": tool_name}],
-            }
-        ]
 
 
 def split_content_and_whitespace(content):
@@ -644,8 +622,6 @@ def handle_responses_streaming_event(
 
     else:
         return current_output, None
-
-
 
 
 def process_tool_result(
@@ -1699,7 +1675,7 @@ async def process_chat_payload(request, form_data, user, metadata, model):
 
     # Prepend tool results to user message so the model sees them
     # NOTE: likely non-native tool calls thus removable,
-    # we prefer hosted tools. 
+    # we prefer hosted tools.
     if sources and prompt:
         tool_parts = []
         for source in sources:

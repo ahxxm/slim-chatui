@@ -414,10 +414,10 @@ async def view_file(
     __user__: dict = None,
 ) -> str:
     """
-    Get the full content of a file by its ID.
+    Get metadata of a file by its ID.
 
     :param file_id: The ID of the file to retrieve
-    :return: JSON with the file's id, filename, and full text content
+    :return: JSON with the file's id, filename, and timestamps
     """
     if __request__ is None:
         return json.dumps({"error": "Request context not available"})
@@ -447,15 +447,10 @@ async def view_file(
         ):
             return json.dumps({"error": "File not found"})
 
-        content = ""
-        if file.data:
-            content = file.data.get("content", "")
-
         return json.dumps(
             {
                 "id": file.id,
                 "filename": file.filename,
-                "content": content,
                 "updated_at": file.updated_at,
                 "created_at": file.created_at,
             },

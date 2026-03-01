@@ -64,7 +64,6 @@ def upload_image(request, image_data, content_type, metadata, user, db=None):
         request,
         file=file,
         metadata=metadata,
-        process=False,
         user=user,
     )
 
@@ -186,7 +185,6 @@ def upload_audio(request, audio_data, content_type, metadata, user):
         request,
         file=file,
         metadata=metadata,
-        process=False,
         user=user,
     )
     url = request.app.url_path_for("get_file_content_by_id", id=file_item.id)
@@ -216,26 +214,3 @@ def get_file_url_from_base64(request, base64_file_string, metadata, user):
     elif "data:audio/wav;base64" in base64_file_string:
         return get_audio_url_from_base64(request, base64_file_string, metadata, user)
     return None
-
-
-def get_image_base64_from_file_id(id: str) -> Optional[str]:
-    file = Files.get_file_by_id(id)
-    if not file:
-        return None
-
-    try:
-        file_path = file.path
-        file_path = Path(file_path)
-
-        # Check if the file already exists in the cache
-        if file_path.is_file():
-            import base64
-
-            with open(file_path, "rb") as image_file:
-                encoded_string = base64.b64encode(image_file.read()).decode("utf-8")
-                content_type, _ = mimetypes.guess_type(file_path.name)
-                return f"data:{content_type};base64,{encoded_string}"
-        else:
-            return None
-    except Exception as e:
-        return None

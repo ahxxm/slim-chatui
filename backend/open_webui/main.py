@@ -73,7 +73,7 @@ from open_webui.internal.db import ScopedSession, get_session
 
 from open_webui.models.functions import Functions
 from open_webui.models.models import Models
-from open_webui.models.users import UserModel, Users
+from open_webui.models.users import Users
 from open_webui.models.chats import Chats
 
 from open_webui.config import (
@@ -914,7 +914,7 @@ async def embeddings(
     Args:
         request (Request): Request context.
         form_data (dict): OpenAI-like payload (e.g., {"model": "...", "input": [...]})
-        user (UserModel): Authenticated user.
+        user: Authenticated user.
 
     Returns:
         dict: OpenAI-compatible embeddings response.
@@ -1420,8 +1420,6 @@ async def get_app_config(request: Request):
                     "engine": app.state.config.CODE_EXECUTION_ENGINE,
                 },
                 "file": {
-                    "max_size": app.state.config.FILE_MAX_SIZE,
-                    "max_count": app.state.config.FILE_MAX_COUNT,
                     "image_compression": {
                         "width": app.state.config.FILE_IMAGE_COMPRESSION_WIDTH,
                         "height": app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT,

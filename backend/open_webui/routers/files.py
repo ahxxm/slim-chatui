@@ -17,7 +17,7 @@ from fastapi import (
     Query,
 )
 
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 from open_webui.internal.db import get_session
 
@@ -36,7 +36,6 @@ from open_webui.storage.provider import Storage
 
 from open_webui.config import BYPASS_ADMIN_ACCESS_CONTROL
 from open_webui.utils.auth import get_admin_user, get_verified_user
-from pydantic import BaseModel
 
 log = logging.getLogger(__name__)
 
@@ -95,7 +94,6 @@ def upload_file_handler(
     request: Request,
     file: UploadFile = File(...),
     metadata: Optional[dict | str] = Form(None),
-    process: bool = False,
     user=Depends(get_verified_user),
     db: Optional[Session] = None,
 ):
@@ -128,7 +126,6 @@ def upload_file_handler(
                     "id": id,
                     "filename": name,
                     "path": file_path,
-                    "data": {},
                     "meta": {
                         "name": name,
                         "content_type": (
@@ -170,20 +167,12 @@ def upload_file_handler(
 @router.get("/", response_model=list[FileModelResponse])
 async def list_files(
     user=Depends(get_verified_user),
-    content: bool = Query(True),
     db: Session = Depends(get_session),
 ):
     if user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL:
-        files = Files.get_files(db=db)
+        return Files.get_files(db=db)
     else:
-        files = Files.get_files_by_user_id(user.id, db=db)
-
-    if not content:
-        for file in files:
-            if "content" in file.data:
-                del file.data["content"]
-
-    return files
+        return Files.get_files_by_user_id(user.id, db=db)
 
 
 ############################
@@ -197,7 +186,6 @@ async def search_files(
         ...,
         description="Filename pattern to search for. Supports wildcards such as '*.txt'",
     ),
-    content: bool = Query(True),
     skip: int = Query(0, ge=0, description="Number of files to skip"),
     limit: int = Query(
         100, ge=1, le=1000, description="Maximum number of files to return"
@@ -205,16 +193,10 @@ async def search_files(
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
 ):
-    """
-    Search for files by filename with support for wildcard patterns.
-    Uses SQL-based filtering with pagination for better performance.
-    """
-    # Determine user_id: null for admin with bypass (search all), user.id otherwise
     user_id = (
         None if (user.role == "admin" and BYPASS_ADMIN_ACCESS_CONTROL) else user.id
     )
 
-    # Use optimized database query with pagination
     files = Files.search_files(
         user_id=user_id,
         filename=filename,
@@ -228,11 +210,6 @@ async def search_files(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="No files found matching the pattern.",
         )
-
-    if not content:
-        for file in files:
-            if file.data and "content" in file.data:
-                del file.data["content"]
 
     return files
 
@@ -296,82 +273,6 @@ async def get_file_by_id(
 
 
 ############################
-# Get File Data Content By Id
-############################
-
-
-@router.get("/{id}/data/content")
-async def get_file_data_content_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    file = Files.get_file_by_id(id, db=db)
-
-    if not file:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or has_access_to_file(id, "read", user, db=db)
-    ):
-        return {"content": file.data.get("content", "")}
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-
-############################
-# Update File Data Content By Id
-############################
-
-
-class ContentForm(BaseModel):
-    content: str
-
-
-@router.post("/{id}/data/content/update")
-def update_file_data_content_by_id(
-    id: str,
-    form_data: ContentForm,
-    user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
-):
-    file = Files.get_file_by_id(id, db=db)
-
-    if not file:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or has_access_to_file(id, "write", user, db=db)
-    ):
-        try:
-            Files.update_file_data_by_id(
-                id, {"content": form_data.content}, db=db
-            )
-            file = Files.get_file_by_id(id=id, db=db)
-        except Exception as e:
-            log.exception(e)
-            log.error(f"Error updating file content: {file.id}")
-
-        return {"content": file.data.get("content", "")}
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-
-############################
 # Get File Content By Id
 ############################
 
@@ -399,12 +300,7 @@ async def get_file_content_by_id(
         try:
             file_path = Path(file.path)
 
-            # Check if the file already exists in the cache
             if file_path.is_file():
-                # Handle Unicode filenames
-                filename = file.meta.get("name", file.filename)
-                encoded_filename = quote(filename)  # RFC5987 encoding
-
                 content_type = file.meta.get("content_type")
                 filename = file.meta.get("name", file.filename)
                 encoded_filename = quote(filename)
@@ -477,7 +373,6 @@ async def get_html_file_content_by_id(
         try:
             file_path = Path(file.path)
 
-            # Check if the file already exists in the cache
             if file_path.is_file():
                 log.info(f"file_path: {file_path}")
                 return FileResponse(file_path)
@@ -503,7 +398,7 @@ async def get_html_file_content_by_id(
 
 
 @router.get("/{id}/content/{file_name}")
-async def get_file_content_by_id(
+async def get_file_content_by_id_and_name(
     id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
 ):
     file = Files.get_file_by_id(id, db=db)
@@ -519,39 +414,19 @@ async def get_file_content_by_id(
         or user.role == "admin"
         or has_access_to_file(id, "read", user, db=db)
     ):
-        file_path = file.path
-
-        # Handle Unicode filenames
         filename = file.meta.get("name", file.filename)
-        encoded_filename = quote(filename)  # RFC5987 encoding
+        encoded_filename = quote(filename)
         headers = {
             "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
         }
 
-        if file_path:
-            file_path = Path(file_path)
-
-            # Check if the file already exists in the cache
-            if file_path.is_file():
-                return FileResponse(file_path, headers=headers)
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=ERROR_MESSAGES.NOT_FOUND,
-                )
+        file_path = Path(file.path)
+        if file_path.is_file():
+            return FileResponse(file_path, headers=headers)
         else:
-            # File path doesn’t exist, return the content as .txt if possible
-            file_content = file.content.get("content", "")
-            file_name = file.filename
-
-            # Create a generator that encodes the file content
-            def generator():
-                yield file_content.encode("utf-8")
-
-            return StreamingResponse(
-                generator(),
-                media_type="text/plain",
-                headers=headers,
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=ERROR_MESSAGES.NOT_FOUND,
             )
     else:
         raise HTTPException(

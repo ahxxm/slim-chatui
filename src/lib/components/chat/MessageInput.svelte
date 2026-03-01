@@ -501,7 +501,7 @@
 		}
 	};
 
-	const uploadFileHandler = async (file, process = true, itemData = {}) => {
+	const uploadFileHandler = async (file, itemData = {}) => {
 		if ($_user?.role !== 'admin' && !($_user?.permissions?.chat?.file_upload ?? true)) {
 			toast.error($i18n.t('You do not have permission to upload files.'));
 			return null;
@@ -519,7 +519,6 @@
 			id: null,
 			url: '',
 			name: file.name,
-			collection_name: '',
 			status: 'uploading',
 			size: file.size,
 			error: '',
@@ -536,14 +535,12 @@
 
 		if (!$temporaryChatEnabled) {
 			try {
-				// During the file upload, file content is automatically extracted.
-				const uploadedFile = await uploadFile(localStorage.token, file, null, process);
+				const uploadedFile = await uploadFile(localStorage.token, file);
 
 				if (uploadedFile) {
 					console.log('File upload completed:', {
 						id: uploadedFile.id,
-						name: fileItem.name,
-						collection: uploadedFile?.meta?.collection_name
+						name: fileItem.name
 					});
 
 					if (uploadedFile.error) {
@@ -554,8 +551,6 @@
 					fileItem.status = 'uploaded';
 					fileItem.file = uploadedFile;
 					fileItem.id = uploadedFile.id;
-					fileItem.collection_name =
-						uploadedFile?.meta?.collection_name || uploadedFile?.collection_name;
 					fileItem.content_type = uploadedFile.meta?.content_type || uploadedFile.content_type;
 					fileItem.url = `${uploadedFile.id}`;
 
@@ -699,7 +694,7 @@
 						const blob = await (await fetch(imageUrl)).blob();
 						const compressedFile = new File([blob], file.name, { type: file.type });
 
-						uploadFileHandler(compressedFile, false);
+						uploadFileHandler(compressedFile);
 					}
 				};
 
@@ -1132,7 +1127,7 @@
 												dismissible={true}
 												edit={true}
 												small={true}
-												modal={['file', 'collection'].includes(file?.type)}
+												modal={file?.type === 'file'}
 												on:dismiss={async () => {
 													// Remove from UI state
 													files.splice(fileIdx, 1);
@@ -1321,7 +1316,7 @@
 																				}
 																			);
 
-																			await uploadFileHandler(file, true, { context: 'full' });
+																			await uploadFileHandler(file, { context: 'full' });
 																		}
 																	}
 																} else {
