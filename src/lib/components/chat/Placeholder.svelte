@@ -45,8 +45,6 @@
 	export let files = [];
 	export let messageInput = null;
 
-	export let showCommands = false;
-
 	export let onSelect = (e) => {};
 	export let onChange = (e) => {};
 
@@ -186,7 +184,6 @@
 					bind:prompt
 					bind:autoScroll
 					bind:atSelectedModel
-					bind:showCommands
 					{stopResponse}
 					{createMessagePair}
 					placeholder={$i18n.t('How can I help you today?')}

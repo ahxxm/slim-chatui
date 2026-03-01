@@ -4,10 +4,8 @@
 
 	export let char = '';
 	export let query = '';
-	export let command: (payload: { id: string; label: string }) => void;
 
 	export let onSelect = (e) => {};
-	export let onUpload = (e) => {};
 	export let insertTextHandler = (text) => {};
 
 	let suggestionElement = null;

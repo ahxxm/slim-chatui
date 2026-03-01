@@ -61,13 +61,7 @@
 	} from '$lib/apis/chats';
 	import { generateOpenAIChatCompletion } from '$lib/apis/openai';
 	import { getAndUpdateUserLocation, getUserSettings } from '$lib/apis/users';
-	import {
-		chatCompleted,
-		chatAction,
-		generateMoACompletion,
-		stopTask,
-		getTaskIdsByChatId
-	} from '$lib/apis';
+	import { chatCompleted, generateMoACompletion, stopTask, getTaskIdsByChatId } from '$lib/apis';
 	import { createOpenAITextStream } from '$lib/apis/streaming';
 	import { updateFolderById } from '$lib/apis/folders';
 
@@ -119,8 +113,6 @@
 	} else {
 		selectedModelIds = selectedModels;
 	}
-
-	let showCommands = false;
 
 	let generating = false;
 	let generationController = null;
@@ -738,7 +730,6 @@
 
 		autoScroll = true;
 
-		resetInput();
 		await chatId.set('');
 		await chatTitle.set('');
 
@@ -920,59 +911,6 @@
 			files = combinedFiles;
 			await tick();
 			await submitPrompt(combinedPrompt);
-		}
-	};
-
-	const chatActionHandler = async (_chatId, actionId, modelId, responseMessageId, event = null) => {
-		const messages = createMessagesList(history, responseMessageId);
-
-		const res = await chatAction(localStorage.token, actionId, {
-			model: modelId,
-			messages: messages.map((m) => ({
-				id: m.id,
-				role: m.role,
-				content: m.content,
-				info: m.info ? m.info : undefined,
-				timestamp: m.timestamp,
-				...(m.sources ? { sources: m.sources } : {})
-			})),
-			...(event ? { event: event } : {}),
-			model_item: $models.find((m) => m.id === modelId),
-			chat_id: _chatId,
-			session_id: $socket?.id,
-			id: responseMessageId
-		}).catch((error) => {
-			toast.error(`${error}`);
-			messages.at(-1).error = { content: error };
-			return null;
-		});
-
-		if (res !== null && res.messages) {
-			// Update chat history with the new messages
-			for (const message of res.messages) {
-				history.messages[message.id] = {
-					...history.messages[message.id],
-					...(history.messages[message.id].content !== message.content
-						? { originalContent: history.messages[message.id].content }
-						: {}),
-					...message
-				};
-			}
-		}
-
-		if ($chatId == _chatId) {
-			if (!$temporaryChatEnabled) {
-				chat = await updateChatById(localStorage.token, _chatId, {
-					models: selectedModels,
-					messages: messages,
-					history: history,
-					params: params,
-					files: chatFiles
-				});
-
-				currentChatPage.set(1);
-				await chats.set(await getChatList(localStorage.token, $currentChatPage));
-			}
 		}
 	};
 
@@ -1453,10 +1391,6 @@
 		chats.set(await getChatList(localStorage.token, $currentChatPage));
 	};
 
-	const getFeatures = () => {
-		return {};
-	};
-
 	const sendMessageSocket = async (model, _messages, _history, responseMessageId, _chatId) => {
 		const responseMessage = _history.messages[responseMessageId];
 		const userMessage = _history.messages[responseMessage.parentId];
@@ -1573,7 +1507,6 @@
 
 				files: (files?.length ?? 0) > 0 ? files : undefined,
 
-				features: getFeatures(),
 				variables: {
 					...getPromptVariables(
 						$user?.name,
@@ -2126,7 +2059,6 @@
 										{continueResponse}
 										{regenerateResponse}
 										{mergeResponses}
-										{chatActionHandler}
 										{addMessages}
 										topPadding={true}
 										bottomPadding={files.length > 0}
@@ -2145,7 +2077,6 @@
 									bind:prompt
 									bind:autoScroll
 									bind:atSelectedModel
-									bind:showCommands
 									{generating}
 									{stopResponse}
 									{createMessagePair}
@@ -2208,7 +2139,6 @@
 									bind:prompt
 									bind:autoScroll
 									bind:atSelectedModel
-									bind:showCommands
 									{stopResponse}
 									{createMessagePair}
 									{onSelect}

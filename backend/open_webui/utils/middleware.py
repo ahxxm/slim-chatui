@@ -16,10 +16,7 @@ from starlette.responses import StreamingResponse, JSONResponse
 from open_webui.models.chats import Chats
 from open_webui.models.folders import Folders
 from open_webui.models.users import Users
-from open_webui.socket.main import (
-    get_event_call,
-    get_event_emitter,
-)
+from open_webui.socket.main import get_event_emitter
 from open_webui.routers.tasks import (
     generate_title,
     generate_follow_ups,
@@ -696,8 +693,6 @@ async def process_chat_payload(request, form_data, user, metadata, model):
 
     form_data = await convert_url_images_to_base64(form_data)
 
-    events = []
-
     # Folder "Project" handling
     # Check if the request has chat_id and is inside of a folder
     # Uses lightweight column query — only fetches folder_id, not the full chat JSON blob
@@ -718,15 +713,11 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                         *form_data.get("files", []),
                     ]
 
-    variables = form_data.pop("variables", None)
-
+    form_data.pop("variables", None)
     form_data.pop("features", None)
     files = form_data.pop("files", None)
 
     if files:
-        if not files:
-            files = []
-
         for file_item in files:
             if file_item.get("type", "file") == "folder":
                 # Get folder files
@@ -747,12 +738,10 @@ async def process_chat_payload(request, form_data, user, metadata, model):
     }
     form_data["metadata"] = metadata
 
-    return form_data, metadata, events
+    return form_data, metadata
 
 
-def get_event_emitter_and_caller(metadata):
-    event_emitter = None
-    event_caller = None
+def get_event_emitter_or_none(metadata):
     if (
         "session_id" in metadata
         and metadata["session_id"]
@@ -761,15 +750,12 @@ def get_event_emitter_and_caller(metadata):
         and "message_id" in metadata
         and metadata["message_id"]
     ):
-        event_emitter = get_event_emitter(metadata)
-        event_caller = get_event_call(metadata)
-    return event_emitter, event_caller
+        return get_event_emitter(metadata)
+    return None
 
 
-def build_chat_response_context(
-    request, form_data, user, model, metadata, tasks, events
-):
-    event_emitter, event_caller = get_event_emitter_and_caller(metadata)
+def build_chat_response_context(request, form_data, user, model, metadata, tasks):
+    event_emitter = get_event_emitter_or_none(metadata)
     return {
         "request": request,
         "form_data": form_data,
@@ -777,9 +763,7 @@ def build_chat_response_context(
         "model": model,
         "metadata": metadata,
         "tasks": tasks,
-        "events": events,
         "event_emitter": event_emitter,
-        "event_caller": event_caller,
     }
 
 
@@ -802,22 +786,6 @@ def get_response_data(response):
         response_data = None
 
     return response, response_data
-
-
-def merge_events_into_response(response_data, events):
-    if events and isinstance(events, list):
-        extra_response = {}
-        for event in events:
-            if isinstance(event, dict):
-                extra_response.update(event)
-            else:
-                extra_response[event] = True
-
-        return {
-            **extra_response,
-            **response_data,
-        }
-    return response_data
 
 
 def build_response_object(response, response_data):
@@ -1059,7 +1027,6 @@ async def non_streaming_chat_response_handler(response, ctx):
 
     user = ctx["user"]
     metadata = ctx["metadata"]
-    events = ctx["events"]
 
     event_emitter = ctx["event_emitter"]
 
@@ -1170,9 +1137,7 @@ async def non_streaming_chat_response_handler(response, ctx):
 
                     await background_tasks_handler(ctx)
 
-            response = build_response_object(
-                response, merge_events_into_response(response_data, events)
-            )
+            response = build_response_object(response, response_data)
         except Exception as e:
             log.debug(f"Error occurred while processing request: {e}")
             pass
@@ -1180,7 +1145,7 @@ async def non_streaming_chat_response_handler(response, ctx):
         return response
 
     if isinstance(response, dict):
-        response = merge_events_into_response(response_data, events)
+        response = response_data
 
     return response
 
@@ -1193,17 +1158,14 @@ async def streaming_chat_response_handler(response, ctx):
     user = ctx["user"]
 
     metadata = ctx["metadata"]
-    events = ctx["events"]
 
     event_emitter = ctx["event_emitter"]
-    event_caller = ctx["event_caller"]
 
     # Standard streaming response handler
-    if event_emitter and event_caller:
-        model_id = form_data.get("model", "")
+    if event_emitter:
 
         # Handle as a background task
-        async def response_handler(response, events):
+        async def response_handler(response):
             def tag_output_handler(content_type, tags, output):
                 """
                 Detect special tags (reasoning, solution) in streaming
@@ -1479,22 +1441,6 @@ async def streaming_chat_response_handler(response, ctx):
                     reasoning_tags = DEFAULT_REASONING_TAGS
 
             try:
-                for event in events:
-                    await event_emitter(
-                        {
-                            "type": "chat:completion",
-                            "data": event,
-                        }
-                    )
-
-                    # Save message in the database
-                    Chats.upsert_message_to_chat_by_id_and_message_id(
-                        metadata["chat_id"],
-                        metadata["message_id"],
-                        {
-                            **event,
-                        },
-                    )
 
                 async def stream_body_handler(response, form_data):
                     nonlocal content
@@ -2035,22 +1981,12 @@ async def streaming_chat_response_handler(response, ctx):
             if response.background is not None:
                 await response.background()
 
-        return await response_handler(response, events)
+        return await response_handler(response)
 
     else:
         # Fallback to the original response
-        async def stream_wrapper(original_generator, events):
-            def wrap_item(item):
-                return f"data: {item}\n\n"
-
-            for event in events:
-                yield wrap_item(json.dumps(event))
-
-            async for data in original_generator:
-                yield data
-
         return StreamingResponse(
-            stream_wrapper(response.body_iterator, events),
+            response.body_iterator,
             headers=dict(response.headers),
             background=response.background,
         )

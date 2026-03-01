@@ -340,9 +340,6 @@
 	};
 
 	let command = '';
-	export let showCommands = false;
-	$: showCommands =
-		['/', '#', '@', '$'].includes(command?.charAt(0)) || '\\#' === command?.slice(0, 2);
 	let suggestions = null;
 
 	let loaded = false;
@@ -692,23 +689,7 @@
 						document.getElementById('chat-input')?.focus();
 					},
 
-					insertTextHandler: insertTextAtCursor,
-					onUpload: (e) => {
-						const { type, data } = e;
-
-						if (type === 'file') {
-							if (files.find((f) => f.id === data.id)) {
-								return;
-							}
-							files = [
-								...files,
-								{
-									...data,
-									status: 'processed'
-								}
-							];
-						}
-					}
+					insertTextHandler: insertTextAtCursor
 				})
 			},
 			{
@@ -725,23 +706,7 @@
 						document.getElementById('chat-input')?.focus();
 					},
 
-					insertTextHandler: insertTextAtCursor,
-					onUpload: (e) => {
-						const { type, data } = e;
-
-						if (type === 'file') {
-							if (files.find((f) => f.id === data.id)) {
-								return;
-							}
-							files = [
-								...files,
-								{
-									...data,
-									status: 'processed'
-								}
-							];
-						}
-					}
+					insertTextHandler: insertTextAtCursor
 				})
 			}
 		];

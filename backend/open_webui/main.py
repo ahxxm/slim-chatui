@@ -910,7 +910,7 @@ async def chat_completion(
 
     async def process_chat(request, form_data, user, metadata, model):
         try:
-            form_data, metadata, events = await process_chat_payload(
+            form_data, metadata = await process_chat_payload(
                 request, form_data, user, metadata, model
             )
 
@@ -930,7 +930,7 @@ async def chat_completion(
                     pass
 
             ctx = build_chat_response_context(
-                request, form_data, user, model, metadata, tasks, events
+                request, form_data, user, model, metadata, tasks
             )
 
             return await process_chat_response(response, ctx)
