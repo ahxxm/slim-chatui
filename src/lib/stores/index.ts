@@ -146,12 +146,11 @@ type Settings = {
 	pinnedModels?: never[];
 	toolServers?: never[];
 	detectArtifacts?: boolean;
-	showUpdateToast?: boolean;
+
 	collapseCodeBlocks?: boolean;
 	expandDetails?: boolean;
 	notificationSound?: boolean;
 	notificationSoundAlways?: boolean;
-	stylizedPdfExport?: boolean;
 	notifications?: any;
 	imageCompression?: boolean;
 	imageCompressionSize?: any;
