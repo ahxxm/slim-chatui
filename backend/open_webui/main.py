@@ -1,14 +1,11 @@
 import asyncio
-import inspect
 import json
 import logging
 import mimetypes
 import os
-import shutil
 import sys
 import time
 import re
-from uuid import uuid4
 
 
 from contextlib import asynccontextmanager
@@ -16,22 +13,16 @@ from urllib.parse import urlencode, parse_qs, urlparse
 from pydantic import BaseModel
 from sqlalchemy import text
 
-from typing import Optional
 from aiocache import cached
-import aiohttp
 import anyio.to_thread
 import requests
 from fastapi import (
     Depends,
     FastAPI,
-    File,
-    Form,
     HTTPException,
     Request,
-    UploadFile,
     status,
     applications,
-    BackgroundTasks,
 )
 from fastapi.openapi.docs import get_swagger_ui_html
 
@@ -90,7 +81,7 @@ from open_webui.routers.retrieval import (
 
 
 from sqlalchemy.orm import Session
-from open_webui.internal.db import ScopedSession, engine, get_session
+from open_webui.internal.db import ScopedSession, get_session
 
 from open_webui.models.functions import Functions
 from open_webui.models.models import Models

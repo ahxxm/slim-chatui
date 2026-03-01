@@ -38,10 +38,9 @@ from open_webui.env import (
     WEBUI_AUTH_SIGNOUT_REDIRECT_URL,
     ENABLE_INITIAL_ADMIN_SIGNUP,
     ENABLE_OAUTH_TOKEN_EXCHANGE,
-    AIOHTTP_CLIENT_SESSION_SSL,
 )
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import RedirectResponse, Response, JSONResponse
+from fastapi.responses import Response, JSONResponse
 from open_webui.config import (
     OPENID_PROVIDER_URL,
     ENABLE_OAUTH_SIGNUP,
@@ -74,7 +73,7 @@ from open_webui.utils.groups import apply_default_group_assignment
 from open_webui.utils.rate_limit import RateLimiter
 
 
-from typing import Optional, List
+from typing import Optional
 
 router = APIRouter()
 

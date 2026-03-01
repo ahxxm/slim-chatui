@@ -3,11 +3,10 @@ import logging
 import os
 import shutil
 import socket
-import base64
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
-from typing import Generic, Union, Optional, TypeVar
+from typing import Generic, Optional, TypeVar
 from urllib.parse import urlparse
 
 import requests
