@@ -830,14 +830,10 @@ SENTENCE_TRANSFORMERS_CROSS_ENCODER_SIGMOID_ACTIVATION_FUNCTION = (
 # OFFLINE_MODE
 ####################################
 
-ENABLE_VERSION_UPDATE_CHECK = (
-    os.environ.get("ENABLE_VERSION_UPDATE_CHECK", "true").lower() == "true"
-)
 OFFLINE_MODE = os.environ.get("OFFLINE_MODE", "false").lower() == "true"
 
 if OFFLINE_MODE:
     os.environ["HF_HUB_OFFLINE"] = "1"
-    ENABLE_VERSION_UPDATE_CHECK = False
 
 ####################################
 # AUDIT LOGGING

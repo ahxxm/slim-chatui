@@ -1,7 +1,4 @@
 <script lang="ts">
-	import type { WorkBook } from 'xlsx';
-	import DOMPurify from 'dompurify';
-
 	import { getContext, onMount, tick } from 'svelte';
 
 	import { formatFileSize, getLineCount } from '$lib/utils';
@@ -35,15 +32,8 @@
 	let isPDF = false;
 	let isAudio = false;
 	let isImage = false;
-	let isExcel = false;
 
 	let selectedTab = '';
-	let excelWorkbook: WorkBook | null = null;
-	let excelSheetNames: string[] = [];
-	let selectedSheet = '';
-	let excelHtml = '';
-	let excelError = '';
-	let rowCount = 0;
 
 	$: isPDF =
 		item?.meta?.content_type === 'application/pdf' ||
@@ -96,59 +86,6 @@
 				item.name.toLowerCase().endsWith('.bmp') ||
 				item.name.toLowerCase().endsWith('.ico')));
 
-	$: isExcel =
-		item?.meta?.content_type === 'application/vnd.ms-excel' ||
-		item?.meta?.content_type ===
-			'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-		item?.meta?.content_type === 'text/csv' ||
-		item?.meta?.content_type === 'application/csv' ||
-		(item?.name &&
-			(item.name.toLowerCase().endsWith('.xls') ||
-				item.name.toLowerCase().endsWith('.xlsx') ||
-				item.name.toLowerCase().endsWith('.csv')));
-
-	const loadExcelContent = async () => {
-		try {
-			excelError = '';
-			const [arrayBuffer, { read }] = await Promise.all([
-				getFileContentById(item.id),
-				import('xlsx')
-			]);
-			excelWorkbook = read(arrayBuffer, { type: 'array' });
-			excelSheetNames = excelWorkbook.SheetNames;
-
-			if (excelSheetNames.length > 0) {
-				selectedSheet = excelSheetNames[0];
-				await renderExcelSheet();
-			}
-		} catch (error) {
-			console.error('Error loading Excel/CSV file:', error);
-			excelError = $i18n.t('Failed to load Excel/CSV file. Please try downloading it instead.');
-		}
-	};
-
-	const renderExcelSheet = async () => {
-		if (!excelWorkbook || !selectedSheet) return;
-
-		const worksheet = excelWorkbook.Sheets[selectedSheet];
-		// Calculate row count
-		const XLSX = await import('xlsx');
-		const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1:A1');
-		rowCount = range.e.r - range.s.r + 1;
-
-		excelHtml = DOMPurify.sanitize(
-			XLSX.utils.sheet_to_html(worksheet, {
-				id: 'excel-table',
-				editable: false,
-				header: ''
-			})
-		);
-	};
-
-	$: if (selectedSheet && excelWorkbook) {
-		renderExcelSheet();
-	}
-
 	const loadContent = async () => {
 		selectedTab = '';
 		expandedContent = false;
@@ -174,11 +111,6 @@
 
 			if (file) {
 				item.file = file || {};
-			}
-
-			// Load Excel content if it's an Excel file
-			if (isExcel) {
-				await loadExcelContent();
 			}
 
 			loading = false;
@@ -265,15 +197,9 @@
 
 						{#if item?.file?.data?.content}
 							<div class="capitalize shrink-0">
-								{#if isExcel && rowCount > 0 && selectedTab === 'preview'}
-									{$i18n.t('{{COUNT}} Rows', {
-										COUNT: rowCount
-									})}
-								{:else}
-									{$i18n.t('{{COUNT}} extracted lines', {
-										COUNT: getLineCount(item?.file?.data?.content ?? '')
-									})}
-								{/if}
+								{$i18n.t('{{COUNT}} extracted lines', {
+									COUNT: getLineCount(item?.file?.data?.content ?? '')
+								})}
 							</div>
 
 							<div class="flex items-center gap-1 shrink-0">
@@ -333,7 +259,7 @@
 					</div>
 				{/if}
 
-				{#if isAudio || isPDF || isExcel || isCode || isMarkdown}
+				{#if isAudio || isPDF || isCode || isMarkdown}
 					<div
 						class="flex mb-2.5 scrollbar-none overflow-x-auto w-full border-b border-gray-50 dark:border-gray-850/30 text-center text-sm font-medium bg-transparent dark:text-gray-200"
 					>
@@ -448,38 +374,6 @@
 							src={`${WEBUI_API_BASE_URL}/files/${item.id}/content`}
 							class="w-full h-[70vh] border-0 rounded-lg"
 						/>
-					{:else if isExcel}
-						{#if excelError}
-							<div class="text-red-500 text-sm p-4">
-								{excelError}
-							</div>
-						{:else}
-							{#if excelSheetNames.length > 1}
-								<div
-									class="flex mb-2.5 scrollbar-none overflow-x-auto w-full border-b border-gray-50 dark:border-gray-850/30 text-center text-sm font-medium bg-transparent dark:text-gray-200"
-								>
-									{#each excelSheetNames as sheetName}
-										<button
-											class="min-w-fit py-1.5 px-4 border-b {selectedSheet === sheetName
-												? ' '
-												: ' border-transparent text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition"
-											type="button"
-											on:click={() => {
-												selectedSheet = sheetName;
-											}}>{sheetName}</button
-										>
-									{/each}
-								</div>
-							{/if}
-
-							{#if excelHtml}
-								<div class="excel-table-container overflow-auto max-h-[60vh]">
-									{@html excelHtml}
-								</div>
-							{:else}
-								<div class="text-gray-500 text-sm p-4">No content available</div>
-							{/if}
-						{/if}
 					{:else if isCode}
 						<div class="max-h-[60vh] overflow-scroll scrollbar-hidden text-sm relative">
 							<CodeBlock
@@ -511,52 +405,3 @@
 		</div>
 	</div>
 </Modal>
-
-<style>
-	:global(.excel-table-container table) {
-		width: 100%;
-		border-collapse: collapse;
-		font-size: 0.875rem;
-		line-height: 1.25rem;
-	}
-
-	:global(.excel-table-container table td),
-	:global(.excel-table-container table th) {
-		border-width: 1px;
-		border-style: solid;
-		border-color: var(--color-gray-300, #cdcdcd);
-		padding: 0.5rem 0.75rem;
-		text-align: left;
-	}
-
-	:global(.dark .excel-table-container table td),
-	:global(.dark .excel-table-container table th) {
-		border-color: var(--color-gray-600, #676767);
-	}
-
-	:global(.excel-table-container table th) {
-		background-color: var(--color-gray-100, #ececec);
-		font-weight: 600;
-	}
-
-	:global(.dark .excel-table-container table th) {
-		background-color: var(--color-gray-800, #333);
-		color: var(--color-gray-100, #ececec);
-	}
-
-	:global(.excel-table-container table tr:nth-child(even)) {
-		background-color: var(--color-gray-50, #f9f9f9);
-	}
-
-	:global(.dark .excel-table-container table tr:nth-child(even)) {
-		background-color: rgba(38, 38, 38, 0.5);
-	}
-
-	:global(.excel-table-container table tr:hover) {
-		background-color: var(--color-gray-100, #ececec);
-	}
-
-	:global(.dark .excel-table-container table tr:hover) {
-		background-color: rgba(51, 51, 51, 0.5);
-	}
-</style>

@@ -13,8 +13,6 @@ dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 dayjs.extend(localizedFormat);
 
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
-
 import { marked } from 'marked';
 import markedExtension from '$lib/utils/marked/extension';
 import markedKatexExtension from '$lib/utils/marked/katex-extension';
@@ -1383,17 +1381,6 @@ export const parseJsonValue = (value: string): any => {
 	return value;
 };
 
-async function ensurePDFjsLoaded() {
-	if (!window.pdfjsLib) {
-		const pdfjs = await import('pdfjs-dist');
-		pdfjs.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
-		if (!window.pdfjsLib) {
-			throw new Error('pdfjsLib is required for PDF extraction');
-		}
-	}
-	return window.pdfjsLib;
-}
-
 export const extractContentFromFile = async (file: File) => {
 	// Known text file extensions for extra fallback
 	const textExtensions = [
@@ -1416,21 +1403,6 @@ export const extractContentFromFile = async (file: File) => {
 		return dot === -1 ? '' : filename.substr(dot).toLowerCase();
 	}
 
-	// Uses pdfjs to extract text from PDF
-	async function extractPdfText(file: File) {
-		const pdfjsLib = await ensurePDFjsLoaded();
-		const arrayBuffer = await file.arrayBuffer();
-		const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-		let allText = '';
-		for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-			const page = await pdf.getPage(pageNum);
-			const content = await page.getTextContent();
-			const strings = content.items.map((item: any) => item.str);
-			allText += strings.join(' ') + '\n';
-		}
-		return allText;
-	}
-
 	// Reads file as text using FileReader
 	function readAsText(file: File) {
 		return new Promise((resolve, reject) => {
@@ -1441,30 +1413,8 @@ export const extractContentFromFile = async (file: File) => {
 		});
 	}
 
-	async function extractDocxText(file: File) {
-		const [arrayBuffer, { default: mammoth }] = await Promise.all([
-			file.arrayBuffer(),
-			import('mammoth')
-		]);
-		const result = await mammoth.extractRawText({ arrayBuffer });
-		return result.value; // plain text
-	}
-
 	const type = file.type || '';
 	const ext = getExtension(file.name);
-
-	// PDF check
-	if (type === 'application/pdf' || ext === '.pdf') {
-		return await extractPdfText(file);
-	}
-
-	// DOCX check
-	if (
-		type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
-		ext === '.docx'
-	) {
-		return await extractDocxText(file);
-	}
 
 	// Text check (plain or common text-based)
 	if (type.startsWith('text/') || textExtensions.includes(ext)) {
