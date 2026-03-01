@@ -627,38 +627,6 @@
 				</div>
 			{/if}
 		</div>
-
-		<div class="flex flex-col w-full">
-			<div class="flex w-full justify-between my-1">
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Direct Tool Servers')}
-				</div>
-				<Switch bind:state={permissions.features.direct_tool_servers} />
-			</div>
-			{#if defaultPermissions?.features?.direct_tool_servers && !permissions.features.direct_tool_servers}
-				<div>
-					<div class="text-xs text-gray-500">
-						{$i18n.t('This is a default user permission and will remain enabled.')}
-					</div>
-				</div>
-			{/if}
-		</div>
-
-		<div class="flex flex-col w-full">
-			<div class="flex w-full justify-between my-1">
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Code Interpreter')}
-				</div>
-				<Switch bind:state={permissions.features.code_interpreter} />
-			</div>
-			{#if defaultPermissions?.features?.code_interpreter && !permissions.features.code_interpreter}
-				<div>
-					<div class="text-xs text-gray-500">
-						{$i18n.t('This is a default user permission and will remain enabled.')}
-					</div>
-				</div>
-			{/if}
-		</div>
 	</div>
 
 	<hr class=" border-gray-100/30 dark:border-gray-850/30" />

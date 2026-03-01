@@ -25,7 +25,6 @@ from open_webui.models.models import Models
 from open_webui.utils.plugin import (
     get_function_module_from_cache,
 )
-from open_webui.utils.tools import get_tools
 
 from open_webui.env import GLOBAL_LOG_LEVEL
 
@@ -210,10 +209,6 @@ async def generate_function_chat_completion(
     metadata = form_data.pop("metadata", {})
 
     files = metadata.get("files", [])
-    tool_ids = metadata.get("tool_ids", [])
-    # Check if tool_ids is None
-    if tool_ids is None:
-        tool_ids = []
 
     __event_emitter__ = None
     __event_call__ = None
@@ -240,17 +235,6 @@ async def generate_function_chat_completion(
         "__metadata__": metadata,
         "__request__": request,
     }
-    extra_params["__tools__"] = await get_tools(
-        request,
-        tool_ids,
-        user,
-        {
-            **extra_params,
-            "__model__": models.get(form_data["model"], None),
-            "__messages__": form_data["messages"],
-            "__files__": files,
-        },
-    )
 
     if model_info:
         if model_info.base_model_id:

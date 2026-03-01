@@ -62,8 +62,6 @@ export const tools = writable(null);
 export const skills = writable(null);
 export const functions = writable(null);
 
-export const toolServers = writable([]);
-
 export const banners: Writable<Banner[]> = writable([]);
 
 export const settings: Writable<Settings> = writable({});
@@ -143,7 +141,6 @@ type OllamaModelDetails = {
 
 type Settings = {
 	pinnedModels?: never[];
-	toolServers?: never[];
 	detectArtifacts?: boolean;
 
 	collapseCodeBlocks?: boolean;

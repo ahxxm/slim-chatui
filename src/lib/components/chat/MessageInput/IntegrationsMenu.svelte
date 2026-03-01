@@ -4,9 +4,7 @@
 	import { fly } from 'svelte/transition';
 	import { flyAndScale } from '$lib/utils/transitions';
 
-	import { config, user, tools as _tools, mobile, settings, toolServers } from '$lib/stores';
-
-	import { getTools } from '$lib/apis/tools';
+	import { config, user, tools as _tools, mobile, settings } from '$lib/stores';
 
 	import Knobs from '$lib/components/icons/Knobs.svelte';
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
@@ -15,7 +13,6 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Wrench from '$lib/components/icons/Wrench.svelte';
 	import Sparkles from '$lib/components/icons/Sparkles.svelte';
-	import Terminal from '$lib/components/icons/Terminal.svelte';
 	import ChevronRight from '$lib/components/icons/ChevronRight.svelte';
 	import ChevronLeft from '$lib/components/icons/ChevronLeft.svelte';
 
@@ -29,9 +26,6 @@
 	export let toggleFilters: { id: string; name: string; description?: string; icon?: string }[] =
 		[];
 	export let selectedFilterIds: string[] = [];
-
-	export let showCodeInterpreterButton = false;
-	export let codeInterpreterEnabled = false;
 
 	export let onShowValves: Function;
 	export let onClose: Function;
@@ -52,10 +46,6 @@
 		($user?.role === 'admin' || $user?.permissions?.chat?.file_upload);
 
 	const init = async () => {
-		if ($_tools === null) {
-			await _tools.set(await getTools(localStorage.token));
-		}
-
 		if ($_tools) {
 			tools = $_tools.reduce((a, tool, i, arr) => {
 				a[tool.id] = {
@@ -66,19 +56,6 @@
 				};
 				return a;
 			}, {});
-		}
-
-		if ($toolServers) {
-			for (const serverIdx in $toolServers) {
-				const server = $toolServers[serverIdx];
-				if (server.info) {
-					tools[`direct_server:${serverIdx}`] = {
-						name: server?.info?.title ?? server.url,
-						description: server.info.description ?? '',
-						enabled: selectedToolIds.includes(`direct_server:${serverIdx}`)
-					};
-				}
-			}
 		}
 
 		selectedToolIds = selectedToolIds.filter((id) => Object.keys(tools).includes(id));
@@ -204,41 +181,6 @@
 								</button>
 							</Tooltip>
 						{/each}
-					{/if}
-
-					{#if showCodeInterpreterButton}
-						<Tooltip content={$i18n.t('Execute code for analysis')} placement="top-start">
-							<button
-								class="flex w-full justify-between gap-2 items-center px-3 py-1.5 text-sm cursor-pointer rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50"
-								aria-pressed={codeInterpreterEnabled}
-								aria-label={codeInterpreterEnabled
-									? $i18n.t('Disable Code Interpreter')
-									: $i18n.t('Enable Code Interpreter')}
-								on:click={() => {
-									codeInterpreterEnabled = !codeInterpreterEnabled;
-								}}
-							>
-								<div class="flex-1 truncate">
-									<div class="flex flex-1 gap-2 items-center">
-										<div class="shrink-0">
-											<Terminal className="size-3.5" strokeWidth="1.75" />
-										</div>
-
-										<div class=" truncate">{$i18n.t('Code Interpreter')}</div>
-									</div>
-								</div>
-
-								<div class=" shrink-0">
-									<Switch
-										state={codeInterpreterEnabled}
-										on:change={async (e) => {
-											const state = e.detail;
-											await tick();
-										}}
-									/>
-								</div>
-							</button>
-						</Tooltip>
 					{/if}
 				</div>
 			{:else if tab === 'tools' && tools}

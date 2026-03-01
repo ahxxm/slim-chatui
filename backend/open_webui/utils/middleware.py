@@ -1,24 +1,18 @@
 import time
 import logging
 import sys
-import textwrap
-
 import asyncio
 from typing import Optional
 import json
 import html
 import re
-import ast
-
 from uuid import uuid4
 
 
 from fastapi import Request
-from fastapi.responses import HTMLResponse
 from starlette.responses import StreamingResponse, JSONResponse
 
 
-from open_webui.utils.misc import is_string_allowed
 from open_webui.models.chats import Chats
 from open_webui.models.folders import Folders
 from open_webui.models.users import Users
@@ -31,7 +25,6 @@ from open_webui.routers.tasks import (
     generate_follow_ups,
     generate_chat_tags,
 )
-from open_webui.utils.tools import get_builtin_tools
 from open_webui.routers.pipelines import (
     process_pipeline_inlet_filter,
 )
@@ -39,7 +32,6 @@ from open_webui.routers.pipelines import (
 from open_webui.utils.webhook import post_webhook
 from open_webui.utils.files import (
     convert_markdown_base64_images,
-    get_file_url_from_base64,
     get_image_base64_from_url,
     get_image_url_from_base64,
 )
@@ -48,56 +40,34 @@ from open_webui.utils.files import (
 from open_webui.models.users import UserModel
 from open_webui.models.functions import Functions
 
-from open_webui.utils.sanitize import sanitize_code
-from open_webui.utils.chat import generate_chat_completion
 from open_webui.utils.task import (
     get_task_model_id,
-    tools_function_calling_generation_template,
 )
 from open_webui.utils.misc import (
     deep_update,
     get_message_list,
     add_or_update_system_message,
-    add_or_update_user_message,
     get_last_user_message,
     get_last_user_message_item,
     get_last_assistant_message,
     get_system_message,
     convert_logit_bias_input_to_json,
-    get_content_from_message,
     convert_output_to_messages,
-)
-from open_webui.utils.tools import (
-    get_tools,
-    get_updated_tool_function,
-    has_tool_server_access,
 )
 from open_webui.utils.filter import (
     get_sorted_filter_ids,
     process_filter_functions,
 )
-from open_webui.utils.code_interpreter import execute_code_jupyter
 from open_webui.utils.payload import apply_system_prompt_to_body
 from open_webui.utils.response import normalize_usage
-from open_webui.utils.mcp.client import MCPClient
 
 
-from open_webui.config import (
-    DEFAULT_TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE,
-    DEFAULT_CODE_INTERPRETER_PROMPT,
-    CODE_INTERPRETER_BLOCKED_MODULES,
-)
 from open_webui.env import (
     GLOBAL_LOG_LEVEL,
     ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION,
     CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE,
-    CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES,
     ENABLE_REALTIME_CHAT_SAVE,
-    ENABLE_FORWARD_USER_INFO_HEADERS,
-    FORWARD_SESSION_INFO_HEADER_CHAT_ID,
-    FORWARD_SESSION_INFO_HEADER_MESSAGE_ID,
 )
-from open_webui.utils.headers import include_user_info_headers
 from open_webui.constants import TASKS
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
@@ -115,26 +85,11 @@ DEFAULT_REASONING_TAGS = [
     ("◁think▷", "◁/think▷"),
 ]
 DEFAULT_SOLUTION_TAGS = [("<|begin_of_solution|>", "<|end_of_solution|>")]
-DEFAULT_CODE_INTERPRETER_TAGS = [("<code_interpreter>", "</code_interpreter>")]
 
 
 def output_id(prefix: str) -> str:
     """Generate OR-style ID: prefix + 24-char hex UUID."""
     return f"{prefix}_{uuid4().hex[:24]}"
-
-
-def split_content_and_whitespace(content):
-    content_stripped = content.rstrip()
-    original_whitespace = (
-        content[len(content_stripped) :] if len(content) > len(content_stripped) else ""
-    )
-    return content_stripped, original_whitespace
-
-
-def is_opening_code_block(content):
-    backtick_segments = content.split("```")
-    # Even number of segments means the last backticks are opening a new block
-    return len(backtick_segments) > 1 and len(backtick_segments) % 2 == 0
 
 
 def serialize_output(output: list) -> str:
@@ -144,13 +99,6 @@ def serialize_output(output: list) -> str:
     """
     content = ""
 
-    # First pass: collect function_call_output items by call_id for lookup
-    tool_outputs = {}
-    for item in output:
-        if item.get("type") == "function_call_output":
-            tool_outputs[item.get("call_id")] = item
-
-    # Second pass: render items in order
     for idx, item in enumerate(output):
         item_type = item.get("type", "")
 
@@ -160,32 +108,6 @@ def serialize_output(output: list) -> str:
                     text = content_part.get("text", "").strip()
                     if text:
                         content = f"{content}{text}\n"
-
-        elif item_type == "function_call":
-            # Render tool call inline with its result (if available)
-            if content and not content.endswith("\n"):
-                content += "\n"
-
-            call_id = item.get("call_id", "")
-            name = item.get("name", "")
-            arguments = item.get("arguments", "")
-
-            result_item = tool_outputs.get(call_id)
-            if result_item:
-                result_text = ""
-                for out in result_item.get("output", []):
-                    if "text" in out:
-                        result_text += out.get("text", "")
-                files = result_item.get("files")
-                embeds = result_item.get("embeds", "")
-
-                content += f'<details type="tool_calls" done="true" id="{call_id}" name="{name}" arguments="{html.escape(json.dumps(arguments))}" result="{html.escape(json.dumps(result_text, ensure_ascii=False))}" files="{html.escape(json.dumps(files)) if files else ""}" embeds="{html.escape(json.dumps(embeds))}">\n<summary>Tool Executed</summary>\n</details>\n'
-            else:
-                content += f'<details type="tool_calls" done="false" id="{call_id}" name="{name}" arguments="{html.escape(json.dumps(arguments))}">\n<summary>Executing...</summary>\n</details>\n'
-
-        elif item_type == "function_call_output":
-            # Already handled inline with function_call above
-            pass
 
         elif item_type == "reasoning":
             reasoning_content = ""
@@ -220,48 +142,6 @@ def serialize_output(output: list) -> str:
                 content = f'{content}<details type="reasoning" done="true" duration="{duration or 0}">\n<summary>Thought for {duration or 0} seconds</summary>\n{display}\n</details>\n'
             else:
                 content = f'{content}<details type="reasoning" done="false">\n<summary>Thinking…</summary>\n{display}\n</details>\n'
-
-        elif item_type == "open_webui:code_interpreter":
-            content_stripped, original_whitespace = split_content_and_whitespace(
-                content
-            )
-            if is_opening_code_block(content_stripped):
-                content = content_stripped.rstrip("`").rstrip() + original_whitespace
-            else:
-                content = content_stripped + original_whitespace
-
-            if content and not content.endswith("\n"):
-                content += "\n"
-
-            # Render the code_interpreter item as a <details> block
-            # so the frontend Collapsible renders "Analyzing..."/"Analyzed".
-            code = item.get("code", "").strip()
-            lang = item.get("lang", "python")
-            status = item.get("status", "in_progress")
-            duration = item.get("duration")
-            is_last_item = idx == len(output) - 1
-
-            # Build inner content: code block
-            display = ""
-            if code:
-                display = f"```{lang}\n{code}\n```"
-
-            # Build output attribute as HTML-escaped JSON for CodeBlock.svelte
-            ci_output = item.get("output")
-            output_attr = ""
-            if ci_output:
-                if isinstance(ci_output, dict):
-                    output_json = json.dumps(ci_output, ensure_ascii=False)
-                else:
-                    output_json = json.dumps(
-                        {"result": str(ci_output)}, ensure_ascii=False
-                    )
-                output_attr = f' output="{html.escape(output_json)}"'
-
-            if status == "completed" or duration is not None or not is_last_item:
-                content += f'<details type="code_interpreter" done="true" duration="{duration or 0}"{output_attr}>\n<summary>Analyzed</summary>\n{display}\n</details>\n'
-            else:
-                content += f'<details type="code_interpreter" done="false"{output_attr}>\n<summary>Analyzing…</summary>\n{display}\n</details>\n'
 
     return content.strip()
 
@@ -622,379 +502,6 @@ def handle_responses_streaming_event(
         return current_output, None
 
 
-def process_tool_result(
-    request,
-    tool_function_name,
-    tool_result,
-    tool_type,
-    direct_tool=False,
-    metadata=None,
-    user=None,
-):
-    tool_result_embeds = []
-
-    if isinstance(tool_result, HTMLResponse):
-        content_disposition = tool_result.headers.get("Content-Disposition", "")
-        if "inline" in content_disposition:
-            content = tool_result.body.decode("utf-8", "replace")
-            tool_result_embeds.append(content)
-
-            if 200 <= tool_result.status_code < 300:
-                tool_result = {
-                    "status": "success",
-                    "code": "ui_component",
-                    "message": f"{tool_function_name}: Embedded UI result is active and visible to the user.",
-                }
-            elif 400 <= tool_result.status_code < 500:
-                tool_result = {
-                    "status": "error",
-                    "code": "ui_component",
-                    "message": f"{tool_function_name}: Client error {tool_result.status_code} from embedded UI result.",
-                }
-            elif 500 <= tool_result.status_code < 600:
-                tool_result = {
-                    "status": "error",
-                    "code": "ui_component",
-                    "message": f"{tool_function_name}: Server error {tool_result.status_code} from embedded UI result.",
-                }
-            else:
-                tool_result = {
-                    "status": "error",
-                    "code": "ui_component",
-                    "message": f"{tool_function_name}: Unexpected status code {tool_result.status_code} from embedded UI result.",
-                }
-        else:
-            tool_result = tool_result.body.decode("utf-8", "replace")
-
-    elif (tool_type in ("external", "action") and isinstance(tool_result, tuple)) or (
-        direct_tool and isinstance(tool_result, list) and len(tool_result) == 2
-    ):
-        tool_result, tool_response_headers = tool_result
-
-        try:
-            if not isinstance(tool_response_headers, dict):
-                tool_response_headers = dict(tool_response_headers)
-        except Exception as e:
-            tool_response_headers = {}
-            log.debug(e)
-
-        if tool_response_headers and isinstance(tool_response_headers, dict):
-            content_disposition = tool_response_headers.get(
-                "Content-Disposition",
-                tool_response_headers.get("content-disposition", ""),
-            )
-
-            if "inline" in content_disposition:
-                content_type = tool_response_headers.get(
-                    "Content-Type",
-                    tool_response_headers.get("content-type", ""),
-                )
-                location = tool_response_headers.get(
-                    "Location",
-                    tool_response_headers.get("location", ""),
-                )
-
-                if "text/html" in content_type:
-                    # Display as iframe embed
-                    tool_result_embeds.append(tool_result)
-                    tool_result = {
-                        "status": "success",
-                        "code": "ui_component",
-                        "message": f"{tool_function_name}: Embedded UI result is active and visible to the user.",
-                    }
-                elif location:
-                    tool_result_embeds.append(location)
-                    tool_result = {
-                        "status": "success",
-                        "code": "ui_component",
-                        "message": f"{tool_function_name}: Embedded UI result is active and visible to the user.",
-                    }
-
-    tool_result_files = []
-
-    if isinstance(tool_result, list):
-        if tool_type == "mcp":  # MCP
-            tool_response = []
-            for item in tool_result:
-                if isinstance(item, dict):
-                    if item.get("type") == "text":
-                        text = item.get("text", "")
-                        if isinstance(text, str):
-                            try:
-                                text = json.loads(text)
-                            except json.JSONDecodeError:
-                                pass
-                        tool_response.append(text)
-                    elif item.get("type") in ["image", "audio"]:
-                        file_url = get_file_url_from_base64(
-                            request,
-                            f"data:{item.get('mimeType')};base64,{item.get('data', item.get('blob', ''))}",
-                            {
-                                "chat_id": metadata.get("chat_id", None),
-                                "message_id": metadata.get("message_id", None),
-                                "session_id": metadata.get("session_id", None),
-                                "result": item,
-                            },
-                            user,
-                        )
-
-                        tool_result_files.append(
-                            {
-                                "type": item.get("type", "data"),
-                                "url": file_url,
-                            }
-                        )
-            tool_result = tool_response[0] if len(tool_response) == 1 else tool_response
-        else:  # OpenAPI
-            for item in tool_result:
-                if isinstance(item, str) and item.startswith("data:"):
-                    tool_result_files.append(
-                        {
-                            "type": "data",
-                            "content": item,
-                        }
-                    )
-                    tool_result.remove(item)
-
-    if isinstance(tool_result, list):
-        tool_result = {"results": tool_result}
-
-    if isinstance(tool_result, dict) or isinstance(tool_result, list):
-        tool_result = json.dumps(tool_result, indent=2, ensure_ascii=False)
-
-    return tool_result, tool_result_files, tool_result_embeds
-
-
-async def chat_completion_tools_handler(
-    request: Request, body: dict, extra_params: dict, user: UserModel, models, tools
-) -> tuple[dict, dict]:
-    async def get_content_from_response(response) -> Optional[str]:
-        content = None
-        if hasattr(response, "body_iterator"):
-            async for chunk in response.body_iterator:
-                data = json.loads(chunk.decode("utf-8", "replace"))
-                content = data["choices"][0]["message"]["content"]
-
-            # Cleanup any remaining background tasks if necessary
-            if response.background is not None:
-                await response.background()
-        else:
-            content = response["choices"][0]["message"]["content"]
-        return content
-
-    def get_tools_function_calling_payload(messages, task_model_id, content):
-        user_message = get_last_user_message(messages)
-
-        if user_message and messages and messages[-1]["role"] == "user":
-            # Remove the last user message to avoid duplication
-            messages = messages[:-1]
-
-        recent_messages = messages[-4:] if len(messages) > 4 else messages
-        chat_history = "\n".join(
-            f"{message['role'].upper()}: \"\"\"{get_content_from_message(message)}\"\"\""
-            for message in recent_messages
-        )
-
-        prompt = (
-            f"History:\n{chat_history}\nQuery: {user_message}"
-            if chat_history
-            else f"Query: {user_message}"
-        )
-
-        return {
-            "model": task_model_id,
-            "messages": [
-                {"role": "system", "content": content},
-                {"role": "user", "content": prompt},
-            ],
-            "stream": False,
-            "metadata": {"task": str(TASKS.FUNCTION_CALLING)},
-        }
-
-    event_caller = extra_params["__event_call__"]
-    event_emitter = extra_params["__event_emitter__"]
-    metadata = extra_params["__metadata__"]
-
-    task_model_id = get_task_model_id(
-        body["model"],
-        request.app.state.config.TASK_MODEL,
-        request.app.state.config.TASK_MODEL_EXTERNAL,
-        models,
-    )
-
-    skip_files = False
-    sources = []
-
-    specs = [tool["spec"] for tool in tools.values()]
-    tools_specs = json.dumps(specs, ensure_ascii=False)
-
-    if request.app.state.config.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE != "":
-        template = request.app.state.config.TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE
-    else:
-        template = DEFAULT_TOOLS_FUNCTION_CALLING_PROMPT_TEMPLATE
-
-    tools_function_calling_prompt = tools_function_calling_generation_template(
-        template, tools_specs
-    )
-    payload = get_tools_function_calling_payload(
-        body["messages"], task_model_id, tools_function_calling_prompt
-    )
-
-    try:
-        response = await generate_chat_completion(request, form_data=payload, user=user)
-        log.debug(f"{response=}")
-        content = await get_content_from_response(response)
-        log.debug(f"{content=}")
-
-        if not content:
-            return body, {}
-
-        try:
-            content = content[content.find("{") : content.rfind("}") + 1]
-            if not content:
-                raise Exception("No JSON object found in the response")
-
-            result = json.loads(content)
-
-            async def tool_call_handler(tool_call):
-                nonlocal skip_files
-
-                log.debug(f"{tool_call=}")
-
-                tool_function_name = tool_call.get("name", None)
-                if tool_function_name not in tools:
-                    return body, {}
-
-                tool_function_params = tool_call.get("parameters", {})
-
-                tool = None
-                tool_type = ""
-                direct_tool = False
-
-                try:
-                    tool = tools[tool_function_name]
-                    tool_type = tool.get("type", "")
-                    direct_tool = tool.get("direct", False)
-
-                    spec = tool.get("spec", {})
-                    allowed_params = (
-                        spec.get("parameters", {}).get("properties", {}).keys()
-                    )
-                    tool_function_params = {
-                        k: v
-                        for k, v in tool_function_params.items()
-                        if k in allowed_params
-                    }
-
-                    if tool.get("direct", False):
-                        tool_result = await event_caller(
-                            {
-                                "type": "execute:tool",
-                                "data": {
-                                    "id": str(uuid4()),
-                                    "name": tool_function_name,
-                                    "params": tool_function_params,
-                                    "server": tool.get("server", {}),
-                                    "session_id": metadata.get("session_id", None),
-                                },
-                            }
-                        )
-                    else:
-                        tool_function = tool["callable"]
-                        tool_result = await tool_function(**tool_function_params)
-
-                except Exception as e:
-                    tool_result = str(e)
-
-                tool_result, tool_result_files, tool_result_embeds = (
-                    process_tool_result(
-                        request,
-                        tool_function_name,
-                        tool_result,
-                        tool_type,
-                        direct_tool,
-                        metadata,
-                        user,
-                    )
-                )
-
-                if event_emitter:
-                    if tool_result_files:
-                        await event_emitter(
-                            {
-                                "type": "files",
-                                "data": {
-                                    "files": tool_result_files,
-                                },
-                            }
-                        )
-
-                    if tool_result_embeds:
-                        await event_emitter(
-                            {
-                                "type": "embeds",
-                                "data": {
-                                    "embeds": tool_result_embeds,
-                                },
-                            }
-                        )
-
-                if tool_result:
-                    tool = tools[tool_function_name]
-                    tool_id = tool.get("tool_id", "")
-
-                    tool_name = (
-                        f"{tool_id}/{tool_function_name}"
-                        if tool_id
-                        else f"{tool_function_name}"
-                    )
-
-                    # Citation is enabled for this tool
-                    sources.append(
-                        {
-                            "source": {
-                                "name": (f"{tool_name}"),
-                            },
-                            "document": [str(tool_result)],
-                            "metadata": [
-                                {
-                                    "source": (f"{tool_name}"),
-                                    "parameters": tool_function_params,
-                                }
-                            ],
-                            "tool_result": True,
-                        }
-                    )
-
-                    if (
-                        tools[tool_function_name]
-                        .get("metadata", {})
-                        .get("file_handler", False)
-                    ):
-                        skip_files = True
-
-            # check if "tool_calls" in result
-            if result.get("tool_calls"):
-                for tool_call in result.get("tool_calls"):
-                    await tool_call_handler(tool_call)
-            else:
-                await tool_call_handler(result)
-
-        except Exception as e:
-            log.debug(f"Error: {e}")
-            content = None
-    except Exception as e:
-        log.debug(f"Error: {e}")
-        content = None
-
-    log.debug(f"tool_contexts: {sources}")
-
-    if skip_files and "files" in body.get("metadata", {}):
-        del body["metadata"]["files"]
-
-    return body, {"sources": sources}
-
-
 def get_image_urls(delta_images, request, metadata, user) -> list[str]:
     if not isinstance(delta_images, list):
         return []
@@ -1014,53 +521,6 @@ def get_image_urls(delta_images, request, metadata, user) -> list[str]:
         image_urls.append(url)
 
     return image_urls
-
-
-def add_file_context(messages: list, chat_id: str, user) -> list:
-    """
-    Add file URLs to messages for native function calling.
-    """
-    if not chat_id or chat_id.startswith("local:"):
-        return messages
-
-    chat = Chats.get_chat_by_id_and_user_id(chat_id, user.id)
-    if not chat:
-        return messages
-
-    history = chat.chat.get("history", {})
-    stored_messages = get_message_list(
-        history.get("messages", {}), history.get("currentId")
-    )
-
-    def format_file_tag(file):
-        attrs = f'type="{file.get("type", "file")}" url="{file["url"]}"'
-        if file.get("content_type"):
-            attrs += f' content_type="{file["content_type"]}"'
-        if file.get("name"):
-            attrs += f' name="{file["name"]}"'
-        return f"<file {attrs}/>"
-
-    for message, stored_message in zip(messages, stored_messages):
-        files_with_urls = [
-            file
-            for file in stored_message.get("files", [])
-            if file.get("url") and not file.get("url").startswith("data:")
-        ]
-        if not files_with_urls:
-            continue
-
-        file_tags = [format_file_tag(file) for file in files_with_urls]
-        file_context = (
-            "<attached_files>\n" + "\n".join(file_tags) + "\n</attached_files>\n\n"
-        )
-
-        content = message.get("content", "")
-        if isinstance(content, list):
-            message["content"] = [{"type": "text", "text": file_context}] + content
-        else:
-            message["content"] = file_context + content
-
-    return messages
 
 
 def apply_params_to_form_data(form_data, model):
@@ -1307,8 +767,6 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                         *form_data.get("files", []),
                     ]
 
-    user_message = get_last_user_message(form_data["messages"])
-
     variables = form_data.pop("variables", None)
 
     # Process the form_data through the pipeline
@@ -1337,27 +795,9 @@ async def process_chat_payload(request, form_data, user, metadata, model):
 
     features = form_data.pop("features", None) or {}
     extra_params["__features__"] = features
-    if features:
-        if "code_interpreter" in features and features["code_interpreter"]:
-            # Skip XML-tag prompt injection when native FC is enabled —
-            # execute_code will be injected as a builtin tool instead
-            if metadata.get("params", {}).get("function_calling") != "native":
-                form_data["messages"] = add_or_update_user_message(
-                    (
-                        request.app.state.config.CODE_INTERPRETER_PROMPT_TEMPLATE
-                        if request.app.state.config.CODE_INTERPRETER_PROMPT_TEMPLATE
-                        != ""
-                        else DEFAULT_CODE_INTERPRETER_PROMPT
-                    ),
-                    form_data["messages"],
-                )
 
-    tool_ids = form_data.pop("tool_ids", None)
+    form_data.pop("tool_ids", None)
     files = form_data.pop("files", None)
-
-    # Caller-provided OpenAI-style tools take precedence over server-side
-    # tool resolution (tool_ids, MCP servers, builtin tools).
-    payload_tools = form_data.get("tools", None)
 
     # Skills
     user_skill_ids = set(form_data.pop("skill_ids", None) or [])
@@ -1399,12 +839,6 @@ async def process_chat_payload(request, form_data, user, metadata, model):
                 append=True,
             )
 
-    prompt = get_last_user_message(form_data["messages"])
-    # TODO: re-enable URL extraction from prompt
-    # urls = []
-    # if prompt and len(prompt or "") < 500 and (not files or len(files) == 0):
-    #     urls = extract_urls(prompt)
-
     if files:
         if not files:
             files = []
@@ -1425,244 +859,9 @@ async def process_chat_payload(request, form_data, user, metadata, model):
 
     metadata = {
         **metadata,
-        "tool_ids": tool_ids,
         "files": files,
     }
     form_data["metadata"] = metadata
-
-    # When the caller provides an explicit OpenAI-style `tools` array in the
-    # request body, skip all server-side tool resolution and pass the caller's
-    # tools through to the model unchanged.
-    if not payload_tools:
-        # Server side tools
-        tool_ids = metadata.get("tool_ids", None)
-        # Client side tools
-        direct_tool_servers = metadata.get("tool_servers", None)
-
-        log.debug(f"{tool_ids=}")
-        log.debug(f"{direct_tool_servers=}")
-
-        tools_dict = {}
-
-        mcp_clients = {}
-        mcp_tools_dict = {}
-
-        if tool_ids:
-            for tool_id in tool_ids:
-                if tool_id.startswith("server:mcp:"):
-                    try:
-                        server_id = tool_id[len("server:mcp:") :]
-
-                        mcp_server_connection = None
-                        for (
-                            server_connection
-                        ) in request.app.state.config.TOOL_SERVER_CONNECTIONS:
-                            if (
-                                server_connection.get("type", "") == "mcp"
-                                and server_connection.get("info", {}).get("id")
-                                == server_id
-                            ):
-                                mcp_server_connection = server_connection
-                                break
-
-                        if not mcp_server_connection:
-                            log.error(f"MCP server with id {server_id} not found")
-                            continue
-
-                        # Check access control for MCP server
-                        if not has_tool_server_access(user, mcp_server_connection):
-                            log.warning(
-                                f"Access denied to MCP server {server_id} for user {user.id}"
-                            )
-                            continue
-
-                        auth_type = mcp_server_connection.get("auth_type", "")
-                        headers = {}
-                        if auth_type == "bearer":
-                            headers["Authorization"] = (
-                                f"Bearer {mcp_server_connection.get('key', '')}"
-                            )
-                        elif auth_type == "none":
-                            # No authentication
-                            pass
-                        elif auth_type == "session":
-                            headers["Authorization"] = (
-                                f"Bearer {request.state.token.credentials}"
-                            )
-                        connection_headers = mcp_server_connection.get("headers", None)
-                        if connection_headers and isinstance(connection_headers, dict):
-                            for key, value in connection_headers.items():
-                                headers[key] = value
-
-                        # Add user info headers if enabled
-                        if ENABLE_FORWARD_USER_INFO_HEADERS and user:
-                            headers = include_user_info_headers(headers, user)
-                            if metadata and metadata.get("chat_id"):
-                                headers[FORWARD_SESSION_INFO_HEADER_CHAT_ID] = (
-                                    metadata.get("chat_id")
-                                )
-                            if metadata and metadata.get("message_id"):
-                                headers[FORWARD_SESSION_INFO_HEADER_MESSAGE_ID] = (
-                                    metadata.get("message_id")
-                                )
-
-                        mcp_clients[server_id] = MCPClient()
-                        await mcp_clients[server_id].connect(
-                            url=mcp_server_connection.get("url", ""),
-                            headers=headers if headers else None,
-                        )
-
-                        function_name_filter_list = mcp_server_connection.get(
-                            "config", {}
-                        ).get("function_name_filter_list", "")
-
-                        if isinstance(function_name_filter_list, str):
-                            function_name_filter_list = function_name_filter_list.split(
-                                ","
-                            )
-
-                        tool_specs = await mcp_clients[server_id].list_tool_specs()
-                        for tool_spec in tool_specs:
-
-                            def make_tool_function(client, function_name):
-                                async def tool_function(**kwargs):
-                                    return await client.call_tool(
-                                        function_name,
-                                        function_args=kwargs,
-                                    )
-
-                                return tool_function
-
-                            if function_name_filter_list:
-                                if not is_string_allowed(
-                                    tool_spec["name"], function_name_filter_list
-                                ):
-                                    # Skip this function
-                                    continue
-
-                            tool_function = make_tool_function(
-                                mcp_clients[server_id], tool_spec["name"]
-                            )
-
-                            mcp_tools_dict[f"{server_id}_{tool_spec['name']}"] = {
-                                "spec": {
-                                    **tool_spec,
-                                    "name": f"{server_id}_{tool_spec['name']}",
-                                },
-                                "callable": tool_function,
-                                "type": "mcp",
-                                "client": mcp_clients[server_id],
-                                "direct": False,
-                            }
-                    except Exception as e:
-                        log.debug(e)
-                        if event_emitter:
-                            await event_emitter(
-                                {
-                                    "type": "chat:message:error",
-                                    "data": {
-                                        "error": {
-                                            "content": f"Failed to connect to MCP server '{server_id}'"
-                                        }
-                                    },
-                                }
-                            )
-                        continue
-
-            tools_dict = await get_tools(
-                request,
-                tool_ids,
-                user,
-                {
-                    **extra_params,
-                    "__model__": models[task_model_id],
-                    "__messages__": form_data["messages"],
-                    "__files__": metadata.get("files", []),
-                },
-            )
-
-            if mcp_tools_dict:
-                tools_dict = {**tools_dict, **mcp_tools_dict}
-
-        if direct_tool_servers:
-            for tool_server in direct_tool_servers:
-                tool_specs = tool_server.pop("specs", [])
-
-                for tool in tool_specs:
-                    tools_dict[tool["name"]] = {
-                        "spec": tool,
-                        "direct": True,
-                        "server": tool_server,
-                    }
-
-        if mcp_clients:
-            metadata["mcp_clients"] = mcp_clients
-
-        # Inject builtin tools for native function calling based on enabled features and model capability
-        # Check if builtin_tools capability is enabled for this model (defaults to True if not specified)
-        builtin_tools_enabled = (
-            model.get("info", {}).get("meta", {}).get("capabilities") or {}
-        ).get("builtin_tools", True)
-        if (
-            metadata.get("params", {}).get("function_calling") == "native"
-            and builtin_tools_enabled
-        ):
-            # Add file context to user messages
-            chat_id = metadata.get("chat_id")
-            form_data["messages"] = add_file_context(
-                form_data.get("messages", []), chat_id, user
-            )
-            builtin_tools = get_builtin_tools(
-                request,
-                {
-                    **extra_params,
-                    "__event_emitter__": event_emitter,
-                    "__skill_ids__": [
-                        s.id for s in available_skills if s.id not in user_skill_ids
-                    ],
-                },
-                features,
-                model,
-            )
-            for name, tool_dict in builtin_tools.items():
-                if name not in tools_dict:
-                    tools_dict[name] = tool_dict
-
-        if tools_dict:
-            if metadata.get("params", {}).get("function_calling") == "native":
-                # If the function calling is native, then call the tools function calling handler
-                metadata["tools"] = tools_dict
-                form_data["tools"] = [
-                    {"type": "function", "function": tool.get("spec", {})}
-                    for tool in tools_dict.values()
-                ]
-
-        else:
-            # If the function calling is not native, then call the tools function calling handler
-            try:
-                form_data, flags = await chat_completion_tools_handler(
-                    request, form_data, extra_params, user, models, tools_dict
-                )
-                sources.extend(flags.get("sources", []))
-            except Exception as e:
-                log.exception(e)
-
-    # Prepend tool results to user message so the model sees them
-    # NOTE: likely non-native tool calls thus removable,
-    # we prefer hosted tools.
-    if sources and prompt:
-        tool_parts = []
-        for source in sources:
-            name = source.get("source", {}).get("name", "")
-            for doc in source.get("document", []):
-                tool_parts.append(f"[{name}]\n{doc}" if name else str(doc))
-        if tool_parts:
-            context = "\n\n".join(tool_parts)
-            form_data["messages"] = add_or_update_user_message(
-                f"{context}\n\n---\n\n{prompt}",
-                form_data["messages"],
-                append=False,
-            )
 
     # If there are citations, add them to the data_items
     sources = [
@@ -2152,7 +1351,7 @@ async def streaming_chat_response_handler(response, ctx):
         async def response_handler(response, events):
             def tag_output_handler(content_type, tags, output):
                 """
-                Detect special tags (reasoning, solution, code_interpreter) in streaming
+                Detect special tags (reasoning, solution) in streaming
                 content and create corresponding OR-aligned output items directly.
                 Operates on output items instead of content_blocks.
 
@@ -2190,7 +1389,6 @@ async def streaming_chat_response_handler(response, ctx):
                 output_type_map = {
                     "reasoning": "reasoning",
                     "solution": "message",  # solution tags just produce text
-                    "code_interpreter": "open_webui:code_interpreter",
                 }
                 output_item_type = output_type_map.get(content_type, content_type)
 
@@ -2242,21 +1440,6 @@ async def streaming_chat_response_handler(response, ctx):
                                         "started_at": time.time(),
                                     }
                                 )
-                            elif output_item_type == "open_webui:code_interpreter":
-                                output.append(
-                                    {
-                                        "type": "open_webui:code_interpreter",
-                                        "id": output_id("ci"),
-                                        "status": "in_progress",
-                                        "start_tag": start_tag,
-                                        "end_tag": end_tag,
-                                        "attributes": attributes,
-                                        "lang": attributes.get("lang", "python"),
-                                        "code": "",
-                                        "output": None,
-                                        "started_at": time.time(),
-                                    }
-                                )
                             else:
                                 # solution or other text-producing tag
                                 output.append(
@@ -2282,8 +1465,6 @@ async def streaming_chat_response_handler(response, ctx):
                                     output[-1]["content"] = [
                                         {"type": "output_text", "text": after_tag}
                                     ]
-                                elif output_item_type == "open_webui:code_interpreter":
-                                    output[-1]["code"] = after_tag
                                 else:
                                     set_last_text(output, after_tag)
 
@@ -2295,16 +1476,9 @@ async def streaming_chat_response_handler(response, ctx):
 
                             break
 
-                elif (
-                    (last_type == "reasoning" and content_type == "reasoning")
-                    or (
-                        last_type == "open_webui:code_interpreter"
-                        and content_type == "code_interpreter"
-                    )
-                    or (
-                        last_type == "message"
-                        and output[-1].get("_tag_type") == content_type
-                    )
+                elif (last_type == "reasoning" and content_type == "reasoning") or (
+                    last_type == "message"
+                    and output[-1].get("_tag_type") == content_type
                 ):
                     item = output[-1]
                     start_tag = item.get("start_tag", "")
@@ -2318,8 +1492,6 @@ async def streaming_chat_response_handler(response, ctx):
                         block_content = ""
                         if parts and parts[-1].get("type") == "output_text":
                             block_content = parts[-1].get("text", "")
-                    elif last_type == "open_webui:code_interpreter":
-                        block_content = item.get("code", "")
                     else:
                         block_content = get_last_text(output)
 
@@ -2357,12 +1529,6 @@ async def streaming_chat_response_handler(response, ctx):
                                     item["ended_at"] - item["started_at"]
                                 )
                                 item["status"] = "completed"
-                            elif last_type == "open_webui:code_interpreter":
-                                item["code"] = block_content
-                                item["ended_at"] = time.time()
-                                item["duration"] = int(
-                                    item["ended_at"] - item["started_at"]
-                                )
                             else:
                                 set_last_text(output, block_content)
                                 item["ended_at"] = time.time()
@@ -2406,8 +1572,6 @@ async def streaming_chat_response_handler(response, ctx):
                 metadata["chat_id"], metadata["message_id"]
             )
 
-            tool_calls = []
-
             last_assistant_message = None
             try:
                 if form_data["messages"][-1]["role"] == "assistant":
@@ -2446,9 +1610,6 @@ async def streaming_chat_response_handler(response, ctx):
 
             reasoning_tags_param = metadata.get("params", {}).get("reasoning_tags")
             DETECT_REASONING_TAGS = reasoning_tags_param is not False
-            DETECT_CODE_INTERPRETER = metadata.get("features", {}).get(
-                "code_interpreter", False
-            )
 
             reasoning_tags = []
             if DETECT_REASONING_TAGS:
@@ -2484,8 +1645,6 @@ async def streaming_chat_response_handler(response, ctx):
                     nonlocal content
                     nonlocal usage
                     nonlocal output
-
-                    response_tool_calls = []
 
                     delta_count = 0
                     delta_chunk_size = max(
@@ -2655,100 +1814,6 @@ async def streaming_chat_response_handler(response, ctx):
                                                     }
                                                 )
 
-                                    delta_tool_calls = delta.get("tool_calls", None)
-                                    if delta_tool_calls:
-                                        for delta_tool_call in delta_tool_calls:
-                                            tool_call_index = delta_tool_call.get(
-                                                "index"
-                                            )
-
-                                            if tool_call_index is not None:
-                                                # Check if the tool call already exists
-                                                current_response_tool_call = None
-                                                for (
-                                                    response_tool_call
-                                                ) in response_tool_calls:
-                                                    if (
-                                                        response_tool_call.get("index")
-                                                        == tool_call_index
-                                                    ):
-                                                        current_response_tool_call = (
-                                                            response_tool_call
-                                                        )
-                                                        break
-
-                                                if current_response_tool_call is None:
-                                                    # Add the new tool call
-                                                    delta_tool_call.setdefault(
-                                                        "function", {}
-                                                    )
-                                                    delta_tool_call[
-                                                        "function"
-                                                    ].setdefault("name", "")
-                                                    delta_tool_call[
-                                                        "function"
-                                                    ].setdefault("arguments", "")
-                                                    response_tool_calls.append(
-                                                        delta_tool_call
-                                                    )
-                                                else:
-                                                    # Update the existing tool call
-                                                    delta_name = delta_tool_call.get(
-                                                        "function", {}
-                                                    ).get("name")
-                                                    delta_arguments = (
-                                                        delta_tool_call.get(
-                                                            "function", {}
-                                                        ).get("arguments")
-                                                    )
-
-                                                    if delta_name:
-                                                        current_response_tool_call[
-                                                            "function"
-                                                        ]["name"] += delta_name
-
-                                                    if delta_arguments:
-                                                        current_response_tool_call[
-                                                            "function"
-                                                        ][
-                                                            "arguments"
-                                                        ] += delta_arguments
-
-                                        # Emit pending tool calls in real-time
-                                        if response_tool_calls:
-                                            # Flush any pending text first
-                                            await flush_pending_delta_data()
-
-                                            # Build pending function_call output items for display
-                                            pending_fc_items = []
-                                            for tc in response_tool_calls:
-                                                call_id = tc.get("id", "")
-                                                func = tc.get("function", {})
-                                                pending_fc_items.append(
-                                                    {
-                                                        "type": "function_call",
-                                                        "id": call_id
-                                                        or output_id("fc"),
-                                                        "call_id": call_id,
-                                                        "name": func.get("name", ""),
-                                                        "arguments": func.get(
-                                                            "arguments", "{}"
-                                                        ),
-                                                        "status": "in_progress",
-                                                    }
-                                                )
-                                            pending_output = output + pending_fc_items
-                                            await event_emitter(
-                                                {
-                                                    "type": "chat:completion",
-                                                    "data": {
-                                                        "content": serialize_output(
-                                                            pending_output
-                                                        ),
-                                                    },
-                                                }
-                                            )
-
                                     image_urls = get_image_urls(
                                         delta.get("images", []), request, metadata, user
                                     )
@@ -2886,8 +1951,6 @@ async def streaming_chat_response_handler(response, ctx):
                                             != "reasoning_content"
                                             and (
                                                 last_item_type == "reasoning"
-                                                or last_item_type
-                                                == "open_webui:code_interpreter"
                                                 or (
                                                     last_item_type == "message"
                                                     and last_item.get("_tag_type")
@@ -2898,14 +1961,7 @@ async def streaming_chat_response_handler(response, ctx):
 
                                         if inside_tag_block:
                                             # Append to the existing tag-based item
-                                            if (
-                                                last_item_type
-                                                == "open_webui:code_interpreter"
-                                            ):
-                                                last_item["code"] = (
-                                                    last_item.get("code", "") + value
-                                                )
-                                            elif last_item_type == "reasoning":
+                                            if last_item_type == "reasoning":
                                                 parts = last_item.get("content", [])
                                                 if (
                                                     parts
@@ -2985,16 +2041,6 @@ async def streaming_chat_response_handler(response, ctx):
                                                 output,
                                             )
 
-                                        if DETECT_CODE_INTERPRETER:
-                                            output, end = tag_output_handler(
-                                                "code_interpreter",
-                                                DEFAULT_CODE_INTERPRETER_TAGS,
-                                                output,
-                                            )
-
-                                            if end:
-                                                break
-
                                         if ENABLE_REALTIME_CHAT_SAVE:
                                             # Save message in the database
                                             Chats.upsert_message_to_chat_by_id_and_message_id(
@@ -3064,419 +2110,10 @@ async def streaming_chat_response_handler(response, ctx):
                                 )
                                 reasoning_item["status"] = "completed"
 
-                    if response_tool_calls:
-                        tool_calls.append(response_tool_calls)
-
                     if response.background:
                         await response.background()
 
                 await stream_body_handler(response, form_data)
-
-                tool_call_retries = 0
-
-                while (
-                    len(tool_calls) > 0
-                    and tool_call_retries < CHAT_RESPONSE_MAX_TOOL_CALL_RETRIES
-                ):
-
-                    tool_call_retries += 1
-
-                    response_tool_calls = tool_calls.pop(0)
-
-                    # Append function_call items for each tool call
-                    for tc in response_tool_calls:
-                        call_id = tc.get("id", "")
-                        func = tc.get("function", {})
-                        output.append(
-                            {
-                                "type": "function_call",
-                                "id": call_id or output_id("fc"),
-                                "call_id": call_id,
-                                "name": func.get("name", ""),
-                                "arguments": func.get("arguments", "{}"),
-                                "status": "in_progress",
-                            }
-                        )
-
-                    await event_emitter(
-                        {
-                            "type": "chat:completion",
-                            "data": {
-                                "content": serialize_output(output),
-                                "output": output,
-                            },
-                        }
-                    )
-
-                    tools = metadata.get("tools", {})
-
-                    results = []
-
-                    for tool_call in response_tool_calls:
-                        tool_call_id = tool_call.get("id", "")
-                        tool_function_name = tool_call.get("function", {}).get(
-                            "name", ""
-                        )
-                        tool_args = tool_call.get("function", {}).get("arguments", "{}")
-
-                        tool_function_params = {}
-                        try:
-                            # json.loads cannot be used because some models do not produce valid JSON
-                            tool_function_params = ast.literal_eval(tool_args)
-                        except Exception as e:
-                            log.debug(e)
-                            # Fallback to JSON parsing
-                            try:
-                                tool_function_params = json.loads(tool_args)
-                            except Exception as e:
-                                log.error(
-                                    f"Error parsing tool call arguments: {tool_args}"
-                                )
-
-                        # Ensure arguments are valid JSON for downstream LLM integrations
-                        log.debug(
-                            f"Parsed args from {tool_args} to {tool_function_params}"
-                        )
-                        tool_call.setdefault("function", {})["arguments"] = json.dumps(
-                            tool_function_params
-                        )
-
-                        tool_result = None
-                        tool = None
-                        tool_type = None
-                        direct_tool = False
-
-                        if tool_function_name in tools:
-                            tool = tools[tool_function_name]
-                            spec = tool.get("spec", {})
-
-                            tool_type = tool.get("type", "")
-                            direct_tool = tool.get("direct", False)
-
-                            try:
-                                allowed_params = (
-                                    spec.get("parameters", {})
-                                    .get("properties", {})
-                                    .keys()
-                                )
-
-                                tool_function_params = {
-                                    k: v
-                                    for k, v in tool_function_params.items()
-                                    if k in allowed_params
-                                }
-
-                                if direct_tool:
-                                    tool_result = await event_caller(
-                                        {
-                                            "type": "execute:tool",
-                                            "data": {
-                                                "id": str(uuid4()),
-                                                "name": tool_function_name,
-                                                "params": tool_function_params,
-                                                "server": tool.get("server", {}),
-                                                "session_id": metadata.get(
-                                                    "session_id", None
-                                                ),
-                                            },
-                                        }
-                                    )
-
-                                else:
-                                    tool_function = get_updated_tool_function(
-                                        function=tool["callable"],
-                                        extra_params={
-                                            "__messages__": form_data.get(
-                                                "messages", []
-                                            ),
-                                            "__files__": metadata.get("files", []),
-                                        },
-                                    )
-
-                                    tool_result = await tool_function(
-                                        **tool_function_params
-                                    )
-
-                            except Exception as e:
-                                tool_result = str(e)
-
-                        tool_result, tool_result_files, tool_result_embeds = (
-                            process_tool_result(
-                                request,
-                                tool_function_name,
-                                tool_result,
-                                tool_type,
-                                direct_tool,
-                                metadata,
-                                user,
-                            )
-                        )
-
-                        results.append(
-                            {
-                                "tool_call_id": tool_call_id,
-                                "content": tool_result or "",
-                                **(
-                                    {"files": tool_result_files}
-                                    if tool_result_files
-                                    else {}
-                                ),
-                                **(
-                                    {"embeds": tool_result_embeds}
-                                    if tool_result_embeds
-                                    else {}
-                                ),
-                            }
-                        )
-
-                    # Update function_call statuses and append function_call_output items
-                    for tc in response_tool_calls:
-                        call_id = tc.get("id", "")
-                        # Mark function_call as completed
-                        for item in output:
-                            if (
-                                item.get("type") == "function_call"
-                                and item.get("call_id") == call_id
-                            ):
-                                item["status"] = "completed"
-                                # Update arguments with parsed/sanitized version
-                                item["arguments"] = tc.get("function", {}).get(
-                                    "arguments", "{}"
-                                )
-                                break
-
-                    for result in results:
-                        output.append(
-                            {
-                                "type": "function_call_output",
-                                "id": output_id("fco"),
-                                "call_id": result.get("tool_call_id", ""),
-                                "output": [
-                                    {
-                                        "type": "input_text",
-                                        "text": result.get("content", ""),
-                                    }
-                                ],
-                                "status": "completed",
-                                **(
-                                    {"files": result.get("files")}
-                                    if result.get("files")
-                                    else {}
-                                ),
-                                **(
-                                    {"embeds": result.get("embeds")}
-                                    if result.get("embeds")
-                                    else {}
-                                ),
-                            }
-                        )
-
-                    # Append a new empty message item for the next response
-                    output.append(
-                        {
-                            "type": "message",
-                            "id": output_id("msg"),
-                            "status": "in_progress",
-                            "role": "assistant",
-                            "content": [{"type": "output_text", "text": ""}],
-                        }
-                    )
-
-                    await event_emitter(
-                        {
-                            "type": "chat:completion",
-                            "data": {
-                                "content": serialize_output(output),
-                                "output": output,
-                            },
-                        }
-                    )
-
-                    try:
-                        new_form_data = {
-                            **form_data,
-                            "model": model_id,
-                            "stream": True,
-                            "messages": [
-                                *form_data["messages"],
-                                *convert_output_to_messages(output, raw=True),
-                            ],
-                        }
-
-                        res = await generate_chat_completion(
-                            request,
-                            new_form_data,
-                            user,
-                            bypass_system_prompt=True,
-                        )
-
-                        if isinstance(res, StreamingResponse):
-                            await stream_body_handler(res, new_form_data)
-                        else:
-                            break
-                    except Exception as e:
-                        log.debug(e)
-                        break
-
-                if DETECT_CODE_INTERPRETER:
-                    MAX_RETRIES = 5
-                    retries = 0
-
-                    while (
-                        output
-                        and output[-1].get("type") == "open_webui:code_interpreter"
-                        and retries < MAX_RETRIES
-                    ):
-
-                        await event_emitter(
-                            {
-                                "type": "chat:completion",
-                                "data": {
-                                    "content": serialize_output(output),
-                                    "output": output,
-                                },
-                            }
-                        )
-
-                        retries += 1
-                        log.debug(f"Attempt count: {retries}")
-
-                        ci_item = output[-1]
-                        ci_output = ""
-                        try:
-                            if ci_item.get("attributes", {}).get("type") == "code":
-                                code = ci_item.get("code", "")
-                                # Sanitize code (strips ANSI codes and markdown fences)
-                                code = sanitize_code(code)
-
-                                if CODE_INTERPRETER_BLOCKED_MODULES:
-                                    blocking_code = textwrap.dedent(f"""
-                                        import builtins
-    
-                                        BLOCKED_MODULES = {CODE_INTERPRETER_BLOCKED_MODULES}
-    
-                                        _real_import = builtins.__import__
-                                        def restricted_import(name, globals=None, locals=None, fromlist=(), level=0):
-                                            if name.split('.')[0] in BLOCKED_MODULES:
-                                                importer_name = globals.get('__name__') if globals else None
-                                                if importer_name == '__main__':
-                                                    raise ImportError(
-                                                        f"Direct import of module {{name}} is restricted."
-                                                    )
-                                            return _real_import(name, globals, locals, fromlist, level)
-    
-                                        builtins.__import__ = restricted_import
-                                    """)
-                                    code = blocking_code + "\n" + code
-
-                                ci_output = await execute_code_jupyter(
-                                    request.app.state.config.CODE_INTERPRETER_JUPYTER_URL,
-                                    code,
-                                    (
-                                        request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_TOKEN
-                                        if request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH
-                                        == "token"
-                                        else None
-                                    ),
-                                    (
-                                        request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH_PASSWORD
-                                        if request.app.state.config.CODE_INTERPRETER_JUPYTER_AUTH
-                                        == "password"
-                                        else None
-                                    ),
-                                    request.app.state.config.CODE_INTERPRETER_JUPYTER_TIMEOUT,
-                                )
-
-                                log.debug(f"Code interpreter output: {ci_output}")
-
-                                if isinstance(ci_output, dict):
-                                    stdout = ci_output.get("stdout", "")
-
-                                    if isinstance(stdout, str):
-                                        stdoutLines = stdout.split("\n")
-                                        for idx, line in enumerate(stdoutLines):
-
-                                            if "data:image/png;base64" in line:
-                                                image_url = get_image_url_from_base64(
-                                                    request,
-                                                    line,
-                                                    metadata,
-                                                    user,
-                                                )
-                                                if image_url:
-                                                    stdoutLines[idx] = (
-                                                        f"![Output Image]({image_url})"
-                                                    )
-
-                                        ci_output["stdout"] = "\n".join(stdoutLines)
-
-                                    result = ci_output.get("result", "")
-
-                                    if isinstance(result, str):
-                                        resultLines = result.split("\n")
-                                        for idx, line in enumerate(resultLines):
-                                            if "data:image/png;base64" in line:
-                                                image_url = get_image_url_from_base64(
-                                                    request,
-                                                    line,
-                                                    metadata,
-                                                    user,
-                                                )
-                                                resultLines[idx] = (
-                                                    f"![Output Image]({image_url})"
-                                                )
-                                        ci_output["result"] = "\n".join(resultLines)
-                        except Exception as e:
-                            ci_output = str(e)
-
-                        ci_item["output"] = ci_output
-                        ci_item["status"] = "completed"
-
-                        output.append(
-                            {
-                                "type": "message",
-                                "id": output_id("msg"),
-                                "status": "in_progress",
-                                "role": "assistant",
-                                "content": [{"type": "output_text", "text": ""}],
-                            }
-                        )
-
-                        await event_emitter(
-                            {
-                                "type": "chat:completion",
-                                "data": {
-                                    "content": serialize_output(output),
-                                    "output": output,
-                                },
-                            }
-                        )
-
-                        try:
-                            new_form_data = {
-                                **form_data,
-                                "model": model_id,
-                                "stream": True,
-                                "messages": [
-                                    *form_data["messages"],
-                                    *convert_output_to_messages(output, raw=True),
-                                ],
-                            }
-
-                            res = await generate_chat_completion(
-                                request,
-                                new_form_data,
-                                user,
-                                bypass_system_prompt=True,
-                            )
-
-                            if isinstance(res, StreamingResponse):
-                                await stream_body_handler(res, new_form_data)
-                            else:
-                                break
-                        except Exception as e:
-                            log.debug(e)
-                            break
 
                 # Mark all in-progress items as completed
                 for item in output:

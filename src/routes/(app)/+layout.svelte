@@ -8,8 +8,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 
-	import { getModels, getToolServersData } from '$lib/apis';
-	import { getTools } from '$lib/apis/tools';
+	import { getModels } from '$lib/apis';
 	import { getBanners } from '$lib/apis/configs';
 	import { getUserSettings } from '$lib/apis/users';
 
@@ -18,14 +17,11 @@
 		user,
 		settings,
 		models,
-		tools,
-		functions,
 		tags,
 		banners,
 		showSettings,
 		showShortcuts,
 		temporaryChatEnabled,
-		toolServers,
 		showSearch,
 		showSidebar
 	} from '$lib/stores';
@@ -105,30 +101,9 @@
 		);
 	};
 
-	const setToolServers = async () => {
-		let toolServersData = await getToolServersData($settings?.toolServers ?? []);
-		toolServersData = toolServersData.filter((data) => {
-			if (!data || data.error) {
-				toast.error(
-					$i18n.t(`Failed to connect to {{URL}} OpenAPI tool server`, {
-						URL: data?.url
-					})
-				);
-				return false;
-			}
-			return true;
-		});
-		toolServers.set(toolServersData);
-	};
-
 	const setBanners = async () => {
 		const bannersData = await getBanners(localStorage.token);
 		banners.set(bannersData);
-	};
-
-	const setTools = async () => {
-		const toolsData = await getTools(localStorage.token);
-		tools.set(toolsData);
 	};
 
 	onMount(async () => {
@@ -144,12 +119,8 @@
 		await Promise.all([
 			checkLocalDBChats(),
 			setBanners().catch((e) => console.error('Failed to load banners:', e)),
-			setTools().catch((e) => console.error('Failed to load tools:', e)),
 			setUserSettings(async () => {
-				await Promise.all([
-					setModels().catch((e) => console.error('Failed to load models:', e)),
-					setToolServers().catch((e) => console.error('Failed to load tool servers:', e))
-				]);
+				await setModels().catch((e) => console.error('Failed to load models:', e));
 			}).catch((e) => console.error('Failed to load user settings:', e))
 		]);
 

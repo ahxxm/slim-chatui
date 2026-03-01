@@ -42,9 +42,7 @@ export const DEFAULT_PERMISSIONS = {
 	},
 	features: {
 		api_keys: false,
-		folders: true,
-		direct_tool_servers: false,
-		code_interpreter: true
+		folders: true
 	},
 	settings: {
 		interface: true

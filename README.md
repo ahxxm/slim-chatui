@@ -1,8 +1,9 @@
 # slim-chatui
 
-Opinionated, diverged hard fork of [Open WebUI](https://github.com/open-webui/open-webui) (v0.8.5), so that you can *chat* with (largely) stateless LLMs.
+Opinionated, diverged hard fork of [Open WebUI](https://github.com/open-webui/open-webui) (v0.8.5), so that you can _chat_ with (largely) stateless LLMs.
 
 Opinions:
+
 - Chat first
 - Personal usage: no `$ENTERPRISE` ldap/oauth/analytics/chats
 - slim: starts in ~3 seconds

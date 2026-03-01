@@ -2,15 +2,13 @@
 	import { toast } from 'svelte-sonner';
 
 	import { onMount, getContext, tick } from 'svelte';
-	import { models, tools, functions, user } from '$lib/stores';
+	import { models, functions, user } from '$lib/stores';
 	import { WEBUI_BASE_URL, DEFAULT_CAPABILITIES } from '$lib/constants';
 
-	import { getTools } from '$lib/apis/tools';
 	import { getFunctions } from '$lib/apis/functions';
 
 	import AdvancedParams from '$lib/components/chat/Settings/Advanced/AdvancedParams.svelte';
 	import Tags from '$lib/components/common/Tags.svelte';
-	import ToolsSelector from '$lib/components/workspace/Models/ToolsSelector.svelte';
 	import SkillsSelector from '$lib/components/workspace/Models/SkillsSelector.svelte';
 	import FiltersSelector from '$lib/components/workspace/Models/FiltersSelector.svelte';
 	import ActionsSelector from '$lib/components/workspace/Models/ActionsSelector.svelte';
@@ -20,8 +18,6 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import DefaultFiltersSelector from './DefaultFiltersSelector.svelte';
-	import DefaultFeatures from './DefaultFeatures.svelte';
-	import BuiltinTools from './BuiltinTools.svelte';
 	import PromptSuggestions from './PromptSuggestions.svelte';
 	import AccessControlModal from '../common/AccessControlModal.svelte';
 	import LockClosed from '$lib/components/icons/LockClosed.svelte';
@@ -87,15 +83,12 @@
 		system: ''
 	};
 
-	let toolIds = [];
 	let skillIds = [];
 
 	let filterIds = [];
 	let defaultFilterIds = [];
 
 	let capabilities = { ...DEFAULT_CAPABILITIES };
-	let defaultFeatureIds = [];
-	let builtinTools = {};
 
 	let actionIds = [];
 	let accessGrants = [];
@@ -131,14 +124,6 @@
 			info.meta.description = null;
 		}
 
-		if (toolIds.length > 0) {
-			info.meta.toolIds = toolIds;
-		} else {
-			if (info.meta.toolIds) {
-				delete info.meta.toolIds;
-			}
-		}
-
 		if (skillIds.length > 0) {
 			info.meta.skillIds = skillIds;
 		} else {
@@ -171,21 +156,8 @@
 			}
 		}
 
-		if (defaultFeatureIds.length > 0) {
-			info.meta.defaultFeatureIds = defaultFeatureIds;
-		} else {
-			if (info.meta.defaultFeatureIds) {
-				delete info.meta.defaultFeatureIds;
-			}
-		}
-
-		if (Object.keys(builtinTools).length > 0) {
-			info.meta.builtinTools = builtinTools;
-		} else {
-			if (info.meta.builtinTools) {
-				delete info.meta.builtinTools;
-			}
-		}
+		delete info.meta.defaultFeatureIds;
+		delete info.meta.builtinTools;
 
 		info.params.system = system.trim() === '' ? null : system;
 		info.params.stop = params.stop ? params.stop.split(',').filter((s) => s.trim()) : null;
@@ -202,7 +174,6 @@
 	};
 
 	onMount(async () => {
-		await tools.set(await getTools(localStorage.token));
 		await functions.set(await getFunctions(localStorage.token));
 
 		// Scroll to top 'workspace-container' element
@@ -242,15 +213,12 @@
 					)
 				: null;
 
-			toolIds = model?.meta?.toolIds ?? [];
 			skillIds = model?.meta?.skillIds ?? [];
 			filterIds = model?.meta?.filterIds ?? [];
 			defaultFilterIds = model?.meta?.defaultFilterIds ?? [];
 			actionIds = model?.meta?.actionIds ?? [];
 
 			capabilities = { ...capabilities, ...(model?.meta?.capabilities ?? {}) };
-			defaultFeatureIds = model?.meta?.defaultFeatureIds ?? [];
-			builtinTools = model?.meta?.builtinTools ?? {};
 
 			accessGrants = model?.access_grants ?? [];
 
@@ -685,10 +653,6 @@
 					</div>
 
 					<div class="my-4">
-						<ToolsSelector bind:selectedToolIds={toolIds} tools={$tools ?? []} />
-					</div>
-
-					<div class="my-4">
 						<SkillsSelector bind:selectedSkillIds={skillIds} />
 					</div>
 
@@ -735,24 +699,6 @@
 					<div class="my-4">
 						<Capabilities bind:capabilities />
 					</div>
-
-					{#if Object.keys(capabilities).filter((key) => capabilities[key]).length > 0}
-						{@const availableFeatures = Object.entries(capabilities)
-							.filter(([key, value]) => value && ['code_interpreter'].includes(key))
-							.map(([key, value]) => key)}
-
-						{#if availableFeatures.length > 0}
-							<div class="my-4">
-								<DefaultFeatures {availableFeatures} bind:featureIds={defaultFeatureIds} />
-							</div>
-						{/if}
-					{/if}
-
-					{#if capabilities.builtin_tools}
-						<div class="my-4">
-							<BuiltinTools bind:builtinTools />
-						</div>
-					{/if}
 
 					<hr class=" border-gray-100/30 dark:border-gray-850/30 my-4" />
 

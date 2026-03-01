@@ -1,15 +1,9 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 
-	import { config, functions, models, settings, tools, user } from '$lib/stores';
-	import { createEventDispatcher, onMount, getContext, tick } from 'svelte';
+	import { functions } from '$lib/stores';
+	import { createEventDispatcher, getContext, tick } from 'svelte';
 
-	import {
-		getUserValvesSpecById as getToolUserValvesSpecById,
-		getUserValvesById as getToolUserValvesById,
-		updateUserValvesById as updateToolUserValvesById,
-		getTools
-	} from '$lib/apis/tools';
 	import {
 		getUserValvesSpecById as getFunctionUserValvesSpecById,
 		getUserValvesById as getFunctionUserValvesById,
@@ -17,7 +11,6 @@
 		getFunctions
 	} from '$lib/apis/functions';
 
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Valves from '$lib/components/common/Valves.svelte';
 
@@ -27,7 +20,6 @@
 
 	export let show = false;
 
-	let tab = 'tools';
 	let selectedId = '';
 
 	let loading = false;
@@ -50,13 +42,8 @@
 
 	const getUserValves = async () => {
 		loading = true;
-		if (tab === 'tools') {
-			valves = await getToolUserValvesById(localStorage.token, selectedId);
-			valvesSpec = await getToolUserValvesSpecById(localStorage.token, selectedId);
-		} else if (tab === 'functions') {
-			valves = await getFunctionUserValvesById(localStorage.token, selectedId);
-			valvesSpec = await getFunctionUserValvesSpecById(localStorage.token, selectedId);
-		}
+		valves = await getFunctionUserValvesById(localStorage.token, selectedId);
+		valvesSpec = await getFunctionUserValvesSpecById(localStorage.token, selectedId);
 
 		if (valvesSpec) {
 			// Convert array to string
@@ -79,39 +66,19 @@
 				}
 			}
 
-			if (tab === 'tools') {
-				const res = await updateToolUserValvesById(localStorage.token, selectedId, valves).catch(
-					(error) => {
-						toast.error(`${error}`);
-						return null;
-					}
-				);
-
-				if (res) {
-					toast.success($i18n.t('Valves updated'));
-					valves = res;
-				}
-			} else if (tab === 'functions') {
-				const res = await updateFunctionUserValvesById(
-					localStorage.token,
-					selectedId,
-					valves
-				).catch((error) => {
+			const res = await updateFunctionUserValvesById(localStorage.token, selectedId, valves).catch(
+				(error) => {
 					toast.error(`${error}`);
 					return null;
-				});
-
-				if (res) {
-					toast.success($i18n.t('Valves updated'));
-					valves = res;
 				}
+			);
+
+			if (res) {
+				toast.success($i18n.t('Valves updated'));
+				valves = res;
 			}
 		}
 	};
-
-	$: if (tab) {
-		selectedId = '';
-	}
 
 	$: if (selectedId) {
 		getUserValves();
@@ -126,9 +93,6 @@
 
 		if ($functions === null) {
 			functions.set(await getFunctions(localStorage.token));
-		}
-		if ($tools === null) {
-			tools.set(await getTools(localStorage.token));
 		}
 
 		loading = false;
@@ -145,49 +109,22 @@
 	>
 		<div class="flex flex-col">
 			<div class="space-y-1">
-				<div class="flex gap-2">
-					<div class="flex-1">
-						<select
-							class="  w-full rounded-sm text-xs py-2 px-1 bg-transparent outline-hidden"
-							bind:value={tab}
-							placeholder={$i18n.t('Select')}
+				<div>
+					<select
+						class="w-full rounded-sm py-2 px-1 text-xs bg-transparent outline-hidden"
+						bind:value={selectedId}
+						on:change={async () => {
+							await tick();
+						}}
+					>
+						<option value="" selected disabled class="bg-gray-100 dark:bg-gray-800"
+							>{$i18n.t('Select a function')}</option
 						>
-							<option value="tools" class="bg-gray-100 dark:bg-gray-800">{$i18n.t('Tools')}</option>
-							<option value="functions" class="bg-gray-100 dark:bg-gray-800"
-								>{$i18n.t('Functions')}</option
-							>
-						</select>
-					</div>
 
-					<div class="flex-1">
-						<select
-							class="w-full rounded-sm py-2 px-1 text-xs bg-transparent outline-hidden"
-							bind:value={selectedId}
-							on:change={async () => {
-								await tick();
-							}}
-						>
-							{#if tab === 'tools'}
-								<option value="" selected disabled class="bg-gray-100 dark:bg-gray-800"
-									>{$i18n.t('Select a tool')}</option
-								>
-
-								{#each $tools
-									.filter((tool) => !tool?.id?.startsWith('server:'))
-									.sort((a, b) => (a.name ?? '').localeCompare(b.name ?? '')) as tool, toolIdx}
-									<option value={tool.id} class="bg-gray-100 dark:bg-gray-800">{tool.name}</option>
-								{/each}
-							{:else if tab === 'functions'}
-								<option value="" selected disabled class="bg-gray-100 dark:bg-gray-800"
-									>{$i18n.t('Select a function')}</option
-								>
-
-								{#each $functions.sort( (a, b) => (a.name ?? '').localeCompare(b.name ?? '') ) as func, funcIdx}
-									<option value={func.id} class="bg-gray-100 dark:bg-gray-800">{func.name}</option>
-								{/each}
-							{/if}
-						</select>
-					</div>
+						{#each ($functions ?? []).sort( (a, b) => (a.name ?? '').localeCompare(b.name ?? '') ) as func, funcIdx}
+							<option value={func.id} class="bg-gray-100 dark:bg-gray-800">{func.name}</option>
+						{/each}
+					</select>
 				</div>
 			</div>
 

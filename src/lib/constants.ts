@@ -96,7 +96,6 @@ export const DEFAULT_CAPABILITIES = {
 	file_context: true,
 	vision: true,
 	file_upload: true,
-	code_interpreter: true,
 	citations: true,
 	status_updates: true,
 	usage: undefined,

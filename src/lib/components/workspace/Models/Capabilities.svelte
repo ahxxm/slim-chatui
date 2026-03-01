@@ -19,10 +19,6 @@
 			label: $i18n.t('File Context'),
 			description: $i18n.t('Inject file content into conversation context')
 		},
-		code_interpreter: {
-			label: $i18n.t('Code Interpreter'),
-			description: $i18n.t('Model can execute code and perform calculations')
-		},
 		usage: {
 			label: $i18n.t('Usage'),
 			description: $i18n.t(
@@ -49,7 +45,6 @@
 		file_context?: boolean;
 		vision?: boolean;
 		file_upload?: boolean;
-		code_interpreter?: boolean;
 		usage?: boolean;
 		citations?: boolean;
 		status_updates?: boolean;

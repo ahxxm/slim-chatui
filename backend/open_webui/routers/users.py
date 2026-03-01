@@ -38,7 +38,7 @@ from open_webui.utils.auth import (
     get_verified_user,
     validate_password,
 )
-from open_webui.utils.access_control import get_permissions, has_permission
+from open_webui.utils.access_control import get_permissions
 
 log = logging.getLogger(__name__)
 
@@ -213,8 +213,6 @@ class ChatPermissions(BaseModel):
 class FeaturesPermissions(BaseModel):
     api_keys: bool = False
     folders: bool = True
-    direct_tool_servers: bool = False
-    code_interpreter: bool = True
 
 
 class SettingsPermissions(BaseModel):
@@ -290,20 +288,6 @@ async def update_user_settings_by_session_user(
     db: Session = Depends(get_session),
 ):
     updated_user_settings = form_data.model_dump()
-    ui_settings = updated_user_settings.get("ui")
-    if (
-        user.role != "admin"
-        and ui_settings is not None
-        and "toolServers" in ui_settings.keys()
-        and not has_permission(
-            user.id,
-            "features.direct_tool_servers",
-            request.app.state.config.USER_PERMISSIONS,
-        )
-    ):
-        # If the user is not an admin and does not have permission to use tool servers, remove the key
-        updated_user_settings["ui"].pop("toolServers", None)
-
     user = Users.update_user_settings_by_id(user.id, updated_user_settings, db=db)
     if user:
         return user.settings

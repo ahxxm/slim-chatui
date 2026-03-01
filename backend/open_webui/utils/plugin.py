@@ -15,7 +15,6 @@ from open_webui.env import (
     ENABLE_PIP_INSTALL_FRONTMATTER_REQUIREMENTS,
 )
 from open_webui.models.functions import Functions
-from open_webui.models.tools import Tools
 
 log = logging.getLogger(__name__)
 
@@ -209,53 +208,6 @@ def replace_imports(content):
     return content
 
 
-def load_tool_module_by_id(tool_id, content=None):
-
-    if content is None:
-        tool = Tools.get_tool_by_id(tool_id)
-        if not tool:
-            raise Exception(f"Toolkit not found: {tool_id}")
-
-        content = tool.content
-
-        content = replace_imports(content)
-        Tools.update_tool_by_id(tool_id, {"content": content})
-    else:
-        frontmatter = extract_frontmatter(content)
-        # Install required packages found within the frontmatter
-        install_frontmatter_requirements(frontmatter.get("requirements", ""))
-
-    module_name = f"tool_{tool_id}"
-    module = types.ModuleType(module_name)
-    sys.modules[module_name] = module
-
-    # Create a temporary file and use it to define `__file__` so
-    # that it works as expected from the module's perspective.
-    temp_file = tempfile.NamedTemporaryFile(delete=False)
-    temp_file.close()
-    try:
-        with open(temp_file.name, "w", encoding="utf-8") as f:
-            f.write(content)
-        module.__dict__["__file__"] = temp_file.name
-
-        # Executing the modified content in the created module's namespace
-        exec(content, module.__dict__)
-        frontmatter = extract_frontmatter(content)
-        log.info(f"Loaded module: {module.__name__}")
-
-        # Create and return the object if the class 'Tools' is found in the module
-        if hasattr(module, "Tools"):
-            return module.Tools(), frontmatter
-        else:
-            raise Exception("No Tools class found in the module")
-    except Exception as e:
-        log.error(f"Error loading module: {tool_id}: {e}")
-        del sys.modules[module_name]  # Clean up
-        raise e
-    finally:
-        os.unlink(temp_file.name)
-
-
 def load_function_module_by_id(function_id: str, content: str | None = None):
     if content is None:
         function = Functions.get_function_by_id(function_id)
@@ -305,48 +257,6 @@ def load_function_module_by_id(function_id: str, content: str | None = None):
         raise e
     finally:
         os.unlink(temp_file.name)
-
-
-def get_tool_module_from_cache(request, tool_id, load_from_db=True):
-    if load_from_db:
-        # Always load from the database by default
-        tool = Tools.get_tool_by_id(tool_id)
-        if not tool:
-            raise Exception(f"Tool not found: {tool_id}")
-        content = tool.content
-
-        new_content = replace_imports(content)
-        if new_content != content:
-            content = new_content
-            # Update the tool content in the database
-            Tools.update_tool_by_id(tool_id, {"content": content})
-
-        if (
-            hasattr(request.app.state, "TOOL_CONTENTS")
-            and tool_id in request.app.state.TOOL_CONTENTS
-        ) and (
-            hasattr(request.app.state, "TOOLS") and tool_id in request.app.state.TOOLS
-        ):
-            if request.app.state.TOOL_CONTENTS[tool_id] == content:
-                return request.app.state.TOOLS[tool_id], None
-
-        tool_module, frontmatter = load_tool_module_by_id(tool_id, content)
-    else:
-        if hasattr(request.app.state, "TOOLS") and tool_id in request.app.state.TOOLS:
-            return request.app.state.TOOLS[tool_id], None
-
-        tool_module, frontmatter = load_tool_module_by_id(tool_id)
-
-    if not hasattr(request.app.state, "TOOLS"):
-        request.app.state.TOOLS = {}
-
-    if not hasattr(request.app.state, "TOOL_CONTENTS"):
-        request.app.state.TOOL_CONTENTS = {}
-
-    request.app.state.TOOLS[tool_id] = tool_module
-    request.app.state.TOOL_CONTENTS[tool_id] = content
-
-    return tool_module, frontmatter
 
 
 def get_function_module_from_cache(request, function_id, load_from_db=True):
@@ -443,7 +353,6 @@ def install_tool_and_function_dependencies():
     handled by pip as much as possible.
     """
     function_list = Functions.get_functions(active_only=True)
-    tool_list = Tools.get_tools()
 
     all_dependencies = ""
     try:
@@ -451,12 +360,6 @@ def install_tool_and_function_dependencies():
             frontmatter = extract_frontmatter(replace_imports(function.content))
             if dependencies := frontmatter.get("requirements"):
                 all_dependencies += f"{dependencies}, "
-        for tool in tool_list:
-            # Only install requirements for admin tools
-            if tool.user and tool.user.role == "admin":
-                frontmatter = extract_frontmatter(replace_imports(tool.content))
-                if dependencies := frontmatter.get("requirements"):
-                    all_dependencies += f"{dependencies}, "
 
         install_frontmatter_requirements(all_dependencies.strip(", "))
     except Exception as e:
