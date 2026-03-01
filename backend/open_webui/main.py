@@ -362,7 +362,6 @@ from open_webui.env import (
     ENABLE_WEBSOCKET_SUPPORT,
     BYPASS_MODEL_ACCESS_CONTROL,
     RESET_CONFIG_ON_START,
-    ENABLE_OTEL,
     EXTERNAL_PWA_MANIFEST_URL,
     AIOHTTP_CLIENT_SESSION_SSL,
     ENABLE_PUBLIC_ACTIVE_USERS_COUNT,
@@ -566,18 +565,6 @@ app.state.config = AppConfig()
 
 app.state.WEBUI_NAME = WEBUI_NAME
 app.state.LICENSE_METADATA = None
-
-
-########################################
-#
-# OPENTELEMETRY
-#
-########################################
-
-if ENABLE_OTEL:
-    from open_webui.utils.telemetry.setup import setup as setup_opentelemetry
-
-    setup_opentelemetry(app=app, db_engine=engine)
 
 
 ########################################

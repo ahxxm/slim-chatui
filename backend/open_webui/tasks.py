@@ -23,9 +23,7 @@ async def create_task(coroutine, id=None):
     task_id = str(uuid4())
     task = asyncio.create_task(coroutine)
 
-    task.add_done_callback(
-        lambda t: asyncio.create_task(cleanup_task(task_id, id))
-    )
+    task.add_done_callback(lambda t: asyncio.create_task(cleanup_task(task_id, id)))
     tasks[task_id] = task
 
     if item_tasks.get(id):
