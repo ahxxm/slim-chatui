@@ -1157,7 +1157,7 @@ async def query_knowledge_files(
 ) -> str:
     """
     Search knowledge base files using semantic/vector search. Searches across collections (KBs),
-    individual files, and notes that the user has access to.
+    individual files that the user has access to.
 
     :param query: The search query to find semantically relevant content
     :param knowledge_ids: Optional list of KB ids to limit search to specific knowledge bases

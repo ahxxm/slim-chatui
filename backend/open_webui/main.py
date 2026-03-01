@@ -1541,7 +1541,7 @@ async def embeddings(
 
     This handler:
       - Performs user/model checks and dispatches to the correct backend.
-      - Supports OpenAI, Ollama, arena models, pipelines, and any compatible provider.
+      - Supports OpenAI, Ollama, pipelines, and any compatible provider.
 
     Args:
         request (Request): Request context.

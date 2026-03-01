@@ -24,7 +24,7 @@ class AccessGrant(Base):
     id = Column(Text, primary_key=True)
     resource_type = Column(
         Text, nullable=False
-    )  # "knowledge", "model", "prompt", "tool", "note", "channel", "file"
+    )  # "knowledge", "model", "prompt", "tool", "file"
     resource_id = Column(Text, nullable=False)
     principal_type = Column(Text, nullable=False)  # "user" or "group"
     principal_id = Column(

@@ -126,8 +126,6 @@
 					{#each items as item, i}
 						{#if i === 0 || item?.type !== items[i - 1]?.type}
 							<div class="px-2 text-xs text-gray-500 py-1">
-								{#if item?.type === 'note'}
-									{$i18n.t('Notes')}
 								{:else if item?.type === 'collection'}
 									{$i18n.t('Collections')}
 								{:else if item?.type === 'file'}
