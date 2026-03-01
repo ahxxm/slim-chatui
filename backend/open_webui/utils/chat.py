@@ -195,10 +195,7 @@ async def generate_chat_completion(
     else:
         # Check if user has access to the model
         if not bypass_filter and user.role == "user":
-            try:
-                check_model_access(user, model)
-            except Exception as e:
-                raise e
+            check_model_access(user, model)
 
         if model.get("pipe"):
             # Below does not require bypass_filter because this is the only route the uses this function and it is already bypassing the filter

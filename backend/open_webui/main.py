@@ -7,7 +7,6 @@ import os
 import shutil
 import sys
 import time
-import random
 import re
 from uuid import uuid4
 
@@ -362,7 +361,6 @@ from open_webui.config import (
     ENABLE_FOLDERS,
     FOLDER_MAX_FILE_COUNT,
     ENABLE_USER_STATUS,
-    ENABLE_MESSAGE_RATING,
     ENABLE_USER_WEBHOOKS,
     BYPASS_ADMIN_ACCESS_CONTROL,
     USER_PERMISSIONS,
@@ -793,7 +791,6 @@ app.state.config.BANNERS = WEBUI_BANNERS
 
 app.state.config.ENABLE_FOLDERS = ENABLE_FOLDERS
 app.state.config.FOLDER_MAX_FILE_COUNT = FOLDER_MAX_FILE_COUNT
-app.state.config.ENABLE_MESSAGE_RATING = ENABLE_MESSAGE_RATING
 app.state.config.ENABLE_USER_WEBHOOKS = ENABLE_USER_WEBHOOKS
 app.state.config.ENABLE_USER_STATUS = ENABLE_USER_STATUS
 
@@ -2035,7 +2032,6 @@ async def get_app_config(request: Request):
                     "enable_code_interpreter": app.state.config.ENABLE_CODE_INTERPRETER,
                     "enable_image_generation": app.state.config.ENABLE_IMAGE_GENERATION,
                     "enable_autocomplete_generation": app.state.config.ENABLE_AUTOCOMPLETE_GENERATION,
-                    "enable_message_rating": app.state.config.ENABLE_MESSAGE_RATING,
                     "enable_user_webhooks": app.state.config.ENABLE_USER_WEBHOOKS,
                     "enable_user_status": app.state.config.ENABLE_USER_STATUS,
                     "enable_admin_export": ENABLE_ADMIN_EXPORT,

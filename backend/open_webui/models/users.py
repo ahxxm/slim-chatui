@@ -115,12 +115,6 @@ class UserModel(BaseModel):
         return self
 
 
-class UserStatusModel(UserModel):
-    is_active: bool = False
-
-    model_config = ConfigDict(from_attributes=True)
-
-
 class ApiKey(Base):
     __tablename__ = "api_key"
 
@@ -204,19 +198,8 @@ class UserIdNameResponse(BaseModel):
     name: str
 
 
-class UserIdNameStatusResponse(UserStatus):
-    id: str
-    name: str
-    is_active: Optional[bool] = None
-
-
 class UserInfoListResponse(BaseModel):
     users: list[UserInfoResponse]
-    total: int
-
-
-class UserIdNameListResponse(BaseModel):
-    users: list[UserIdNameResponse]
     total: int
 
 
@@ -491,7 +474,7 @@ class UsersTable:
 
     def get_users_by_user_ids(
         self, user_ids: list[str], db: Optional[Session] = None
-    ) -> list[UserStatusModel]:
+    ) -> list[UserModel]:
         with get_db_context(db) as db:
             users = (
                 db.query(User)

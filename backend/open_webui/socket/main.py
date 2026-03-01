@@ -5,10 +5,10 @@ import socketio
 import logging
 import sys
 import time
-from typing import Dict, Set
+
 from redis import asyncio as aioredis
 
-from open_webui.models.users import Users, UserNameResponse
+from open_webui.models.users import Users
 from open_webui.models.chats import Chats
 from open_webui.utils.redis import (
     get_sentinels_from_env,
@@ -20,7 +20,6 @@ from open_webui.config import (
 )
 
 from open_webui.env import (
-    VERSION,
     ENABLE_WEBSOCKET_SUPPORT,
     WEBSOCKET_MANAGER,
     WEBSOCKET_REDIS_URL,
@@ -37,10 +36,10 @@ from open_webui.env import (
 )
 from open_webui.utils.auth import decode_token
 from open_webui.socket.utils import RedisDict, RedisLock
-from open_webui.tasks import create_task, stop_item_tasks
+
 from open_webui.utils.redis import get_redis_connection
-from open_webui.utils.access_control import has_permission
-from open_webui.models.access_grants import AccessGrants
+
+
 
 
 from open_webui.env import (
@@ -401,7 +400,6 @@ async def heartbeat(sid, data):
 @sio.event
 async def disconnect(sid):
     if sid in SESSION_POOL:
-        user = SESSION_POOL[sid]
         del SESSION_POOL[sid]
 
         # Clean up USAGE_POOL entries for this session
@@ -413,10 +411,6 @@ async def disconnect(sid):
                     del USAGE_POOL[model_id]
                 else:
                     USAGE_POOL[model_id] = connections
-
-    else:
-        pass
-        # print(f"Unknown session ID {sid} disconnected")
 
 
 def get_event_emitter(request_info, update_db=True):

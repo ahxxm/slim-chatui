@@ -54,9 +54,9 @@
 		});
 
 		if (res) {
-			knowledgeItems = res.items.map((note) => {
+			knowledgeItems = res.items.map((item) => {
 				return {
-					...note,
+					...item,
 					type: 'collection'
 				};
 			});

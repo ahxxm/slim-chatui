@@ -4,7 +4,6 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 
-from open_webui.utils.misc import get_message_list
 from open_webui.socket.main import get_event_emitter
 from open_webui.models.chats import (
     ChatForm,

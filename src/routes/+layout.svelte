@@ -28,6 +28,7 @@
 		appInfo,
 		toolServers,
 		playingNotificationSound,
+		appData,
 	} from '$lib/stores';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';

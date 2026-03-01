@@ -1,8 +1,7 @@
 import json
 import uuid
 from open_webui.utils.redis import get_redis_connection
-from open_webui.env import REDIS_KEY_PREFIX
-from typing import Optional, List, Tuple
+
 
 class RedisLock:
     def __init__(

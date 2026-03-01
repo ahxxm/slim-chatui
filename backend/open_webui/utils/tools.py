@@ -440,10 +440,7 @@ def get_builtin_tools(
         if model_knowledge:
             # Model has attached knowledge - only allow semantic search within it
             builtin_functions.append(query_knowledge_files)
-
-            knowledge_types = {item.get("type") for item in model_knowledge}
-            if "file" in knowledge_types or "collection" in knowledge_types:
-                builtin_functions.append(view_file)
+            builtin_functions.append(view_file)
         else:
             # No model knowledge - allow full KB browsing
             builtin_functions.extend(
