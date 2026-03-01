@@ -9,7 +9,7 @@
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
-	import { banners as _banners, config, showChangelog } from '$lib/stores';
+	import { banners as _banners, config } from '$lib/stores';
 	import type { Banner } from '$lib/types';
 	import { compareVersion } from '$lib/utils';
 	import { onMount, getContext } from 'svelte';
@@ -130,15 +130,6 @@
 									{/if}
 								</div>
 
-								<button
-									class=" underline flex items-center space-x-1 text-xs text-gray-500 dark:text-gray-500"
-									type="button"
-									on:click={() => {
-										showChangelog.set(true);
-									}}
-								>
-									<div>{$i18n.t("See what's new")}</div>
-								</button>
 							</div>
 
 							{#if $config?.features?.enable_version_update_check}

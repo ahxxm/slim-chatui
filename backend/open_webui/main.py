@@ -1980,11 +1980,6 @@ async def get_app_latest_release_version(user=Depends(get_verified_user)):
         return {"current": VERSION, "latest": VERSION}
 
 
-@app.get("/api/changelog")
-async def get_app_changelog():
-    return {}
-
-
 @app.get("/api/usage")
 async def get_current_usage(user=Depends(get_verified_user)):
     """
