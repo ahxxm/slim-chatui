@@ -110,13 +110,6 @@
 			info.meta.description = null;
 		}
 
-		delete info.meta.skillIds;
-		delete info.meta.filterIds;
-		delete info.meta.defaultFilterIds;
-		delete info.meta.actionIds;
-		delete info.meta.defaultFeatureIds;
-		delete info.meta.builtinTools;
-
 		info.params.system = system.trim() === '' ? null : system;
 		info.params.stop = params.stop ? params.stop.split(',').filter((s) => s.trim()) : null;
 		Object.keys(info.params).forEach((key) => {

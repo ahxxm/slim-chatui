@@ -721,9 +721,6 @@ async def process_chat_payload(request, form_data, user, metadata, model):
     variables = form_data.pop("variables", None)
 
     form_data.pop("features", None)
-    form_data.pop("filter_ids", None)
-    form_data.pop("tool_ids", None)
-    form_data.pop("skill_ids", None)
     files = form_data.pop("files", None)
 
     if files:

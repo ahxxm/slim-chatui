@@ -13,8 +13,6 @@
 	export let onDelete = () => {};
 	export let onSubmit = () => {};
 
-	export let pipeline = false;
-
 	export let url = '';
 	export let key = '';
 	export let config = {};
@@ -67,7 +65,7 @@
 		<div class="flex w-full gap-2">
 			<div class="flex-1 relative">
 				<input
-					class={`w-full bg-transparent ${($settings?.highContrastMode ?? false) ? '' : 'outline-hidden'} ${pipeline ? 'pr-8' : ''}`}
+					class={`w-full bg-transparent ${($settings?.highContrastMode ?? false) ? '' : 'outline-hidden'}`}
 					placeholder={$i18n.t('API Base URL')}
 					bind:value={url}
 					autocomplete="off"

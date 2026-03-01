@@ -676,10 +676,6 @@ async def get_models(
 
     models = []
     for model in all_models:
-        # Filter out filter pipelines
-        if "pipeline" in model and model["pipeline"].get("type", None) == "filter":
-            continue
-
         # Remove profile image URL to reduce payload size
         if model.get("info", {}).get("meta", {}).get("profile_image_url"):
             model["info"]["meta"].pop("profile_image_url", None)
@@ -740,7 +736,7 @@ async def embeddings(
 
     This handler:
       - Performs user/model checks and dispatches to the correct backend.
-      - Supports OpenAI, Ollama, pipelines, and any compatible provider.
+      - Supports OpenAI, Ollama, and any compatible provider.
 
     Args:
         request (Request): Request context.
@@ -1041,7 +1037,7 @@ async def generate_messages(
 
     Accepts the Anthropic Messages API format, converts internally to OpenAI
     Chat Completions format, routes through the existing chat completion
-    pipeline, then converts the response back to Anthropic Messages format.
+    handler, then converts the response back to Anthropic Messages format.
 
     Supports both streaming and non-streaming requests.
     All models configured in Open WebUI are accessible via this endpoint.
