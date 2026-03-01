@@ -39,9 +39,6 @@ export const DEFAULT_PERMISSIONS = {
 		edit: true,
 		share: true,
 		export: true,
-		stt: true,
-		tts: true,
-		call: true,
 		multiple_models: true,
 		temporary: true,
 		temporary_enforced: false
@@ -51,7 +48,6 @@ export const DEFAULT_PERMISSIONS = {
 		folders: true,
 		direct_tool_servers: false,
 		web_search: true,
-		image_generation: true,
 		code_interpreter: true,
 		memories: true
 	},

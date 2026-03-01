@@ -21,7 +21,6 @@
 		settings,
 		models,
 		config,
-		showCallOverlay,
 		tools,
 		toolServers,
 		user as _user,
@@ -55,7 +54,6 @@
 	import { getSuggestionRenderer } from '../common/RichTextInput/suggestions';
 
 	import InputMenu from './MessageInput/InputMenu.svelte';
-	import VoiceRecording from './MessageInput/VoiceRecording.svelte';
 	import FilesOverlay from './MessageInput/FilesOverlay.svelte';
 	import ToolServersModal from './ToolServersModal.svelte';
 
@@ -66,12 +64,10 @@
 
 	import XMark from '../icons/XMark.svelte';
 	import GlobeAlt from '../icons/GlobeAlt.svelte';
-	import Photo from '../icons/Photo.svelte';
 	import Wrench from '../icons/Wrench.svelte';
 	import Sparkles from '../icons/Sparkles.svelte';
 
 	import InputVariablesModal from './MessageInput/InputVariablesModal.svelte';
-	import Voice from '../icons/Voice.svelte';
 	import Terminal from '../icons/Terminal.svelte';
 	import IntegrationsMenu from './MessageInput/IntegrationsMenu.svelte';
 	import Component from '../icons/Component.svelte';
@@ -111,7 +107,6 @@
 	export let selectedToolIds = [];
 	export let selectedFilterIds = [];
 
-	export let imageGenerationEnabled = false;
 	export let webSearchEnabled = false;
 	export let codeInterpreterEnabled = false;
 
@@ -149,7 +144,6 @@
 			}),
 		selectedToolIds,
 		selectedFilterIds,
-		imageGenerationEnabled,
 		webSearchEnabled,
 		codeInterpreterEnabled
 	});
@@ -390,8 +384,6 @@
 	let showTools = false;
 
 	let loaded = false;
-	let recording = false;
-
 	let isComposing = false;
 	// Safari has a bug where compositionend is not triggered correctly #16615
 	// when using the virtual keyboard on iOS.
@@ -449,14 +441,6 @@
 		(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.web_search ?? true
 	);
 
-	let imageGenerationCapableModels = [];
-	$: imageGenerationCapableModels = (
-		atSelectedModel?.id ? [atSelectedModel.id] : selectedModels
-	).filter(
-		(model) =>
-			$models.find((m) => m.id === model)?.info?.meta?.capabilities?.image_generation ?? true
-	);
-
 	let codeInterpreterCapableModels = [];
 	$: codeInterpreterCapableModels = (
 		atSelectedModel?.id ? [atSelectedModel.id] : selectedModels
@@ -479,13 +463,6 @@
 			webSearchCapableModels.length &&
 		$config?.features?.enable_web_search &&
 		($_user.role === 'admin' || $_user?.permissions?.features?.web_search);
-
-	let showImageGenerationButton = false;
-	$: showImageGenerationButton =
-		(atSelectedModel?.id ? [atSelectedModel.id] : selectedModels).length ===
-			imageGenerationCapableModels.length &&
-		$config?.features?.enable_image_generation &&
-		($_user.role === 'admin' || $_user?.permissions?.features?.image_generation);
 
 	let showCodeInterpreterButton = false;
 	$: showCodeInterpreterButton =
@@ -575,19 +552,8 @@
 
 		if (!$temporaryChatEnabled) {
 			try {
-				// If the file is an audio file, provide the language for STT.
-				let metadata = null;
-				if (
-					(file.type.startsWith('audio/') || file.type.startsWith('video/')) &&
-					$settings?.audio?.stt?.language
-				) {
-					metadata = {
-						language: $settings?.audio?.stt?.language
-					};
-				}
-
 				// During the file upload, file content is automatically extracted.
-				const uploadedFile = await uploadFile(localStorage.token, file, metadata, process);
+				const uploadedFile = await uploadFile(localStorage.token, file, null, process);
 
 				if (uploadedFile) {
 					console.log('File upload completed:', {
@@ -796,19 +762,6 @@
 	const onKeyDown = (e) => {
 		if (e.key === 'Shift') {
 			shiftKey = true;
-		}
-
-		// Cmd/Ctrl+Shift+L to toggle dictation
-		if (e.key.toLowerCase() === 'l' && (e.metaKey || e.ctrlKey) && e.shiftKey) {
-			e.preventDefault();
-			if (recording) {
-				// Confirm and stop recording
-				document.getElementById('confirm-recording-button')?.click();
-			} else {
-				// Start recording (same logic as voice-input-button click)
-				document.getElementById('voice-input-button')?.click();
-			}
-			return;
 		}
 
 		if (e.key === 'Escape') {
@@ -1091,33 +1044,8 @@
 						}}
 					/>
 
-					<div class={recording ? '' : 'hidden'}>
-						<VoiceRecording
-							bind:recording
-							onCancel={async () => {
-								recording = false;
-
-								await tick();
-								document.getElementById('chat-input')?.focus();
-							}}
-							onConfirm={async (data) => {
-								const { text, filename } = data;
-
-								recording = false;
-
-								await tick();
-								await insertTextAtCursor(`${text}`);
-								await tick();
-								document.getElementById('chat-input')?.focus();
-
-								if ($settings?.speechAutoSend ?? false) {
-									dispatch('submit', prompt);
-								}
-							}}
-						/>
-					</div>
 					<form
-						class="w-full flex flex-col gap-1.5 {recording ? 'hidden' : ''}"
+						class="w-full flex flex-col gap-1.5"
 						on:submit|preventDefault={() => {
 							// check if selectedModels support image input
 							dispatch('submit', prompt);
@@ -1424,7 +1352,6 @@
 															selectedFilterIds = [];
 
 															webSearchEnabled = false;
-															imageGenerationEnabled = false;
 															codeInterpreterEnabled = false;
 														}
 													}}
@@ -1498,7 +1425,7 @@
 										</div>
 									</InputMenu>
 
-									{#if showWebSearchButton || showImageGenerationButton || showCodeInterpreterButton || showToolsButton || (toggleFilters && toggleFilters.length > 0)}
+									{#if showWebSearchButton || showCodeInterpreterButton || showToolsButton || (toggleFilters && toggleFilters.length > 0)}
 										<div
 											class="flex self-center w-[1px] h-4 mx-1 bg-gray-200/50 dark:bg-gray-800/50"
 										/>
@@ -1507,12 +1434,10 @@
 											selectedModels={atSelectedModel ? [atSelectedModel.id] : selectedModels}
 											{toggleFilters}
 											{showWebSearchButton}
-											{showImageGenerationButton}
 											{showCodeInterpreterButton}
 											bind:selectedToolIds
 											bind:selectedFilterIds
 											bind:webSearchEnabled
-											bind:imageGenerationEnabled
 											bind:codeInterpreterEnabled
 											closeOnOutsideClick={integrationsMenuCloseOnOutsideClick}
 											onShowValves={(e) => {
@@ -1636,24 +1561,6 @@
 											</Tooltip>
 										{/if}
 
-										{#if imageGenerationEnabled}
-											<Tooltip content={$i18n.t('Image')} placement="top">
-												<button
-													on:click|preventDefault={() =>
-														(imageGenerationEnabled = !imageGenerationEnabled)}
-													type="button"
-													class="group p-[7px] flex gap-1.5 items-center text-sm rounded-full transition-colors duration-300 focus:outline-hidden max-w-full overflow-hidden {imageGenerationEnabled
-														? ' text-sky-500 dark:text-sky-300 bg-sky-50 hover:bg-sky-100 dark:bg-sky-400/10 dark:hover:bg-sky-700/10 border border-sky-200/40 dark:border-sky-500/20'
-														: 'bg-transparent text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 '}"
-												>
-													<Photo className="size-4" strokeWidth="1.75" />
-													<div class="hidden group-hover:block">
-														<XMark className="size-4" strokeWidth="1.75" />
-													</div>
-												</button>
-											</Tooltip>
-										{/if}
-
 										{#if codeInterpreterEnabled}
 											<Tooltip content={$i18n.t('Code Interpreter')} placement="top">
 												<button
@@ -1708,133 +1615,31 @@
 											</Tooltip>
 										</div>
 									{:else}
-										{#if (!history?.currentId || history.messages[history.currentId]?.done == true) && ($_user?.role === 'admin' || ($_user?.permissions?.chat?.stt ?? true))}
-											<!-- {$i18n.t('Record voice')} -->
-											<Tooltip content={$i18n.t('Dictate')}>
+										<div class=" flex items-center">
+											<Tooltip content={$i18n.t('Send message')}>
 												<button
-													id="voice-input-button"
-													class=" text-gray-600 dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 transition rounded-full p-1.5 self-center mr-0.5"
-													type="button"
-													on:click={async () => {
-														try {
-															let stream = await navigator.mediaDevices
-																.getUserMedia({ audio: true })
-																.catch(function (err) {
-																	toast.error(
-																		$i18n.t(
-																			`Permission denied when accessing microphone: {{error}}`,
-																			{
-																				error: err
-																			}
-																		)
-																	);
-																	return null;
-																});
-
-															if (stream) {
-																recording = true;
-																const tracks = stream.getTracks();
-																tracks.forEach((track) => track.stop());
-															}
-															stream = null;
-														} catch {
-															toast.error($i18n.t('Permission denied when accessing microphone'));
-														}
-													}}
-													aria-label="Voice Input"
+													id="send-message-button"
+													class="{!(prompt === '' && files.length === 0)
+														? 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-100 '
+														: 'text-white bg-gray-200 dark:text-gray-900 dark:bg-gray-700 disabled'} transition rounded-full p-1.5 self-center"
+													type="submit"
+													disabled={prompt === '' && files.length === 0}
 												>
 													<svg
 														xmlns="http://www.w3.org/2000/svg"
-														viewBox="0 0 20 20"
+														viewBox="0 0 16 16"
 														fill="currentColor"
-														class="size-5 translate-y-[0.5px]"
+														class="size-5"
 													>
-														<path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4z" />
 														<path
-															d="M5.5 9.643a.75.75 0 00-1.5 0V10c0 3.06 2.29 5.585 5.25 5.954V17.5h-1.5a.75.75 0 000 1.5h4.5a.75.75 0 000-1.5h-1.5v-1.546A6.001 6.001 0 0016 10v-.357a.75.75 0 00-1.5 0V10a4.5 4.5 0 01-9 0v-.357z"
+															fill-rule="evenodd"
+															d="M8 14a.75.75 0 0 1-.75-.75V4.56L4.03 7.78a.75.75 0 0 1-1.06-1.06l4.5-4.5a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06L8.75 4.56v8.69A.75.75 0 0 1 8 14Z"
+															clip-rule="evenodd"
 														/>
 													</svg>
 												</button>
 											</Tooltip>
-										{/if}
-
-										{#if prompt === '' && files.length === 0 && ($_user?.role === 'admin' || ($_user?.permissions?.chat?.call ?? true))}
-											<div class=" flex items-center">
-												<!-- {$i18n.t('Call')} -->
-												<Tooltip content={$i18n.t('Voice mode')}>
-													<button
-														class=" bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-100 transition rounded-full p-1.5 self-center"
-														type="button"
-														on:click={async () => {
-															if (selectedModels.length > 1) {
-																toast.error($i18n.t('Select only one model to call'));
-
-																return;
-															}
-
-															if ($config.audio.stt.engine === 'web') {
-																toast.error(
-																	$i18n.t('Call feature is not supported when using Web STT engine')
-																);
-
-																return;
-															}
-															// check if user has access to getUserMedia
-															try {
-																let stream = await navigator.mediaDevices.getUserMedia({
-																	audio: true
-																});
-																// If the user grants the permission, proceed to show the call overlay
-
-																if (stream) {
-																	const tracks = stream.getTracks();
-																	tracks.forEach((track) => track.stop());
-																}
-
-																stream = null;
-
-																showCallOverlay.set(true);
-																showControls.set(true);
-															} catch (err) {
-																// If the user denies the permission or an error occurs, show an error message
-																toast.error(
-																	$i18n.t('Permission denied when accessing media devices')
-																);
-															}
-														}}
-														aria-label={$i18n.t('Voice mode')}
-													>
-														<Voice className="size-5" strokeWidth="2.5" />
-													</button>
-												</Tooltip>
-											</div>
-										{:else}
-											<div class=" flex items-center">
-												<Tooltip content={$i18n.t('Send message')}>
-													<button
-														id="send-message-button"
-														class="{!(prompt === '' && files.length === 0)
-															? 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-100 '
-															: 'text-white bg-gray-200 dark:text-gray-900 dark:bg-gray-700 disabled'} transition rounded-full p-1.5 self-center"
-														type="submit"
-														disabled={prompt === '' && files.length === 0}
-													>
-														<svg
-															xmlns="http://www.w3.org/2000/svg"
-															viewBox="0 0 16 16"
-															fill="currentColor"
-															class="size-5"
-														>
-															<path
-																fill-rule="evenodd"
-																d="M8 14a.75.75 0 0 1-.75-.75V4.56L4.03 7.78a.75.75 0 0 1-1.06-1.06l4.5-4.5a.75.75 0 0 1 1.06 0l4.5 4.5a.75.75 0 0 1-1.06 1.06L8.75 4.56v8.69A.75.75 0 0 1 8 14Z"
-																clip-rule="evenodd"
-															/>
-														</svg>
-													</button>
-												</Tooltip>
-											</div>
-										{/if}
+										</div>
 									{/if}
 								</div>
 							</div>

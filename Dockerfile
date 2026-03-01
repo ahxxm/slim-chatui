@@ -41,9 +41,6 @@ ENV OPENAI_API_KEY="" \
     DO_NOT_TRACK=true \
     ANONYMIZED_TELEMETRY=false
 
-ENV WHISPER_MODEL="base" \
-    WHISPER_MODEL_DIR="/app/backend/data/cache/whisper/models"
-
 ENV RAG_EMBEDDING_MODEL="sentence-transformers/all-MiniLM-L6-v2" \
     RAG_RERANKING_MODEL="" \
     AUXILIARY_EMBEDDING_MODEL="TaylorAI/bge-micro-v2" \

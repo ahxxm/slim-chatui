@@ -41,7 +41,6 @@ from open_webui.models.access_grants import AccessGrants
 
 
 from open_webui.routers.retrieval import ProcessFileForm, process_file
-from open_webui.routers.audio import transcribe
 
 from open_webui.storage.provider import Storage
 
@@ -155,25 +154,7 @@ def process_uploaded_file(
                     content_type = "text/plain"
 
             if content_type:
-                stt_supported_content_types = getattr(
-                    request.app.state.config, "STT_SUPPORTED_CONTENT_TYPES", []
-                )
-
-                if strict_match_mime_type(stt_supported_content_types, content_type):
-                    file_path_processed = file_path
-                    result = transcribe(
-                        request, file_path_processed, file_metadata, user
-                    )
-
-                    process_file(
-                        request,
-                        ProcessFileForm(
-                            file_id=file_item.id, content=result.get("text", "")
-                        ),
-                        user=user,
-                        db=db_session,
-                    )
-                elif (not content_type.startswith(("image/", "video/"))) or (
+                if (not content_type.startswith(("image/", "video/"))) or (
                     request.app.state.config.CONTENT_EXTRACTION_ENGINE == "external"
                 ):
                     process_file(

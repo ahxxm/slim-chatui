@@ -27,9 +27,7 @@
 		banners,
 		user,
 		socket,
-		audioQueue,
 		showControls,
-		showCallOverlay,
 		currentChatPage,
 		temporaryChatEnabled,
 		mobile,
@@ -48,15 +46,12 @@
 	import {
 		convertMessagesToHistory,
 		copyToClipboard,
-		getMessageContentParts,
 		createMessagesList,
 		getPromptVariables,
 		processDetails,
-		removeAllDetails,
 		getCodeBlockContents,
 		isYoutubeUrl
 	} from '$lib/utils';
-	import { AudioQueue } from '$lib/utils/audio';
 
 	import {
 		createNewChat,
@@ -136,7 +131,6 @@
 
 	let selectedToolIds = [];
 	let selectedFilterIds = [];
-	let imageGenerationEnabled = false;
 	let webSearchEnabled = false;
 	let codeInterpreterEnabled = false;
 
@@ -184,7 +178,6 @@
 		selectedToolIds = [];
 		selectedFilterIds = [];
 		webSearchEnabled = false;
-		imageGenerationEnabled = false;
 
 		const storageChatInput = sessionStorage.getItem(
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
@@ -231,7 +224,6 @@
 						selectedToolIds = input.selectedToolIds;
 						selectedFilterIds = input.selectedFilterIds;
 						webSearchEnabled = input.webSearchEnabled;
-						imageGenerationEnabled = input.imageGenerationEnabled;
 						codeInterpreterEnabled = input.codeInterpreterEnabled;
 					}
 				} catch (e) {}
@@ -291,7 +283,6 @@
 		selectedToolIds = [];
 		selectedFilterIds = [];
 		webSearchEnabled = false;
-		imageGenerationEnabled = false;
 		codeInterpreterEnabled = false;
 
 		if (selectedModelIds.filter((id) => id).length > 0) {
@@ -330,14 +321,6 @@
 
 			// Set Default Features
 			if (model?.info?.meta?.defaultFeatureIds) {
-				if (
-					model.info?.meta?.capabilities?.['image_generation'] &&
-					$config?.features?.enable_image_generation &&
-					($user?.role === 'admin' || $user?.permissions?.features?.image_generation)
-				) {
-					imageGenerationEnabled = model.info.meta.defaultFeatureIds.includes('image_generation');
-				}
-
 				if (
 					model.info?.meta?.capabilities?.['web_search'] &&
 					$config?.features?.enable_web_search &&
@@ -596,28 +579,17 @@
 	let showControlsSubscribe = null;
 	let selectedFolderSubscribe = null;
 
-	const stopAudio = () => {
-		try {
-			speechSynthesis.cancel();
-			$audioQueue.stop();
-		} catch {}
-	};
-
 	onMount(async () => {
 		loading = true;
 		console.log('mounted');
 		window.addEventListener('message', onMessageHandler);
 		$socket?.on('events', chatEventHandler);
 
-		audioQueue.set(new AudioQueue(document.getElementById('audioElement')));
-
 		pageSubscribe = page.subscribe(async (p) => {
 			if (p.url.pathname === '/') {
 				await tick();
 				initNewChat();
 			}
-
-			stopAudio();
 		});
 
 		const storageChatInput = sessionStorage.getItem(
@@ -637,7 +609,6 @@
 			selectedToolIds = [];
 			selectedFilterIds = [];
 			webSearchEnabled = false;
-			imageGenerationEnabled = false;
 			codeInterpreterEnabled = false;
 
 			try {
@@ -649,7 +620,6 @@
 					selectedToolIds = input.selectedToolIds;
 					selectedFilterIds = input.selectedFilterIds;
 					webSearchEnabled = input.webSearchEnabled;
-					imageGenerationEnabled = input.imageGenerationEnabled;
 					codeInterpreterEnabled = input.codeInterpreterEnabled;
 				}
 			} catch (e) {}
@@ -669,7 +639,6 @@
 			}
 
 			if (!value) {
-				showCallOverlay.set(false);
 				showOverview.set(false);
 				showArtifacts.set(false);
 				showEmbeds.set(false);
@@ -699,7 +668,6 @@
 			chatIdUnsubscriber?.();
 			window.removeEventListener('message', onMessageHandler);
 			$socket?.off('events', chatEventHandler);
-			$audioQueue?.destroy();
 		} catch (e) {
 			console.error(e);
 		}
@@ -923,7 +891,6 @@
 		}
 
 		await showControls.set(false);
-		await showCallOverlay.set(false);
 		await showOverview.set(false);
 		await showArtifacts.set(false);
 
@@ -959,10 +926,6 @@
 			webSearchEnabled = true;
 		}
 
-		if ($page.url.searchParams.get('image-generation') === 'true') {
-			imageGenerationEnabled = true;
-		}
-
 		if ($page.url.searchParams.get('code-interpreter') === 'true') {
 			codeInterpreterEnabled = true;
 		}
@@ -979,11 +942,6 @@
 				?.split(',')
 				.map((id) => id.trim())
 				.filter((id) => id);
-		}
-
-		if ($page.url.searchParams.get('call') === 'true') {
-			showCallOverlay.set(true);
-			showControls.set(true);
 		}
 
 		if ($page.url.searchParams.get('q')) {
@@ -1380,29 +1338,6 @@
 					if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
 						navigator.vibrate(5);
 					}
-
-					// Emit chat event for TTS
-					const messageContentParts = getMessageContentParts(
-						removeAllDetails(message.content),
-						$config?.audio?.tts?.split_on ?? 'punctuation'
-					);
-					messageContentParts.pop();
-
-					// dispatch only last sentence and make sure it hasn't been dispatched before
-					if (
-						messageContentParts.length > 0 &&
-						messageContentParts[messageContentParts.length - 1] !== message.lastSentence
-					) {
-						message.lastSentence = messageContentParts[messageContentParts.length - 1];
-						eventTarget.dispatchEvent(
-							new CustomEvent('chat', {
-								detail: {
-									id: message.id,
-									content: messageContentParts[messageContentParts.length - 1]
-								}
-							})
-						);
-					}
 				}
 			}
 		}
@@ -1413,29 +1348,6 @@
 
 			if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
 				navigator.vibrate(5);
-			}
-
-			// Emit chat event for TTS
-			const messageContentParts = getMessageContentParts(
-				removeAllDetails(message.content),
-				$config?.audio?.tts?.split_on ?? 'punctuation'
-			);
-			messageContentParts.pop();
-
-			// dispatch only last sentence and make sure it hasn't been dispatched before
-			if (
-				messageContentParts.length > 0 &&
-				messageContentParts[messageContentParts.length - 1] !== message.lastSentence
-			) {
-				message.lastSentence = messageContentParts[messageContentParts.length - 1];
-				eventTarget.dispatchEvent(
-					new CustomEvent('chat', {
-						detail: {
-							id: message.id,
-							content: messageContentParts[messageContentParts.length - 1]
-						}
-					})
-				);
 			}
 		}
 
@@ -1456,24 +1368,6 @@
 				copyToClipboard(message.content);
 			}
 
-			if ($settings.responseAutoPlayback && !$showCallOverlay) {
-				await tick();
-				document.getElementById(`speak-button-${message.id}`)?.click();
-			}
-
-			// Emit chat event for TTS
-			let lastMessageContentPart =
-				getMessageContentParts(
-					removeAllDetails(message.content),
-					$config?.audio?.tts?.split_on ?? 'punctuation'
-				)?.at(-1) ?? '';
-			if (lastMessageContentPart) {
-				eventTarget.dispatchEvent(
-					new CustomEvent('chat', {
-						detail: { id: message.id, content: lastMessageContentPart }
-					})
-				);
-			}
 			eventTarget.dispatchEvent(
 				new CustomEvent('chat:finish', {
 					detail: {
@@ -1724,18 +1618,13 @@
 
 				if (model) {
 					// If there are image files, check if model is vision capable
-					// Skip this check if image generation is enabled, as images may be for editing or are generated outputs in the history
 					const hasImages = createMessagesList(_history, parentId).some((message) =>
 						message.files?.some(
 							(file) => file.type === 'image' || (file?.content_type ?? '').startsWith('image/')
 						)
 					);
 
-					if (
-						hasImages &&
-						!(model.info?.meta?.capabilities?.vision ?? true) &&
-						!imageGenerationEnabled
-					) {
+					if (hasImages && !(model.info?.meta?.capabilities?.vision ?? true)) {
 						toast.error(
 							$i18n.t('Model {{modelName}} is not vision capable', {
 								modelName: model.name ?? model.id
@@ -1774,12 +1663,6 @@
 
 		if ($config?.features)
 			features = {
-				voice: $showCallOverlay,
-				image_generation:
-					$config?.features?.enable_image_generation &&
-					($user?.role === 'admin' || $user?.permissions?.features?.image_generation)
-						? imageGenerationEnabled
-						: false,
 				code_interpreter:
 					$config?.features?.enable_code_interpreter &&
 					($user?.role === 'admin' || $user?.permissions?.features?.code_interpreter)
@@ -2406,8 +2289,6 @@
 	</title>
 </svelte:head>
 
-<audio id="audioElement" src="" style="display: none;"></audio>
-
 <EventConfirmDialog
 	bind:show={showEventConfirmation}
 	title={eventConfirmationTitle}
@@ -2566,7 +2447,6 @@
 									bind:autoScroll
 									bind:selectedToolIds
 									bind:selectedFilterIds
-									bind:imageGenerationEnabled
 									bind:codeInterpreterEnabled
 									bind:webSearchEnabled
 									bind:atSelectedModel
@@ -2636,7 +2516,6 @@
 									bind:autoScroll
 									bind:selectedToolIds
 									bind:selectedFilterIds
-									bind:imageGenerationEnabled
 									bind:codeInterpreterEnabled
 									bind:webSearchEnabled
 									bind:atSelectedModel

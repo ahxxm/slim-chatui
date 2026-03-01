@@ -23,10 +23,6 @@
 			label: $i18n.t('Web Search'),
 			description: $i18n.t('Model can search the web for information')
 		},
-		image_generation: {
-			label: $i18n.t('Image Generation'),
-			description: $i18n.t('Model can generate images based on text prompts')
-		},
 		code_interpreter: {
 			label: $i18n.t('Code Interpreter'),
 			description: $i18n.t('Model can execute code and perform calculations')
@@ -58,7 +54,6 @@
 		vision?: boolean;
 		file_upload?: boolean;
 		web_search?: boolean;
-		image_generation?: boolean;
 		code_interpreter?: boolean;
 		usage?: boolean;
 		citations?: boolean;

@@ -54,8 +54,6 @@ from open_webui.utils.headers import include_user_info_headers
 from open_webui.tools.builtin import (
     search_web,
     fetch_url,
-    generate_image,
-    edit_image,
     execute_code,
     search_memories,
     add_memory,
@@ -478,22 +476,6 @@ def get_builtin_tools(
         and features.get("web_search")
     ):
         builtin_functions.extend([search_web, fetch_url])
-
-    # Add image generation/edit tools if builtin category enabled AND enabled globally AND model has image_generation capability
-    if (
-        is_builtin_tool_enabled("image_generation")
-        and getattr(request.app.state.config, "ENABLE_IMAGE_GENERATION", False)
-        and get_model_capability("image_generation")
-        and features.get("image_generation")
-    ):
-        builtin_functions.append(generate_image)
-    if (
-        is_builtin_tool_enabled("image_generation")
-        and getattr(request.app.state.config, "ENABLE_IMAGE_EDIT", False)
-        and get_model_capability("image_generation")
-        and features.get("image_generation")
-    ):
-        builtin_functions.append(edit_image)
 
     # Add code interpreter tool if builtin category enabled AND enabled globally AND model has code_interpreter capability
     if (

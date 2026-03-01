@@ -80,21 +80,16 @@ xlrd==2.0.2
 validators==0.35.0
 psutil
 sentencepiece
-soundfile==0.13.1
-
 pillow==12.1.0
 opencv-python-headless==4.13.0.92
 rapidocr-onnxruntime==1.4.4
 rank-bm25==0.2.2
 
 onnxruntime==1.24.1
-faster-whisper==1.2.1
-
 black==26.1.0
 youtube-transcript-api==1.2.4
 pytube==15.0.0
 
-pydub
 ddgs==9.10.0
 
 azure-ai-documentintelligence==1.0.2
@@ -113,8 +108,6 @@ playwright==1.58.0 # Caution: version must match docker-compose.playwright.yaml 
 elasticsearch==9.3.0
 pinecone==6.0.2
 oracledb==3.4.2
-
-av==14.0.1 # Caution: Set due to FATAL FIPS SELFTEST FAILURE, see discussion https://github.com/open-webui/open-webui/discussions/15720
 
 colbert-ai==0.2.22
 
