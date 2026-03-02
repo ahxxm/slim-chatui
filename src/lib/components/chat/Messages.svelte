@@ -29,7 +29,6 @@
 	export let chatId = '';
 	export let user = $_user;
 
-	export let prompt;
 	export let history = {};
 	export let selectedModels;
 	export let atSelectedModel;
@@ -338,15 +337,6 @@
 		}
 	};
 
-	const saveMessage = async (messageId, message) => {
-		if (!history.messages?.[messageId]) {
-			return;
-		}
-
-		history.messages[messageId] = message;
-		await updateChat();
-	};
-
 	const deleteMessage = async (messageId) => {
 		const messageToDelete = history.messages[messageId];
 		const parentMessageId = messageToDelete.parentId;
@@ -378,16 +368,6 @@
 		});
 
 		showMessage({ id: parentMessageId }, false);
-	};
-
-	const triggerScroll = () => {
-		if (autoScroll) {
-			const element = document.getElementById('messages-container');
-			autoScroll = element.scrollHeight - element.scrollTop <= element.clientHeight + 50;
-			setTimeout(() => {
-				scrollToBottom();
-			}, 100);
-		}
 	};
 </script>
 
@@ -429,12 +409,10 @@
 								{updateChat}
 								{editMessage}
 								{deleteMessage}
-								{saveMessage}
 								{submitMessage}
 								{regenerateResponse}
 								{continueResponse}
 								{addMessages}
-								{triggerScroll}
 								{readOnly}
 								{editCodeBlock}
 								{topPadding}

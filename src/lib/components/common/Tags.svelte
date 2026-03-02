@@ -6,7 +6,6 @@
 	const i18n = getContext('i18n');
 
 	export let tags = [];
-	export let suggestionTags = [];
 	export let disabled = false;
 
 	let inputValue = '';

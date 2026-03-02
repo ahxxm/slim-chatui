@@ -197,12 +197,6 @@
 			id: 'data_controls',
 			title: 'Data Controls',
 			keywords: [
-				'archive all chats',
-				'archive chats',
-				'archiveallchats',
-				'archivechats',
-				'archived chats',
-				'archivedchats',
 				'chat activity',
 				'chat history',
 				'chat settings',
@@ -636,7 +630,6 @@
 			<div class="flex-1 px-3.5 md:pl-0 md:pr-4.5 md:min-h-[42rem] max-h-[42rem]">
 				{#if selectedTab === 'general'}
 					<General
-						{getModels}
 						{saveSettings}
 						on:save={() => {
 							toast.success($i18n.t('Settings saved successfully!'));
@@ -657,7 +650,7 @@
 						}}
 					/>
 				{:else if selectedTab === 'data_controls'}
-					<DataControls {saveSettings} />
+					<DataControls />
 				{:else if selectedTab === 'account'}
 					<Account
 						{saveSettings}

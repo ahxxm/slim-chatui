@@ -180,8 +180,6 @@
 						files = input.files;
 					}
 				} catch (e) {}
-			} else {
-				await setDefaults();
 			}
 
 			const chatInput = document.getElementById('chat-input');
@@ -1787,7 +1785,6 @@
 									chatId={$chatId}
 									bind:history
 									bind:autoScroll
-									bind:prompt
 									setInputText={(text) => {
 										messageInput?.setText(text);
 									}}

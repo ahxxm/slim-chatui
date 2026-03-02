@@ -95,7 +95,6 @@
 
 	export let updateChat: Function;
 	export let editMessage: Function;
-	export let saveMessage: Function;
 	export let deleteMessage: Function;
 
 	export let submitMessage: Function;
@@ -499,7 +498,6 @@
 								<Citations
 									bind:this={citationsElement}
 									id={message?.id}
-									{chatId}
 									sources={message?.sources ?? message?.citations}
 								/>
 							{/if}

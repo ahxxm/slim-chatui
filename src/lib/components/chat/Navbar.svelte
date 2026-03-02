@@ -38,12 +38,10 @@
 	const i18n = getContext('i18n');
 
 	export let initNewChat: Function;
-	export let scrollTop = 0;
 
 	export let chat;
 	export let history;
 	export let selectedModels;
-	export let showModelSelector = true;
 
 	export let onSaveTempChat: () => {};
 	export let moveChatHandler: (id: string, folderId: string) => void;
@@ -99,9 +97,7 @@
 			{$showSidebar ? 'ml-1' : ''}
 			"
 				>
-					{#if showModelSelector}
-						<ModelSelector bind:selectedModels />
-					{/if}
+					<ModelSelector bind:selectedModels />
 				</div>
 
 				<div class="self-start flex flex-none items-center text-gray-600 dark:text-gray-400">

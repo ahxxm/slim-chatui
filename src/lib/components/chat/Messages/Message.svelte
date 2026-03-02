@@ -19,7 +19,6 @@
 	export let updateChat;
 
 	export let editMessage;
-	export let saveMessage;
 	export let deleteMessage;
 	export let submitMessage;
 
@@ -27,7 +26,6 @@
 	export let continueResponse;
 
 	export let addMessages;
-	export let triggerScroll;
 	export let readOnly = false;
 	export let editCodeBlock = true;
 	export let topPadding = false;
@@ -74,7 +72,6 @@
 				{showNextMessage}
 				{updateChat}
 				{editMessage}
-				{saveMessage}
 				{submitMessage}
 				{deleteMessage}
 				{continueResponse}
