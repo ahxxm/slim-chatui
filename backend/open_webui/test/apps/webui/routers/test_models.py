@@ -15,9 +15,7 @@ class TestModels(IntegrationTest):
         _, headers = self.sign_up()
 
         # empty at start
-        response = self.fast_api_client.get(
-            self.create_url("/list"), headers=headers
-        )
+        response = self.fast_api_client.get(self.create_url("/list"), headers=headers)
         assert response.status_code == 200
         assert response.json()["total"] == 0
 
@@ -41,9 +39,7 @@ class TestModels(IntegrationTest):
         assert response.status_code == 200
 
         # list shows one
-        response = self.fast_api_client.get(
-            self.create_url("/list"), headers=headers
-        )
+        response = self.fast_api_client.get(self.create_url("/list"), headers=headers)
         assert response.status_code == 200
         assert response.json()["total"] == 1
 
@@ -83,8 +79,6 @@ class TestModels(IntegrationTest):
         )
         assert response.status_code == 200
 
-        response = self.fast_api_client.get(
-            self.create_url("/list"), headers=headers
-        )
+        response = self.fast_api_client.get(self.create_url("/list"), headers=headers)
         assert response.status_code == 200
         assert response.json()["total"] == 0

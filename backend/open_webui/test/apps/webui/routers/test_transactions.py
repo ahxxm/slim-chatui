@@ -123,7 +123,9 @@ class TestDBAtomicity(IntegrationTest):
             session.rollback()
 
         with get_db() as db:
-            assert db.get(Auth, uid).email == user_data["email"], "rollback should undo email update"
+            assert (
+                db.get(Auth, uid).email == user_data["email"]
+            ), "rollback should undo email update"
 
     def test_rollback_undoes_insert_new_auth(self):
         self.sign_up()
@@ -139,10 +141,12 @@ class TestDBAtomicity(IntegrationTest):
             session.rollback()
 
         with get_db() as db:
-            assert db.query(Auth).filter_by(email="rollback@test.com").first() is None, \
-                "rollback should undo auth insert"
-            assert db.query(User).filter_by(email="rollback@test.com").first() is None, \
-                "rollback should undo user insert"
+            assert (
+                db.query(Auth).filter_by(email="rollback@test.com").first() is None
+            ), "rollback should undo auth insert"
+            assert (
+                db.query(User).filter_by(email="rollback@test.com").first() is None
+            ), "rollback should undo user insert"
 
     def test_rollback_undoes_delete_auth(self):
         _, admin_headers = self.sign_up()
@@ -194,10 +198,12 @@ class TestDBAtomicity(IntegrationTest):
 
         with get_db() as db:
             chat = db.get(Chat, chat_id)
-            assert "rollback_tag" not in chat.meta.get("tags", []), \
-                "rollback should undo tag addition to chat meta"
-            assert db.query(Tag).filter_by(id="rollback_tag").first() is None, \
-                "rollback should undo tag row creation"
+            assert "rollback_tag" not in chat.meta.get(
+                "tags", []
+            ), "rollback should undo tag addition to chat meta"
+            assert (
+                db.query(Tag).filter_by(id="rollback_tag").first() is None
+            ), "rollback should undo tag row creation"
 
 
 class TestChatTagOperations(IntegrationTest):
@@ -253,9 +259,7 @@ class TestChatTagOperations(IntegrationTest):
         chat_id = self._create_chat(headers)
         self._add_tag(chat_id, "unique tag", headers)
 
-        resp = self.fast_api_client.delete(
-            f"/api/v1/chats/{chat_id}", headers=headers
-        )
+        resp = self.fast_api_client.delete(f"/api/v1/chats/{chat_id}", headers=headers)
         assert resp.status_code == 200
 
         from open_webui.internal.db import get_db
