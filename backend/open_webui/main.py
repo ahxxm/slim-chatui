@@ -1029,7 +1029,6 @@ async def get_app_config(request: Request):
         "default_locale": str(DEFAULT_LOCALE),
         "features": {
             "auth": WEBUI_AUTH,
-            "auth_trusted_header": bool(app.state.AUTH_TRUSTED_EMAIL_HEADER),
             "enable_signup_password_confirmation": ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
             "enable_signup": app.state.config.ENABLE_SIGNUP,
             "enable_websocket": ENABLE_WEBSOCKET_SUPPORT,
