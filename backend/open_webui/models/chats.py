@@ -216,7 +216,7 @@ class ChatTable:
 
             chat_item = Chat(**chat.model_dump())
             db.add(chat_item)
-            db.commit()
+            db.flush()
             db.refresh(chat_item)
 
             # Dual-write initial messages to chat_message table
@@ -278,7 +278,7 @@ class ChatTable:
                 chats.append(Chat(**chat.model_dump()))
 
             db.add_all(chats)
-            db.commit()
+            db.flush()
 
             # Dual-write messages to chat_message table
             try:
@@ -316,7 +316,7 @@ class ChatTable:
 
                 chat_item.updated_at = int(time.time())
 
-                db.commit()
+                db.flush()
                 db.refresh(chat_item)
 
                 return ChatModel.model_validate(chat_item)
@@ -347,7 +347,7 @@ class ChatTable:
 
             # Single meta update
             chat.meta = {**chat.meta, "tags": new_tag_ids}
-            db.commit()
+            db.flush()
             db.refresh(chat)
 
             # Batch-create any missing tag rows
@@ -471,7 +471,7 @@ class ChatTable:
                 chat = db.get(Chat, id)
                 chat.pinned = not chat.pinned
                 chat.updated_at = int(time.time())
-                db.commit()
+                db.flush()
                 db.refresh(chat)
                 return ChatModel.model_validate(chat)
         except Exception:
@@ -582,7 +582,7 @@ class ChatTable:
                     return None
 
                 if self._sanitize_chat_row(chat_item):
-                    db.commit()
+                    db.flush()
                     db.refresh(chat_item)
 
                 return ChatModel.model_validate(chat_item)
@@ -865,7 +865,7 @@ class ChatTable:
                 chat.folder_id = folder_id
                 chat.updated_at = int(time.time())
                 chat.pinned = False
-                db.commit()
+                db.flush()
                 db.refresh(chat)
                 return ChatModel.model_validate(chat)
         except Exception:
@@ -914,7 +914,7 @@ class ChatTable:
                         **chat.meta,
                         "tags": list(set(chat.meta.get("tags", []) + [tag_id])),
                     }
-                db.commit()
+                db.flush()
                 db.refresh(chat)
                 return ChatModel.model_validate(chat)
         except Exception:
@@ -985,7 +985,7 @@ class ChatTable:
                     **chat.meta,
                     "tags": list(set(tags)),
                 }
-                db.commit()
+                db.flush()
                 return True
         except Exception:
             return False
@@ -1000,7 +1000,7 @@ class ChatTable:
                     **chat.meta,
                     "tags": [],
                 }
-                db.commit()
+                db.flush()
 
                 return True
         except Exception:
@@ -1011,7 +1011,7 @@ class ChatTable:
             with get_db_context(db) as db:
                 db.query(ChatMessage).filter_by(chat_id=id).delete()
                 db.query(Chat).filter_by(id=id).delete()
-                db.commit()
+                db.flush()
                 return True
         except Exception:
             return False
@@ -1023,7 +1023,7 @@ class ChatTable:
             with get_db_context(db) as db:
                 db.query(ChatMessage).filter_by(chat_id=id).delete()
                 db.query(Chat).filter_by(id=id, user_id=user_id).delete()
-                db.commit()
+                db.flush()
                 return True
         except Exception:
             return False
@@ -1040,7 +1040,7 @@ class ChatTable:
                     ChatMessage.chat_id.in_(chat_id_subquery)
                 ).delete(synchronize_session=False)
                 db.query(Chat).filter_by(user_id=user_id).delete()
-                db.commit()
+                db.flush()
 
                 return True
         except Exception:
@@ -1060,7 +1060,7 @@ class ChatTable:
                     ChatMessage.chat_id.in_(chat_id_subquery)
                 ).delete(synchronize_session=False)
                 db.query(Chat).filter_by(user_id=user_id, folder_id=folder_id).delete()
-                db.commit()
+                db.flush()
 
                 return True
         except Exception:
@@ -1078,7 +1078,7 @@ class ChatTable:
                 db.query(Chat).filter_by(user_id=user_id, folder_id=folder_id).update(
                     {"folder_id": new_folder_id}
                 )
-                db.commit()
+                db.flush()
 
                 return True
         except Exception:
@@ -1136,7 +1136,7 @@ class ChatTable:
                 ]
 
                 db.add_all(results)
-                db.commit()
+                db.flush()
 
                 return chat_files
         except Exception:
@@ -1162,7 +1162,7 @@ class ChatTable:
         try:
             with get_db_context(db) as db:
                 db.query(ChatFile).filter_by(chat_id=chat_id, file_id=file_id).delete()
-                db.commit()
+                db.flush()
                 return True
         except Exception:
             return False

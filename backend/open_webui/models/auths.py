@@ -103,7 +103,7 @@ class AuthsTable:
                 id, name, email, profile_image_url, role, db=db
             )
 
-            db.commit()
+            db.flush()
             db.refresh(result)
 
             if result and user:
@@ -141,7 +141,7 @@ class AuthsTable:
                 result = (
                     db.query(Auth).filter_by(id=id).update({"password": new_password})
                 )
-                db.commit()
+                db.flush()
                 return True if result == 1 else False
         except Exception:
             return False
@@ -150,14 +150,10 @@ class AuthsTable:
         self, id: str, email: str, db: Optional[Session] = None
     ) -> bool:
         try:
-            # FIXME: error prone transaction passing, need to fix all
-            if db is None:
-                with get_db() as db:
-                    db.query(Auth).filter_by(id=id).update({"email": email})
-                    db.commit()
-                    return True
-            db.query(Auth).filter_by(id=id).update({"email": email})
-            return True
+            with get_db_context(db) as db:
+                db.query(Auth).filter_by(id=id).update({"email": email})
+                db.flush()
+                return True
         except Exception:
             return False
 
@@ -169,7 +165,7 @@ class AuthsTable:
 
                 if result:
                     db.query(Auth).filter_by(id=id).delete()
-                    db.commit()
+                    db.flush()
 
                     return True
                 else:

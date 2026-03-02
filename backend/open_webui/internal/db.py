@@ -57,6 +57,10 @@ def get_session():
     db = SessionLocal()
     try:
         yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 
@@ -67,11 +71,11 @@ get_db = contextmanager(get_session)
 @contextmanager
 def get_db_context(db: Session | None = None):
     if db is not None:
-        yield db
+        yield db  # caller owns the transaction
     else:
         with get_db() as session:
             yield session
-            session.commit()
+            session.commit()  # we own it, commit on clean exit
 
 
 def backup_db() -> str:
