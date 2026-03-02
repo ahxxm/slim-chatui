@@ -20,7 +20,6 @@ from open_webui.models.users import (
     UserProfileImageResponse,
     Users,
     UpdateProfileForm,
-    UserStatus,
 )
 from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
 from open_webui.env import (
@@ -124,7 +123,7 @@ class SessionUserResponse(Token, UserProfileImageResponse):
     expires_at: Optional[int] = None
 
 
-class SessionUserInfoResponse(SessionUserResponse, UserStatus):
+class SessionUserInfoResponse(SessionUserResponse):
     bio: Optional[str] = None
     gender: Optional[str] = None
     date_of_birth: Optional[datetime.date] = None
@@ -180,9 +179,6 @@ async def get_session_user(
         "bio": user.bio,
         "gender": user.gender,
         "date_of_birth": user.date_of_birth,
-        "status_emoji": user.status_emoji,
-        "status_message": user.status_message,
-        "status_expires_at": user.status_expires_at,
     }
 
 
@@ -597,10 +593,8 @@ async def get_admin_config(request: Request, user=Depends(get_admin_user)):
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
         "ENABLE_USER_WEBHOOKS": request.app.state.config.ENABLE_USER_WEBHOOKS,
-        "ENABLE_USER_STATUS": request.app.state.config.ENABLE_USER_STATUS,
         "PENDING_USER_OVERLAY_TITLE": request.app.state.config.PENDING_USER_OVERLAY_TITLE,
         "PENDING_USER_OVERLAY_CONTENT": request.app.state.config.PENDING_USER_OVERLAY_CONTENT,
-        "RESPONSE_WATERMARK": request.app.state.config.RESPONSE_WATERMARK,
     }
 
 
@@ -612,10 +606,8 @@ class AdminConfig(BaseModel):
     DEFAULT_USER_ROLE: str
     JWT_EXPIRES_IN: str
     ENABLE_USER_WEBHOOKS: bool
-    ENABLE_USER_STATUS: bool
     PENDING_USER_OVERLAY_TITLE: Optional[str] = None
     PENDING_USER_OVERLAY_CONTENT: Optional[str] = None
-    RESPONSE_WATERMARK: Optional[str] = None
 
 
 @router.post("/admin/config")
@@ -637,7 +629,6 @@ async def update_admin_config(
         request.app.state.config.JWT_EXPIRES_IN = form_data.JWT_EXPIRES_IN
 
     request.app.state.config.ENABLE_USER_WEBHOOKS = form_data.ENABLE_USER_WEBHOOKS
-    request.app.state.config.ENABLE_USER_STATUS = form_data.ENABLE_USER_STATUS
 
     request.app.state.config.PENDING_USER_OVERLAY_TITLE = (
         form_data.PENDING_USER_OVERLAY_TITLE
@@ -645,8 +636,6 @@ async def update_admin_config(
     request.app.state.config.PENDING_USER_OVERLAY_CONTENT = (
         form_data.PENDING_USER_OVERLAY_CONTENT
     )
-
-    request.app.state.config.RESPONSE_WATERMARK = form_data.RESPONSE_WATERMARK
 
     return {
         "SHOW_ADMIN_DETAILS": request.app.state.config.SHOW_ADMIN_DETAILS,
@@ -656,8 +645,6 @@ async def update_admin_config(
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
         "ENABLE_USER_WEBHOOKS": request.app.state.config.ENABLE_USER_WEBHOOKS,
-        "ENABLE_USER_STATUS": request.app.state.config.ENABLE_USER_STATUS,
         "PENDING_USER_OVERLAY_TITLE": request.app.state.config.PENDING_USER_OVERLAY_TITLE,
         "PENDING_USER_OVERLAY_CONTENT": request.app.state.config.PENDING_USER_OVERLAY_CONTENT,
-        "RESPONSE_WATERMARK": request.app.state.config.RESPONSE_WATERMARK,
     }

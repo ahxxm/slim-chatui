@@ -4,23 +4,16 @@
 	import { getContext } from 'svelte';
 
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
-	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
-	import Pencil from '$lib/components/icons/Pencil.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Tags from '$lib/components/chat/Tags.svelte';
-	import Share from '$lib/components/icons/Share.svelte';
-	import ArchiveBox from '$lib/components/icons/ArchiveBox.svelte';
 	import Download from '$lib/components/icons/Download.svelte';
-	import ArrowUpCircle from '$lib/components/icons/ArrowUpCircle.svelte';
 	import Pin from '$lib/components/icons/Pin.svelte';
 	import PinSlash from '$lib/components/icons/PinSlash.svelte';
-
-	import { config, settings } from '$lib/stores';
 	import Link from '$lib/components/icons/Link.svelte';
+
+	import { settings } from '$lib/stores';
 
 	const i18n = getContext('i18n');
 
-	export let user;
 	export let model;
 
 	export let exportHandler: Function;

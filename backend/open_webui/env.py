@@ -289,25 +289,9 @@ DATABASE_ENABLE_SQLITE_WAL = (
     os.environ.get("DATABASE_ENABLE_SQLITE_WAL", "False").lower() == "true"
 )
 
-DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL = os.environ.get(
-    "DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL", None
-)
-if DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL is not None:
-    try:
-        DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL = float(
-            DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL
-        )
-    except Exception:
-        DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL = 0.0
-
 # When enabled, get_db_context reuses existing sessions; set to False to always create new sessions
 DATABASE_ENABLE_SESSION_SHARING = (
     os.environ.get("DATABASE_ENABLE_SESSION_SHARING", "False").lower() == "true"
-)
-
-# Enable public visibility of active user count (when disabled, only admins can see it)
-ENABLE_PUBLIC_ACTIVE_USERS_COUNT = (
-    os.environ.get("ENABLE_PUBLIC_ACTIVE_USERS_COUNT", "True").lower() == "true"
 )
 
 RESET_CONFIG_ON_START = (
@@ -415,11 +399,6 @@ WEBUI_AUTH_COOKIE_SECURE = (
 
 if WEBUI_AUTH and WEBUI_SECRET_KEY == "":
     raise ValueError(ERROR_MESSAGES.ENV_VAR_NOT_FOUND)
-
-ENABLE_COMPRESSION_MIDDLEWARE = (
-    os.environ.get("ENABLE_COMPRESSION_MIDDLEWARE", "True").lower() == "true"
-)
-
 
 ####################################
 # MODELS

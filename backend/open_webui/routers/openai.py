@@ -9,8 +9,6 @@ import aiohttp
 from aiocache import cached
 import requests
 
-from azure.identity import DefaultAzureCredential, get_bearer_token_provider
-
 from fastapi import Depends, HTTPException, Request, APIRouter
 from fastapi.responses import (
     FileResponse,
@@ -153,9 +151,6 @@ async def get_headers_and_cookies(
     elif auth_type == "session":
         cookies = request.cookies
         token = request.state.token.credentials
-    elif auth_type in ("azure_ad", "microsoft_entra_id"):
-        token = get_microsoft_entra_id_access_token()
-
     if token:
         headers["Authorization"] = f"Bearer {token}"
 
@@ -163,21 +158,6 @@ async def get_headers_and_cookies(
         headers = {**headers, **config.get("headers")}
 
     return headers, cookies
-
-
-def get_microsoft_entra_id_access_token():
-    """
-    Get Microsoft Entra ID access token using DefaultAzureCredential for Azure OpenAI.
-    Returns the token string or None if authentication fails.
-    """
-    try:
-        token_provider = get_bearer_token_provider(
-            DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"
-        )
-        return token_provider()
-    except Exception as e:
-        log.error(f"Error getting Microsoft Entra ID access token: {e}")
-        return None
 
 
 ##########################################
@@ -532,12 +512,7 @@ async def get_models(
                     request, url, key, api_config, user=user
                 )
 
-                if api_config.get("azure", False):
-                    models = {
-                        "data": api_config.get("model_ids", []) or [],
-                        "object": "list",
-                    }
-                elif is_anthropic_url(url):
+                if is_anthropic_url(url):
                     models = await get_anthropic_models(url, key, user=user)
                     if models is None:
                         raise Exception("Failed to connect to Anthropic API")
@@ -621,36 +596,7 @@ async def verify_connection(
                 request, url, key, api_config, user=user
             )
 
-            if api_config.get("azure", False):
-                # Only set api-key header if not using Azure Entra ID authentication
-                auth_type = api_config.get("auth_type", "bearer")
-                if auth_type not in ("azure_ad", "microsoft_entra_id"):
-                    headers["api-key"] = key
-
-                api_version = api_config.get("api_version", "") or "2023-03-15-preview"
-                async with session.get(
-                    url=f"{url}/openai/models?api-version={api_version}",
-                    headers=headers,
-                    cookies=cookies,
-                    ssl=AIOHTTP_CLIENT_SESSION_SSL,
-                ) as r:
-                    try:
-                        response_data = await r.json()
-                    except Exception:
-                        response_data = await r.text()
-
-                    if r.status != 200:
-                        if isinstance(response_data, (dict, list)):
-                            return JSONResponse(
-                                status_code=r.status, content=response_data
-                            )
-                        else:
-                            return PlainTextResponse(
-                                status_code=r.status, content=response_data
-                            )
-
-                    return response_data
-            elif is_anthropic_url(url):
+            if is_anthropic_url(url):
                 result = await get_anthropic_models(url, key)
                 if result is None:
                     raise HTTPException(
@@ -696,75 +642,8 @@ async def verify_connection(
             )
 
 
-def get_azure_allowed_params(api_version: str) -> set[str]:
-    allowed_params = {
-        "messages",
-        "temperature",
-        "role",
-        "content",
-        "contentPart",
-        "contentPartImage",
-        "enhancements",
-        "dataSources",
-        "n",
-        "stream",
-        "stop",
-        "max_tokens",
-        "logit_bias",
-        "user",
-        "function_call",
-        "functions",
-        "tools",
-        "tool_choice",
-        "top_p",
-        "log_probs",
-        "top_logprobs",
-        "response_format",
-        "seed",
-        "max_completion_tokens",
-        "reasoning_effort",
-    }
-
-    try:
-        if api_version >= "2024-09-01-preview":
-            allowed_params.add("stream_options")
-    except ValueError:
-        log.debug(
-            f"Invalid API version {api_version} for Azure OpenAI. Defaulting to allowed parameters."
-        )
-
-    return allowed_params
-
-
 def is_openai_reasoning_model(model: str) -> bool:
     return model.lower().startswith(("o1", "o3", "o4", "gpt-5"))
-
-
-def convert_to_azure_payload(url, payload: dict, api_version: str):
-    model = payload.get("model", "")
-
-    # Filter allowed parameters based on Azure OpenAI API
-    allowed_params = get_azure_allowed_params(api_version)
-
-    # Special handling for o-series models
-    if is_openai_reasoning_model(model):
-        # Convert max_tokens to max_completion_tokens for o-series models
-        if "max_tokens" in payload:
-            payload["max_completion_tokens"] = payload["max_tokens"]
-            del payload["max_tokens"]
-
-        # Remove temperature if not 1 for o-series models
-        if "temperature" in payload and payload["temperature"] != 1:
-            log.debug(
-                f"Removing temperature parameter for o-series model {model} as only default value (1) is supported"
-            )
-            del payload["temperature"]
-
-    # Filter out unsupported parameters
-    payload = {k: v for k, v in payload.items() if k in allowed_params}
-
-    url = f"{url}/openai/deployments/{model}"
-    return url, payload
 
 
 def convert_to_responses_payload(payload: dict) -> dict:
@@ -964,28 +843,11 @@ async def generate_chat_completion(
 
     is_responses = api_config.get("api_type") == "responses"
 
-    if api_config.get("azure", False):
-        api_version = api_config.get("api_version", "2023-03-15-preview")
-        request_url, payload = convert_to_azure_payload(url, payload, api_version)
-
-        # Only set api-key header if not using Azure Entra ID authentication
-        auth_type = api_config.get("auth_type", "bearer")
-        if auth_type not in ("azure_ad", "microsoft_entra_id"):
-            headers["api-key"] = key
-
-        headers["api-version"] = api_version
-
-        if is_responses:
-            payload = convert_to_responses_payload(payload)
-            request_url = f"{request_url}/responses?api-version={api_version}"
-        else:
-            request_url = f"{request_url}/chat/completions?api-version={api_version}"
+    if is_responses:
+        payload = convert_to_responses_payload(payload)
+        request_url = f"{url}/responses"
     else:
-        if is_responses:
-            payload = convert_to_responses_payload(payload)
-            request_url = f"{url}/responses"
-        else:
-            request_url = f"{url}/chat/completions"
+        request_url = f"{url}/chat/completions"
 
     payload = json.dumps(payload)
 
@@ -1190,21 +1052,7 @@ async def responses(
             request, url, key, api_config, user=user
         )
 
-        if api_config.get("azure", False):
-            api_version = api_config.get("api_version", "2023-03-15-preview")
-
-            auth_type = api_config.get("auth_type", "bearer")
-            if auth_type not in ("azure_ad", "microsoft_entra_id"):
-                headers["api-key"] = key
-
-            headers["api-version"] = api_version
-
-            model = payload.get("model", "")
-            request_url = (
-                f"{url}/openai/deployments/{model}/responses?api-version={api_version}"
-            )
-        else:
-            request_url = f"{url}/responses"
+        request_url = f"{url}/responses"
 
         session = aiohttp.ClientSession(
             trust_env=True,
@@ -1298,23 +1146,7 @@ async def proxy(path: str, request: Request, user=Depends(get_verified_user)):
             request, url, key, api_config, user=user
         )
 
-        if api_config.get("azure", False):
-            api_version = api_config.get("api_version", "2023-03-15-preview")
-
-            # Only set api-key header if not using Azure Entra ID authentication
-            auth_type = api_config.get("auth_type", "bearer")
-            if auth_type not in ("azure_ad", "microsoft_entra_id"):
-                headers["api-key"] = key
-
-            headers["api-version"] = api_version
-
-            payload = json.loads(body)
-            url, payload = convert_to_azure_payload(url, payload, api_version)
-            body = json.dumps(payload).encode()
-
-            request_url = f"{url}/{path}?api-version={api_version}"
-        else:
-            request_url = f"{url}/{path}"
+        request_url = f"{url}/{path}"
 
         session = aiohttp.ClientSession(
             trust_env=True,

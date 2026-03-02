@@ -154,10 +154,6 @@ async def get_current_user(
                             detail="User mismatch. Please sign in again.",
                         )
 
-                # Refresh the user's last active timestamp asynchronously
-                # to prevent blocking the request
-                if background_tasks:
-                    background_tasks.add_task(Users.update_last_active_by_id, user.id)
             return user
         else:
             raise HTTPException(
