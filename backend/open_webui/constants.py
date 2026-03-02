@@ -50,8 +50,6 @@ class ERROR_MESSAGES(str, Enum):
 
     EMPTY_CONTENT = "The content provided is empty. Please ensure that there is text or data present before proceeding."
 
-    DB_NOT_SQLITE = "This feature is only available when running with SQLite databases."
-
     INVALID_PASSWORD = lambda err="": (
         err if err else "The password does not meet the required validation criteria."
     )

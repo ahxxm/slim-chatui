@@ -230,6 +230,7 @@ class ChatTable:
                             chat_id=id,
                             user_id=user_id,
                             data=message,
+                            db=db,
                         )
             except Exception as e:
                 log.warning(
@@ -291,6 +292,7 @@ class ChatTable:
                                 chat_id=chat_obj.id,
                                 user_id=user_id,
                                 data=message,
+                                db=db,
                             )
             except Exception as e:
                 log.warning(

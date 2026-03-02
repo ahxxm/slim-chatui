@@ -57,7 +57,7 @@ from open_webui.routers import (
     utils,
 )
 
-from open_webui.internal.db import ScopedSession
+from open_webui.internal.db import get_db
 
 from open_webui.models.models import Models
 from open_webui.models.users import Users
@@ -443,18 +443,6 @@ app.add_middleware(RedirectMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
 
-@app.middleware("http")
-async def commit_session_after_request(request: Request, call_next):
-    response = await call_next(request)
-    # log.debug("Commit session after request")
-    try:
-        ScopedSession.commit()
-    finally:
-        # CRITICAL: remove() returns the connection to the pool.
-        # Without this, connections remain "checked out" and accumulate
-        # as "idle in transaction" in PostgreSQL.
-        ScopedSession.remove()
-    return response
 
 
 @app.middleware("http")
@@ -1185,7 +1173,8 @@ async def healthcheck():
 
 @app.get("/health/db")
 async def healthcheck_with_db():
-    ScopedSession.execute(text("SELECT 1;")).all()
+    with get_db() as db:
+        db.execute(text("SELECT 1;")).all()
     return {"status": True}
 
 

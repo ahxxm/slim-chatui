@@ -1,5 +1,8 @@
 import json
 import logging
+import os
+import sqlite3
+import tempfile
 from contextlib import contextmanager
 from typing import Any, Optional
 
@@ -9,7 +12,7 @@ from open_webui.env import (
 )
 from sqlalchemy import Dialect, create_engine, MetaData, event, types
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import scoped_session, sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session
 from sqlalchemy.sql.type_api import _T
 from typing_extensions import Self
 
@@ -37,6 +40,10 @@ engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 def on_connect(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA synchronous=NORMAL")
+    cursor.execute("PRAGMA busy_timeout=5000")
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.execute("PRAGMA cache_size=-64000")
     cursor.close()
 
 
@@ -47,7 +54,6 @@ SessionLocal = sessionmaker(
 )
 metadata_obj = MetaData()
 Base = declarative_base(metadata=metadata_obj)
-ScopedSession = scoped_session(SessionLocal)
 
 
 def get_session():
@@ -68,3 +74,16 @@ def get_db_context(db: Optional[Session] = None):
     else:
         with get_db() as session:
             yield session
+
+
+def backup_db() -> str:
+    """Create a consistent snapshot of the SQLite database via backup API.
+    Returns the path to the temp file. Caller is responsible for cleanup."""
+    source = sqlite3.connect(engine.url.database)
+    fd, backup_path = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
+    dest = sqlite3.connect(backup_path)
+    source.backup(dest)
+    source.close()
+    dest.close()
+    return backup_path
