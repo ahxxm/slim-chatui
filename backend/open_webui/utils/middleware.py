@@ -91,6 +91,17 @@ def serialize_output(output: list) -> str:
                     if text:
                         content = f"{content}{text}\n"
 
+        elif item_type == "web_search_call":
+            status = item.get("status", "in_progress")
+            action = item.get("action", {})
+            query = html.escape(action.get("query", ""))
+            if content and not content.endswith("\n"):
+                content += "\n"
+            if status == "completed":
+                content = f'{content}<details type="web_search" done="true" query="{query}">\n<summary>Searched the web</summary>\n</details>\n'
+            else:
+                content = f'{content}<details type="web_search" done="false" query="{query}">\n<summary>Searching the web…</summary>\n</details>\n'
+
         elif item_type == "reasoning":
             reasoning_content = ""
             # Check for 'summary' (new structure) or 'content' (legacy/fallback)

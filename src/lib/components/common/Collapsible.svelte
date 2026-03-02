@@ -100,6 +100,12 @@
 						{:else}
 							{$i18n.t('Thinking...')}
 						{/if}
+					{:else if attributes?.type === 'web_search'}
+						{#if attributes?.done === 'true'}
+							{$i18n.t('Searched')} "{attributes?.query || ''}"
+						{:else}
+							{$i18n.t('Searching...')}
+						{/if}
 					{:else}
 						{title}
 					{/if}

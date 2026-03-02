@@ -855,7 +855,7 @@ export const removeAllDetails = (content) => {
 };
 
 export const processDetails = (content) => {
-	content = removeDetails(content, ['reasoning']);
+	content = removeDetails(content, ['reasoning', 'web_search']);
 
 	// This regex matches <details> tags with type="tool_calls" and captures their attributes to convert them to a string
 	const detailsRegex = /<details\s+type="tool_calls"([^>]*)>([\s\S]*?)<\/details>/gis;
