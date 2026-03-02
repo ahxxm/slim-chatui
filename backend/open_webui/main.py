@@ -134,10 +134,7 @@ from open_webui.env import (
     INSTANCE_ID,
     WEBUI_BUILD_HASH,
     ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
-    WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
-    WEBUI_AUTH_TRUSTED_NAME_HEADER,
     ENABLE_WEBSOCKET_SUPPORT,
-    RESET_CONFIG_ON_START,
     EXTERNAL_PWA_MANIFEST_URL,
     # Admin Account Runtime Creation
     WEBUI_ADMIN_EMAIL,
@@ -222,12 +219,8 @@ async def lifespan(app: FastAPI):
     # Store reference to main event loop for sync->async calls (e.g., embedding generation)
     # This allows sync functions to schedule work on the main loop without blocking health checks
     app.state.main_loop = asyncio.get_running_loop()
-
     app.state.instance_id = INSTANCE_ID
     start_logger()
-
-    if RESET_CONFIG_ON_START:
-        reset_config()
 
     # Create admin account from env vars if specified and no users exist
     if WEBUI_ADMIN_EMAIL and WEBUI_ADMIN_PASSWORD:
@@ -345,8 +338,6 @@ app.state.config.BANNERS = WEBUI_BANNERS
 
 app.state.config.ENABLE_USER_WEBHOOKS = ENABLE_USER_WEBHOOKS
 
-app.state.AUTH_TRUSTED_EMAIL_HEADER = WEBUI_AUTH_TRUSTED_EMAIL_HEADER
-app.state.AUTH_TRUSTED_NAME_HEADER = WEBUI_AUTH_TRUSTED_NAME_HEADER
 app.state.EXTERNAL_PWA_MANIFEST_URL = EXTERNAL_PWA_MANIFEST_URL
 
 
@@ -441,8 +432,6 @@ class RedirectMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(RedirectMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
-
-
 
 
 @app.middleware("http")

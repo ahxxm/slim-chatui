@@ -4,12 +4,9 @@ import os
 import sqlite3
 import tempfile
 from contextlib import contextmanager
-from typing import Any, Optional
+from typing import Any
 
-from open_webui.env import (
-    DATABASE_URL,
-    DATABASE_ENABLE_SESSION_SHARING,
-)
+from open_webui.env import DATABASE_URL
 from sqlalchemy import Dialect, create_engine, MetaData, event, types
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
@@ -23,10 +20,10 @@ class JSONField(types.TypeDecorator):
     impl = types.Text
     cache_ok = True
 
-    def process_bind_param(self, value: Optional[_T], dialect: Dialect) -> Any:
+    def process_bind_param(self, value: _T | None, dialect: Dialect) -> Any:
         return json.dumps(value)
 
-    def process_result_value(self, value: Optional[_T], dialect: Dialect) -> Any:
+    def process_result_value(self, value: _T | None, dialect: Dialect) -> Any:
         if value is not None:
             return json.loads(value)
 
@@ -68,12 +65,9 @@ get_db = contextmanager(get_session)
 
 
 @contextmanager
-def get_db_context(db: Optional[Session] = None):
-    if isinstance(db, Session) and DATABASE_ENABLE_SESSION_SHARING:
-        yield db
-    else:
-        with get_db() as session:
-            yield session
+def get_db_context(db: Session | None = None):
+    with get_db() as session:
+        yield session
 
 
 def backup_db() -> str:
