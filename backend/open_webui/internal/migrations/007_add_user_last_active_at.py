@@ -57,7 +57,7 @@ def migrate(migrator: Migrator, database: pw.Database, *, fake=False):
         "user",
         created_at=pw.BigIntegerField(null=False),
         updated_at=pw.BigIntegerField(null=False),
-        last_active_at=pw.BigIntegerField(null=False),
+        last_active_at=pw.BigIntegerField(null=True),
     )
 
 
