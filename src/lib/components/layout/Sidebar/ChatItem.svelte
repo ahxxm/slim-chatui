@@ -7,7 +7,6 @@
 	const dispatch = createEventDispatcher();
 
 	import {
-		archiveChatById,
 		cloneChatById,
 		deleteChatById,
 		getAllTags,
@@ -33,10 +32,8 @@
 
 	import ChatMenu from './ChatMenu.svelte';
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
-	import ShareChatModal from '$lib/components/chat/ShareChatModal.svelte';
 	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import ArchiveBox from '$lib/components/icons/ArchiveBox.svelte';
 	import DragGhost from '$lib/components/common/DragGhost.svelte';
 	import Check from '$lib/components/icons/Check.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
@@ -91,7 +88,6 @@
 		}
 	};
 
-	let showShareChatModal = false;
 	let confirmEdit = false;
 
 	let chatTitle = title;
@@ -154,11 +150,6 @@
 
 			dispatch('change');
 		}
-	};
-
-	const archiveChatHandler = async (id) => {
-		await archiveChatById(localStorage.token, id);
-		dispatch('change');
 	};
 
 	const moveChatHandler = async (chatId, folderId) => {
@@ -339,8 +330,6 @@
 	};
 </script>
 
-<ShareChatModal bind:show={showShareChatModal} chatId={id} />
-
 <DeleteConfirmDialog
 	bind:show={showDeleteConfirm}
 	title={$i18n.t('Delete chat?')}
@@ -507,18 +496,6 @@
 			</div>
 		{:else if shiftKey && mouseOver}
 			<div class=" flex items-center self-center space-x-1.5">
-				<Tooltip content={$i18n.t('Archive')} className="flex items-center">
-					<button
-						class=" self-center dark:hover:text-white transition"
-						on:click={() => {
-							archiveChatHandler(id);
-						}}
-						type="button"
-					>
-						<ArchiveBox className="size-4  translate-y-[0.5px]" strokeWidth="2" />
-					</button>
-				</Tooltip>
-
 				<Tooltip content={$i18n.t('Delete')}>
 					<button
 						class=" self-center dark:hover:text-white transition"
@@ -538,13 +515,7 @@
 					cloneChatHandler={() => {
 						cloneChatHandler(id);
 					}}
-					shareHandler={() => {
-						showShareChatModal = true;
-					}}
 					{moveChatHandler}
-					archiveChatHandler={() => {
-						archiveChatHandler(id);
-					}}
 					{renameHandler}
 					deleteHandler={() => {
 						showDeleteConfirm = true;

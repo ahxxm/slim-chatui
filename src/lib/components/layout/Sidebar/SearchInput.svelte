@@ -34,14 +34,6 @@
 		{
 			name: 'pinned:',
 			description: $i18n.t('search for pinned chats')
-		},
-		{
-			name: 'shared:',
-			description: $i18n.t('search for shared chats')
-		},
-		{
-			name: 'archived:',
-			description: $i18n.t('search for archived chats')
 		}
 	];
 	let focused = false;
@@ -134,46 +126,6 @@
 				const pinnedValue = lastWord.slice(7);
 				if (pinnedValue) {
 					return item.id.startsWith(pinnedValue) && item.id !== pinnedValue;
-				} else {
-					return true;
-				}
-			});
-		} else if (lastWord.startsWith('shared:')) {
-			filteredItems = [
-				{
-					id: 'true',
-					name: 'true',
-					type: 'shared'
-				},
-				{
-					id: 'false',
-					name: 'false',
-					type: 'shared'
-				}
-			].filter((item) => {
-				const sharedValue = lastWord.slice(7);
-				if (sharedValue) {
-					return item.id.startsWith(sharedValue) && item.id !== sharedValue;
-				} else {
-					return true;
-				}
-			});
-		} else if (lastWord.startsWith('archived:')) {
-			filteredItems = [
-				{
-					id: 'true',
-					name: 'true',
-					type: 'archived'
-				},
-				{
-					id: 'false',
-					name: 'false',
-					type: 'archived'
-				}
-			].filter((item) => {
-				const archivedValue = lastWord.slice(9);
-				if (archivedValue) {
-					return item.id.startsWith(archivedValue) && item.id !== archivedValue;
 				} else {
 					return true;
 				}

@@ -12,7 +12,6 @@ from open_webui.models.chats import (
     ChatResponse,
     Chats,
     ChatTitleIdResponse,
-    SharedChatResponse,
 )
 from open_webui.models.tags import TagModel, Tags
 from open_webui.models.folders import Folders
@@ -117,7 +116,7 @@ async def get_user_chat_list_by_user_id(
         filter["direction"] = direction
 
     return Chats.get_chat_list_by_user_id(
-        user_id, include_archived=True, filter=filter, skip=skip, limit=limit, db=db
+        user_id, filter=filter, skip=skip, limit=limit, db=db
     )
 
 
@@ -275,21 +274,6 @@ async def get_user_chats(
 
 
 ############################
-# GetArchivedChats
-############################
-
-
-@router.get("/all/archived", response_model=list[ChatResponse])
-async def get_user_archived_chats(
-    user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    return [
-        ChatResponse(**chat.model_dump())
-        for chat in Chats.get_archived_chats_by_user_id(user.id, db=db)
-    ]
-
-
-############################
 # GetAllTags
 ############################
 
@@ -323,132 +307,6 @@ async def get_all_user_chats_in_db(
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
         )
     return [ChatResponse(**chat.model_dump()) for chat in Chats.get_chats(db=db)]
-
-
-############################
-# GetArchivedChats
-############################
-
-
-@router.get("/archived", response_model=list[ChatTitleIdResponse])
-async def get_archived_session_user_chat_list(
-    page: Optional[int] = None,
-    query: Optional[str] = None,
-    order_by: Optional[str] = None,
-    direction: Optional[str] = None,
-    user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
-):
-    if page is None:
-        page = 1
-
-    limit = 60
-    skip = (page - 1) * limit
-
-    filter = {}
-    if query:
-        filter["query"] = query
-    if order_by:
-        filter["order_by"] = order_by
-    if direction:
-        filter["direction"] = direction
-
-    return Chats.get_archived_chat_list_by_user_id(
-        user.id,
-        filter=filter,
-        skip=skip,
-        limit=limit,
-        db=db,
-    )
-
-
-############################
-# ArchiveAllChats
-############################
-
-
-@router.post("/archive/all", response_model=bool)
-async def archive_all_chats(
-    user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    return Chats.archive_all_chats_by_user_id(user.id, db=db)
-
-
-############################
-# UnarchiveAllChats
-############################
-
-
-@router.post("/unarchive/all", response_model=bool)
-async def unarchive_all_chats(
-    user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    return Chats.unarchive_all_chats_by_user_id(user.id, db=db)
-
-
-############################
-# GetSharedChats
-############################
-
-
-@router.get("/shared", response_model=list[SharedChatResponse])
-async def get_shared_session_user_chat_list(
-    page: Optional[int] = None,
-    query: Optional[str] = None,
-    order_by: Optional[str] = None,
-    direction: Optional[str] = None,
-    user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
-):
-    if page is None:
-        page = 1
-
-    limit = 60
-    skip = (page - 1) * limit
-
-    filter = {}
-    if query:
-        filter["query"] = query
-    if order_by:
-        filter["order_by"] = order_by
-    if direction:
-        filter["direction"] = direction
-
-    return Chats.get_shared_chat_list_by_user_id(
-        user.id,
-        filter=filter,
-        skip=skip,
-        limit=limit,
-        db=db,
-    )
-
-
-############################
-# GetSharedChatById
-############################
-
-
-@router.get("/share/{share_id}", response_model=Optional[ChatResponse])
-async def get_shared_chat_by_id(
-    share_id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    if user.role == "pending":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.NOT_FOUND
-        )
-
-    if user.role == "user" or (user.role == "admin" and not ENABLE_ADMIN_CHAT_ACCESS):
-        chat = Chats.get_chat_by_share_id(share_id, db=db)
-    elif user.role == "admin" and ENABLE_ADMIN_CHAT_ACCESS:
-        chat = Chats.get_chat_by_id(share_id, db=db)
-
-    if chat:
-        return ChatResponse(**chat.model_dump())
-
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.NOT_FOUND
-        )
 
 
 ############################
@@ -762,144 +620,6 @@ async def clone_chat_by_id(
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-
-############################
-# CloneSharedChatById
-############################
-
-
-@router.post("/{id}/clone/shared", response_model=Optional[ChatResponse])
-async def clone_shared_chat_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-
-    if user.role == "admin":
-        chat = Chats.get_chat_by_id(id, db=db)
-    else:
-        chat = Chats.get_chat_by_share_id(id, db=db)
-
-    if chat:
-        updated_chat = {
-            **chat.chat,
-            "originalChatId": chat.id,
-            "branchPointMessageId": chat.chat["history"]["currentId"],
-            "title": f"Clone of {chat.title}",
-        }
-
-        chats = Chats.import_chats(
-            user.id,
-            [
-                ChatImportForm(
-                    **{
-                        "chat": updated_chat,
-                        "meta": chat.meta,
-                        "pinned": chat.pinned,
-                        "folder_id": chat.folder_id,
-                    }
-                )
-            ],
-            db=db,
-        )
-
-        if chats:
-            chat = chats[0]
-            return ChatResponse(**chat.model_dump())
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=ERROR_MESSAGES.DEFAULT(),
-            )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-
-############################
-# ArchiveChat
-############################
-
-
-@router.post("/{id}/archive", response_model=Optional[ChatResponse])
-async def archive_chat_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
-    if chat:
-        chat = Chats.toggle_chat_archive_by_id(id, db=db)
-
-        tag_ids = chat.meta.get("tags", [])
-        if chat.archived:
-            # Archived chats are excluded from count — clean up orphans
-            Chats.delete_orphan_tags_for_user(tag_ids, user.id, db=db)
-        else:
-            # Unarchived — ensure tag rows exist
-            Tags.ensure_tags_exist(tag_ids, user.id, db=db)
-
-        return ChatResponse(**chat.model_dump())
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-
-############################
-# ShareChatById
-############################
-
-
-@router.post("/{id}/share", response_model=Optional[ChatResponse])
-async def share_chat_by_id(
-    id: str,
-    user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
-):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
-
-    if chat:
-        if chat.share_id:
-            shared_chat = Chats.update_shared_chat_by_chat_id(chat.id, db=db)
-            return ChatResponse(**shared_chat.model_dump())
-
-        shared_chat = Chats.insert_shared_chat_by_chat_id(chat.id, db=db)
-        if not shared_chat:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=ERROR_MESSAGES.DEFAULT(),
-            )
-        return ChatResponse(**shared_chat.model_dump())
-
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
-
-
-############################
-# DeletedSharedChatById
-############################
-
-
-@router.delete("/{id}/share", response_model=Optional[bool])
-async def delete_shared_chat_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
-    if chat:
-        if not chat.share_id:
-            return False
-
-        result = Chats.delete_shared_chat_by_chat_id(id, db=db)
-        update_result = Chats.update_chat_share_id_by_id(id, None, db=db)
-
-        return result and update_result != None
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
         )
 
 

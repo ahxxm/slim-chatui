@@ -5,8 +5,8 @@ Opinionated, diverged hard fork of [Open WebUI](https://github.com/open-webui/op
 Opinions:
 
 - Chat first
-- Personal usage: no `$ENTERPRISE` ldap/oauth/analytics/chats
-- slim: starts in ~3 seconds
+- Personal usage: no `$ENTERPRISE` ldap/oauth/analytics/chats/status/share
+- slim: cold start in ~3 seconds, 150MB Docker image
 
 ---
 

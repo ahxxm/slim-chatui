@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
 	import { getContext } from 'svelte';
 
 	import dayjs from 'dayjs';
@@ -7,11 +6,8 @@
 
 	dayjs.extend(localizedFormat);
 
-	import { getChatListByUserId, deleteChatById, getArchivedChatList } from '$lib/apis/chats';
+	import { getChatListByUserId } from '$lib/apis/chats';
 
-	import Modal from '$lib/components/common/Modal.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
 	import ChatsModal from '$lib/components/layout/ChatsModal.svelte';
 
 	const i18n = getContext('i18n');
@@ -111,7 +107,6 @@
 		user: user.name.length > 32 ? `${user.name.slice(0, 32)}...` : user.name
 	})}
 	emptyPlaceholder={$i18n.t('No chats found for this user.')}
-	shareUrl={true}
 	{chatList}
 	{allChatsLoaded}
 	{chatListLoading}

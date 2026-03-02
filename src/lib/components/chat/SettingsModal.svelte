@@ -223,10 +223,7 @@
 				'exportchats',
 				'import chats',
 				'importchats',
-				'message activity',
-				'message archive',
 				'message history',
-				'messagearchive',
 				'messagehistory'
 			]
 		},

@@ -1731,7 +1731,6 @@
 					{history}
 					title={$chatTitle}
 					bind:selectedModels
-					shareEnabled={!!history.currentId}
 					{initNewChat}
 					{moveChatHandler}
 					onSaveTempChat={async () => {
