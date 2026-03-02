@@ -1,0 +1,101 @@
+{
+	"id": "resp_01",
+	"object": "response",
+	"created_at": 1771443926,
+	"status": "completed",
+	"background": false,
+	"completed_at": 1771443930,
+	"error": null,
+	"frequency_penalty": 0.0,
+	"incomplete_details": null,
+	"instructions": null,
+	"max_output_tokens": null,
+	"max_tool_calls": null,
+	"model": "gpt-5.2-2025-12-11",
+	"output": [
+		{
+			"id": "rs_123",
+			"type": "reasoning",
+			"summary": [
+				{
+					"type": "summary_text",
+					"text": "**Getting current weather**\n\nI need to find the current weather in Hong Kong, so I\u2019ll use the web.run tool for that. My plan is to ask for the weather right now. I'll include \"Hong Kong, China\" to get accurate conditions. It should involve a straightforward call with parameters like location set to null. So, I\u2019ll prepare a request like {\"weather\":[{\"location\":\"Hong Kong, China\"}]} and then call the tool to retrieve the info."
+				}
+			]
+		},
+		{
+			"id": "ws_123",
+			"type": "web_search_call",
+			"status": "completed",
+			"action": {
+				"type": "search",
+				"queries": ["weather: Hong Kong, China"],
+				"query": "weather: Hong Kong, China"
+			}
+		},
+		{
+			"id": "msg_123",
+			"type": "message",
+			"status": "completed",
+			"content": [
+				{
+					"type": "output_text",
+					"annotations": [],
+					"logprobs": [],
+					"text": "Hong Kong weather right now: **Overcast, 69\u00b0F (21\u00b0C)**. \n\nNext few hours: **cloudy**, gradually cooling to about **66\u00b0F (19\u00b0C)** by midnight; **thunderstorms** possible early morning (around **4\u20135 AM**). "
+				}
+			],
+			"role": "assistant"
+		}
+	],
+	"parallel_tool_calls": true,
+	"presence_penalty": 0.0,
+	"previous_response_id": null,
+	"prompt_cache_key": null,
+	"prompt_cache_retention": null,
+	"reasoning": {
+		"effort": "high",
+		"summary": "detailed"
+	},
+	"safety_identifier": null,
+	"service_tier": "priority",
+	"store": false,
+	"temperature": 1.0,
+	"text": {
+		"format": {
+			"type": "text"
+		},
+		"verbosity": "medium"
+	},
+	"tool_choice": "auto",
+	"tools": [
+		{
+			"type": "web_search_preview",
+			"search_context_size": "medium",
+			"user_location": {
+				"type": "approximate",
+				"city": null,
+				"country": "US",
+				"region": null,
+				"timezone": null
+			}
+		}
+	],
+	"top_logprobs": 0,
+	"top_p": 0.98,
+	"truncation": "disabled",
+	"usage": {
+		"input_tokens": 4754,
+		"input_tokens_details": {
+			"cached_tokens": 4352
+		},
+		"output_tokens": 187,
+		"output_tokens_details": {
+			"reasoning_tokens": 97
+		},
+		"total_tokens": 4941
+	},
+	"user": null,
+	"metadata": {},
+	"done": true
+}
