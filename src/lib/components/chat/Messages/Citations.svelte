@@ -9,13 +9,10 @@
 	export let chatId = '';
 
 	export let sources = [];
-	export let readOnly = false;
 
 	let citations = [];
 	let showPercentage = false;
 	let showRelevance = true;
-
-	let citationModal = null;
 
 	let showCitations = false;
 	let showCitationModal = false;
@@ -38,14 +35,9 @@
 		}
 
 		if (citations[index]) {
-			console.log('Showing citation modal for:', citations[index]);
-
 			if (citations[index]?.source?.embed_url) {
-				const embedUrl = citations[index].source.embed_url;
-				if (embedUrl) {
-					window.open(embedUrl, '_blank');
-					return;
-				}
+				window.open(citations[index].source.embed_url, '_blank');
+				return;
 			}
 
 			selectedCitation = citations[index];
@@ -118,8 +110,6 @@
 
 			return acc;
 		}, []);
-		console.log('citations', citations);
-
 		showRelevance = calculateShowRelevance(citations);
 		showPercentage = shouldShowPercentage(citations);
 	}

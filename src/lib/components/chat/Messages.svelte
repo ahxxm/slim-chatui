@@ -259,7 +259,7 @@
 	};
 
 	const editMessage = async (messageId, { content, files }, submit = true) => {
-		if ((selectedModels ?? []).filter((id) => id).length === 0) {
+		if (!selectedModels[0]) {
 			toast.error($i18n.t('Model not selected'));
 			return;
 		}
@@ -419,7 +419,6 @@
 							<Message
 								{chatId}
 								bind:history
-								{selectedModels}
 								messageId={message.id}
 								idx={messageIdx}
 								{user}

@@ -2,36 +2,27 @@
 	import { toast } from 'svelte-sonner';
 	import dayjs from 'dayjs';
 
-	import { createEventDispatcher, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { onMount, tick, getContext } from 'svelte';
 	import type { Writable } from 'svelte/store';
-	import type { i18n as i18nType, t } from 'i18next';
+	import type { i18n as i18nType } from 'i18next';
 
 	const i18n = getContext<Writable<i18nType>>('i18n');
 
-	const dispatch = createEventDispatcher();
-
-	import { getChatById } from '$lib/apis/chats';
-	import { generateTags } from '$lib/apis';
-
-	import { config, models, settings, temporaryChatEnabled } from '$lib/stores';
+	import { config, models, settings } from '$lib/stores';
 	import {
 		copyToClipboard as _copyToClipboard,
-		approximateToHumanReadable,
 		sanitizeResponseContent,
-		createMessagesList,
 		formatDate,
-		removeDetails,
 		removeAllDetails
 	} from '$lib/utils';
-	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
 	import Name from './Name.svelte';
 	import ProfileImage from './ProfileImage.svelte';
 	import Skeleton from './Skeleton.svelte';
 	import Image from '$lib/components/common/Image.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
 
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 
@@ -42,7 +33,6 @@
 	import FileItem from '$lib/components/common/FileItem.svelte';
 	import FollowUps from './ResponseMessage/FollowUps.svelte';
 	import { fade } from 'svelte/transition';
-	import { flyAndScale } from '$lib/utils/transitions';
 	import RegenerateMenu from './ResponseMessage/RegenerateMenu.svelte';
 	import StatusHistory from './ResponseMessage/StatusHistory.svelte';
 	import FullHeightIframe from '$lib/components/common/FullHeightIframe.svelte';
@@ -89,7 +79,6 @@
 	export let chatId = '';
 	export let history;
 	export let messageId;
-	export let selectedModels = [];
 
 	let message: MessageType = JSON.parse(JSON.stringify(history.messages[messageId]));
 	$: if (history.messages) {
@@ -222,12 +211,6 @@
 	const deleteMessageHandler = async () => {
 		deleteMessage(message.id);
 	};
-
-	$: if (!edit) {
-		(async () => {
-			await tick();
-		})();
-	}
 
 	const buttonsWheelHandler = (event: WheelEvent) => {
 		if (buttonsContainerElement) {
@@ -523,7 +506,6 @@
 									id={message?.id}
 									{chatId}
 									sources={message?.sources ?? message?.citations}
-									{readOnly}
 								/>
 							{/if}
 						</div>
@@ -780,36 +762,12 @@
 											class="hidden regenerate-response-button"
 											on:click={() => {
 												regenerateResponse(message);
-
-												(model?.actions ?? []).forEach((action) => {
-													dispatch('action', {
-														id: action.id,
-														event: {
-															id: 'regenerate-response',
-															data: {
-																messageId: message.id
-															}
-														}
-													});
-												});
 											}}
 										/>
 
 										<RegenerateMenu
 											onRegenerate={(prompt = null) => {
 												regenerateResponse(message, prompt);
-
-												(model?.actions ?? []).forEach((action) => {
-													dispatch('action', {
-														id: action.id,
-														event: {
-															id: 'regenerate-response',
-															data: {
-																messageId: message.id
-															}
-														}
-													});
-												});
 											}}
 										>
 											<Tooltip content={$i18n.t('Regenerate')} placement="bottom">
@@ -847,18 +805,6 @@
 													: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition regenerate-response-button"
 												on:click={() => {
 													regenerateResponse(message);
-
-													(model?.actions ?? []).forEach((action) => {
-														dispatch('action', {
-															id: action.id,
-															event: {
-																id: 'regenerate-response',
-																data: {
-																	messageId: message.id
-																}
-															}
-														});
-													});
 												}}
 											>
 												<svg

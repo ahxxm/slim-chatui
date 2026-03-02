@@ -13,8 +13,7 @@
 	export let showSetDefault = true;
 
 	const saveDefaultModel = async () => {
-		const hasEmptyModel = selectedModels.filter((it) => it === '');
-		if (hasEmptyModel.length) {
+		if (!selectedModels[0]) {
 			toast.error($i18n.t('Choose a model before saving...'));
 			return;
 		}
@@ -37,13 +36,9 @@
 		await updateUserSettings(localStorage.token, { ui: $settings });
 	};
 
-	$: if (selectedModels.length > 0 && $models.length > 0) {
-		const _selectedModels = selectedModels.map((model) =>
-			$models.map((m) => m.id).includes(model) ? model : ''
-		);
-
-		if (JSON.stringify(_selectedModels) !== JSON.stringify(selectedModels)) {
-			selectedModels = _selectedModels;
+	$: if (selectedModels[0] && $models.length > 0) {
+		if (!$models.find((m) => m.id === selectedModels[0])) {
+			selectedModels = [''];
 		}
 	}
 </script>

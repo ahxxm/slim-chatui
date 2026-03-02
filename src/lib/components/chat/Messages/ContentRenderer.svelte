@@ -1,6 +1,5 @@
 <script>
-	import { onDestroy, onMount, tick, getContext } from 'svelte';
-	const i18n = getContext('i18n');
+	import { onDestroy, onMount, tick } from 'svelte';
 
 	import Markdown from './Markdown.svelte';
 	import { mobile, settings } from '$lib/stores';
@@ -89,10 +88,7 @@
 		}
 
 		if (floatingButtonsElement) {
-			// check if closeHandler is defined
-
 			if (typeof floatingButtonsElement?.closeHandler === 'function') {
-				// call the closeHandler function
 				floatingButtonsElement?.closeHandler();
 			}
 		}

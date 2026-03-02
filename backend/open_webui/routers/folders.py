@@ -16,7 +16,7 @@ from open_webui.constants import ERROR_MESSAGES
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from open_webui.utils.auth import get_verified_user
 

@@ -19,8 +19,7 @@
 
 	export let files = [];
 
-	export let selectedModels: string[] = [];
-	export let fileUploadCapableModels: string[] = [];
+	export let fileUploadEnabled: boolean = true;
 
 	export let screenCaptureHandler: Function;
 	export let uploadFilesHandler: Function;
@@ -30,9 +29,6 @@
 
 	let show = false;
 	let tab = '';
-
-	let fileUploadEnabled = true;
-	$: fileUploadEnabled = fileUploadCapableModels.length === selectedModels.length;
 
 	$: if (!fileUploadEnabled && files.length > 0) {
 		files = [];
@@ -101,11 +97,7 @@
 			{#if tab === ''}
 				<div in:fly={{ x: -20, duration: 150 }}>
 					<Tooltip
-						content={fileUploadCapableModels.length !== selectedModels.length
-							? $i18n.t('Model(s) do not support file upload')
-							: !fileUploadEnabled
-								? $i18n.t('You do not have permission to upload files.')
-								: ''}
+						content={!fileUploadEnabled ? $i18n.t('Model does not support file upload') : ''}
 						className="w-full"
 					>
 						<DropdownMenu.Item
@@ -125,11 +117,7 @@
 					</Tooltip>
 
 					<Tooltip
-						content={fileUploadCapableModels.length !== selectedModels.length
-							? $i18n.t('Model(s) do not support file upload')
-							: !fileUploadEnabled
-								? $i18n.t('You do not have permission to upload files.')
-								: ''}
+						content={!fileUploadEnabled ? $i18n.t('Model does not support file upload') : ''}
 						className="w-full"
 					>
 						<DropdownMenu.Item
@@ -156,11 +144,7 @@
 					</Tooltip>
 
 					<Tooltip
-						content={fileUploadCapableModels.length !== selectedModels.length
-							? $i18n.t('Model(s) do not support file upload')
-							: !fileUploadEnabled
-								? $i18n.t('You do not have permission to upload files.')
-								: ''}
+						content={!fileUploadEnabled ? $i18n.t('Model does not support file upload') : ''}
 						className="w-full"
 					>
 						<button

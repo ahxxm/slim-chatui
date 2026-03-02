@@ -31,7 +31,7 @@
 {#key mounted}
 	<div class="m-auto w-full max-w-6xl px-8 lg:px-20">
 		<div class="flex justify-start">
-			<div class="flex -space-x-4 mb-0.5" in:fade={{ duration: 200 }}>
+			<div class="mb-0.5" in:fade={{ duration: 200 }}>
 				{#if model}
 					<Tooltip
 						content={marked.parse(

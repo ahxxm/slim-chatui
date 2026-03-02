@@ -210,16 +210,11 @@
 	}
 
 	const saveSessionSelectedModels = () => {
-		const selectedModelsString = JSON.stringify(selectedModels);
-		if (
-			selectedModels.length === 0 ||
-			(selectedModels.length === 1 && selectedModels[0] === '') ||
-			sessionStorage.selectedModels === selectedModelsString
-		) {
+		if (!selectedModels[0] || sessionStorage.selectedModels === JSON.stringify(selectedModels)) {
 			return;
 		}
-		sessionStorage.selectedModels = selectedModelsString;
-		console.log('saveSessionSelectedModels', selectedModels, sessionStorage.selectedModels);
+		sessionStorage.selectedModels = JSON.stringify(selectedModels);
+		console.log('saveSessionSelectedModels', selectedModels);
 	};
 
 	const showMessage = async (message, scroll = true) => {
@@ -422,10 +417,10 @@
 	const savedModelIds = async () => {
 		if (
 			$selectedFolder &&
-			selectedModels.filter((modelId) => modelId !== '').length > 0 &&
+			selectedModels[0] &&
 			JSON.stringify($selectedFolder?.data?.model_ids) !== JSON.stringify(selectedModels)
 		) {
-			const res = await updateFolderById(localStorage.token, $selectedFolder.id, {
+			await updateFolderById(localStorage.token, $selectedFolder.id, {
 				data: {
 					model_ids: selectedModels
 				}
@@ -536,34 +531,24 @@
 				''
 			)?.split(',');
 
-			if (urlModels.length === 1) {
-				if (!$models.find((m) => m.id === urlModels[0])) {
-					// Model not found; open model selector and prefill
-					const modelSelectorButton = document.getElementById('model-selector-0-button');
-					if (modelSelectorButton) {
-						modelSelectorButton.click();
-						await tick();
-
-						const modelSelectorInput = document.getElementById('model-search-input');
-						if (modelSelectorInput) {
-							modelSelectorInput.focus();
-							modelSelectorInput.value = urlModels[0];
-							modelSelectorInput.dispatchEvent(new Event('input'));
-						}
-					}
-				} else {
-					// Model found; set it as selected
-					selectedModels = urlModels;
-				}
+			if ($models.find((m) => m.id === urlModels[0])) {
+				selectedModels = [urlModels[0]];
 			} else {
-				// Multiple models; set as selected
-				selectedModels = urlModels;
-			}
+				// Model not found; open model selector and prefill with search
+				selectedModels = [''];
+				const modelSelectorButton = document.getElementById('model-selector-0-button');
+				if (modelSelectorButton) {
+					modelSelectorButton.click();
+					await tick();
 
-			// Unavailable models filtering
-			selectedModels = selectedModels.filter((modelId) =>
-				$models.map((m) => m.id).includes(modelId)
-			);
+					const modelSelectorInput = document.getElementById('model-search-input');
+					if (modelSelectorInput) {
+						modelSelectorInput.focus();
+						modelSelectorInput.value = urlModels[0];
+						modelSelectorInput.dispatchEvent(new Event('input'));
+					}
+				}
+			}
 		} else {
 			if ($selectedFolder?.data?.model_ids) {
 				// Set from folder model IDs
@@ -584,24 +569,17 @@
 				}
 			}
 
-			// Unavailable & hidden models filtering
-			selectedModels = selectedModels.filter((modelId) => availableModels.includes(modelId));
+			// Clear if selected model is unavailable or hidden
+			if (selectedModels[0] && !availableModels.includes(selectedModels[0])) {
+				selectedModels = [''];
+			}
 		}
 
-		// Ensure at least one model is selected
-		if (selectedModels.length === 0 || (selectedModels.length === 1 && selectedModels[0] === '')) {
+		// Ensure a model is selected
+		if (!selectedModels[0]) {
 			if (availableModels.length > 0) {
-				if (defaultModels && defaultModels.length > 0) {
-					selectedModels = defaultModels.filter((modelId) => availableModels.includes(modelId));
-				}
-
-				if (
-					selectedModels.length === 0 ||
-					(selectedModels.length === 1 && selectedModels[0] === '')
-				) {
-					// Only fall back to first available model if default models didn't resolve
-					selectedModels = [availableModels?.at(0) ?? ''];
-				}
+				const defaultMatch = defaultModels.filter((id) => availableModels.includes(id));
+				selectedModels = defaultMatch[0] ? [defaultMatch[0]] : [availableModels[0]];
 			} else {
 				selectedModels = [''];
 			}
@@ -638,10 +616,6 @@
 			}
 		}
 
-		selectedModels = selectedModels.map((modelId) =>
-			$models.map((m) => m.id).includes(modelId) ? modelId : ''
-		);
-
 		const chatInput = document.getElementById('chat-input');
 		setTimeout(() => chatInput?.focus(), 0);
 	};
@@ -668,12 +642,8 @@
 			if (chatContent) {
 				console.log(chatContent);
 
-				selectedModels =
-					(chatContent?.models ?? undefined) !== undefined
-						? chatContent.models
-						: [chatContent.models ?? ''];
-
-				selectedModels = selectedModels.length > 0 ? [selectedModels[0]] : [''];
+				const savedModels = chatContent?.models ?? [];
+				selectedModels = [savedModels[0] ?? ''];
 
 				history =
 					(chatContent?.history ?? undefined) !== undefined
@@ -805,70 +775,67 @@
 
 	const createMessagePair = async (userPrompt) => {
 		messageInput?.setText('');
-		if (selectedModels.length === 0) {
+
+		const modelId = selectedModels[0];
+		const model = $models.find((m) => m.id === modelId);
+
+		if (!model) {
 			toast.error($i18n.t('Model not selected'));
+			return;
+		}
+
+		const messages = createMessagesList(history, history.currentId);
+		const parentMessage = messages.length !== 0 ? messages.at(-1) : null;
+
+		const userMessageId = uuidv4();
+		const responseMessageId = uuidv4();
+
+		const userMessage = {
+			id: userMessageId,
+			parentId: parentMessage ? parentMessage.id : null,
+			childrenIds: [responseMessageId],
+			role: 'user',
+			content: userPrompt ? userPrompt : `[PROMPT] ${userMessageId}`,
+			timestamp: Math.floor(Date.now() / 1000)
+		};
+
+		const responseMessage = {
+			id: responseMessageId,
+			parentId: userMessageId,
+			childrenIds: [],
+			role: 'assistant',
+			content: `[RESPONSE] ${responseMessageId}`,
+			done: true,
+
+			model: modelId,
+			modelName: model.name ?? model.id,
+			timestamp: Math.floor(Date.now() / 1000)
+		};
+
+		if (parentMessage) {
+			parentMessage.childrenIds.push(userMessageId);
+			history.messages[parentMessage.id] = parentMessage;
+		}
+		history.messages[userMessageId] = userMessage;
+		history.messages[responseMessageId] = responseMessage;
+
+		history.currentId = responseMessageId;
+
+		await tick();
+
+		if (autoScroll) {
+			scrollToBottom();
+		}
+
+		if (messages.length === 0) {
+			await initChatHandler(history);
 		} else {
-			const modelId = selectedModels[0];
-			const model = $models.filter((m) => m.id === modelId).at(0);
-
-			if (!model) {
-				toast.error($i18n.t('Model not found'));
-				return;
-			}
-
-			const messages = createMessagesList(history, history.currentId);
-			const parentMessage = messages.length !== 0 ? messages.at(-1) : null;
-
-			const userMessageId = uuidv4();
-			const responseMessageId = uuidv4();
-
-			const userMessage = {
-				id: userMessageId,
-				parentId: parentMessage ? parentMessage.id : null,
-				childrenIds: [responseMessageId],
-				role: 'user',
-				content: userPrompt ? userPrompt : `[PROMPT] ${userMessageId}`,
-				timestamp: Math.floor(Date.now() / 1000)
-			};
-
-			const responseMessage = {
-				id: responseMessageId,
-				parentId: userMessageId,
-				childrenIds: [],
-				role: 'assistant',
-				content: `[RESPONSE] ${responseMessageId}`,
-				done: true,
-
-				model: modelId,
-				modelName: model.name ?? model.id,
-				timestamp: Math.floor(Date.now() / 1000)
-			};
-
-			if (parentMessage) {
-				parentMessage.childrenIds.push(userMessageId);
-				history.messages[parentMessage.id] = parentMessage;
-			}
-			history.messages[userMessageId] = userMessage;
-			history.messages[responseMessageId] = responseMessage;
-
-			history.currentId = responseMessageId;
-
-			await tick();
-
-			if (autoScroll) {
-				scrollToBottom();
-			}
-
-			if (messages.length === 0) {
-				await initChatHandler(history);
-			} else {
-				await saveChatHandler($chatId, history);
-			}
+			await saveChatHandler($chatId, history);
 		}
 	};
 
 	const addMessages = async ({ modelId, parentId, messages }) => {
-		const model = $models.filter((m) => m.id === modelId).at(0);
+		const model = $models.find((m) => m.id === modelId);
 
 		let parentMessage = history.messages[parentId];
 		let currentParentId = parentMessage ? parentMessage.id : null;
@@ -1029,19 +996,11 @@
 	const submitPrompt = async (userPrompt, { _raw = false } = {}) => {
 		console.log('submitPrompt', userPrompt, $chatId);
 
-		const _selectedModels = selectedModels.map((modelId) =>
-			$models.map((m) => m.id).includes(modelId) ? modelId : ''
-		);
-
-		if (JSON.stringify(selectedModels) !== JSON.stringify(_selectedModels)) {
-			selectedModels = _selectedModels;
-		}
-
 		if (userPrompt === '' && files.length === 0) {
 			toast.error($i18n.t('Please enter a prompt'));
 			return;
 		}
-		if (selectedModels.includes('')) {
+		if (!selectedModels[0] || !$models.find((m) => m.id === selectedModels[0])) {
 			toast.error($i18n.t('Model not selected'));
 			return;
 		}
@@ -1568,9 +1527,9 @@
 			responseMessage.done = false;
 			await tick();
 
-			const model = $models
-				.filter((m) => m.id === (responseMessage?.selectedModelId ?? responseMessage.model))
-				.at(0);
+			const model = $models.find(
+				(m) => m.id === (responseMessage?.selectedModelId ?? responseMessage.model)
+			);
 
 			if (model) {
 				await sendMessageSocket(

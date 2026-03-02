@@ -1,18 +1,10 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-
-	import { tick, getContext, onMount, createEventDispatcher } from 'svelte';
-	const dispatch = createEventDispatcher();
-	const i18n = getContext('i18n');
-
 	import { settings } from '$lib/stores';
-	import { copyToClipboard } from '$lib/utils';
 
 	import ResponseMessage from './ResponseMessage.svelte';
 	import UserMessage from './UserMessage.svelte';
 
 	export let chatId;
-	export let selectedModels = [];
 	export let idx = 0;
 
 	export let history;
@@ -74,7 +66,6 @@
 				{chatId}
 				{history}
 				{messageId}
-				{selectedModels}
 				isLastMessage={messageId === history.currentId}
 				siblings={history.messages[history.messages[messageId].parentId]?.childrenIds ?? []}
 				{setInputText}

@@ -77,8 +77,7 @@
 	export let atSelectedModel: Model | undefined = undefined;
 	export let selectedModels: [''];
 
-	let selectedModelIds = [];
-	$: selectedModelIds = atSelectedModel !== undefined ? [atSelectedModel.id] : selectedModels;
+	$: activeModelId = atSelectedModel?.id ?? selectedModels[0];
 
 	export let history;
 	export let taskIds = null;
@@ -383,15 +382,9 @@
 	let user = null;
 	export let placeholder = '';
 
-	let visionCapableModels = [];
-	$: visionCapableModels = (atSelectedModel?.id ? [atSelectedModel.id] : selectedModels).filter(
-		(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.vision ?? true
-	);
-
-	let fileUploadCapableModels = [];
-	$: fileUploadCapableModels = (atSelectedModel?.id ? [atSelectedModel.id] : selectedModels).filter(
-		(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.file_upload ?? true
-	);
+	$: activeModel = $models.find((m) => m.id === activeModelId);
+	$: visionCapable = activeModel?.info?.meta?.capabilities?.vision ?? true;
+	$: fileUploadCapable = activeModel?.info?.meta?.capabilities?.file_upload ?? true;
 
 	const scrollToBottom = () => {
 		const element = document.getElementById('messages-container');
@@ -440,8 +433,8 @@
 	};
 
 	const uploadFileHandler = async (file, itemData = {}) => {
-		if (fileUploadCapableModels.length !== selectedModels.length) {
-			toast.error($i18n.t('Model(s) do not support file upload'));
+		if (!fileUploadCapable) {
+			toast.error($i18n.t('Model does not support file upload'));
 			return null;
 		}
 
@@ -538,8 +531,8 @@
 			});
 
 			if (file['type'].startsWith('image/')) {
-				if (visionCapableModels.length === 0) {
-					toast.error($i18n.t('Selected model(s) do not support image inputs'));
+				if (!visionCapable) {
+					toast.error($i18n.t('Selected model does not support image inputs'));
 					return;
 				}
 
@@ -894,14 +887,10 @@
 														alt=""
 														imageClassName=" size-10 rounded-xl object-cover"
 													/>
-													{#if atSelectedModel ? visionCapableModels.length === 0 : selectedModels.length !== visionCapableModels.length}
+													{#if !visionCapable}
 														<Tooltip
 															className=" absolute top-1 left-1"
-															content={$i18n.t('{{ models }}', {
-																models: [...(atSelectedModel ? [atSelectedModel] : selectedModels)]
-																	.filter((id) => !visionCapableModels.includes(id))
-																	.join(', ')
-															})}
+															content={$i18n.t('Model does not support vision')}
 														>
 															<svg
 																xmlns="http://www.w3.org/2000/svg"
@@ -1028,13 +1017,13 @@
 													autocomplete={$config?.features?.enable_autocomplete_generation &&
 														($settings?.promptAutocomplete ?? false)}
 													generateAutoCompletion={async (text) => {
-														if (selectedModelIds.length === 0 || !selectedModelIds.at(0)) {
+														if (!activeModelId) {
 															toast.error($i18n.t('Please select a model first.'));
 														}
 
 														const res = await generateAutoCompletion(
 															localStorage.token,
-															selectedModelIds.at(0),
+															activeModelId,
 															text,
 															history?.currentId
 																? createMessagesList(history, history.currentId)
@@ -1165,8 +1154,7 @@
 								<div class="ml-1 self-end flex items-center flex-1 max-w-[80%]">
 									<InputMenu
 										bind:files
-										selectedModels={atSelectedModel ? [atSelectedModel.id] : selectedModels}
-										{fileUploadCapableModels}
+										fileUploadEnabled={fileUploadCapable}
 										{screenCaptureHandler}
 										{inputFilesHandler}
 										uploadFilesHandler={() => {
