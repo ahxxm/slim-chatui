@@ -43,15 +43,6 @@ classifiers = [
     "Topic :: Multimedia",
 ]
 
-[project.optional-dependencies]
-postgres = [
-    "psycopg2-binary==2.9.11",
-]
-
-all = [
-    "psycopg2-binary==2.9.11",
-]
-
 [project.scripts]
 open-webui = "open_webui:app"
 
@@ -80,18 +71,9 @@ exclude = [
     ".webui_secret_key",
     "dev.sh",
     "start.sh",
-    "start_windows.bat",
     "webui.db",
-    "chroma.sqlite3",
 ]
 force-include = { build = "open_webui/frontend" }
-
-[tool.codespell]
-# Ref: https://github.com/codespell-project/codespell#using-a-config-file
-skip = '.git*,*.svg,package-lock.json,i18n,*.lock,*.css,*-bundle.js,locales,example-doc.txt,emoji-shortcodes.json'
-check-hidden = true
-# ignore-regex = ''
-ignore-words-list = 'ans'
 
 [dependency-groups]
 dev = [
