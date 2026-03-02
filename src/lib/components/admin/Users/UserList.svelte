@@ -5,9 +5,7 @@
 	import { onMount, getContext, onDestroy } from 'svelte';
 
 	import dayjs from 'dayjs';
-	import relativeTime from 'dayjs/plugin/relativeTime';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
-	dayjs.extend(relativeTime);
 	dayjs.extend(localizedFormat);
 
 	import { toast } from 'svelte-sonner';
@@ -30,7 +28,6 @@
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
-	import ProfilePreview from '$lib/components/common/ProfilePreview.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -275,29 +272,6 @@
 					<th
 						scope="col"
 						class="px-2.5 py-2 cursor-pointer select-none"
-						on:click={() => setSortKey('last_active_at')}
-					>
-						<div class="flex gap-1.5 items-center">
-							{$i18n.t('Last Active')}
-
-							{#if orderBy === 'last_active_at'}
-								<span class="font-normal"
-									>{#if direction === 'asc'}
-										<ChevronUp className="size-2" />
-									{:else}
-										<ChevronDown className="size-2" />
-									{/if}
-								</span>
-							{:else}
-								<span class="invisible">
-									<ChevronUp className="size-2" />
-								</span>
-							{/if}
-						</div>
-					</th>
-					<th
-						scope="col"
-						class="px-2.5 py-2 cursor-pointer select-none"
 						on:click={() => setSortKey('created_at')}
 					>
 						<div class="flex gap-1.5 items-center">
@@ -341,33 +315,16 @@
 						</td>
 						<td class="px-3 py-1 font-medium text-gray-900 dark:text-white max-w-48">
 							<div class="flex items-center gap-2">
-								<ProfilePreview {user} side="right" align="center" sideOffset={6}>
-									<img
-										class="rounded-full w-6 min-w-6 h-6 object-cover mr-0.5 flex-shrink-0"
-										src={`${WEBUI_API_BASE_URL}/users/${user.id}/profile/image`}
-										alt="user"
-									/>
-								</ProfilePreview>
+								<img
+									class="rounded-full w-6 min-w-6 h-6 object-cover mr-0.5 flex-shrink-0"
+									src={`${WEBUI_API_BASE_URL}/users/${user.id}/profile/image`}
+									alt="user"
+								/>
 
 								<div class="font-medium truncate">{user.name}</div>
-
-								{#if user?.last_active_at && Date.now() / 1000 - user.last_active_at < 180}
-									<div>
-										<span class="relative flex size-1.5">
-											<span
-												class="absolute inline-flex h-full w-full animate-ping rounded-full bg-green-400 opacity-75"
-											></span>
-											<span class="relative inline-flex size-1.5 rounded-full bg-green-500"></span>
-										</span>
-									</div>
-								{/if}
 							</div>
 						</td>
 						<td class=" px-3 py-1"> {user.email} </td>
-
-						<td class=" px-3 py-1">
-							{dayjs(user.last_active_at * 1000).fromNow()}
-						</td>
 
 						<td class=" px-3 py-1">
 							{dayjs(user.created_at * 1000).format('LL')}

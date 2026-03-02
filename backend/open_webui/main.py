@@ -29,7 +29,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
-from starlette_compress import CompressMiddleware
 
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -42,10 +41,8 @@ from open_webui.utils.logger import start_logger
 from open_webui.socket.main import (
     MODELS,
     app as socket_app,
-    periodic_usage_pool_cleanup,
     periodic_session_pool_cleanup,
     get_event_emitter,
-    get_models_in_use,
 )
 from open_webui.routers import (
     openai,
@@ -90,7 +87,6 @@ from open_webui.config import (
     SHOW_ADMIN_DETAILS,
     JWT_EXPIRES_IN,
     ENABLE_SIGNUP,
-    ENABLE_USER_STATUS,
     ENABLE_USER_WEBHOOKS,
     DEFAULT_USER_ROLE,
     PENDING_USER_OVERLAY_CONTENT,
@@ -108,7 +104,6 @@ from open_webui.config import (
     CORS_ALLOW_ORIGIN,
     DEFAULT_LOCALE,
     WEBUI_URL,
-    RESPONSE_WATERMARK,
     # Admin
     ENABLE_ADMIN_CHAT_ACCESS,
     ENABLE_ADMIN_EXPORT,
@@ -141,11 +136,9 @@ from open_webui.env import (
     ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
     WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
     WEBUI_AUTH_TRUSTED_NAME_HEADER,
-    ENABLE_COMPRESSION_MIDDLEWARE,
     ENABLE_WEBSOCKET_SUPPORT,
     RESET_CONFIG_ON_START,
     EXTERNAL_PWA_MANIFEST_URL,
-    ENABLE_PUBLIC_ACTIVE_USERS_COUNT,
     # Admin Account Runtime Creation
     WEBUI_ADMIN_EMAIL,
     WEBUI_ADMIN_PASSWORD,
@@ -246,7 +239,6 @@ async def lifespan(app: FastAPI):
         limiter = anyio.to_thread.current_default_thread_limiter()
         limiter.total_tokens = THREAD_POOL_SIZE
 
-    asyncio.create_task(periodic_usage_pool_cleanup())
     asyncio.create_task(periodic_session_pool_cleanup())
 
     if app.state.config.ENABLE_BASE_MODELS_CACHE:
@@ -348,13 +340,10 @@ app.state.config.DEFAULT_USER_ROLE = DEFAULT_USER_ROLE
 app.state.config.PENDING_USER_OVERLAY_CONTENT = PENDING_USER_OVERLAY_CONTENT
 app.state.config.PENDING_USER_OVERLAY_TITLE = PENDING_USER_OVERLAY_TITLE
 
-app.state.config.RESPONSE_WATERMARK = RESPONSE_WATERMARK
-
 app.state.config.WEBHOOK_URL = WEBHOOK_URL
 app.state.config.BANNERS = WEBUI_BANNERS
 
 app.state.config.ENABLE_USER_WEBHOOKS = ENABLE_USER_WEBHOOKS
-app.state.config.ENABLE_USER_STATUS = ENABLE_USER_STATUS
 
 app.state.AUTH_TRUSTED_EMAIL_HEADER = WEBUI_AUTH_TRUSTED_EMAIL_HEADER
 app.state.AUTH_TRUSTED_NAME_HEADER = WEBUI_AUTH_TRUSTED_NAME_HEADER
@@ -407,10 +396,6 @@ app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH = (
 ########################################
 
 app.state.MODELS = MODELS
-
-# Add the middleware to the app
-if ENABLE_COMPRESSION_MIDDLEWARE:
-    app.add_middleware(CompressMiddleware)
 
 
 class RedirectMiddleware(BaseHTTPMiddleware):
@@ -1071,14 +1056,12 @@ async def get_app_config(request: Request):
             "enable_signup_password_confirmation": ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
             "enable_signup": app.state.config.ENABLE_SIGNUP,
             "enable_websocket": ENABLE_WEBSOCKET_SUPPORT,
-            "enable_public_active_users_count": ENABLE_PUBLIC_ACTIVE_USERS_COUNT,
             "enable_easter_eggs": ENABLE_EASTER_EGGS,
             **(
                 {
                     "enable_direct_connections": app.state.config.ENABLE_DIRECT_CONNECTIONS,
                     "enable_autocomplete_generation": app.state.config.ENABLE_AUTOCOMPLETE_GENERATION,
                     "enable_user_webhooks": app.state.config.ENABLE_USER_WEBHOOKS,
-                    "enable_user_status": app.state.config.ENABLE_USER_STATUS,
                     "enable_admin_export": ENABLE_ADMIN_EXPORT,
                     "enable_admin_chat_access": ENABLE_ADMIN_CHAT_ACCESS,
                 }
@@ -1101,7 +1084,6 @@ async def get_app_config(request: Request):
                 "ui": {
                     "pending_user_overlay_title": app.state.config.PENDING_USER_OVERLAY_TITLE,
                     "pending_user_overlay_content": app.state.config.PENDING_USER_OVERLAY_CONTENT,
-                    "response_watermark": app.state.config.RESPONSE_WATERMARK,
                 },
             }
             if user is not None and (user.role in ["admin", "user"])
@@ -1145,31 +1127,6 @@ async def get_app_version():
         "version": VERSION,
         "deployment_id": DEPLOYMENT_ID,
     }
-
-
-@app.get("/api/usage")
-async def get_current_usage(user=Depends(get_verified_user)):
-    """
-    Get current usage statistics for Open WebUI.
-    This is an experimental endpoint and subject to change.
-    """
-    try:
-        # If public visibility is disabled, only allow admins to access this endpoint
-        if not ENABLE_PUBLIC_ACTIVE_USERS_COUNT and user.role != "admin":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Access denied. Only administrators can view usage statistics.",
-            )
-
-        return {
-            "model_ids": get_models_in_use(),
-            "user_count": Users.get_active_user_count(),
-        }
-    except HTTPException:
-        raise
-    except Exception as e:
-        log.error(f"Error getting usage statistics: {e}")
-        raise HTTPException(status_code=500, detail="Internal Server Error")
 
 
 @app.get("/manifest.json")

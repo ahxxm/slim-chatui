@@ -488,20 +488,6 @@ PENDING_USER_OVERLAY_CONTENT = PersistentConfig(
     os.environ.get("PENDING_USER_OVERLAY_CONTENT", ""),
 )
 
-
-RESPONSE_WATERMARK = PersistentConfig(
-    "RESPONSE_WATERMARK",
-    "ui.watermark",
-    os.environ.get("RESPONSE_WATERMARK", ""),
-)
-
-
-ENABLE_USER_STATUS = PersistentConfig(
-    "ENABLE_USER_STATUS",
-    "users.enable_status",
-    os.environ.get("ENABLE_USER_STATUS", "True").lower() == "true",
-)
-
 WEBHOOK_URL = PersistentConfig(
     "WEBHOOK_URL", "webhook_url", os.environ.get("WEBHOOK_URL", "")
 )

@@ -1108,21 +1108,19 @@ async def non_streaming_chat_response_handler(response, ctx):
                         },
                     )
 
-                    # Send a webhook notification if the user is not active
-                    if not Users.is_user_active(user.id):
-                        webhook_url = Users.get_user_webhook_url_by_id(user.id)
-                        if webhook_url:
-                            await post_webhook(
-                                request.app.state.WEBUI_NAME,
-                                webhook_url,
-                                f"{title} - {request.app.state.config.WEBUI_URL}/c/{metadata['chat_id']}\n\n{content}",
-                                {
-                                    "action": "chat",
-                                    "message": content,
-                                    "title": title,
-                                    "url": f"{request.app.state.config.WEBUI_URL}/c/{metadata['chat_id']}",
-                                },
-                            )
+                    webhook_url = Users.get_user_webhook_url_by_id(user.id)
+                    if webhook_url:
+                        await post_webhook(
+                            request.app.state.WEBUI_NAME,
+                            webhook_url,
+                            f"{title} - {request.app.state.config.WEBUI_URL}/c/{metadata['chat_id']}\n\n{content}",
+                            {
+                                "action": "chat",
+                                "message": content,
+                                "title": title,
+                                "url": f"{request.app.state.config.WEBUI_URL}/c/{metadata['chat_id']}",
+                            },
+                        )
 
                     await background_tasks_handler(ctx)
 
@@ -1928,21 +1926,19 @@ async def streaming_chat_response_handler(response, ctx):
                         {"usage": usage},
                     )
 
-                # Send a webhook notification if the user is not active
-                if not Users.is_user_active(user.id):
-                    webhook_url = Users.get_user_webhook_url_by_id(user.id)
-                    if webhook_url:
-                        await post_webhook(
-                            request.app.state.WEBUI_NAME,
-                            webhook_url,
-                            f"{title} - {request.app.state.config.WEBUI_URL}/c/{metadata['chat_id']}\n\n{content}",
-                            {
-                                "action": "chat",
-                                "message": content,
-                                "title": title,
-                                "url": f"{request.app.state.config.WEBUI_URL}/c/{metadata['chat_id']}",
-                            },
-                        )
+                webhook_url = Users.get_user_webhook_url_by_id(user.id)
+                if webhook_url:
+                    await post_webhook(
+                        request.app.state.WEBUI_NAME,
+                        webhook_url,
+                        f"{title} - {request.app.state.config.WEBUI_URL}/c/{metadata['chat_id']}\n\n{content}",
+                        {
+                            "action": "chat",
+                            "message": content,
+                            "title": title,
+                            "url": f"{request.app.state.config.WEBUI_URL}/c/{metadata['chat_id']}",
+                        },
+                    )
 
                 await event_emitter(
                     {
