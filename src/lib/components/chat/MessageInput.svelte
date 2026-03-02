@@ -9,7 +9,7 @@
 	dayjs.extend(duration);
 	dayjs.extend(relativeTime);
 
-	import { onMount, tick, getContext, createEventDispatcher, onDestroy } from 'svelte';
+	import { onMount, tick, getContext, createEventDispatcher } from 'svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -20,7 +20,6 @@
 		models,
 		config,
 		user as _user,
-		showControls,
 		temporaryChatEnabled
 	} from '$lib/stores';
 
@@ -78,8 +77,7 @@
 	export let atSelectedModel: Model | undefined = undefined;
 	export let selectedModels: [''];
 
-	let selectedModelIds = [];
-	$: selectedModelIds = atSelectedModel !== undefined ? [atSelectedModel.id] : selectedModels;
+	$: activeModelId = atSelectedModel?.id ?? selectedModels[0];
 
 	export let history;
 	export let taskIds = null;
@@ -106,8 +104,7 @@
 			.map((file) => {
 				return {
 					...file,
-					user: undefined,
-					access_grants: undefined
+					user: undefined
 				};
 			})
 	});
@@ -385,15 +382,9 @@
 	let user = null;
 	export let placeholder = '';
 
-	let visionCapableModels = [];
-	$: visionCapableModels = (atSelectedModel?.id ? [atSelectedModel.id] : selectedModels).filter(
-		(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.vision ?? true
-	);
-
-	let fileUploadCapableModels = [];
-	$: fileUploadCapableModels = (atSelectedModel?.id ? [atSelectedModel.id] : selectedModels).filter(
-		(model) => $models.find((m) => m.id === model)?.info?.meta?.capabilities?.file_upload ?? true
-	);
+	$: activeModel = $models.find((m) => m.id === activeModelId);
+	$: visionCapable = activeModel?.info?.meta?.capabilities?.vision ?? true;
+	$: fileUploadCapable = activeModel?.info?.meta?.capabilities?.file_upload ?? true;
 
 	const scrollToBottom = () => {
 		const element = document.getElementById('messages-container');
@@ -442,13 +433,8 @@
 	};
 
 	const uploadFileHandler = async (file, itemData = {}) => {
-		if ($_user?.role !== 'admin' && !($_user?.permissions?.chat?.file_upload ?? true)) {
-			toast.error($i18n.t('You do not have permission to upload files.'));
-			return null;
-		}
-
-		if (fileUploadCapableModels.length !== selectedModels.length) {
-			toast.error($i18n.t('Model(s) do not support file upload'));
+		if (!fileUploadCapable) {
+			toast.error($i18n.t('Model does not support file upload'));
 			return null;
 		}
 
@@ -545,8 +531,8 @@
 			});
 
 			if (file['type'].startsWith('image/')) {
-				if (visionCapableModels.length === 0) {
-					toast.error($i18n.t('Selected model(s) do not support image inputs'));
+				if (!visionCapable) {
+					toast.error($i18n.t('Selected model does not support image inputs'));
 					return;
 				}
 
@@ -673,27 +659,13 @@
 		shiftKey = false;
 	};
 
-	onMount(async () => {
+	onMount(() => {
+		let isDestroyed = false;
+		let dropzoneElement: HTMLElement | null = null;
+
 		suggestions = [
 			{
 				char: '@',
-				render: getSuggestionRenderer(CommandSuggestionList, {
-					i18n,
-					onSelect: (e) => {
-						const { type, data } = e;
-
-						if (type === 'model') {
-							atSelectedModel = data;
-						}
-
-						document.getElementById('chat-input')?.focus();
-					},
-
-					insertTextHandler: insertTextAtCursor
-				})
-			},
-			{
-				char: '/',
 				render: getSuggestionRenderer(CommandSuggestionList, {
 					i18n,
 					onSelect: (e) => {
@@ -723,30 +695,29 @@
 		window.addEventListener('focus', onFocus);
 		window.addEventListener('blur', onBlur);
 
-		await tick();
+		(async () => {
+			await tick();
+			if (isDestroyed) return;
 
-		const dropzoneElement = document.getElementById('chat-container');
+			dropzoneElement = document.getElementById('chat-container');
+			dropzoneElement?.addEventListener('dragover', onDragOver);
+			dropzoneElement?.addEventListener('drop', onDrop);
+			dropzoneElement?.addEventListener('dragleave', onDragLeave);
+		})();
 
-		dropzoneElement?.addEventListener('dragover', onDragOver);
-		dropzoneElement?.addEventListener('drop', onDrop);
-		dropzoneElement?.addEventListener('dragleave', onDragLeave);
-	});
+		return () => {
+			isDestroyed = true;
 
-	onDestroy(() => {
-		console.log('destroy');
-		window.removeEventListener('keydown', onKeyDown);
-		window.removeEventListener('keyup', onKeyUp);
+			window.removeEventListener('keydown', onKeyDown);
+			window.removeEventListener('keyup', onKeyUp);
 
-		window.removeEventListener('focus', onFocus);
-		window.removeEventListener('blur', onBlur);
+			window.removeEventListener('focus', onFocus);
+			window.removeEventListener('blur', onBlur);
 
-		const dropzoneElement = document.getElementById('chat-container');
-
-		if (dropzoneElement) {
 			dropzoneElement?.removeEventListener('dragover', onDragOver);
 			dropzoneElement?.removeEventListener('drop', onDrop);
 			dropzoneElement?.removeEventListener('dragleave', onDragLeave);
-		}
+		};
 	});
 </script>
 
@@ -918,14 +889,10 @@
 														alt=""
 														imageClassName=" size-10 rounded-xl object-cover"
 													/>
-													{#if atSelectedModel ? visionCapableModels.length === 0 : selectedModels.length !== visionCapableModels.length}
+													{#if !visionCapable}
 														<Tooltip
 															className=" absolute top-1 left-1"
-															content={$i18n.t('{{ models }}', {
-																models: [...(atSelectedModel ? [atSelectedModel] : selectedModels)]
-																	.filter((id) => !visionCapableModels.includes(id))
-																	.join(', ')
-															})}
+															content={$i18n.t('Model does not support vision')}
 														>
 															<svg
 																xmlns="http://www.w3.org/2000/svg"
@@ -1052,13 +1019,13 @@
 													autocomplete={$config?.features?.enable_autocomplete_generation &&
 														($settings?.promptAutocomplete ?? false)}
 													generateAutoCompletion={async (text) => {
-														if (selectedModelIds.length === 0 || !selectedModelIds.at(0)) {
+														if (!activeModelId) {
 															toast.error($i18n.t('Please select a model first.'));
 														}
 
 														const res = await generateAutoCompletion(
 															localStorage.token,
-															selectedModelIds.at(0),
+															activeModelId,
 															text,
 															history?.currentId
 																? createMessagesList(history, history.currentId)
@@ -1189,8 +1156,7 @@
 								<div class="ml-1 self-end flex items-center flex-1 max-w-[80%]">
 									<InputMenu
 										bind:files
-										selectedModels={atSelectedModel ? [atSelectedModel.id] : selectedModels}
-										{fileUploadCapableModels}
+										fileUploadEnabled={fileUploadCapable}
 										{screenCaptureHandler}
 										{inputFilesHandler}
 										uploadFilesHandler={() => {

@@ -8,7 +8,6 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Pin from '$lib/components/icons/Pin.svelte';
 	import PinSlash from '$lib/components/icons/PinSlash.svelte';
-	import DocumentDuplicate from '$lib/components/icons/DocumentDuplicate.svelte';
 	import Link from '$lib/components/icons/Link.svelte';
 	import Pencil from '$lib/components/icons/Pencil.svelte';
 	import { settings, user } from '$lib/stores';
@@ -53,7 +52,7 @@
 		align="end"
 		transition={flyAndScale}
 	>
-		{#if model?.preset || model?.info?.base_model_id ? model?.info?.user_id === $user?.id : $user?.role === 'admin'}
+		{#if $user?.role === 'admin'}
 			<DropdownMenu.Item
 				type="button"
 				class="select-none flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition items-center gap-2"
@@ -61,11 +60,7 @@
 					e.stopPropagation();
 					e.preventDefault();
 
-					goto(
-						model?.preset || model?.info?.base_model_id
-							? `/workspace/models/edit?id=${encodeURIComponent(model?.id ?? '')}`
-							: `/admin/settings/models?id=${encodeURIComponent(model?.id ?? '')}`
-					);
+					goto(`/admin/settings/models?id=${encodeURIComponent(model?.id ?? '')}`);
 					show = false;
 				}}
 			>

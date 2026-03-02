@@ -20,9 +20,6 @@ class ERROR_MESSAGES(str, Enum):
     DELETE_USER_ERROR = "Oops! Something went wrong. We encountered an issue while trying to delete the user. Please give it another shot."
     EMAIL_TAKEN = "Uh-oh! This email is already registered. Sign in with your existing account or choose another email to start anew."
     PASSWORD_TOO_LONG = "Uh-oh! The password you entered is too long. Please make sure your password is less than 72 bytes long."
-    COMMAND_TAKEN = "Uh-oh! This command is already registered. Please choose another command string."
-
-    ID_TAKEN = "Uh-oh! This id is already registered. Please choose another id string."
     MODEL_ID_TAKEN = "Uh-oh! This model id is already registered. Please choose another model id string."
     MODEL_ID_TOO_LONG = "The model id is too long. Please make sure your model id is less than 256 characters long."
 
@@ -46,15 +43,10 @@ class ERROR_MESSAGES(str, Enum):
 
     NOT_FOUND = "We could not find what you're looking for :/"
     USER_NOT_FOUND = "We could not find what you're looking for :/"
-    API_KEY_NOT_FOUND = "Oops! It looks like there's a hiccup. The API key is missing. Please make sure to provide a valid API key to access this feature."
-    API_KEY_NOT_ALLOWED = "Use of API key is not enabled in the environment."
-
     RATE_LIMIT_EXCEEDED = "API rate limit exceeded"
 
     MODEL_NOT_FOUND = lambda name="": f"Model '{name}' was not found"
     OPENAI_NOT_FOUND = lambda name="": "OpenAI API was not found"
-    CREATE_API_KEY_ERROR = "Oops! Something went wrong while creating your API key. Please try again later. If the issue persists, contact support for assistance."
-    API_KEY_CREATION_NOT_ALLOWED = "API key creation is not allowed in the environment."
 
     EMPTY_CONTENT = "The content provided is empty. Please ensure that there is text or data present before proceeding."
 
@@ -75,4 +67,3 @@ class TASKS(str, Enum):
     TAGS_GENERATION = "tags_generation"
     EMOJI_GENERATION = "emoji_generation"
     AUTOCOMPLETE_GENERATION = "autocomplete_generation"
-    MOA_RESPONSE_GENERATION = "moa_response_generation"

@@ -24,6 +24,13 @@
 	let tooltipElement;
 	let tooltipInstance;
 
+	const destroyInstance = () => {
+		if (tooltipInstance) {
+			tooltipInstance.destroy();
+			tooltipInstance = null;
+		}
+	};
+
 	$: if (tooltipElement && (content || elementId)) {
 		let tooltipContent = null;
 
@@ -31,6 +38,10 @@
 			tooltipContent = document.getElementById(`${elementId}`);
 		} else {
 			tooltipContent = DOMPurify.sanitize(content);
+		}
+
+		if (tooltipInstance && tooltipInstance.reference !== tooltipElement) {
+			destroyInstance();
 		}
 
 		if (tooltipInstance) {
@@ -51,15 +62,11 @@
 			}
 		}
 	} else if (tooltipInstance && content === '') {
-		if (tooltipInstance) {
-			tooltipInstance.destroy();
-		}
+		destroyInstance();
 	}
 
 	onDestroy(() => {
-		if (tooltipInstance) {
-			tooltipInstance.destroy();
-		}
+		destroyInstance();
 	});
 </script>
 

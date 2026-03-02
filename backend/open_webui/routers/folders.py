@@ -16,10 +16,9 @@ from open_webui.constants import ERROR_MESSAGES
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
 
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from open_webui.utils.auth import get_verified_user
-from open_webui.utils.access_control import has_permission
 
 log = logging.getLogger(__name__)
 
@@ -38,23 +37,6 @@ async def get_folders(
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
 ):
-    if request.app.state.config.ENABLE_FOLDERS is False:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
-
-    if user.role != "admin" and not has_permission(
-        user.id,
-        "features.folders",
-        request.app.state.config.USER_PERMISSIONS,
-        db=db,
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
-
     folders = Folders.get_folders_by_user_id(user.id, db=db)
 
     # Verify folder data integrity
@@ -278,22 +260,11 @@ async def update_folder_is_expanded_by_id(
 
 @router.delete("/{id}")
 async def delete_folder_by_id(
-    request: Request,
     id: str,
     delete_contents: Optional[bool] = True,
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
 ):
-    if Chats.count_chats_by_folder_id_and_user_id(id, user.id, db=db):
-        chat_delete_permission = has_permission(
-            user.id, "chat.delete", request.app.state.config.USER_PERMISSIONS, db=db
-        )
-        if user.role != "admin" and not chat_delete_permission:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-            )
-
     folders = []
     folders.append(Folders.get_folder_by_id_and_user_id(id, user.id, db=db))
     while folders:

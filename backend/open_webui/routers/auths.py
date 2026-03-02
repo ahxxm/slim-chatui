@@ -8,7 +8,6 @@ import urllib
 
 from open_webui.models.auths import (
     AddUserForm,
-    ApiKey,
     Auths,
     Token,
     SigninForm,
@@ -23,14 +22,11 @@ from open_webui.models.users import (
     UpdateProfileForm,
     UserStatus,
 )
-from open_webui.models.groups import Groups
-
 from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
 from open_webui.env import (
     WEBUI_AUTH,
     WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
     WEBUI_AUTH_TRUSTED_NAME_HEADER,
-    WEBUI_AUTH_TRUSTED_GROUPS_HEADER,
     WEBUI_AUTH_COOKIE_SAME_SITE,
     WEBUI_AUTH_COOKIE_SECURE,
     WEBUI_AUTH_SIGNOUT_REDIRECT_URL,
@@ -45,7 +41,6 @@ from open_webui.utils.auth import (
     validate_password,
     verify_password,
     decode_token,
-    create_api_key,
     create_token,
     get_admin_user,
     get_verified_user,
@@ -56,8 +51,6 @@ from open_webui.utils.auth import (
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
 from open_webui.utils.webhook import post_webhook
-from open_webui.utils.access_control import get_permissions, has_permission
-from open_webui.utils.groups import apply_default_group_assignment
 
 from open_webui.utils.rate_limit import RateLimiter
 
@@ -110,10 +103,6 @@ def create_session_response(
             secure=WEBUI_AUTH_COOKIE_SECURE,
         )
 
-    user_permissions = get_permissions(
-        user.id, request.app.state.config.USER_PERMISSIONS, db=db
-    )
-
     return {
         "token": token,
         "token_type": "Bearer",
@@ -123,7 +112,6 @@ def create_session_response(
         "name": user.name,
         "role": user.role,
         "profile_image_url": f"/api/v1/users/{user.id}/profile/image",
-        "permissions": user_permissions,
     }
 
 
@@ -134,7 +122,6 @@ def create_session_response(
 
 class SessionUserResponse(Token, UserProfileImageResponse):
     expires_at: Optional[int] = None
-    permissions: Optional[dict] = None
 
 
 class SessionUserInfoResponse(SessionUserResponse, UserStatus):
@@ -181,10 +168,6 @@ async def get_session_user(
             secure=WEBUI_AUTH_COOKIE_SECURE,
         )
 
-    user_permissions = get_permissions(
-        user.id, request.app.state.config.USER_PERMISSIONS, db=db
-    )
-
     return {
         "token": token,
         "token_type": "Bearer",
@@ -200,7 +183,6 @@ async def get_session_user(
         "status_emoji": user.status_emoji,
         "status_message": user.status_message,
         "status_expires_at": user.status_expires_at,
-        "permissions": user_permissions,
     }
 
 
@@ -324,14 +306,6 @@ async def signin(
             )
 
         user = Auths.authenticate_user_by_email(email, db=db)
-        if WEBUI_AUTH_TRUSTED_GROUPS_HEADER and user and user.role != "admin":
-            group_names = request.headers.get(
-                WEBUI_AUTH_TRUSTED_GROUPS_HEADER, ""
-            ).split(",")
-            group_names = [name.strip() for name in group_names if name.strip()]
-
-            if group_names:
-                Groups.sync_groups_by_group_names(user.id, group_names, db=db)
 
     elif WEBUI_AUTH == False:
         admin_email = "admin@localhost"
@@ -444,12 +418,6 @@ async def signup_handler(
             },
         )
 
-    apply_default_group_assignment(
-        request.app.state.config.DEFAULT_GROUP_ID,
-        user.id,
-        db=db,
-    )
-
     return user
 
 
@@ -560,12 +528,6 @@ async def add_user(
         )
 
         if user:
-            apply_default_group_assignment(
-                request.app.state.config.DEFAULT_GROUP_ID,
-                user.id,
-                db=db,
-            )
-
             token = create_token(data={"id": user.id})
             return {
                 "token": token,
@@ -632,14 +594,8 @@ async def get_admin_config(request: Request, user=Depends(get_admin_user)):
         "ADMIN_EMAIL": request.app.state.config.ADMIN_EMAIL,
         "WEBUI_URL": request.app.state.config.WEBUI_URL,
         "ENABLE_SIGNUP": request.app.state.config.ENABLE_SIGNUP,
-        "ENABLE_API_KEYS": request.app.state.config.ENABLE_API_KEYS,
-        "ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS": request.app.state.config.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS,
-        "API_KEYS_ALLOWED_ENDPOINTS": request.app.state.config.API_KEYS_ALLOWED_ENDPOINTS,
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
-        "DEFAULT_GROUP_ID": request.app.state.config.DEFAULT_GROUP_ID,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
-        "ENABLE_FOLDERS": request.app.state.config.ENABLE_FOLDERS,
-        "FOLDER_MAX_FILE_COUNT": request.app.state.config.FOLDER_MAX_FILE_COUNT,
         "ENABLE_USER_WEBHOOKS": request.app.state.config.ENABLE_USER_WEBHOOKS,
         "ENABLE_USER_STATUS": request.app.state.config.ENABLE_USER_STATUS,
         "PENDING_USER_OVERLAY_TITLE": request.app.state.config.PENDING_USER_OVERLAY_TITLE,
@@ -653,14 +609,8 @@ class AdminConfig(BaseModel):
     ADMIN_EMAIL: Optional[str] = None
     WEBUI_URL: str
     ENABLE_SIGNUP: bool
-    ENABLE_API_KEYS: bool
-    ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS: bool
-    API_KEYS_ALLOWED_ENDPOINTS: str
     DEFAULT_USER_ROLE: str
-    DEFAULT_GROUP_ID: str
     JWT_EXPIRES_IN: str
-    ENABLE_FOLDERS: bool
-    FOLDER_MAX_FILE_COUNT: Optional[int | str] = None
     ENABLE_USER_WEBHOOKS: bool
     ENABLE_USER_STATUS: bool
     PENDING_USER_OVERLAY_TITLE: Optional[str] = None
@@ -677,22 +627,8 @@ async def update_admin_config(
     request.app.state.config.WEBUI_URL = form_data.WEBUI_URL
     request.app.state.config.ENABLE_SIGNUP = form_data.ENABLE_SIGNUP
 
-    request.app.state.config.ENABLE_API_KEYS = form_data.ENABLE_API_KEYS
-    request.app.state.config.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS = (
-        form_data.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS
-    )
-    request.app.state.config.API_KEYS_ALLOWED_ENDPOINTS = (
-        form_data.API_KEYS_ALLOWED_ENDPOINTS
-    )
-
-    request.app.state.config.ENABLE_FOLDERS = form_data.ENABLE_FOLDERS
-    request.app.state.config.FOLDER_MAX_FILE_COUNT = (
-        int(form_data.FOLDER_MAX_FILE_COUNT) if form_data.FOLDER_MAX_FILE_COUNT else ""
-    )
     if form_data.DEFAULT_USER_ROLE in ["pending", "user", "admin"]:
         request.app.state.config.DEFAULT_USER_ROLE = form_data.DEFAULT_USER_ROLE
-
-    request.app.state.config.DEFAULT_GROUP_ID = form_data.DEFAULT_GROUP_ID
 
     pattern = r"^(-1|0|(-?\d+(\.\d+)?)(ms|s|m|h|d|w))$"
 
@@ -717,68 +653,11 @@ async def update_admin_config(
         "ADMIN_EMAIL": request.app.state.config.ADMIN_EMAIL,
         "WEBUI_URL": request.app.state.config.WEBUI_URL,
         "ENABLE_SIGNUP": request.app.state.config.ENABLE_SIGNUP,
-        "ENABLE_API_KEYS": request.app.state.config.ENABLE_API_KEYS,
-        "ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS": request.app.state.config.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS,
-        "API_KEYS_ALLOWED_ENDPOINTS": request.app.state.config.API_KEYS_ALLOWED_ENDPOINTS,
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
-        "DEFAULT_GROUP_ID": request.app.state.config.DEFAULT_GROUP_ID,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
-        "ENABLE_FOLDERS": request.app.state.config.ENABLE_FOLDERS,
-        "FOLDER_MAX_FILE_COUNT": request.app.state.config.FOLDER_MAX_FILE_COUNT,
         "ENABLE_USER_WEBHOOKS": request.app.state.config.ENABLE_USER_WEBHOOKS,
         "ENABLE_USER_STATUS": request.app.state.config.ENABLE_USER_STATUS,
         "PENDING_USER_OVERLAY_TITLE": request.app.state.config.PENDING_USER_OVERLAY_TITLE,
         "PENDING_USER_OVERLAY_CONTENT": request.app.state.config.PENDING_USER_OVERLAY_CONTENT,
         "RESPONSE_WATERMARK": request.app.state.config.RESPONSE_WATERMARK,
     }
-
-
-############################
-# API Key
-############################
-
-
-# create api key
-@router.post("/api_key", response_model=ApiKey)
-async def generate_api_key(
-    request: Request, user=Depends(get_current_user), db: Session = Depends(get_session)
-):
-    if not request.app.state.config.ENABLE_API_KEYS or not has_permission(
-        user.id, "features.api_keys", request.app.state.config.USER_PERMISSIONS
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=ERROR_MESSAGES.API_KEY_CREATION_NOT_ALLOWED,
-        )
-
-    api_key = create_api_key()
-    success = Users.update_user_api_key_by_id(user.id, api_key, db=db)
-
-    if success:
-        return {
-            "api_key": api_key,
-        }
-    else:
-        raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_API_KEY_ERROR)
-
-
-# delete api key
-@router.delete("/api_key", response_model=bool)
-async def delete_api_key(
-    user=Depends(get_current_user), db: Session = Depends(get_session)
-):
-    return Users.delete_user_api_key_by_id(user.id, db=db)
-
-
-# get api key
-@router.get("/api_key", response_model=ApiKey)
-async def get_api_key(
-    user=Depends(get_current_user), db: Session = Depends(get_session)
-):
-    api_key = Users.get_user_api_key_by_id(user.id, db=db)
-    if api_key:
-        return {
-            "api_key": api_key,
-        }
-    else:
-        raise HTTPException(404, detail=ERROR_MESSAGES.API_KEY_NOT_FOUND)

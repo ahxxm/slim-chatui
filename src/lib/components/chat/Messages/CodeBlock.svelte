@@ -1,6 +1,6 @@
 <script lang="ts">
 	import hljs from 'highlight.js';
-	import { getContext, onMount, tick } from 'svelte';
+	import { getContext } from 'svelte';
 
 	import {
 		copyToClipboard,
@@ -22,18 +22,13 @@
 	export let edit = true;
 
 	export let onSave = (e) => {};
-	export let onUpdate = (e) => {};
-	export let onPreview = (e) => {};
 
 	export let save = false;
-	export let preview = false;
 	export let collapsed = false;
 
 	export let token;
 	export let lang = '';
 	export let code = '';
-	export let attributes = {};
-
 	export let className = '';
 	export let editorClassName = '';
 	export let stickyButtonsClassName = 'top-0';
@@ -51,12 +46,6 @@
 
 	let renderHTML = null;
 	let renderError = null;
-
-	let highlightedCode = null;
-
-	let stdout = null;
-	let stderr = null;
-	let result = null;
 
 	let copied = false;
 	let saved = false;
@@ -85,10 +74,6 @@
 		}, 1000);
 	};
 
-	const previewCode = () => {
-		onPreview(code);
-	};
-
 	let mermaid = null;
 	const renderMermaid = async (code) => {
 		if (!mermaid) {
@@ -98,7 +83,6 @@
 	};
 
 	const render = async () => {
-		onUpdate(token);
 		if (lang === 'mermaid' && (token?.raw ?? '').slice(-4).includes('```')) {
 			try {
 				renderHTML = await renderMermaid(code);
@@ -132,36 +116,6 @@
 	$: if (_token) {
 		render();
 	}
-
-	$: if (attributes) {
-		onAttributesUpdate();
-	}
-
-	const onAttributesUpdate = () => {
-		if (attributes?.output) {
-			const unescapeHtml = (html) => {
-				const textArea = document.createElement('textarea');
-				textArea.innerHTML = html;
-				return textArea.value;
-			};
-
-			try {
-				const unescapedOutput = unescapeHtml(attributes.output);
-				const output = JSON.parse(unescapedOutput);
-				stdout = output.stdout;
-				stderr = output.stderr;
-				result = output.result;
-			} catch (error) {
-				console.error('Error:', error);
-			}
-		}
-	};
-
-	onMount(async () => {
-		if (token) {
-			onUpdate(token);
-		}
-	});
 </script>
 
 <div>
@@ -225,26 +179,13 @@
 						class="copy-code-button bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
 						on:click={copyCode}>{copied ? $i18n.t('Copied') : $i18n.t('Copy')}</button
 					>
-
-					{#if preview && ['html', 'svg'].includes(lang)}
-						<button
-							class="flex gap-1 items-center run-code-button bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
-							on:click={previewCode}
-						>
-							<div>
-								{$i18n.t('Preview')}
-							</div>
-						</button>
-					{/if}
 				</div>
 			</div>
 
 			<div
 				class="language-{lang} rounded-t-2xl -mt-8 {editorClassName
 					? editorClassName
-					: stdout || stderr || result
-						? ''
-						: 'rounded-b-2xl'} overflow-hidden"
+					: 'rounded-b-2xl'} overflow-hidden"
 			>
 				<div class=" pt-6.5 bg-white dark:bg-black"></div>
 
@@ -264,10 +205,7 @@
 					{:else}
 						<pre
 							class=" hljs p-4 px-5 overflow-x-auto"
-							style="border-top-left-radius: 0px; border-top-right-radius: 0px; {(stdout ||
-								stderr ||
-								result) &&
-								'border-bottom-left-radius: 0px; border-bottom-right-radius: 0px;'}"><code
+							style="border-top-left-radius: 0px; border-top-right-radius: 0px;"><code
 								class="language-{lang} rounded-t-none whitespace-pre text-sm"
 								>{@html hljs.highlightAuto(code, hljs.getLanguage(lang)?.aliases).value ||
 									code}</code
@@ -291,31 +229,6 @@
 					id="plt-canvas-{id}"
 					class="bg-gray-50 dark:bg-black dark:text-white max-w-full overflow-x-auto scrollbar-hidden"
 				/>
-
-				{#if stdout || stderr || result}
-					<div
-						class="bg-gray-50 dark:bg-black dark:text-white rounded-b-2xl! py-4 px-4 flex flex-col gap-2"
-					>
-						{#if stdout || stderr}
-							<div class=" ">
-								<div class=" text-gray-500 text-sm mb-1">{$i18n.t('STDOUT/STDERR')}</div>
-								<div
-									class="text-sm font-mono whitespace-pre-wrap {stdout?.split('\n')?.length > 100
-										? `max-h-96`
-										: ''}  overflow-y-auto"
-								>
-									{stdout || stderr}
-								</div>
-							</div>
-						{/if}
-						{#if result}
-							<div class=" ">
-								<div class=" text-gray-500 text-sm mb-1">{$i18n.t('RESULT')}</div>
-								<div class="text-sm">{`${JSON.stringify(result)}`}</div>
-							</div>
-						{/if}
-					</div>
-				{/if}
 			{/if}
 		{/if}
 	</div>

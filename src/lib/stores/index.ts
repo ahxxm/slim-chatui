@@ -64,15 +64,6 @@ export const showSearch = writable(false);
 export const showSettings = writable(false);
 export const showShortcuts = writable(false);
 export const showArchivedChats = writable(false);
-export const showControls = writable(false);
-export const showEmbeds = writable(false);
-export const showOverview = writable(false);
-export const showArtifacts = writable(false);
-export const artifactCode = writable(null);
-export const artifactContents = writable(null);
-
-export const embed = writable(null);
-
 export const temporaryChatEnabled = writable(false);
 export const scrollPaginationEnabled = writable(false);
 export const currentChatPage = writable(1);
@@ -89,7 +80,6 @@ export type Model = {
 
 type Settings = {
 	pinnedModels?: never[];
-	detectArtifacts?: boolean;
 
 	collapseCodeBlocks?: boolean;
 	expandDetails?: boolean;
@@ -105,7 +95,6 @@ type Settings = {
 	hapticFeedback?: boolean;
 	responseAutoCopy?: any;
 	richTextInput?: boolean;
-	params?: any;
 	userLocation?: any;
 	autoTags?: boolean;
 	autoFollowUps?: boolean;
@@ -148,14 +137,12 @@ type Config = {
 	features: {
 		auth: boolean;
 		auth_trusted_header: boolean;
-		enable_api_keys: boolean;
 		enable_signup: boolean;
 		enable_admin_export: boolean;
 		enable_admin_chat_access: boolean;
 		enable_autocomplete_generation: boolean;
 		enable_direct_connections: boolean;
 		enable_version_update_check: boolean;
-		folder_max_file_count?: number;
 	};
 	ui?: {
 		pending_user_overlay_title?: string;
@@ -169,7 +156,6 @@ type PromptSuggestion = {
 };
 
 export type SessionUser = {
-	permissions: any;
 	id: string;
 	email: string;
 	name: string;

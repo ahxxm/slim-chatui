@@ -20,12 +20,11 @@ from open_webui.internal.db import get_session
 
 from open_webui.config import ENABLE_ADMIN_CHAT_ACCESS, ENABLE_ADMIN_EXPORT
 from open_webui.constants import ERROR_MESSAGES
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
 
 from open_webui.utils.auth import get_admin_user, get_verified_user
-from open_webui.utils.access_control import has_permission
 
 log = logging.getLogger(__name__)
 
@@ -74,18 +73,9 @@ def get_session_user_chat_list(
 
 @router.delete("/", response_model=bool)
 async def delete_all_user_chats(
-    request: Request,
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
 ):
-
-    if user.role == "user" and not has_permission(
-        user.id, "chat.delete", request.app.state.config.USER_PERMISSIONS
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
 
     result = Chats.delete_chats_by_user_id(user.id, db=db)
     return result
@@ -651,7 +641,6 @@ async def send_chat_message_event_by_id(
 
 @router.delete("/{id}", response_model=bool)
 async def delete_chat_by_id(
-    request: Request,
     id: str,
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
@@ -671,14 +660,6 @@ async def delete_chat_by_id(
 
         return result
     else:
-        if not has_permission(
-            user.id, "chat.delete", request.app.state.config.USER_PERMISSIONS
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-            )
-
         chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
         if not chat:
             raise HTTPException(
@@ -871,21 +852,10 @@ async def archive_chat_by_id(
 
 @router.post("/{id}/share", response_model=Optional[ChatResponse])
 async def share_chat_by_id(
-    request: Request,
     id: str,
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
 ):
-    if (user.role != "admin") and (
-        not has_permission(
-            user.id, "chat.share", request.app.state.config.USER_PERMISSIONS
-        )
-    ):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
-
     chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
 
     if chat:

@@ -314,12 +314,10 @@ class ChatMessageTable:
         self,
         start_date: Optional[int] = None,
         end_date: Optional[int] = None,
-        group_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> dict[str, int]:
         with get_db_context(db) as db:
             from sqlalchemy import func
-            from open_webui.models.groups import GroupMember
 
             query = db.query(
                 ChatMessage.model_id, func.count(ChatMessage.id).label("count")
@@ -333,13 +331,6 @@ class ChatMessageTable:
                 query = query.filter(ChatMessage.created_at >= start_date)
             if end_date:
                 query = query.filter(ChatMessage.created_at <= end_date)
-            if group_id:
-                group_users = (
-                    db.query(GroupMember.user_id)
-                    .filter(GroupMember.group_id == group_id)
-                    .subquery()
-                )
-                query = query.filter(ChatMessage.user_id.in_(group_users))
 
             results = query.group_by(ChatMessage.model_id).all()
             return {row.model_id: row.count for row in results}
@@ -348,13 +339,11 @@ class ChatMessageTable:
         self,
         start_date: Optional[int] = None,
         end_date: Optional[int] = None,
-        group_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> dict[str, dict]:
         """Aggregate token usage by model using database-level aggregation."""
         with get_db_context(db) as db:
             from sqlalchemy import func, cast, Integer
-            from open_webui.models.groups import GroupMember
 
             dialect = db.bind.dialect.name
 
@@ -366,7 +355,6 @@ class ChatMessageTable:
                     func.json_extract(ChatMessage.usage, "$.output_tokens"), Integer
                 )
             elif dialect == "postgresql":
-                # Use json_extract_path_text for PostgreSQL JSON columns
                 input_tokens = cast(
                     func.json_extract_path_text(ChatMessage.usage, "input_tokens"),
                     Integer,
@@ -394,13 +382,6 @@ class ChatMessageTable:
                 query = query.filter(ChatMessage.created_at >= start_date)
             if end_date:
                 query = query.filter(ChatMessage.created_at <= end_date)
-            if group_id:
-                group_users = (
-                    db.query(GroupMember.user_id)
-                    .filter(GroupMember.group_id == group_id)
-                    .subquery()
-                )
-                query = query.filter(ChatMessage.user_id.in_(group_users))
 
             results = query.group_by(ChatMessage.model_id).all()
 
@@ -479,12 +460,10 @@ class ChatMessageTable:
         self,
         start_date: Optional[int] = None,
         end_date: Optional[int] = None,
-        group_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> dict[str, int]:
         with get_db_context(db) as db:
             from sqlalchemy import func
-            from open_webui.models.groups import GroupMember
 
             query = db.query(
                 ChatMessage.user_id, func.count(ChatMessage.id).label("count")
@@ -494,13 +473,6 @@ class ChatMessageTable:
                 query = query.filter(ChatMessage.created_at >= start_date)
             if end_date:
                 query = query.filter(ChatMessage.created_at <= end_date)
-            if group_id:
-                group_users = (
-                    db.query(GroupMember.user_id)
-                    .filter(GroupMember.group_id == group_id)
-                    .subquery()
-                )
-                query = query.filter(ChatMessage.user_id.in_(group_users))
 
             results = query.group_by(ChatMessage.user_id).all()
             return {row.user_id: row.count for row in results}
@@ -509,12 +481,10 @@ class ChatMessageTable:
         self,
         start_date: Optional[int] = None,
         end_date: Optional[int] = None,
-        group_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> dict[str, int]:
         with get_db_context(db) as db:
             from sqlalchemy import func
-            from open_webui.models.groups import GroupMember
 
             query = db.query(
                 ChatMessage.chat_id, func.count(ChatMessage.id).label("count")
@@ -524,13 +494,6 @@ class ChatMessageTable:
                 query = query.filter(ChatMessage.created_at >= start_date)
             if end_date:
                 query = query.filter(ChatMessage.created_at <= end_date)
-            if group_id:
-                group_users = (
-                    db.query(GroupMember.user_id)
-                    .filter(GroupMember.group_id == group_id)
-                    .subquery()
-                )
-                query = query.filter(ChatMessage.user_id.in_(group_users))
 
             results = query.group_by(ChatMessage.chat_id).all()
             return {row.chat_id: row.count for row in results}
@@ -539,13 +502,11 @@ class ChatMessageTable:
         self,
         start_date: Optional[int] = None,
         end_date: Optional[int] = None,
-        group_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> dict[str, dict[str, int]]:
         """Get message counts grouped by day and model."""
         with get_db_context(db) as db:
             from datetime import datetime, timedelta
-            from open_webui.models.groups import GroupMember
 
             query = db.query(ChatMessage.created_at, ChatMessage.model_id).filter(
                 ChatMessage.role == "assistant",
@@ -557,13 +518,6 @@ class ChatMessageTable:
                 query = query.filter(ChatMessage.created_at >= start_date)
             if end_date:
                 query = query.filter(ChatMessage.created_at <= end_date)
-            if group_id:
-                group_users = (
-                    db.query(GroupMember.user_id)
-                    .filter(GroupMember.group_id == group_id)
-                    .subquery()
-                )
-                query = query.filter(ChatMessage.user_id.in_(group_users))
 
             results = query.all()
 

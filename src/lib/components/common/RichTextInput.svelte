@@ -679,11 +679,18 @@
 			extensions: [
 				StarterKit.configure({
 					link: link,
-					// When rich text is off, disable Strike from StarterKit so we can
-					// re-add it below without its Mod-Shift-s shortcut (which conflicts
-					// with the Toggle Sidebar shortcut). When rich text is on, the user
-					// can undo strikethrough via the toolbar, so the shortcut is fine.
-					...(richText ? {} : { strike: false })
+					// StarterKit bundles codeBlock/bulletList/listItem/orderedList/listKeymap,
+					// which conflict with CodeBlockLowlight + ListKit added below in richText mode.
+					// In plain mode, disable Strike so Mod-Shift-s stays free for Toggle Sidebar.
+					...(richText
+						? {
+								codeBlock: false,
+								bulletList: false,
+								listItem: false,
+								orderedList: false,
+								listKeymap: false
+							}
+						: { strike: false })
 				}),
 				...(dragHandle ? [ListItemDragHandle] : []),
 				Placeholder.configure({ placeholder: () => _placeholder, showOnlyWhenEditable: false }),

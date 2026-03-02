@@ -4,7 +4,6 @@
 	import { getBackendConfig, getWebhookUrl, updateWebhookUrl } from '$lib/apis';
 	import { getAdminConfig, updateAdminConfig } from '$lib/apis/auths';
 	import { getBanners, setBanners } from '$lib/apis/configs';
-	import { getGroups } from '$lib/apis/groups';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
@@ -22,8 +21,6 @@
 
 	let adminConfig = null;
 	let webhookUrl = '';
-	let groups = [];
-
 	let banners: Banner[] = [];
 
 	const updateBanners = async () => {
@@ -53,9 +50,6 @@
 
 			(async () => {
 				webhookUrl = await getWebhookUrl(localStorage.token);
-			})(),
-			(async () => {
-				groups = await getGroups(localStorage.token);
 			})()
 		]);
 
@@ -114,23 +108,6 @@
 							</select>
 						</div>
 					</div>
-
-					<div class="  mb-2.5 flex w-full justify-between">
-						<div class=" self-center text-xs font-medium">{$i18n.t('Default Group')}</div>
-						<div class="flex items-center relative">
-							<select
-								class="w-fit pr-8 rounded-sm px-2 text-xs bg-transparent outline-hidden text-right"
-								bind:value={adminConfig.DEFAULT_GROUP_ID}
-								placeholder={$i18n.t('Select a group')}
-							>
-								<option value={''}>None</option>
-								{#each groups as group}
-									<option value={group.id}>{group.name}</option>
-								{/each}
-							</select>
-						</div>
-					</div>
-
 					<div class=" mb-2.5 flex w-full justify-between pr-2">
 						<div class=" self-center text-xs font-medium">{$i18n.t('Enable New Sign Ups')}</div>
 
@@ -186,48 +163,6 @@
 						/>
 					</div>
 
-					<div class="mb-2.5 flex w-full justify-between pr-2">
-						<div class=" self-center text-xs font-medium">{$i18n.t('Enable API Keys')}</div>
-
-						<Switch bind:state={adminConfig.ENABLE_API_KEYS} />
-					</div>
-
-					{#if adminConfig?.ENABLE_API_KEYS}
-						<div class="mb-2.5 flex w-full justify-between pr-2">
-							<div class=" self-center text-xs font-medium">
-								{$i18n.t('API Key Endpoint Restrictions')}
-							</div>
-
-							<Switch bind:state={adminConfig.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS} />
-						</div>
-
-						{#if adminConfig?.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS}
-							<div class=" flex w-full flex-col pr-2 mb-2.5">
-								<div class=" text-xs font-medium">
-									{$i18n.t('Allowed Endpoints')}
-								</div>
-
-								<input
-									class="w-full mt-1 text-sm dark:text-gray-300 bg-transparent outline-hidden"
-									type="text"
-									placeholder={`e.g.) /api/v1/chats, /api/v1/models`}
-									bind:value={adminConfig.API_KEYS_ALLOWED_ENDPOINTS}
-								/>
-
-								<div class="mt-2 text-xs text-gray-400 dark:text-gray-500">
-									<!-- https://docs.openwebui.com/getting-started/advanced-topics/api-endpoints -->
-									<a
-										href="https://docs.openwebui.com/getting-started/api-endpoints"
-										target="_blank"
-										class=" text-gray-300 font-medium underline"
-									>
-										{$i18n.t('To learn more about available endpoints, visit our documentation.')}
-									</a>
-								</div>
-							</div>
-						{/if}
-					{/if}
-
 					<div class=" mb-2.5 w-full justify-between">
 						<div class="flex w-full justify-between">
 							<div class=" self-center text-xs font-medium">{$i18n.t('JWT Expiration')}</div>
@@ -276,37 +211,6 @@
 
 					<hr class=" border-gray-100/30 dark:border-gray-850/30 my-2" />
 
-					<div class="mb-2.5 flex w-full items-center justify-between pr-2">
-						<div class=" self-center text-xs font-medium">
-							{$i18n.t('Folders')}
-						</div>
-
-						<Switch bind:state={adminConfig.ENABLE_FOLDERS} />
-					</div>
-
-					{#if adminConfig.ENABLE_FOLDERS}
-						<div class="mb-2.5 w-full justify-between">
-							<div class="flex w-full justify-between">
-								<div class=" self-center text-xs font-medium">
-									{$i18n.t('Folder Max File Count')}
-								</div>
-							</div>
-
-							<div class="flex mt-2 space-x-2">
-								<input
-									class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
-									type="number"
-									min="0"
-									placeholder={$i18n.t('Leave empty for unlimited')}
-									bind:value={adminConfig.FOLDER_MAX_FILE_COUNT}
-								/>
-							</div>
-
-							<div class="mt-2 text-xs text-gray-400 dark:text-gray-500">
-								{$i18n.t('Maximum number of files allowed per folder.')}
-							</div>
-						</div>
-					{/if}
 					<div class="mb-2.5 flex w-full items-center justify-between pr-2">
 						<div class=" self-center text-xs font-medium">
 							{$i18n.t('User Webhooks')}

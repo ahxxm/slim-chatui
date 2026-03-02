@@ -9,13 +9,14 @@
 	export let duration = 4000;
 
 	onMount(() => {
-		setInterval(async () => {
+		const interval = setInterval(async () => {
 			if (idx === words.length - 1) {
 				idx = 0;
 			} else {
 				idx = idx + 1;
 			}
 		}, duration);
+		return () => clearInterval(interval);
 	});
 </script>
 

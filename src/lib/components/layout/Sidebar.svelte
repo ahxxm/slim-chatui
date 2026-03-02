@@ -28,7 +28,7 @@
 		sidebarWidth,
 		activeChatIds
 	} from '$lib/stores';
-	import { onMount, getContext, tick, onDestroy } from 'svelte';
+	import { onMount, getContext, tick } from 'svelte';
 
 	const i18n = getContext('i18n');
 
@@ -91,10 +91,6 @@
 	}
 
 	const initFolders = async () => {
-		if ($config?.features?.enable_folders === false) {
-			return;
-		}
-
 		const folderList = await getFolders(localStorage.token).catch((error) => {
 			return [];
 		});
@@ -392,7 +388,29 @@
 
 	let unsubscribers = [];
 
-	onMount(async () => {
+	// Handler for chat:active events (defined outside onMount for proper cleanup)
+	const chatActiveEventHandler = (event: {
+		chat_id: string;
+		message_id: string;
+		data: { type: string; data: any };
+	}) => {
+		if (event.data?.type === 'chat:active') {
+			const { active } = event.data.data;
+			activeChatIds.update((ids) => {
+				const newSet = new Set(ids);
+				if (active) {
+					newSet.add(event.chat_id);
+				} else {
+					newSet.delete(event.chat_id);
+				}
+				return newSet;
+			});
+		}
+	};
+
+	onMount(() => {
+		let isDestroyed = false;
+
 		try {
 			const width = Number(localStorage.getItem('sidebarWidth'));
 			if (!Number.isNaN(width) && width >= MIN_WIDTH && width <= MAX_WIDTH) {
@@ -401,11 +419,15 @@
 		} catch {}
 
 		document.documentElement.style.setProperty('--sidebar-width', `${$sidebarWidth}px`);
-		sidebarWidth.subscribe((w) => {
+
+		const sidebarWidthUnsub = sidebarWidth.subscribe((w) => {
 			document.documentElement.style.setProperty('--sidebar-width', `${w}px`);
 		});
 
-		await showSidebar.set(!$mobile ? localStorage.sidebar === 'true' : false);
+		(async () => {
+			await showSidebar.set(!$mobile ? localStorage.sidebar === 'true' : false);
+			if (isDestroyed) return;
+		})();
 
 		unsubscribers = [
 			mobile.subscribe((value) => {
@@ -476,68 +498,40 @@
 		dropZone?.addEventListener('drop', onDrop);
 		dropZone?.addEventListener('dragleave', onDragLeave);
 
-		// Listen for real-time chat:active events via the events channel
 		$socket?.off('events', chatActiveEventHandler);
 		$socket?.on('events', chatActiveEventHandler);
-	});
 
-	// Handler for chat:active events (defined outside onMount for proper cleanup)
-	const chatActiveEventHandler = (event: {
-		chat_id: string;
-		message_id: string;
-		data: { type: string; data: any };
-	}) => {
-		if (event.data?.type === 'chat:active') {
-			const { active } = event.data.data;
-			activeChatIds.update((ids) => {
-				const newSet = new Set(ids);
-				if (active) {
-					newSet.add(event.chat_id);
-				} else {
-					newSet.delete(event.chat_id);
-				}
-				return newSet;
-			});
-		}
-	};
+		return () => {
+			isDestroyed = true;
 
-	onDestroy(() => {
-		if (unsubscribers && unsubscribers.length > 0) {
-			unsubscribers.forEach((unsubscriber) => {
-				if (unsubscriber) {
-					unsubscriber();
-				}
-			});
-		}
+			sidebarWidthUnsub();
 
-		window.removeEventListener('keydown', onKeyDown);
-		window.removeEventListener('keyup', onKeyUp);
+			if (unsubscribers && unsubscribers.length > 0) {
+				unsubscribers.forEach((unsub) => unsub?.());
+			}
 
-		window.removeEventListener('touchstart', onTouchStart);
-		window.removeEventListener('touchend', onTouchEnd);
+			window.removeEventListener('keydown', onKeyDown);
+			window.removeEventListener('keyup', onKeyUp);
 
-		window.removeEventListener('focus', onFocus);
-		window.removeEventListener('blur', onBlur);
+			window.removeEventListener('touchstart', onTouchStart);
+			window.removeEventListener('touchend', onTouchEnd);
 
-		const dropZone = document.getElementById('sidebar');
+			window.removeEventListener('focus', onFocus);
+			window.removeEventListener('blur', onBlur);
 
-		dropZone?.removeEventListener('dragover', onDragOver);
-		dropZone?.removeEventListener('drop', onDrop);
-		dropZone?.removeEventListener('dragleave', onDragLeave);
+			dropZone?.removeEventListener('dragover', onDragOver);
+			dropZone?.removeEventListener('drop', onDrop);
+			dropZone?.removeEventListener('dragleave', onDragLeave);
 
-		// Clean up socket listener
-		$socket?.off('events', chatActiveEventHandler);
+			$socket?.off('events', chatActiveEventHandler);
+		};
 	});
 
 	const newChatHandler = async () => {
 		selectedChatId = null;
 		selectedFolder.set(null);
 
-		if ($user?.role !== 'admin' && $user?.permissions?.chat?.temporary_enforced) {
-			await temporaryChatEnabled.set(true);
-		} else {
-			await temporaryChatEnabled.set(false);
-		}
+		await temporaryChatEnabled.set(false);
 
 		setTimeout(() => {
 			if ($mobile) {
@@ -693,43 +687,6 @@
 						</button>
 					</Tooltip>
 				</div>
-
-				{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.prompts}
-					<div class="">
-						<Tooltip content={$i18n.t('Workspace')} placement="right">
-							<a
-								class=" cursor-pointer flex rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition group"
-								href="/workspace"
-								on:click={async (e) => {
-									e.stopImmediatePropagation();
-									e.preventDefault();
-
-									goto('/workspace');
-									itemClickHandler();
-								}}
-								aria-label={$i18n.t('Workspace')}
-								draggable="false"
-							>
-								<div class=" self-center flex items-center justify-center size-9">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke-width="1.5"
-										stroke="currentColor"
-										class="size-4.5"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 0 0 2.25-2.25V6a2.25 2.25 0 0 0-2.25-2.25H6A2.25 2.25 0 0 0 3.75 6v2.25A2.25 2.25 0 0 0 6 10.5Zm0 9.75h2.25A2.25 2.25 0 0 0 10.5 18v-2.25a2.25 2.25 0 0 0-2.25-2.25H6a2.25 2.25 0 0 0-2.25 2.25V18A2.25 2.25 0 0 0 6 20.25Zm9.75-9.75H18a2.25 2.25 0 0 0 2.25-2.25V6A2.25 2.25 0 0 0 18 3.75h-2.25A2.25 2.25 0 0 0 13.5 6v2.25a2.25 2.25 0 0 0 2.25 2.25Z"
-										/>
-									</svg>
-								</div>
-							</a>
-						</Tooltip>
-					</div>
-				{/if}
 			</div>
 		</button>
 
@@ -903,40 +860,6 @@
 							<HotkeyHint name="search" className=" group-hover:visible invisible" />
 						</button>
 					</div>
-
-					{#if $user?.role === 'admin' || $user?.permissions?.workspace?.models || $user?.permissions?.workspace?.prompts}
-						<div class="px-[0.4375rem] flex justify-center text-gray-800 dark:text-gray-200">
-							<a
-								id="sidebar-workspace-button"
-								class="grow flex items-center space-x-3 rounded-2xl px-2.5 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition"
-								href="/workspace"
-								on:click={itemClickHandler}
-								draggable="false"
-								aria-label={$i18n.t('Workspace')}
-							>
-								<div class="self-center">
-									<svg
-										xmlns="http://www.w3.org/2000/svg"
-										fill="none"
-										viewBox="0 0 24 24"
-										stroke-width="2"
-										stroke="currentColor"
-										class="size-4.5"
-									>
-										<path
-											stroke-linecap="round"
-											stroke-linejoin="round"
-											d="M13.5 16.875h3.375m0 0h3.375m-3.375 0V13.5m0 3.375v3.375M6 10.5h2.25a2.25 2.25 0 0 0 2.25-2.25V6a2.25 2.25 0 0 0-2.25-2.25H6A2.25 2.25 0 0 0 3.75 6v2.25A2.25 2.25 0 0 0 6 10.5Zm0 9.75h2.25A2.25 2.25 0 0 0 10.5 18v-2.25a2.25 2.25 0 0 0-2.25-2.25H6a2.25 2.25 0 0 0-2.25 2.25V18A2.25 2.25 0 0 0 6 20.25Zm9.75-9.75H18a2.25 2.25 0 0 0 2.25-2.25V6A2.25 2.25 0 0 0 18 3.75h-2.25A2.25 2.25 0 0 0 13.5 6v2.25a2.25 2.25 0 0 0 2.25 2.25Z"
-										/>
-									</svg>
-								</div>
-
-								<div class="flex self-center translate-y-[0.5px]">
-									<div class=" self-center text-sm font-primary">{$i18n.t('Workspace')}</div>
-								</div>
-							</a>
-						</div>
-					{/if}
 				</div>
 
 				{#if ($models ?? []).length > 0 && (($settings?.pinnedModels ?? []).length > 0 || $config?.default_pinned_models)}
@@ -952,59 +875,57 @@
 					</Folder>
 				{/if}
 
-				{#if $config?.features?.enable_folders && ($user?.role === 'admin' || ($user?.permissions?.features?.folders ?? true))}
-					<Folder
-						id="sidebar-folders"
-						bind:open={showFolders}
-						className="px-2 mt-0.5"
-						name={$i18n.t('Folders')}
-						chevron={false}
-						onAdd={() => {
-							showCreateFolderModal = true;
-						}}
-						onAddLabel={$i18n.t('New Folder')}
-						on:drop={async (e) => {
-							const { type, id, item } = e.detail;
+				<Folder
+					id="sidebar-folders"
+					bind:open={showFolders}
+					className="px-2 mt-0.5"
+					name={$i18n.t('Folders')}
+					chevron={false}
+					onAdd={() => {
+						showCreateFolderModal = true;
+					}}
+					onAddLabel={$i18n.t('New Folder')}
+					on:drop={async (e) => {
+						const { type, id, item } = e.detail;
 
-							if (type === 'folder') {
-								if (folders[id].parent_id === null) {
-									return;
-								}
-
-								const res = await updateFolderParentIdById(localStorage.token, id, null).catch(
-									(error) => {
-										toast.error(`${error}`);
-										return null;
-									}
-								);
-
-								if (res) {
-									await initFolders();
-								}
+						if (type === 'folder') {
+							if (folders[id].parent_id === null) {
+								return;
 							}
+
+							const res = await updateFolderParentIdById(localStorage.token, id, null).catch(
+								(error) => {
+									toast.error(`${error}`);
+									return null;
+								}
+							);
+
+							if (res) {
+								await initFolders();
+							}
+						}
+					}}
+				>
+					<Folders
+						bind:folderRegistry
+						{folders}
+						{shiftKey}
+						onDelete={(folderId) => {
+							selectedFolder.set(null);
+							initChatList();
 						}}
-					>
-						<Folders
-							bind:folderRegistry
-							{folders}
-							{shiftKey}
-							onDelete={(folderId) => {
-								selectedFolder.set(null);
-								initChatList();
-							}}
-							on:update={() => {
-								initChatList();
-							}}
-							on:import={(e) => {
-								const { folderId, items } = e.detail;
-								importChatHandler(items, false, folderId);
-							}}
-							on:change={async () => {
-								initChatList();
-							}}
-						/>
-					</Folder>
-				{/if}
+						on:update={() => {
+							initChatList();
+						}}
+						on:import={(e) => {
+							const { folderId, items } = e.detail;
+							importChatHandler(items, false, folderId);
+						}}
+						on:change={async () => {
+							initChatList();
+						}}
+					/>
+				</Folder>
 
 				<Folder
 					id="sidebar-chats"

@@ -7,17 +7,15 @@ import io
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import Response, StreamingResponse, FileResponse
-from pydantic import BaseModel, ConfigDict
+from pydantic import ConfigDict
 
 
 from open_webui.models.auths import Auths
 
-from open_webui.models.groups import Groups
 from open_webui.models.chats import Chats
 from open_webui.models.users import (
     UserModel,
-    UserGroupIdsModel,
-    UserGroupIdsListResponse,
+    UserListResponse,
     UserInfoResponse,
     UserInfoListResponse,
     UserRoleUpdateForm,
@@ -38,7 +36,6 @@ from open_webui.utils.auth import (
     get_verified_user,
     validate_password,
 )
-from open_webui.utils.access_control import get_permissions
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +50,7 @@ router = APIRouter()
 PAGE_ITEM_COUNT = 30
 
 
-@router.get("/", response_model=UserGroupIdsListResponse)
+@router.get("/", response_model=UserListResponse)
 async def get_users(
     query: Optional[str] = None,
     order_by: Optional[str] = None,
@@ -75,29 +72,7 @@ async def get_users(
     if direction:
         filter["direction"] = direction
 
-    filter["direction"] = direction
-
-    result = Users.get_users(filter=filter, skip=skip, limit=limit, db=db)
-
-    users = result["users"]
-    total = result["total"]
-
-    # Fetch groups for all users in a single query to avoid N+1
-    user_ids = [user.id for user in users]
-    user_groups = Groups.get_groups_by_member_ids(user_ids, db=db)
-
-    return {
-        "users": [
-            UserGroupIdsModel(
-                **{
-                    **user.model_dump(),
-                    "group_ids": [group.id for group in user_groups.get(user.id, [])],
-                }
-            )
-            for user in users
-        ],
-        "total": total,
-    }
+    return Users.get_users(filter=filter, skip=skip, limit=limit, db=db)
 
 
 @router.get("/all", response_model=UserInfoListResponse)
@@ -131,120 +106,6 @@ async def search_users(
         filter["direction"] = direction
 
     return Users.get_users(filter=filter, skip=skip, limit=limit, db=db)
-
-
-############################
-# User Groups
-############################
-
-
-@router.get("/groups")
-async def get_user_groups(
-    user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    return Groups.get_groups_by_member_id(user.id, db=db)
-
-
-############################
-# User Permissions
-############################
-
-
-@router.get("/permissions")
-async def get_user_permissisions(
-    request: Request,
-    user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
-):
-    user_permissions = get_permissions(
-        user.id, request.app.state.config.USER_PERMISSIONS, db=db
-    )
-
-    return user_permissions
-
-
-############################
-# User Default Permissions
-############################
-class WorkspacePermissions(BaseModel):
-    models: bool = False
-    prompts: bool = False
-    models_import: bool = False
-    models_export: bool = False
-    prompts_import: bool = False
-    prompts_export: bool = False
-
-
-class SharingPermissions(BaseModel):
-    models: bool = False
-    public_models: bool = False
-    prompts: bool = False
-    public_prompts: bool = False
-
-
-class ChatPermissions(BaseModel):
-    controls: bool = True
-    system_prompt: bool = True
-    params: bool = True
-    file_upload: bool = True
-    web_upload: bool = True
-    delete: bool = True
-    delete_message: bool = True
-    continue_response: bool = True
-    regenerate_response: bool = True
-    rate_response: bool = True
-    edit: bool = True
-    share: bool = True
-    export: bool = True
-    multiple_models: bool = True
-    temporary: bool = True
-    temporary_enforced: bool = False
-
-
-class FeaturesPermissions(BaseModel):
-    api_keys: bool = False
-    folders: bool = True
-
-
-class SettingsPermissions(BaseModel):
-    interface: bool = True
-
-
-class UserPermissions(BaseModel):
-    workspace: WorkspacePermissions
-    sharing: SharingPermissions
-    chat: ChatPermissions
-    features: FeaturesPermissions
-    settings: SettingsPermissions
-
-
-@router.get("/default/permissions", response_model=UserPermissions)
-async def get_default_user_permissions(request: Request, user=Depends(get_admin_user)):
-    return {
-        "workspace": WorkspacePermissions(
-            **request.app.state.config.USER_PERMISSIONS.get("workspace", {})
-        ),
-        "sharing": SharingPermissions(
-            **request.app.state.config.USER_PERMISSIONS.get("sharing", {})
-        ),
-        "chat": ChatPermissions(
-            **request.app.state.config.USER_PERMISSIONS.get("chat", {})
-        ),
-        "features": FeaturesPermissions(
-            **request.app.state.config.USER_PERMISSIONS.get("features", {})
-        ),
-        "settings": SettingsPermissions(
-            **request.app.state.config.USER_PERMISSIONS.get("settings", {})
-        ),
-    }
-
-
-@router.post("/default/permissions")
-async def update_default_user_permissions(
-    request: Request, form_data: UserPermissions, user=Depends(get_admin_user)
-):
-    request.app.state.config.USER_PERMISSIONS = form_data.model_dump()
-    return request.app.state.config.USER_PERMISSIONS
 
 
 ############################
@@ -401,7 +262,6 @@ async def update_user_info_by_session_user(
 class UserActiveResponse(UserStatus):
     name: str
     profile_image_url: Optional[str] = None
-    groups: Optional[list] = []
 
     is_active: bool
     model_config = ConfigDict(extra="allow")
@@ -426,11 +286,9 @@ async def get_user_by_id(
 
     user = Users.get_user_by_id(user_id, db=db)
     if user:
-        groups = Groups.get_groups_by_member_id(user_id, db=db)
         return UserActiveResponse(
             **{
                 **user.model_dump(),
-                "groups": [{"id": group.id, "name": group.name} for group in groups],
                 "is_active": Users.is_user_active(user_id, db=db),
             }
         )
@@ -447,11 +305,9 @@ async def get_user_info_by_id(
 ):
     user = Users.get_user_by_id(user_id, db=db)
     if user:
-        groups = Groups.get_groups_by_member_id(user_id, db=db)
         return UserInfoResponse(
             **{
                 **user.model_dump(),
-                "groups": [{"id": group.id, "name": group.name} for group in groups],
                 "is_active": Users.is_user_active(user_id, db=db),
             }
         )
@@ -638,15 +494,3 @@ async def delete_user_by_id(
         status_code=status.HTTP_403_FORBIDDEN,
         detail=ERROR_MESSAGES.ACTION_PROHIBITED,
     )
-
-
-############################
-# GetUserGroupsById
-############################
-
-
-@router.get("/{user_id}/groups")
-async def get_user_groups_by_id(
-    user_id: str, user=Depends(get_admin_user), db: Session = Depends(get_session)
-):
-    return Groups.get_groups_by_member_id(user_id, db=db)

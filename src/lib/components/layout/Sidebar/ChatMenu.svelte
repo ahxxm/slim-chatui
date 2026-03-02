@@ -23,7 +23,7 @@
 		getChatPinnedStatusById,
 		toggleChatPinnedStatusById
 	} from '$lib/apis/chats';
-	import { chats, folders, theme, user } from '$lib/stores';
+	import { chats, folders, theme } from '$lib/stores';
 	import { createMessagesList } from '$lib/utils';
 	import Download from '$lib/components/icons/Download.svelte';
 	import Folder from '$lib/components/icons/Folder.svelte';
@@ -115,18 +115,16 @@
 			align="start"
 			transition={flyAndScale}
 		>
-			{#if $user?.role === 'admin' || ($user.permissions?.chat?.share ?? true)}
-				<DropdownMenu.Item
-					draggable="false"
-					class="flex gap-2 items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800  rounded-xl"
-					on:click={() => {
-						shareHandler();
-					}}
-				>
-					<Share strokeWidth="1.5" />
-					<div class="flex items-center">{$i18n.t('Share')}</div>
-				</DropdownMenu.Item>
-			{/if}
+			<DropdownMenu.Item
+				draggable="false"
+				class="flex gap-2 items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800  rounded-xl"
+				on:click={() => {
+					shareHandler();
+				}}
+			>
+				<Share strokeWidth="1.5" />
+				<div class="flex items-center">{$i18n.t('Share')}</div>
+			</DropdownMenu.Item>
 
 			<DropdownMenu.Sub>
 				<DropdownMenu.SubTrigger
@@ -142,17 +140,15 @@
 					transition={flyAndScale}
 					sideOffset={8}
 				>
-					{#if $user?.role === 'admin' || ($user.permissions?.chat?.export ?? true)}
-						<DropdownMenu.Item
-							draggable="false"
-							class="flex gap-2 items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-							on:click={() => {
-								downloadJSONExport();
-							}}
-						>
-							<div class="flex items-center line-clamp-1">{$i18n.t('Export chat (.json)')}</div>
-						</DropdownMenu.Item>
-					{/if}
+					<DropdownMenu.Item
+						draggable="false"
+						class="flex gap-2 items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
+						on:click={() => {
+							downloadJSONExport();
+						}}
+					>
+						<div class="flex items-center line-clamp-1">{$i18n.t('Export chat (.json)')}</div>
+					</DropdownMenu.Item>
 
 					<DropdownMenu.Item
 						draggable="false"
