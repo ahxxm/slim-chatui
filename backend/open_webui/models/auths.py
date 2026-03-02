@@ -3,8 +3,8 @@ import uuid
 from typing import Optional
 
 from sqlalchemy.orm import Session
-from open_webui.internal.db import Base, get_db_context
-from open_webui.models.users import User, UserModel, UserProfileImageResponse, Users
+from open_webui.internal.db import Base, get_db, get_db_context
+from open_webui.models.users import UserModel, UserProfileImageResponse, Users
 from open_webui.utils.validate import validate_profile_image_url
 from pydantic import BaseModel, field_validator
 from sqlalchemy import Boolean, Column, String, Text
@@ -150,10 +150,14 @@ class AuthsTable:
         self, id: str, email: str, db: Optional[Session] = None
     ) -> bool:
         try:
-            with get_db_context(db) as db:
-                result = db.query(Auth).filter_by(id=id).update({"email": email})
-                db.commit()
-                return True if result == 1 else False
+            # FIXME: error prone transaction passing, need to fix all
+            if db is None:
+                with get_db() as db:
+                    db.query(Auth).filter_by(id=id).update({"email": email})
+                    db.commit()
+                    return True
+            db.query(Auth).filter_by(id=id).update({"email": email})
+            return True
         except Exception:
             return False
 

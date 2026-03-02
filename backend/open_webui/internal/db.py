@@ -66,8 +66,12 @@ get_db = contextmanager(get_session)
 
 @contextmanager
 def get_db_context(db: Session | None = None):
-    with get_db() as session:
-        yield session
+    if db is not None:
+        yield db
+    else:
+        with get_db() as session:
+            yield session
+            session.commit()
 
 
 def backup_db() -> str:
