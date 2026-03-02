@@ -1,3 +1,5 @@
+import os
+
 import black
 import logging
 
@@ -5,6 +7,7 @@ from open_webui.config import ENABLE_ADMIN_EXPORT
 from open_webui.constants import ERROR_MESSAGES
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
+from starlette.background import BackgroundTask
 from starlette.responses import FileResponse
 
 
@@ -43,15 +46,12 @@ async def download_db(user=Depends(get_admin_user)):
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
         )
-    from open_webui.internal.db import engine
+    from open_webui.internal.db import backup_db
 
-    if engine.name != "sqlite":
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.DB_NOT_SQLITE,
-        )
+    backup_path = backup_db()
     return FileResponse(
-        engine.url.database,
+        backup_path,
         media_type="application/octet-stream",
         filename="webui.db",
+        background=BackgroundTask(os.unlink, backup_path),
     )

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export HATCH_BUILD_HOOKS_ENABLE=false
+export SKIP_FRONTEND_BUILD=true
 export CORS_ALLOW_ORIGIN="*"
 export WEBUI_AUTH=false
 PORT="${PORT:-8080}"

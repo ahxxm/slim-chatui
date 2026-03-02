@@ -18,7 +18,6 @@ from open_webui.env import (
     PASSWORD_VALIDATION_HINT,
     PASSWORD_VALIDATION_REGEX_PATTERN,
     WEBUI_SECRET_KEY,
-    WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
 )
 
 from fastapi import BackgroundTasks, Depends, HTTPException, Request, Response, status
@@ -144,17 +143,7 @@ async def get_current_user(
                     detail=ERROR_MESSAGES.INVALID_TOKEN,
                 )
             else:
-                if WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
-                    trusted_email = request.headers.get(
-                        WEBUI_AUTH_TRUSTED_EMAIL_HEADER, ""
-                    ).lower()
-                    if trusted_email and user.email != trusted_email:
-                        raise HTTPException(
-                            status_code=status.HTTP_401_UNAUTHORIZED,
-                            detail="User mismatch. Please sign in again.",
-                        )
-
-            return user
+                return user
         else:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

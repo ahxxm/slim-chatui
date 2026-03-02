@@ -21,7 +21,7 @@ ENV APP_BUILD_HASH=${BUILD_HASH}
 RUN npm run build
 
 ######## Backend ########
-FROM python:3.12-slim-bookworm AS base
+FROM python:3.12-slim-trixie AS base
 
 ARG USE_PERMISSION_HARDENING
 ARG UID
@@ -50,24 +50,20 @@ RUN if [ $UID -ne 0 ]; then \
 
 RUN chown -R $UID:$GID /app $HOME
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    git build-essential gcc netcat-openbsd curl jq \
-    python3-dev \
-    && rm -rf /var/lib/apt/lists/*
-
 COPY --chown=$UID:$GID ./package.json ./LICENSE ./README.md ./pyproject.toml ./hatch_build.py /app/
 COPY --chown=$UID:$GID ./backend .
 COPY --chown=$UID:$GID --from=build /app/build /app/build
 
-RUN SKIP_FRONTEND_BUILD=1 pip3 install --no-cache-dir uv && \
-    SKIP_FRONTEND_BUILD=1 uv pip install --system --no-cache-dir '/app[all]' && \
+RUN pip3 install --no-cache-dir uv && \
+    uv pip compile --no-header --all-extras /app/pyproject.toml -o /tmp/requirements.txt && \
+    uv pip install --system --no-cache-dir -r /tmp/requirements.txt && \
     pip3 uninstall -y uv pip && \
+    rm /tmp/requirements.txt && \
     mkdir -p /app/backend/data && chown -R $UID:$GID /app/backend/data/
 
 EXPOSE 8080
 
-HEALTHCHECK CMD curl --silent --fail http://localhost:${PORT:-8080}/health | jq -ne 'input.status == true' || exit 1
+HEALTHCHECK CMD python3 -c "import urllib.request,json,sys;r=urllib.request.urlopen('http://localhost:${PORT:-8080}/health');sys.exit(0 if json.load(r).get('status') else 1)"
 
 # Minimal, atomic permission hardening for OpenShift (arbitrary UID):
 # - Group 0 owns /app and /root

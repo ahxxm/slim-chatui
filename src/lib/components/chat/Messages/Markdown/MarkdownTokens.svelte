@@ -324,6 +324,15 @@
 				open={false}
 				className="w-full space-y-1"
 			/>
+		{:else if token?.attributes?.type === 'web_search'}
+			<Collapsible
+				title={token.summary}
+				open={false}
+				disabled={true}
+				attributes={token?.attributes}
+				className="w-full space-y-1"
+				dir="auto"
+			/>
 		{:else if textContent.length > 0}
 			<Collapsible
 				title={token.summary}

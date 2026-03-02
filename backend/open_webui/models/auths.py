@@ -133,26 +133,6 @@ class AuthsTable:
         except Exception:
             return None
 
-    def authenticate_user_by_email(
-        self, email: str, db: Optional[Session] = None
-    ) -> Optional[UserModel]:
-        log.info(f"authenticate_user_by_email: {email}")
-        try:
-            with get_db_context(db) as db:
-                # Single JOIN query instead of two separate queries
-                result = (
-                    db.query(Auth, User)
-                    .join(User, Auth.id == User.id)
-                    .filter(Auth.email == email, Auth.active == True)
-                    .first()
-                )
-                if result:
-                    _, user = result
-                    return UserModel.model_validate(user)
-                return None
-        except Exception:
-            return None
-
     def update_user_password_by_id(
         self, id: str, new_password: str, db: Optional[Session] = None
     ) -> bool:

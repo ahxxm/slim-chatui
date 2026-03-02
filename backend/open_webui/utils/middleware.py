@@ -91,6 +91,17 @@ def serialize_output(output: list) -> str:
                     if text:
                         content = f"{content}{text}\n"
 
+        elif item_type == "web_search_call":
+            status = item.get("status", "in_progress")
+            action = item.get("action", {})
+            query = html.escape(action.get("query", ""))
+            if content and not content.endswith("\n"):
+                content += "\n"
+            if status == "completed":
+                content = f'{content}<details type="web_search" done="true" query="{query}">\n<summary>Searched the web</summary>\n</details>\n'
+            else:
+                content = f'{content}<details type="web_search" done="false" query="{query}">\n<summary>Searching the web…</summary>\n</details>\n'
+
         elif item_type == "reasoning":
             reasoning_content = ""
             # Check for 'summary' (new structure) or 'content' (legacy/fallback)
@@ -121,7 +132,8 @@ def serialize_output(output: list) -> str:
             )
 
             if status == "completed" or duration is not None or not is_last_item:
-                content = f'{content}<details type="reasoning" done="true" duration="{duration or 0}">\n<summary>Thought for {duration or 0} seconds</summary>\n{display}\n</details>\n'
+                d = round(duration, 1) if duration else 0
+                content = f'{content}<details type="reasoning" done="true" duration="{d}">\n<summary>Thought for {d} seconds</summary>\n{display}\n</details>\n'
             else:
                 content = f'{content}<details type="reasoning" done="false">\n<summary>Thinking…</summary>\n{display}\n</details>\n'
 
@@ -175,6 +187,8 @@ def handle_responses_streaming_event(
         item = data.get("item", {})
         if item:
             new_output = list(current_output)
+            if item.get("type") == "reasoning":
+                item = {**item, "started_at": time.time()}
             new_output.append(item)
             return new_output, None
         return current_output, None
@@ -457,16 +471,23 @@ def handle_responses_streaming_event(
         response_data = data.get("response", {})
         final_output = response_data.get("output")
 
+        # Carry over timing from tracked reasoning items
+        timing = {}
+        for item in current_output:
+            if item.get("type") == "reasoning" and "started_at" in item:
+                timing[item.get("id")] = item["started_at"]
+
         new_output = final_output if final_output is not None else current_output
 
-        # Ensure reasoning items are marked as completed in the final output
+        now = time.time()
         if new_output:
             for item in new_output:
-                if (
-                    item.get("type") == "reasoning"
-                    and item.get("status") != "completed"
-                ):
-                    item["status"] = "completed"
+                if item.get("type") == "reasoning":
+                    if item.get("status") != "completed":
+                        item["status"] = "completed"
+                    if "duration" not in item:
+                        started = timing.get(item.get("id"))
+                        item["duration"] = (now - started) if started else 0
 
         return new_output, {"usage": response_data.get("usage"), "done": True}
 
@@ -1329,9 +1350,7 @@ async def streaming_chat_response_handler(response, ctx):
                                     {"type": "output_text", "text": block_content}
                                 ]
                                 item["ended_at"] = time.time()
-                                item["duration"] = int(
-                                    item["ended_at"] - item["started_at"]
-                                )
+                                item["duration"] = item["ended_at"] - item["started_at"]
                                 item["status"] = "completed"
                             else:
                                 set_last_text(output, block_content)
@@ -1671,7 +1690,7 @@ async def streaming_chat_response_handler(response, ctx):
                                         ):
                                             reasoning_item = output[-1]
                                             reasoning_item["ended_at"] = time.time()
-                                            reasoning_item["duration"] = int(
+                                            reasoning_item["duration"] = (
                                                 reasoning_item["ended_at"]
                                                 - reasoning_item["started_at"]
                                             )
@@ -1884,7 +1903,7 @@ async def streaming_chat_response_handler(response, ctx):
                             reasoning_item = output[-1]
                             if reasoning_item.get("ended_at") is None:
                                 reasoning_item["ended_at"] = time.time()
-                                reasoning_item["duration"] = int(
+                                reasoning_item["duration"] = round(
                                     reasoning_item["ended_at"]
                                     - reasoning_item["started_at"]
                                 )

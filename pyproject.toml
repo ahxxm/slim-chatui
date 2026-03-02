@@ -22,8 +22,6 @@ dependencies = [
 
     "sqlalchemy==2.0.46",
     "alembic==1.18.3",
-    "peewee==3.19.0",
-    "peewee-migrate==1.14.3",
 
     "pytz==2025.2",
 
