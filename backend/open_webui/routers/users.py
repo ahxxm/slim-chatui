@@ -7,18 +7,16 @@ import io
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import Response, StreamingResponse, FileResponse
-from pydantic import BaseModel, ConfigDict
-
 
 from open_webui.models.auths import Auths
 
 from open_webui.models.chats import Chats
 from open_webui.models.users import (
     UserModel,
+    UserModelResponse,
     UserListResponse,
     UserInfoResponse,
     UserInfoListResponse,
-    UserRoleUpdateForm,
     Users,
     UserSettings,
     UserUpdateForm,
@@ -204,13 +202,7 @@ async def update_user_info_by_session_user(
 ############################
 
 
-class UserActiveResponse(BaseModel):
-    name: str
-    profile_image_url: Optional[str] = None
-    model_config = ConfigDict(extra="allow")
-
-
-@router.get("/{user_id}", response_model=UserActiveResponse)
+@router.get("/{user_id}", response_model=UserModelResponse)
 async def get_user_by_id(
     user_id: str, user=Depends(get_admin_user), db: Session = Depends(get_session)
 ):
@@ -229,7 +221,7 @@ async def get_user_by_id(
 
     user = Users.get_user_by_id(user_id, db=db)
     if user:
-        return UserActiveResponse(**user.model_dump())
+        return user
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

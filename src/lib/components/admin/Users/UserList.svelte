@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
-	import { WEBUI_NAME, config, user, showSidebar } from '$lib/stores';
-	import { goto } from '$app/navigation';
-	import { onMount, getContext, onDestroy } from 'svelte';
+	import { WEBUI_API_BASE_URL } from '$lib/constants';
+	import { config, user } from '$lib/stores';
+	import { getContext, onDestroy } from 'svelte';
 
 	import dayjs from 'dayjs';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';

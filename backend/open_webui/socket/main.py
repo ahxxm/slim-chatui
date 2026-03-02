@@ -14,17 +14,13 @@ from open_webui.config import (
 
 from open_webui.env import (
     ENABLE_WEBSOCKET_SUPPORT,
+    GLOBAL_LOG_LEVEL,
     WEBSOCKET_SERVER_PING_TIMEOUT,
     WEBSOCKET_SERVER_PING_INTERVAL,
     WEBSOCKET_SERVER_LOGGING,
     WEBSOCKET_SERVER_ENGINEIO_LOGGING,
 )
 from open_webui.utils.auth import decode_token
-
-
-from open_webui.env import (
-    GLOBAL_LOG_LEVEL,
-)
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
@@ -50,6 +46,14 @@ SESSION_POOL_TIMEOUT = 120  # seconds without heartbeat before session is reaped
 
 MODELS = {}
 SESSION_POOL = {}
+
+_USER_SESSION_EXCLUDE_FIELDS = [
+    "profile_image_url",
+    "profile_banner_image_url",
+    "date_of_birth",
+    "bio",
+    "gender",
+]
 
 
 async def periodic_session_pool_cleanup():
@@ -117,7 +121,6 @@ async def enter_room_for_users(room: str, user_ids: list[str]):
         log.debug(f"Failed to make users {user_ids} join room {room}: {e}")
 
 
-
 @sio.event
 async def connect(sid, environ, auth):
     user = None
@@ -129,15 +132,7 @@ async def connect(sid, environ, auth):
 
         if user:
             SESSION_POOL[sid] = {
-                **user.model_dump(
-                    exclude=[
-                        "profile_image_url",
-                        "profile_banner_image_url",
-                        "date_of_birth",
-                        "bio",
-                        "gender",
-                    ]
-                ),
+                **user.model_dump(exclude=_USER_SESSION_EXCLUDE_FIELDS),
                 "last_seen_at": int(time.time()),
             }
             await sio.enter_room(sid, f"user:{user.id}")
@@ -146,7 +141,7 @@ async def connect(sid, environ, auth):
 @sio.on("user-join")
 async def user_join(sid, data):
 
-    auth = data["auth"] if "auth" in data else None
+    auth = data.get("auth")
     if not auth or "token" not in auth:
         return
 
@@ -159,15 +154,7 @@ async def user_join(sid, data):
         return
 
     SESSION_POOL[sid] = {
-        **user.model_dump(
-            exclude=[
-                "profile_image_url",
-                "profile_banner_image_url",
-                "date_of_birth",
-                "bio",
-                "gender",
-            ]
-        ),
+        **user.model_dump(exclude=_USER_SESSION_EXCLUDE_FIELDS),
         "last_seen_at": int(time.time()),
     }
 

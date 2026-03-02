@@ -23,7 +23,6 @@ import datetime
 class UserSettings(BaseModel):
     ui: Optional[dict] = {}
     model_config = ConfigDict(extra="allow")
-    pass
 
 
 class User(Base):
@@ -116,11 +115,6 @@ class UserInfoResponse(BaseModel):
     bio: Optional[str] = None
 
 
-class UserIdNameResponse(BaseModel):
-    id: str
-    name: str
-
-
 class UserInfoListResponse(BaseModel):
     users: list[UserInfoResponse]
     total: int
@@ -139,11 +133,6 @@ class UserResponse(UserNameResponse):
 class UserProfileImageResponse(UserNameResponse):
     email: str
     profile_image_url: str
-
-
-class UserRoleUpdateForm(BaseModel):
-    id: str
-    role: str
 
 
 class UserUpdateForm(BaseModel):
@@ -172,25 +161,20 @@ class UsersTable:
     ) -> Optional[UserModel]:
         with get_db_context(db) as db:
             user = UserModel(
-                **{
-                    "id": id,
-                    "email": email,
-                    "name": name,
-                    "role": role,
-                    "profile_image_url": profile_image_url,
-                    "created_at": int(time.time()),
-                    "updated_at": int(time.time()),
-                    "username": username,
-                }
+                id=id,
+                email=email,
+                name=name,
+                role=role,
+                profile_image_url=profile_image_url,
+                created_at=int(time.time()),
+                updated_at=int(time.time()),
+                username=username,
             )
             result = User(**user.model_dump())
             db.add(result)
             db.commit()
             db.refresh(result)
-            if result:
-                return user
-            else:
-                return None
+            return user
 
     def get_user_by_id(
         self, id: str, db: Optional[Session] = None
@@ -444,5 +428,6 @@ class UsersTable:
                 return UserModel.model_validate(user)
             else:
                 return None
+
 
 Users = UsersTable()

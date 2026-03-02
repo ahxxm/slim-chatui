@@ -36,17 +36,12 @@
 
 		label = token?.label ?? id;
 
-		if (triggerChar === '@') {
-			if (idType === 'U') {
-				// User
-			} else if (idType === 'M') {
-				// Model
-				const model = $models.find((m) => m.id === id);
-				if (model) {
-					label = model.name;
-				} else {
-					label = $i18n.t('Unknown');
-				}
+		if (triggerChar === '@' && idType === 'M') {
+			const model = $models.find((m) => m.id === id);
+			if (model) {
+				label = model.name;
+			} else {
+				label = $i18n.t('Unknown');
 			}
 		}
 	};
@@ -57,15 +52,8 @@
 <span
 	class="mention cursor-pointer"
 	on:click={async () => {
-		if (triggerChar === '@') {
-			if (idType === 'U') {
-				console.log('Clicked user mention', id);
-			} else if (idType === 'M') {
-				console.log('Clicked model mention', id);
-				await goto(`/?model=${id}`);
-			}
-		} else {
-			console.log('Clicked mention', id);
+		if (triggerChar === '@' && idType === 'M') {
+			await goto(`/?model=${id}`);
 		}
 	}}
 >

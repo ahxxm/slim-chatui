@@ -36,7 +36,6 @@ async def format_code(form_data: CodeForm, user=Depends(get_admin_user)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-
 @router.get("/db/download")
 async def download_db(user=Depends(get_admin_user)):
     if not ENABLE_ADMIN_EXPORT:
