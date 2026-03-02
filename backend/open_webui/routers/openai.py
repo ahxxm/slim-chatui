@@ -25,8 +25,6 @@ from sqlalchemy.orm import Session
 from open_webui.internal.db import get_session
 
 from open_webui.models.models import Models
-from open_webui.models.access_grants import AccessGrants
-from open_webui.models.groups import Groups
 from open_webui.config import (
     CACHE_DIR,
 )
@@ -37,7 +35,6 @@ from open_webui.env import (
     AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST,
     ENABLE_FORWARD_USER_INFO_HEADERS,
     FORWARD_SESSION_INFO_HEADER_CHAT_ID,
-    BYPASS_MODEL_ACCESS_CONTROL,
 )
 from open_webui.models.users import UserModel
 
@@ -430,36 +427,6 @@ async def get_all_models_responses(request: Request, user: UserModel) -> list:
     return responses
 
 
-async def get_filtered_models(models, user, db=None):
-    # Filter models based on user access control
-    model_ids = [model["id"] for model in models.get("data", [])]
-    model_infos = {
-        model_info.id: model_info
-        for model_info in Models.get_models_by_ids(model_ids, db=db)
-    }
-    user_group_ids = {
-        group.id for group in Groups.get_groups_by_member_id(user.id, db=db)
-    }
-
-    # Batch-fetch accessible resource IDs in a single query instead of N has_access calls
-    accessible_model_ids = AccessGrants.get_accessible_resource_ids(
-        user_id=user.id,
-        resource_type="model",
-        resource_ids=list(model_infos.keys()),
-        permission="read",
-        user_group_ids=user_group_ids,
-        db=db,
-    )
-
-    filtered_models = []
-    for model in models.get("data", []):
-        model_info = model_infos.get(model["id"])
-        if model_info:
-            if user.id == model_info.user_id or model_info.id in accessible_model_ids:
-                filtered_models.append(model)
-    return filtered_models
-
-
 @cached(
     ttl=MODELS_CACHE_TTL,
     key=lambda _, user: f"openai_all_models_{user.id}" if user else "openai_all_models",
@@ -622,8 +589,7 @@ async def get_models(
                 error_detail = f"Unexpected error: {str(e)}"
                 raise HTTPException(status_code=500, detail=error_detail)
 
-    if user.role == "user" and not BYPASS_MODEL_ACCESS_CONTROL:
-        models["data"] = await get_filtered_models(models, user)
+    models["data"] = models.get("data", [])
 
     return models
 
@@ -913,16 +879,8 @@ async def generate_chat_completion(
     request: Request,
     form_data: dict,
     user=Depends(get_verified_user),
-    bypass_filter: Optional[bool] = False,
     bypass_system_prompt: bool = False,
 ):
-    # NOTE: We intentionally do NOT use Depends(get_session) here.
-    # Database operations (get_model_by_id, AccessGrants.has_access) manage their own short-lived sessions.
-    # This prevents holding a connection during the entire LLM call (30-60+ seconds),
-    # which would exhaust the connection pool under concurrent load.
-    if BYPASS_MODEL_ACCESS_CONTROL:
-        bypass_filter = True
-
     idx = 0
 
     payload = {**form_data}
@@ -950,32 +908,6 @@ async def generate_chat_completion(
             payload = apply_model_params_to_body_openai(params, payload)
             if not bypass_system_prompt:
                 payload = apply_system_prompt_to_body(system, payload, metadata, user)
-
-        # Check if user has access to the model
-        if not bypass_filter and user.role == "user":
-            user_group_ids = {
-                group.id for group in Groups.get_groups_by_member_id(user.id)
-            }
-            if not (
-                user.id == model_info.user_id
-                or AccessGrants.has_access(
-                    user_id=user.id,
-                    resource_type="model",
-                    resource_id=model_info.id,
-                    permission="read",
-                    user_group_ids=user_group_ids,
-                )
-            ):
-                raise HTTPException(
-                    status_code=403,
-                    detail="Model not found",
-                )
-    elif not bypass_filter:
-        if user.role != "admin":
-            raise HTTPException(
-                status_code=403,
-                detail="Model not found",
-            )
 
     # Check if model is already in app state cache to avoid expensive get_all_models() call
     models = request.app.state.OPENAI_MODELS

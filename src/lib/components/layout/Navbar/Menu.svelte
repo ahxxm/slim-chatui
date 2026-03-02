@@ -8,27 +8,13 @@
 
 	import { copyToClipboard, createMessagesList } from '$lib/utils';
 
-	import {
-		showOverview,
-		showControls,
-		showArtifacts,
-		mobile,
-		temporaryChatEnabled,
-		theme,
-		user,
-		folders,
-		showEmbeds,
-		artifactContents
-	} from '$lib/stores';
+	import { mobile, temporaryChatEnabled, theme, user, folders } from '$lib/stores';
 	import { flyAndScale } from '$lib/utils/transitions';
 	import { getChatById } from '$lib/apis/chats';
 
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import Tags from '$lib/components/chat/Tags.svelte';
-	import Map from '$lib/components/icons/Map.svelte';
 	import Clipboard from '$lib/components/icons/Clipboard.svelte';
-	import AdjustmentsHorizontal from '$lib/components/icons/AdjustmentsHorizontal.svelte';
-	import Cube from '$lib/components/icons/Cube.svelte';
 	import Folder from '$lib/components/icons/Folder.svelte';
 	import Share from '$lib/components/icons/Share.svelte';
 	import ArchiveBox from '$lib/components/icons/ArchiveBox.svelte';
@@ -131,58 +117,7 @@
 				<div class="flex items-center">{$i18n.t('Settings')}</div>
 			</DropdownMenu.Item> -->
 
-			{#if $mobile && ($user?.role === 'admin' || ($user?.permissions.chat?.controls ?? true))}
-				<DropdownMenu.Item
-					draggable="false"
-					class="flex gap-2 items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl select-none w-full"
-					id="chat-controls-button"
-					on:click={async () => {
-						await showControls.set(true);
-						await showOverview.set(false);
-						await showArtifacts.set(false);
-						await showEmbeds.set(false);
-					}}
-				>
-					<AdjustmentsHorizontal className=" size-4" strokeWidth="1.5" />
-					<div class="flex items-center">{$i18n.t('Controls')}</div>
-				</DropdownMenu.Item>
-			{/if}
-
-			<DropdownMenu.Item
-				draggable="false"
-				class="flex gap-2 items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl select-none w-full"
-				id="chat-overview-button"
-				on:click={async () => {
-					await showControls.set(true);
-					await showOverview.set(true);
-					await showArtifacts.set(false);
-					await showEmbeds.set(false);
-				}}
-			>
-				<Map className=" size-4" strokeWidth="1.5" />
-				<div class="flex items-center">{$i18n.t('Overview')}</div>
-			</DropdownMenu.Item>
-
-			{#if ($artifactContents ?? []).length > 0}
-				<DropdownMenu.Item
-					draggable="false"
-					class="flex gap-2 items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl select-none w-full"
-					id="chat-overview-button"
-					on:click={async () => {
-						await showControls.set(true);
-						await showArtifacts.set(true);
-						await showOverview.set(false);
-						await showEmbeds.set(false);
-					}}
-				>
-					<Cube className=" size-4" strokeWidth="1.5" />
-					<div class="flex items-center">{$i18n.t('Artifacts')}</div>
-				</DropdownMenu.Item>
-			{/if}
-
-			<hr class="border-gray-50/30 dark:border-gray-800/30 my-1" />
-
-			{#if !$temporaryChatEnabled && ($user?.role === 'admin' || ($user.permissions?.chat?.share ?? true))}
+			{#if !$temporaryChatEnabled}
 				<DropdownMenu.Item
 					draggable="false"
 					class="flex gap-2 items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl select-none w-full"
@@ -210,17 +145,15 @@
 					transition={flyAndScale}
 					sideOffset={8}
 				>
-					{#if $user?.role === 'admin' || ($user.permissions?.chat?.export ?? true)}
-						<DropdownMenu.Item
-							draggable="false"
-							class="flex gap-2 items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl select-none w-full"
-							on:click={() => {
-								downloadJSONExport();
-							}}
-						>
-							<div class="flex items-center line-clamp-1">{$i18n.t('Export chat (.json)')}</div>
-						</DropdownMenu.Item>
-					{/if}
+					<DropdownMenu.Item
+						draggable="false"
+						class="flex gap-2 items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl select-none w-full"
+						on:click={() => {
+							downloadJSONExport();
+						}}
+					>
+						<div class="flex items-center line-clamp-1">{$i18n.t('Export chat (.json)')}</div>
+					</DropdownMenu.Item>
 					<DropdownMenu.Item
 						draggable="false"
 						class="flex gap-2 items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl select-none w-full"

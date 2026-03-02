@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import { embed, showControls, showEmbeds } from '$lib/stores';
 
 	import CitationModal from './Citations/CitationModal.svelte';
 
@@ -10,13 +9,10 @@
 	export let chatId = '';
 
 	export let sources = [];
-	export let readOnly = false;
 
 	let citations = [];
 	let showPercentage = false;
 	let showRelevance = true;
-
-	let citationModal = null;
 
 	let showCitations = false;
 	let showCitationModal = false;
@@ -39,35 +35,13 @@
 		}
 
 		if (citations[index]) {
-			console.log('Showing citation modal for:', citations[index]);
-
 			if (citations[index]?.source?.embed_url) {
-				const embedUrl = citations[index].source.embed_url;
-				if (embedUrl) {
-					if (readOnly) {
-						// Open in new tab if readOnly
-						window.open(embedUrl, '_blank');
-						return;
-					} else {
-						showControls.set(true);
-						showEmbeds.set(true);
-						embed.set({
-							url: embedUrl,
-							title: citations[index]?.source?.name || 'Embedded Content',
-							source: citations[index],
-							chatId: chatId,
-							messageId: id,
-							sourceId: sourceId
-						});
-					}
-				} else {
-					selectedCitation = citations[index];
-					showCitationModal = true;
-				}
-			} else {
-				selectedCitation = citations[index];
-				showCitationModal = true;
+				window.open(citations[index].source.embed_url, '_blank');
+				return;
 			}
+
+			selectedCitation = citations[index];
+			showCitationModal = true;
 		}
 	};
 
@@ -136,8 +110,6 @@
 
 			return acc;
 		}, []);
-		console.log('citations', citations);
-
 		showRelevance = calculateShowRelevance(citations);
 		showPercentage = shouldShowPercentage(citations);
 	}

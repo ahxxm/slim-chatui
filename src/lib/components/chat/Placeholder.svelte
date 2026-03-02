@@ -48,14 +48,7 @@
 	export let onSelect = (e) => {};
 	export let onChange = (e) => {};
 
-	let models = [];
-	let selectedModelIdx = 0;
-
-	$: if (selectedModels.length > 0) {
-		selectedModelIdx = models.length - 1;
-	}
-
-	$: models = selectedModels.map((id) => $_models.find((m) => m.id === id));
+	$: model = $_models.find((m) => m.id === selectedModels[0]);
 </script>
 
 <div class="m-auto w-full max-w-6xl px-2 @2xl:px-20 translate-y-6 py-24 text-center">
@@ -92,32 +85,15 @@
 			{:else}
 				<div class="flex flex-row justify-center gap-3 @sm:gap-3.5 w-fit px-5 max-w-xl">
 					<div class="flex shrink-0 justify-center">
-						<div class="flex -space-x-4 mb-0.5" in:fade={{ duration: 100 }}>
-							{#each models as model, modelIdx}
-								<Tooltip
-									content={(models[modelIdx]?.info?.meta?.tags ?? [])
-										.map((tag) => tag.name.toUpperCase())
-										.join(', ')}
-									placement="top"
-								>
-									<button
-										aria-hidden={models.length <= 1}
-										aria-label={$i18n.t('Get information on {{name}} in the UI', {
-											name: models[modelIdx]?.name
-										})}
-										on:click={() => {
-											selectedModelIdx = modelIdx;
-										}}
-									>
-										<img
-											src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}`}
-											class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
-											aria-hidden="true"
-											draggable="false"
-										/>
-									</button>
-								</Tooltip>
-							{/each}
+						<div class="flex mb-0.5" in:fade={{ duration: 100 }}>
+							{#if model}
+								<img
+									src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}`}
+									class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
+									aria-hidden="true"
+									draggable="false"
+								/>
+							{/if}
 						</div>
 					</div>
 
@@ -125,14 +101,10 @@
 						class=" text-3xl @sm:text-3xl line-clamp-1 flex items-center"
 						in:fade={{ duration: 100 }}
 					>
-						{#if models[selectedModelIdx]?.name}
-							<Tooltip
-								content={models[selectedModelIdx]?.name}
-								placement="top"
-								className=" flex items-center "
-							>
+						{#if model?.name}
+							<Tooltip content={model?.name} placement="top" className=" flex items-center ">
 								<span class="line-clamp-1">
-									{models[selectedModelIdx]?.name}
+									{model?.name}
 								</span>
 							</Tooltip>
 						{:else}
@@ -143,13 +115,14 @@
 
 				<div class="flex mt-1 mb-2">
 					<div in:fade={{ duration: 100, delay: 50 }}>
-						{#if models[selectedModelIdx]?.info?.meta?.description ?? null}
+						{#if model?.info?.meta?.description ?? null}
 							<Tooltip
 								className=" w-fit"
 								content={marked.parse(
-									sanitizeResponseContent(
-										models[selectedModelIdx]?.info?.meta?.description ?? ''
-									).replaceAll('\n', '<br>')
+									sanitizeResponseContent(model?.info?.meta?.description ?? '').replaceAll(
+										'\n',
+										'<br>'
+									)
 								)}
 								placement="top"
 							>
@@ -157,17 +130,18 @@
 									class="mt-0.5 px-2 text-sm font-normal text-gray-500 dark:text-gray-400 line-clamp-2 max-w-xl markdown"
 								>
 									{@html marked.parse(
-										sanitizeResponseContent(
-											models[selectedModelIdx]?.info?.meta?.description ?? ''
-										).replaceAll('\n', '<br>')
+										sanitizeResponseContent(model?.info?.meta?.description ?? '').replaceAll(
+											'\n',
+											'<br>'
+										)
 									)}
 								</div>
 							</Tooltip>
 
-							{#if models[selectedModelIdx]?.info?.meta?.user}
+							{#if model?.info?.meta?.user}
 								<div class="mt-0.5 text-sm font-normal text-gray-400 dark:text-gray-500">
 									By
-									{models[selectedModelIdx]?.info?.meta?.user.name}
+									{model?.info?.meta?.user.name}
 								</div>
 							{/if}
 						{/if}
@@ -208,7 +182,7 @@
 			<div class="mx-5">
 				<Suggestions
 					suggestionPrompts={atSelectedModel?.info?.meta?.suggestion_prompts ??
-						models[selectedModelIdx]?.info?.meta?.suggestion_prompts ??
+						model?.info?.meta?.suggestion_prompts ??
 						$config?.default_prompt_suggestions ??
 						[]}
 					inputValue={prompt}

@@ -54,10 +54,8 @@ from open_webui.routers import (
     chats,
     folders,
     configs,
-    groups,
     files,
     models,
-    prompts,
     users,
     utils,
 )
@@ -92,17 +90,9 @@ from open_webui.config import (
     SHOW_ADMIN_DETAILS,
     JWT_EXPIRES_IN,
     ENABLE_SIGNUP,
-    ENABLE_API_KEYS,
-    ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS,
-    API_KEYS_ALLOWED_ENDPOINTS,
-    ENABLE_FOLDERS,
-    FOLDER_MAX_FILE_COUNT,
     ENABLE_USER_STATUS,
     ENABLE_USER_WEBHOOKS,
-    BYPASS_ADMIN_ACCESS_CONTROL,
-    USER_PERMISSIONS,
     DEFAULT_USER_ROLE,
-    DEFAULT_GROUP_ID,
     PENDING_USER_OVERLAY_CONTENT,
     PENDING_USER_OVERLAY_TITLE,
     DEFAULT_PROMPT_SUGGESTIONS,
@@ -153,7 +143,6 @@ from open_webui.env import (
     WEBUI_AUTH_TRUSTED_NAME_HEADER,
     ENABLE_COMPRESSION_MIDDLEWARE,
     ENABLE_WEBSOCKET_SUPPORT,
-    BYPASS_MODEL_ACCESS_CONTROL,
     RESET_CONFIG_ON_START,
     EXTERNAL_PWA_MANIFEST_URL,
     ENABLE_PUBLIC_ACTIVE_USERS_COUNT,
@@ -169,8 +158,6 @@ from open_webui.env import (
 from open_webui.utils.models import (
     get_all_models,
     get_all_base_models,
-    check_model_access,
-    get_filtered_models,
 )
 from open_webui.utils.chat import (
     generate_chat_completion as chat_completion_handler,
@@ -342,12 +329,6 @@ app.state.BASE_MODELS = []
 app.state.config.WEBUI_URL = WEBUI_URL
 app.state.config.ENABLE_SIGNUP = ENABLE_SIGNUP
 
-app.state.config.ENABLE_API_KEYS = ENABLE_API_KEYS
-app.state.config.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS = (
-    ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS
-)
-app.state.config.API_KEYS_ALLOWED_ENDPOINTS = API_KEYS_ALLOWED_ENDPOINTS
-
 app.state.config.JWT_EXPIRES_IN = JWT_EXPIRES_IN
 
 app.state.config.SHOW_ADMIN_DETAILS = SHOW_ADMIN_DETAILS
@@ -363,20 +344,15 @@ app.state.config.DEFAULT_MODEL_PARAMS = DEFAULT_MODEL_PARAMS
 
 app.state.config.DEFAULT_PROMPT_SUGGESTIONS = DEFAULT_PROMPT_SUGGESTIONS
 app.state.config.DEFAULT_USER_ROLE = DEFAULT_USER_ROLE
-app.state.config.DEFAULT_GROUP_ID = DEFAULT_GROUP_ID
 
 app.state.config.PENDING_USER_OVERLAY_CONTENT = PENDING_USER_OVERLAY_CONTENT
 app.state.config.PENDING_USER_OVERLAY_TITLE = PENDING_USER_OVERLAY_TITLE
 
 app.state.config.RESPONSE_WATERMARK = RESPONSE_WATERMARK
 
-app.state.config.USER_PERMISSIONS = USER_PERMISSIONS
 app.state.config.WEBHOOK_URL = WEBHOOK_URL
 app.state.config.BANNERS = WEBUI_BANNERS
 
-
-app.state.config.ENABLE_FOLDERS = ENABLE_FOLDERS
-app.state.config.FOLDER_MAX_FILE_COUNT = FOLDER_MAX_FILE_COUNT
 app.state.config.ENABLE_USER_WEBHOOKS = ENABLE_USER_WEBHOOKS
 app.state.config.ENABLE_USER_STATUS = ENABLE_USER_STATUS
 
@@ -482,51 +458,6 @@ app.add_middleware(RedirectMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
 
-class APIKeyRestrictionMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        auth_header = request.headers.get("Authorization")
-        token = None
-
-        if auth_header:
-            parts = auth_header.split(" ", 1)
-            if len(parts) == 2:
-                token = parts[1]
-
-        # Only apply restrictions if an sk- API key is used
-        if token and token.startswith("sk-"):
-            # Check if restrictions are enabled
-            if request.app.state.config.ENABLE_API_KEYS_ENDPOINT_RESTRICTIONS:
-                allowed_paths = [
-                    path.strip()
-                    for path in str(
-                        request.app.state.config.API_KEYS_ALLOWED_ENDPOINTS
-                    ).split(",")
-                    if path.strip()
-                ]
-
-                request_path = request.url.path
-
-                # Match exact path or prefix path
-                is_allowed = any(
-                    request_path == allowed or request_path.startswith(allowed + "/")
-                    for allowed in allowed_paths
-                )
-
-                if not is_allowed:
-                    return JSONResponse(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        content={
-                            "detail": "API key not allowed to access this endpoint."
-                        },
-                    )
-
-        response = await call_next(request)
-        return response
-
-
-app.add_middleware(APIKeyRestrictionMiddleware)
-
-
 @app.middleware("http")
 async def commit_session_after_request(request: Request, call_next):
     response = await call_next(request)
@@ -565,7 +496,6 @@ async def check_url(request: Request, call_next):
                 scheme="Bearer", credentials=request.headers.get("x-api-key")
             )
 
-    request.state.enable_api_keys = app.state.config.ENABLE_API_KEYS
     response = await call_next(request)
     process_time = int(time.time()) - start_time
     response.headers["X-Process-Time"] = str(process_time)
@@ -615,10 +545,7 @@ app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(chats.router, prefix="/api/v1/chats", tags=["chats"])
 
 app.include_router(models.router, prefix="/api/v1/models", tags=["models"])
-app.include_router(prompts.router, prefix="/api/v1/prompts", tags=["prompts"])
-
 app.include_router(folders.router, prefix="/api/v1/folders", tags=["folders"])
-app.include_router(groups.router, prefix="/api/v1/groups", tags=["groups"])
 app.include_router(files.router, prefix="/api/v1/files", tags=["files"])
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 
@@ -682,8 +609,6 @@ async def get_models(
                 (model.get("name", "") or ""),
             )
         )
-
-    models = get_filtered_models(models, user)
 
     log.debug(
         f"/api/models returned filtered models accessible to the user: {json.dumps([model.get('id') for model in models])}"
@@ -752,15 +677,6 @@ async def chat_completion(
 
             model = request.app.state.MODELS[model_id]
             model_info = Models.get_model_by_id(model_id)
-
-            # Check if user has access to the model
-            if not BYPASS_MODEL_ACCESS_CONTROL and (
-                user.role != "admin" or not BYPASS_ADMIN_ACCESS_CONTROL
-            ):
-                try:
-                    check_model_access(user, model)
-                except Exception as e:
-                    raise e
         else:
             model = model_item
 
@@ -1153,7 +1069,6 @@ async def get_app_config(request: Request):
             "auth": WEBUI_AUTH,
             "auth_trusted_header": bool(app.state.AUTH_TRUSTED_EMAIL_HEADER),
             "enable_signup_password_confirmation": ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
-            "enable_api_keys": app.state.config.ENABLE_API_KEYS,
             "enable_signup": app.state.config.ENABLE_SIGNUP,
             "enable_websocket": ENABLE_WEBSOCKET_SUPPORT,
             "enable_public_active_users_count": ENABLE_PUBLIC_ACTIVE_USERS_COUNT,
@@ -1161,8 +1076,6 @@ async def get_app_config(request: Request):
             **(
                 {
                     "enable_direct_connections": app.state.config.ENABLE_DIRECT_CONNECTIONS,
-                    "enable_folders": app.state.config.ENABLE_FOLDERS,
-                    "folder_max_file_count": app.state.config.FOLDER_MAX_FILE_COUNT,
                     "enable_autocomplete_generation": app.state.config.ENABLE_AUTOCOMPLETE_GENERATION,
                     "enable_user_webhooks": app.state.config.ENABLE_USER_WEBHOOKS,
                     "enable_user_status": app.state.config.ENABLE_USER_STATUS,
@@ -1185,7 +1098,6 @@ async def get_app_config(request: Request):
                         "height": app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT,
                     },
                 },
-                "permissions": {**app.state.config.USER_PERMISSIONS},
                 "ui": {
                     "pending_user_overlay_title": app.state.config.PENDING_USER_OVERLAY_TITLE,
                     "pending_user_overlay_content": app.state.config.PENDING_USER_OVERLAY_CONTENT,

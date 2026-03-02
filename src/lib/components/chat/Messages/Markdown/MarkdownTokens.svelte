@@ -27,13 +27,11 @@
 	export let id: string;
 	export let tokens: Token[];
 	export let top = true;
-	export let attributes = {};
 	export let sourceIds = [];
 
 	export let done = true;
 
 	export let save = false;
-	export let preview = false;
 
 	export let paragraphTag = 'p';
 
@@ -41,8 +39,6 @@
 	export let topPadding = false;
 
 	export let onSave: Function = () => {};
-	export let onUpdate: Function = () => {};
-	export let onPreview: Function = () => {};
 
 	export let onTaskClick: Function = () => {};
 	export let onSourceClick: Function = () => {};
@@ -112,9 +108,7 @@
 				{token}
 				lang={token?.lang ?? ''}
 				code={token?.text ?? ''}
-				{attributes}
 				{save}
-				{preview}
 				edit={editCodeBlock}
 				stickyButtonsClassName={topPadding ? 'top-10' : 'top-0'}
 				onSave={(value) => {
@@ -124,8 +118,6 @@
 						newContent: value
 					});
 				}}
-				{onUpdate}
-				{onPreview}
 			/>
 		{:else}
 			{token.text}

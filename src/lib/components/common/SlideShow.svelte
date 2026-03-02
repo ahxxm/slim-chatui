@@ -12,9 +12,10 @@
 	let selectedImageIdx = 0;
 
 	onMount(() => {
-		setInterval(() => {
+		const interval = setInterval(() => {
 			selectedImageIdx = (selectedImageIdx + 1) % (imageUrls.length - 1);
 		}, duration);
+		return () => clearInterval(interval);
 	});
 </script>
 

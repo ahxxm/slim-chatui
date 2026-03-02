@@ -24,8 +24,8 @@
 	import ModelSelector from './ModelSelector.svelte';
 	import AdvancedParams from '$lib/components/chat/Settings/Advanced/AdvancedParams.svelte';
 
-	import Capabilities from '$lib/components/workspace/Models/Capabilities.svelte';
-	import PromptSuggestions from '$lib/components/workspace/Models/PromptSuggestions.svelte';
+	import Capabilities from './Capabilities.svelte';
+	import PromptSuggestions from './PromptSuggestions.svelte';
 
 	import AdjustmentsHorizontal from '$lib/components/icons/AdjustmentsHorizontal.svelte';
 	import Eye from '$lib/components/icons/Eye.svelte';

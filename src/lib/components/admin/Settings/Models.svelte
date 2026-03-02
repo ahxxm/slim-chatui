@@ -26,16 +26,14 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 
-	import ModelEditor from '$lib/components/workspace/Models/ModelEditor.svelte';
+	import ModelEditor from './Models/ModelEditor.svelte';
 	import { toast } from 'svelte-sonner';
-	import Badge from '$lib/components/common/Badge.svelte';
 	import ModelSettingsModal from './Models/ModelSettingsModal.svelte';
 	import ModelMenu from '$lib/components/admin/Settings/Models/ModelMenu.svelte';
 	import EllipsisHorizontal from '$lib/components/icons/EllipsisHorizontal.svelte';
 	import EyeSlash from '$lib/components/icons/EyeSlash.svelte';
 	import Eye from '$lib/components/icons/Eye.svelte';
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
-	import { goto } from '$app/navigation';
 	import { DropdownMenu } from 'bits-ui';
 	import { flyAndScale } from '$lib/utils/transitions';
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
@@ -155,7 +153,6 @@
 				name: model.name,
 				base_model_id: null,
 				params: {},
-				access_grants: [],
 				...model
 			}).catch((error) => {
 				return null;
@@ -183,7 +180,6 @@
 				base_model_id: null,
 				meta: {},
 				params: {},
-				access_grants: [],
 				is_active: model.is_active
 			}).catch((error) => {
 				return null;
@@ -231,16 +227,6 @@
 		} else {
 			toast.error($i18n.t('Failed to copy link'));
 		}
-	};
-
-	const cloneHandler = async (model) => {
-		sessionStorage.model = JSON.stringify({
-			...model,
-			base_model_id: model.id,
-			id: `${model.id}-clone`,
-			name: `${model.name} (Clone)`
-		});
-		goto('/workspace/models/create');
 	};
 
 	const exportModelHandler = async (model) => {
@@ -515,25 +501,6 @@
 									>
 										<div class="font-medium line-clamp-1 flex items-center gap-2">
 											{model.name}
-
-											<Badge
-												type={(model?.access_grants ?? []).some(
-													(g) =>
-														g.principal_type === 'user' &&
-														g.principal_id === '*' &&
-														g.permission === 'read'
-												)
-													? 'success'
-													: 'muted'}
-												content={(model?.access_grants ?? []).some(
-													(g) =>
-														g.principal_type === 'user' &&
-														g.principal_id === '*' &&
-														g.permission === 'read'
-												)
-													? $i18n.t('Public')
-													: $i18n.t('Private')}
-											/>
 										</div>
 									</Tooltip>
 									<div
@@ -600,9 +567,6 @@
 										}}
 										copyLinkHandler={() => {
 											copyLinkHandler(model);
-										}}
-										cloneHandler={() => {
-											cloneHandler(model);
 										}}
 										onClose={() => {}}
 									>

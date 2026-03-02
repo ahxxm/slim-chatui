@@ -8,23 +8,13 @@ from open_webui.internal.db import Base, get_db_context
 from open_webui.env import DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL
 
 from open_webui.models.chats import Chats
-from open_webui.models.groups import Groups, GroupMember
 from open_webui.utils.misc import throttle
 from open_webui.utils.validate import validate_profile_image_url
 
 
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
-from sqlalchemy import (
-    BigInteger,
-    JSON,
-    Column,
-    String,
-    Text,
-    Date,
-    exists,
-    select,
-)
-from sqlalchemy import or_, case, func
+from sqlalchemy import BigInteger, JSON, Column, String, Text, Date
+from sqlalchemy import or_, func
 
 import datetime
 
@@ -106,32 +96,6 @@ class UserModel(BaseModel):
         return self
 
 
-class ApiKey(Base):
-    __tablename__ = "api_key"
-
-    id = Column(Text, primary_key=True, unique=True)
-    user_id = Column(Text, nullable=False)
-    key = Column(Text, unique=True, nullable=False)
-    data = Column(JSON, nullable=True)
-    expires_at = Column(BigInteger, nullable=True)
-    last_used_at = Column(BigInteger, nullable=True)
-    created_at = Column(BigInteger, nullable=False)
-    updated_at = Column(BigInteger, nullable=False)
-
-
-class ApiKeyModel(BaseModel):
-    id: str
-    user_id: str
-    key: str
-    data: Optional[dict] = None
-    expires_at: Optional[int] = None
-    last_used_at: Optional[int] = None
-    created_at: int  # timestamp in epoch
-    updated_at: int  # timestamp in epoch
-
-    model_config = ConfigDict(from_attributes=True)
-
-
 ####################
 # Forms
 ####################
@@ -150,21 +114,12 @@ class UpdateProfileForm(BaseModel):
         return validate_profile_image_url(v)
 
 
-class UserGroupIdsModel(UserModel):
-    group_ids: list[str] = []
-
-
 class UserModelResponse(UserModel):
     model_config = ConfigDict(extra="allow")
 
 
 class UserListResponse(BaseModel):
     users: list[UserModelResponse]
-    total: int
-
-
-class UserGroupIdsListResponse(BaseModel):
-    users: list[UserGroupIdsModel]
     total: int
 
 
@@ -180,7 +135,6 @@ class UserInfoResponse(UserStatus):
     email: str
     role: str
     bio: Optional[str] = None
-    groups: Optional[list] = []
     is_active: bool = False
 
 
@@ -271,21 +225,6 @@ class UsersTable:
         except Exception:
             return None
 
-    def get_user_by_api_key(
-        self, api_key: str, db: Optional[Session] = None
-    ) -> Optional[UserModel]:
-        try:
-            with get_db_context(db) as db:
-                user = (
-                    db.query(User)
-                    .join(ApiKey, User.id == ApiKey.user_id)
-                    .filter(ApiKey.key == api_key)
-                    .first()
-                )
-                return UserModel.model_validate(user) if user else None
-        except Exception:
-            return None
-
     def get_user_by_email(
         self, email: str, db: Optional[Session] = None
     ) -> Optional[UserModel]:
@@ -308,7 +247,6 @@ class UsersTable:
         db: Optional[Session] = None,
     ) -> dict:
         with get_db_context(db) as db:
-            # Join GroupMember so we can order by group_id when requested
             query = db.query(User).options(defer(User.profile_image_url))
 
             if filter:
@@ -322,25 +260,8 @@ class UsersTable:
                     )
 
                 user_ids = filter.get("user_ids")
-                group_ids = filter.get("group_ids")
-
-                if isinstance(user_ids, list) and isinstance(group_ids, list):
-                    # If both are empty lists, return no users
-                    if not user_ids and not group_ids:
-                        return {"users": [], "total": 0}
-
                 if user_ids:
                     query = query.filter(User.id.in_(user_ids))
-
-                if group_ids:
-                    query = query.filter(
-                        exists(
-                            select(GroupMember.id).where(
-                                GroupMember.user_id == User.id,
-                                GroupMember.group_id.in_(group_ids),
-                            )
-                        )
-                    )
 
                 roles = filter.get("roles")
                 if roles:
@@ -355,26 +276,7 @@ class UsersTable:
                 order_by = filter.get("order_by")
                 direction = filter.get("direction")
 
-                if order_by and order_by.startswith("group_id:"):
-                    group_id = order_by.split(":", 1)[1]
-
-                    # Subquery that checks if the user belongs to the group
-                    membership_exists = exists(
-                        select(GroupMember.id).where(
-                            GroupMember.user_id == User.id,
-                            GroupMember.group_id == group_id,
-                        )
-                    )
-
-                    # CASE: user in group → 1, user not in group → 0
-                    group_sort = case((membership_exists, 1), else_=0)
-
-                    if direction == "asc":
-                        query = query.order_by(group_sort.asc(), User.name.asc())
-                    else:
-                        query = query.order_by(group_sort.desc(), User.name.asc())
-
-                elif order_by == "name":
+                if order_by == "name":
                     if direction == "asc":
                         query = query.order_by(User.name.asc())
                     else:
@@ -412,10 +314,8 @@ class UsersTable:
             else:
                 query = query.order_by(User.created_at.desc())
 
-            # Count BEFORE pagination
             total = query.count()
 
-            # correct pagination logic
             if skip is not None:
                 query = query.offset(skip)
             if limit is not None:
@@ -426,19 +326,6 @@ class UsersTable:
                 "users": [UserModel.model_validate(user) for user in users],
                 "total": total,
             }
-
-    def get_users_by_group_id(
-        self, group_id: str, db: Optional[Session] = None
-    ) -> list[UserModel]:
-        with get_db_context(db) as db:
-            users = (
-                db.query(User)
-                .options(defer(User.profile_image_url))
-                .join(GroupMember, User.id == GroupMember.user_id)
-                .filter(GroupMember.group_id == group_id)
-                .all()
-            )
-            return [UserModel.model_validate(user) for user in users]
 
     def get_users_by_user_ids(
         self, user_ids: list[str], db: Optional[Session] = None
@@ -600,10 +487,6 @@ class UsersTable:
 
     def delete_user_by_id(self, id: str, db: Optional[Session] = None) -> bool:
         try:
-            # Remove User from Groups
-            Groups.remove_user_from_all_groups(id)
-
-            # Delete User Chats
             result = Chats.delete_chats_by_user_id(id, db=db)
             if result:
                 with get_db_context(db) as db:
@@ -614,49 +497,6 @@ class UsersTable:
                 return True
             else:
                 return False
-        except Exception:
-            return False
-
-    def get_user_api_key_by_id(
-        self, id: str, db: Optional[Session] = None
-    ) -> Optional[str]:
-        try:
-            with get_db_context(db) as db:
-                api_key = db.query(ApiKey).filter_by(user_id=id).first()
-                return api_key.key if api_key else None
-        except Exception:
-            return None
-
-    def update_user_api_key_by_id(
-        self, id: str, api_key: str, db: Optional[Session] = None
-    ) -> bool:
-        try:
-            with get_db_context(db) as db:
-                db.query(ApiKey).filter_by(user_id=id).delete()
-                db.commit()
-
-                now = int(time.time())
-                new_api_key = ApiKey(
-                    id=f"key_{id}",
-                    user_id=id,
-                    key=api_key,
-                    created_at=now,
-                    updated_at=now,
-                )
-                db.add(new_api_key)
-                db.commit()
-
-                return True
-
-        except Exception:
-            return False
-
-    def delete_user_api_key_by_id(self, id: str, db: Optional[Session] = None) -> bool:
-        try:
-            with get_db_context(db) as db:
-                db.query(ApiKey).filter_by(user_id=id).delete()
-                db.commit()
-                return True
         except Exception:
             return False
 

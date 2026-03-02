@@ -7,14 +7,8 @@ from fastapi import Request
 from open_webui.routers import openai
 
 from open_webui.models.models import Models
-from open_webui.models.access_grants import AccessGrants
-from open_webui.models.groups import Groups
 
-from open_webui.config import (
-    BYPASS_ADMIN_ACCESS_CONTROL,
-)
-
-from open_webui.env import BYPASS_MODEL_ACCESS_CONTROL, GLOBAL_LOG_LEVEL
+from open_webui.env import GLOBAL_LOG_LEVEL
 from open_webui.models.users import UserModel
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
@@ -122,61 +116,3 @@ async def get_all_models(request, refresh: bool = False, user: UserModel = None)
     request.app.state.MODELS = models_dict
 
     return models
-
-
-def check_model_access(user, model, db=None):
-    model_info = Models.get_model_by_id(model.get("id"), db=db)
-    if not model_info:
-        raise Exception("Model not found")
-    elif not (
-        user.id == model_info.user_id
-        or AccessGrants.has_access(
-            user_id=user.id,
-            resource_type="model",
-            resource_id=model_info.id,
-            permission="read",
-            db=db,
-        )
-    ):
-        raise Exception("Model not found")
-
-
-def get_filtered_models(models, user, db=None):
-    # Filter out models that the user does not have access to
-    if (
-        user.role == "user"
-        or (user.role == "admin" and not BYPASS_ADMIN_ACCESS_CONTROL)
-    ) and not BYPASS_MODEL_ACCESS_CONTROL:
-        model_infos = {}
-        for model in models:
-            info = model.get("info")
-            if info:
-                model_infos[model["id"]] = info
-
-        user_group_ids = {
-            group.id for group in Groups.get_groups_by_member_id(user.id, db=db)
-        }
-
-        # Batch-fetch accessible resource IDs in a single query instead of N has_access calls
-        accessible_model_ids = AccessGrants.get_accessible_resource_ids(
-            user_id=user.id,
-            resource_type="model",
-            resource_ids=list(model_infos.keys()),
-            permission="read",
-            user_group_ids=user_group_ids,
-            db=db,
-        )
-
-        filtered_models = []
-        for model in models:
-            model_info = model_infos.get(model["id"])
-            if model_info:
-                if (
-                    user.id == model_info.get("user_id")
-                    or model["id"] in accessible_model_ids
-                ):
-                    filtered_models.append(model)
-
-        return filtered_models
-    else:
-        return models

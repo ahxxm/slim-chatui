@@ -4,9 +4,7 @@
 	import { createEventDispatcher } from 'svelte';
 	import { onMount, getContext } from 'svelte';
 
-	import { goto } from '$app/navigation';
-
-	import { updateUserById, getUserGroupsById } from '$lib/apis/users';
+	import { updateUserById } from '$lib/apis/users';
 
 	import Modal from '$lib/components/common/Modal.svelte';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
@@ -30,7 +28,6 @@
 		if (selectedUser) {
 			_user = selectedUser;
 			_user.password = '';
-			loadUserGroups();
 		}
 	};
 
@@ -42,8 +39,6 @@
 		password: ''
 	};
 
-	let userGroups: any[] | null = null;
-
 	const submitHandler = async () => {
 		const res = await updateUserById(localStorage.token, selectedUser.id, _user).catch((error) => {
 			toast.error(`${error}`);
@@ -53,16 +48,6 @@
 			dispatch('save');
 			show = false;
 		}
-	};
-
-	const loadUserGroups = async () => {
-		if (!selectedUser?.id) return;
-		userGroups = null;
-
-		userGroups = await getUserGroupsById(localStorage.token, selectedUser.id).catch((error) => {
-			toast.error(`${error}`);
-			return null;
-		});
 	};
 </script>
 
@@ -112,28 +97,6 @@
 								</div>
 
 								<div class=" flex flex-col space-y-1.5">
-									{#if (userGroups ?? []).length > 0}
-										<div class="flex flex-col w-full text-sm">
-											<div class="mb-1 text-xs text-gray-500">{$i18n.t('User Groups')}</div>
-
-											<div class="flex flex-wrap gap-1 my-0.5 -mx-1">
-												{#each userGroups as userGroup}
-													<span
-														class="px-1.5 py-0.5 rounded-xl bg-gray-100 dark:bg-gray-850 text-xs"
-													>
-														<a
-															href={'/admin/users/groups?id=' + userGroup.id}
-															on:click|preventDefault={() =>
-																goto('/admin/users/groups?id=' + userGroup.id)}
-														>
-															{userGroup.name}
-														</a>
-													</span>
-												{/each}
-											</div>
-										</div>
-									{/if}
-
 									<div class="flex flex-col w-full">
 										<div class=" mb-1 text-xs text-gray-500">{$i18n.t('Role')}</div>
 

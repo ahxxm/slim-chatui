@@ -201,11 +201,7 @@
 				} else if (isShortcutMatch(event, shortcuts[Shortcut.NEW_TEMPORARY_CHAT])) {
 					console.log('Shortcut triggered: NEW_TEMPORARY_CHAT');
 					event.preventDefault();
-					if ($user?.role !== 'admin' && $user?.permissions?.chat?.temporary_enforced) {
-						temporaryChatEnabled.set(true);
-					} else {
-						temporaryChatEnabled.set(!$temporaryChatEnabled);
-					}
+					temporaryChatEnabled.set(!$temporaryChatEnabled);
 					await goto('/');
 					setTimeout(() => {
 						document.getElementById('new-chat-button')?.click();
@@ -226,14 +222,8 @@
 		};
 		setupKeyboardShortcuts();
 
-		if ($user?.role === 'admin' || ($user?.permissions?.chat?.temporary ?? true)) {
-			if ($page.url.searchParams.get('temporary-chat') === 'true') {
-				temporaryChatEnabled.set(true);
-			}
-
-			if ($user?.role !== 'admin' && $user?.permissions?.chat?.temporary_enforced) {
-				temporaryChatEnabled.set(true);
-			}
+		if ($page.url.searchParams.get('temporary-chat') === 'true') {
+			temporaryChatEnabled.set(true);
 		}
 
 		await tick();

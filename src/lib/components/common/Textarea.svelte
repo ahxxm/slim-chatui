@@ -17,20 +17,27 @@
 
 	let textareaElement;
 
-	// Adjust height on mount and after setting the element.
-	onMount(async () => {
-		await tick();
-		resize();
+	onMount(() => {
+		let pollInterval: ReturnType<typeof setInterval> | null = null;
+
+		(async () => {
+			await tick();
+			resize();
+		})();
 
 		requestAnimationFrame(() => {
-			// setInterveal to cehck until textareaElement is set
-			const interval = setInterval(() => {
+			pollInterval = setInterval(() => {
 				if (textareaElement) {
-					clearInterval(interval);
+					clearInterval(pollInterval!);
+					pollInterval = null;
 					resize();
 				}
 			}, 100);
 		});
+
+		return () => {
+			if (pollInterval) clearInterval(pollInterval);
+		};
 	});
 
 	const resize = () => {

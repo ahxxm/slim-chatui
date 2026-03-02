@@ -224,13 +224,3 @@ def autocomplete_generation_template(
 
     template = prompt_template(template, user)
     return template
-
-
-def moa_response_generation_template(
-    template: str, prompt: str, responses: list[str]
-) -> str:
-    template = replace_prompt_variable(template, prompt)
-
-    formatted = "\n\n".join(f'"""{r}"""' for r in responses)
-    template = template.replace("{{responses}}", formatted)
-    return template

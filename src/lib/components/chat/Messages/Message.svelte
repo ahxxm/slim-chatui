@@ -1,19 +1,10 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-
-	import { tick, getContext, onMount, createEventDispatcher } from 'svelte';
-	const dispatch = createEventDispatcher();
-	const i18n = getContext('i18n');
-
 	import { settings } from '$lib/stores';
-	import { copyToClipboard } from '$lib/utils';
 
-	import MultiResponseMessages from './MultiResponseMessages.svelte';
 	import ResponseMessage from './ResponseMessage.svelte';
 	import UserMessage from './UserMessage.svelte';
 
 	export let chatId;
-	export let selectedModels = [];
 	export let idx = 0;
 
 	export let history;
@@ -34,7 +25,6 @@
 
 	export let regenerateResponse;
 	export let continueResponse;
-	export let mergeResponses;
 
 	export let addMessages;
 	export let triggerScroll;
@@ -71,12 +61,11 @@
 				{editCodeBlock}
 				{topPadding}
 			/>
-		{:else if (history.messages[history.messages[messageId].parentId]?.models?.length ?? 1) === 1}
+		{:else}
 			<ResponseMessage
 				{chatId}
 				{history}
 				{messageId}
-				{selectedModels}
 				isLastMessage={messageId === history.currentId}
 				siblings={history.messages[history.messages[messageId].parentId]?.childrenIds ?? []}
 				{setInputText}
@@ -95,30 +84,6 @@
 				{editCodeBlock}
 				{topPadding}
 			/>
-		{:else}
-			{#key messageId}
-				<MultiResponseMessages
-					bind:history
-					{chatId}
-					{messageId}
-					{selectedModels}
-					isLastMessage={messageId === history?.currentId}
-					{setInputText}
-					{updateChat}
-					{editMessage}
-					{saveMessage}
-					{submitMessage}
-					{deleteMessage}
-					{continueResponse}
-					{regenerateResponse}
-					{mergeResponses}
-					{triggerScroll}
-					{addMessages}
-					{readOnly}
-					{editCodeBlock}
-					{topPadding}
-				/>
-			{/key}
 		{/if}
 	{/if}
 </div>

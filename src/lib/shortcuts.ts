@@ -17,8 +17,6 @@ export enum Shortcut {
 	NEW_TEMPORARY_CHAT = 'newTemporaryChat',
 	DELETE_CHAT = 'deleteChat',
 	OPEN_MODEL_SELECTOR = 'openModelSelector',
-	TOGGLE_DICTATION = 'toggleDictation',
-
 	//Global
 	SEARCH = 'search',
 	OPEN_SETTINGS = 'openSettings',
@@ -31,8 +29,6 @@ export enum Shortcut {
 	ACCEPT_AUTOCOMPLETE = 'acceptAutocomplete',
 	PREVENT_FILE_CREATION = 'preventFileCreation',
 	NAVIGATE_PROMPT_HISTORY_UP = 'navigatePromptHistoryUp',
-	ATTACH_FILE = 'attachFile',
-	ADD_PROMPT = 'addPrompt',
 	TALK_TO_MODEL = 'talkToModel',
 
 	//Message
@@ -65,12 +61,6 @@ export const shortcuts: ShortcutRegistry = {
 		keys: ['mod', 'shift', 'M'],
 		category: 'Chat'
 	},
-	[Shortcut.TOGGLE_DICTATION]: {
-		name: 'Toggle Dictation',
-		keys: ['mod', 'shift', 'L'],
-		category: 'Chat'
-	},
-
 	//Global
 	[Shortcut.SEARCH]: {
 		name: 'Search',
@@ -114,11 +104,6 @@ export const shortcuts: ShortcutRegistry = {
 		keys: ['mod', 'shift', 'V'],
 		category: 'Input',
 		tooltip: 'Only active when "Paste Large Text as File" setting is toggled on.'
-	},
-	[Shortcut.ADD_PROMPT]: {
-		name: 'Add Custom Prompt',
-		keys: ['/'],
-		category: 'Input'
 	},
 	[Shortcut.TALK_TO_MODEL]: {
 		name: 'Talk to Model',

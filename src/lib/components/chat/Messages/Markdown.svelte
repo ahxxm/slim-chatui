@@ -17,7 +17,6 @@
 	export let done = true;
 	export let model = null;
 	export let save = false;
-	export let preview = false;
 
 	export let paragraphTag = 'p';
 	export let editCodeBlock = true;
@@ -26,9 +25,6 @@
 	export let sourceIds = [];
 
 	export let onSave = () => {};
-	export let onUpdate = () => {};
-
-	export let onPreview = () => {};
 
 	export let onSourceClick = () => {};
 	export let onTaskClick = () => {};
@@ -68,7 +64,6 @@
 		{id}
 		{done}
 		{save}
-		{preview}
 		{paragraphTag}
 		{editCodeBlock}
 		{sourceIds}
@@ -76,7 +71,5 @@
 		{onTaskClick}
 		{onSourceClick}
 		{onSave}
-		{onUpdate}
-		{onPreview}
 	/>
 {/key}

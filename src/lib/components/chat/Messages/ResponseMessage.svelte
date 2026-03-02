@@ -2,36 +2,26 @@
 	import { toast } from 'svelte-sonner';
 	import dayjs from 'dayjs';
 
-	import { createEventDispatcher, onDestroy } from 'svelte';
 	import { onMount, tick, getContext } from 'svelte';
 	import type { Writable } from 'svelte/store';
-	import type { i18n as i18nType, t } from 'i18next';
+	import type { i18n as i18nType } from 'i18next';
 
 	const i18n = getContext<Writable<i18nType>>('i18n');
 
-	const dispatch = createEventDispatcher();
-
-	import { getChatById } from '$lib/apis/chats';
-	import { generateTags } from '$lib/apis';
-
-	import { config, models, settings, temporaryChatEnabled, user } from '$lib/stores';
+	import { config, models, settings } from '$lib/stores';
 	import {
 		copyToClipboard as _copyToClipboard,
-		approximateToHumanReadable,
 		sanitizeResponseContent,
-		createMessagesList,
 		formatDate,
-		removeDetails,
 		removeAllDetails
 	} from '$lib/utils';
-	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
 	import Name from './Name.svelte';
 	import ProfileImage from './ProfileImage.svelte';
 	import Skeleton from './Skeleton.svelte';
 	import Image from '$lib/components/common/Image.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
 
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 
@@ -42,7 +32,6 @@
 	import FileItem from '$lib/components/common/FileItem.svelte';
 	import FollowUps from './ResponseMessage/FollowUps.svelte';
 	import { fade } from 'svelte/transition';
-	import { flyAndScale } from '$lib/utils/transitions';
 	import RegenerateMenu from './ResponseMessage/RegenerateMenu.svelte';
 	import StatusHistory from './ResponseMessage/StatusHistory.svelte';
 	import FullHeightIframe from '$lib/components/common/FullHeightIframe.svelte';
@@ -89,7 +78,6 @@
 	export let chatId = '';
 	export let history;
 	export let messageId;
-	export let selectedModels = [];
 
 	let message: MessageType = JSON.parse(JSON.stringify(history.messages[messageId]));
 	$: if (history.messages) {
@@ -223,12 +211,6 @@
 		deleteMessage(message.id);
 	};
 
-	$: if (!edit) {
-		(async () => {
-			await tick();
-		})();
-	}
-
 	const buttonsWheelHandler = (event: WheelEvent) => {
 		if (buttonsContainerElement) {
 			if (buttonsContainerElement.scrollWidth <= buttonsContainerElement.clientWidth) {
@@ -273,27 +255,27 @@
 		}
 	};
 
-	onMount(async () => {
-		// console.log('ResponseMessage mounted');
+	onMount(() => {
+		let isDestroyed = false;
+		let wheelTarget: HTMLElement | null = null;
+		let copyTarget: HTMLElement | null = null;
 
-		await tick();
-		if (buttonsContainerElement) {
-			buttonsContainerElement.addEventListener('wheel', buttonsWheelHandler);
-		}
+		(async () => {
+			await tick();
+			if (isDestroyed) return;
 
-		if (contentContainerElement) {
-			contentContainerElement.addEventListener('copy', contentCopyHandler);
-		}
-	});
+			wheelTarget = buttonsContainerElement;
+			copyTarget = contentContainerElement;
 
-	onDestroy(() => {
-		if (buttonsContainerElement) {
-			buttonsContainerElement.removeEventListener('wheel', buttonsWheelHandler);
-		}
+			wheelTarget?.addEventListener('wheel', buttonsWheelHandler);
+			copyTarget?.addEventListener('copy', contentCopyHandler);
+		})();
 
-		if (contentContainerElement) {
-			contentContainerElement.removeEventListener('copy', contentCopyHandler);
-		}
+		return () => {
+			isDestroyed = true;
+			wheelTarget?.removeEventListener('wheel', buttonsWheelHandler);
+			copyTarget?.removeEventListener('copy', contentCopyHandler);
+		};
 	});
 </script>
 
@@ -478,14 +460,12 @@
 									id={`${chatId}-${message.id}`}
 									messageId={message.id}
 									{history}
-									{selectedModels}
 									content={message.content}
 									sources={message.sources}
 									floatingButtons={message?.done &&
 										!readOnly &&
 										($settings?.showFloatingActionButtons ?? true)}
 									save={!readOnly}
-									preview={!readOnly}
 									{editCodeBlock}
 									{topPadding}
 									done={($settings?.chatFadeStreamingText ?? true)
@@ -525,7 +505,6 @@
 									id={message?.id}
 									{chatId}
 									sources={message?.sources ?? message?.citations}
-									{readOnly}
 								/>
 							{/if}
 						</div>
@@ -637,35 +616,33 @@
 
 							{#if message.done}
 								{#if !readOnly}
-									{#if $user?.role === 'user' ? ($user?.permissions?.chat?.edit ?? true) : true}
-										<Tooltip content={$i18n.t('Edit')} placement="bottom">
-											<button
-												aria-label={$i18n.t('Edit')}
-												class="{isLastMessage || ($settings?.highContrastMode ?? false)
-													? 'visible'
-													: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition"
-												on:click={() => {
-													editMessageHandler();
-												}}
+									<Tooltip content={$i18n.t('Edit')} placement="bottom">
+										<button
+											aria-label={$i18n.t('Edit')}
+											class="{isLastMessage || ($settings?.highContrastMode ?? false)
+												? 'visible'
+												: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition"
+											on:click={() => {
+												editMessageHandler();
+											}}
+										>
+											<svg
+												xmlns="http://www.w3.org/2000/svg"
+												fill="none"
+												viewBox="0 0 24 24"
+												stroke-width="2.3"
+												aria-hidden="true"
+												stroke="currentColor"
+												class="w-4 h-4"
 											>
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													fill="none"
-													viewBox="0 0 24 24"
-													stroke-width="2.3"
-													aria-hidden="true"
-													stroke="currentColor"
-													class="w-4 h-4"
-												>
-													<path
-														stroke-linecap="round"
-														stroke-linejoin="round"
-														d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"
-													/>
-												</svg>
-											</button>
-										</Tooltip>
-									{/if}
+												<path
+													stroke-linecap="round"
+													stroke-linejoin="round"
+													d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125"
+												/>
+											</svg>
+										</button>
+									</Tooltip>
 								{/if}
 
 								<Tooltip content={$i18n.t('Copy')} placement="bottom">
@@ -741,7 +718,7 @@
 								{/if}
 
 								{#if !readOnly}
-									{#if isLastMessage && ($user?.role === 'admin' || ($user?.permissions?.chat?.continue_response ?? true))}
+									{#if isLastMessage}
 										<Tooltip content={$i18n.t('Continue Response')} placement="bottom">
 											<button
 												aria-label={$i18n.t('Continue Response')}
@@ -778,93 +755,26 @@
 										</Tooltip>
 									{/if}
 
-									{#if $user?.role === 'admin' || ($user?.permissions?.chat?.regenerate_response ?? true)}
-										{#if $settings?.regenerateMenu ?? true}
-											<button
-												type="button"
-												class="hidden regenerate-response-button"
-												on:click={() => {
-													regenerateResponse(message);
+									{#if $settings?.regenerateMenu ?? true}
+										<button
+											type="button"
+											class="hidden regenerate-response-button"
+											on:click={() => {
+												regenerateResponse(message);
+											}}
+										/>
 
-													(model?.actions ?? []).forEach((action) => {
-														dispatch('action', {
-															id: action.id,
-															event: {
-																id: 'regenerate-response',
-																data: {
-																	messageId: message.id
-																}
-															}
-														});
-													});
-												}}
-											/>
-
-											<RegenerateMenu
-												onRegenerate={(prompt = null) => {
-													regenerateResponse(message, prompt);
-
-													(model?.actions ?? []).forEach((action) => {
-														dispatch('action', {
-															id: action.id,
-															event: {
-																id: 'regenerate-response',
-																data: {
-																	messageId: message.id
-																}
-															}
-														});
-													});
-												}}
-											>
-												<Tooltip content={$i18n.t('Regenerate')} placement="bottom">
-													<div
-														aria-label={$i18n.t('Regenerate')}
-														class="{isLastMessage
-															? 'visible'
-															: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition"
-													>
-														<svg
-															xmlns="http://www.w3.org/2000/svg"
-															fill="none"
-															viewBox="0 0 24 24"
-															stroke-width="2.3"
-															aria-hidden="true"
-															stroke="currentColor"
-															class="w-4 h-4"
-														>
-															<path
-																stroke-linecap="round"
-																stroke-linejoin="round"
-																d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
-															/>
-														</svg>
-													</div>
-												</Tooltip>
-											</RegenerateMenu>
-										{:else}
+										<RegenerateMenu
+											onRegenerate={(prompt = null) => {
+												regenerateResponse(message, prompt);
+											}}
+										>
 											<Tooltip content={$i18n.t('Regenerate')} placement="bottom">
-												<button
-													type="button"
+												<div
 													aria-label={$i18n.t('Regenerate')}
 													class="{isLastMessage
 														? 'visible'
-														: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition regenerate-response-button"
-													on:click={() => {
-														regenerateResponse(message);
-
-														(model?.actions ?? []).forEach((action) => {
-															dispatch('action', {
-																id: action.id,
-																event: {
-																	id: 'regenerate-response',
-																	data: {
-																		messageId: message.id
-																	}
-																}
-															});
-														});
-													}}
+														: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition"
 												>
 													<svg
 														xmlns="http://www.w3.org/2000/svg"
@@ -881,43 +791,70 @@
 															d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
 														/>
 													</svg>
-												</button>
+												</div>
 											</Tooltip>
-										{/if}
+										</RegenerateMenu>
+									{:else}
+										<Tooltip content={$i18n.t('Regenerate')} placement="bottom">
+											<button
+												type="button"
+												aria-label={$i18n.t('Regenerate')}
+												class="{isLastMessage
+													? 'visible'
+													: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition regenerate-response-button"
+												on:click={() => {
+													regenerateResponse(message);
+												}}
+											>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													fill="none"
+													viewBox="0 0 24 24"
+													stroke-width="2.3"
+													aria-hidden="true"
+													stroke="currentColor"
+													class="w-4 h-4"
+												>
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
+													/>
+												</svg>
+											</button>
+										</Tooltip>
 									{/if}
 
-									{#if $user?.role === 'admin' || ($user?.permissions?.chat?.delete_message ?? true)}
-										{#if siblings.length > 1}
-											<Tooltip content={$i18n.t('Delete')} placement="bottom">
-												<button
-													type="button"
-													aria-label={$i18n.t('Delete')}
-													id="delete-response-button"
-													class="{isLastMessage || ($settings?.highContrastMode ?? false)
-														? 'visible'
-														: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition"
-													on:click={() => {
-														showDeleteConfirm = true;
-													}}
+									{#if siblings.length > 1}
+										<Tooltip content={$i18n.t('Delete')} placement="bottom">
+											<button
+												type="button"
+												aria-label={$i18n.t('Delete')}
+												id="delete-response-button"
+												class="{isLastMessage || ($settings?.highContrastMode ?? false)
+													? 'visible'
+													: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition"
+												on:click={() => {
+													showDeleteConfirm = true;
+												}}
+											>
+												<svg
+													xmlns="http://www.w3.org/2000/svg"
+													fill="none"
+													viewBox="0 0 24 24"
+													stroke-width="2"
+													stroke="currentColor"
+													aria-hidden="true"
+													class="w-4 h-4"
 												>
-													<svg
-														xmlns="http://www.w3.org/2000/svg"
-														fill="none"
-														viewBox="0 0 24 24"
-														stroke-width="2"
-														stroke="currentColor"
-														aria-hidden="true"
-														class="w-4 h-4"
-													>
-														<path
-															stroke-linecap="round"
-															stroke-linejoin="round"
-															d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
-														/>
-													</svg>
-												</button>
-											</Tooltip>
-										{/if}
+													<path
+														stroke-linecap="round"
+														stroke-linejoin="round"
+														d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"
+													/>
+												</svg>
+											</button>
+										</Tooltip>
 									{/if}
 								{/if}
 							{/if}
