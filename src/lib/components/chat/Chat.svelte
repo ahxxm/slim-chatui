@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { v4 as uuidv4 } from 'uuid';
 	import { toast } from 'svelte-sonner';
-	import { PaneGroup, Pane, PaneResizer } from 'paneforge';
 
 	import { getContext, onDestroy, onMount, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
@@ -27,17 +26,11 @@
 		banners,
 		user,
 		socket,
-		showControls,
 		currentChatPage,
 		temporaryChatEnabled,
-		mobile,
-		showOverview,
 		chatTitle,
-		showArtifacts,
-		artifactContents,
 		selectedFolder,
-		pinnedChats,
-		showEmbeds
+		pinnedChats
 	} from '$lib/stores';
 
 	import {
@@ -45,8 +38,7 @@
 		copyToClipboard,
 		createMessagesList,
 		getPromptVariables,
-		processDetails,
-		getCodeBlockContents
+		processDetails
 	} from '$lib/utils';
 
 	import {
@@ -61,15 +53,13 @@
 	} from '$lib/apis/chats';
 	import { generateOpenAIChatCompletion } from '$lib/apis/openai';
 	import { getAndUpdateUserLocation, getUserSettings } from '$lib/apis/users';
-	import { chatCompleted, generateMoACompletion, stopTask, getTaskIdsByChatId } from '$lib/apis';
-	import { createOpenAITextStream } from '$lib/apis/streaming';
+	import { chatCompleted, stopTask, getTaskIdsByChatId } from '$lib/apis';
 	import { updateFolderById } from '$lib/apis/folders';
 
 	import Banner from '../common/Banner.svelte';
 	import MessageInput from '$lib/components/chat/MessageInput.svelte';
 	import Messages from '$lib/components/chat/Messages.svelte';
 	import Navbar from '$lib/components/chat/Navbar.svelte';
-	import ChatControls from './ChatControls.svelte';
 	import EventConfirmDialog from '../common/ConfirmDialog.svelte';
 	import Placeholder from './Placeholder.svelte';
 	import NotificationToast from '../NotificationToast.svelte';
@@ -83,8 +73,6 @@
 	let loading = true;
 
 	const eventTarget = new EventTarget();
-	let controlPane;
-	let controlPaneComponent;
 
 	let messageInput;
 
@@ -465,7 +453,6 @@
 	}
 
 	let pageSubscribe = null;
-	let showControlsSubscribe = null;
 	let selectedFolderSubscribe = null;
 
 	onMount(async () => {
@@ -506,26 +493,6 @@
 			} catch (e) {}
 		}
 
-		showControlsSubscribe = showControls.subscribe(async (value) => {
-			if (controlPane && !$mobile) {
-				try {
-					if (value) {
-						controlPaneComponent.openPane();
-					} else {
-						controlPane.collapse();
-					}
-				} catch (e) {
-					// ignore
-				}
-			}
-
-			if (!value) {
-				showOverview.set(false);
-				showArtifacts.set(false);
-				showEmbeds.set(false);
-			}
-		});
-
 		selectedFolderSubscribe = selectedFolder.subscribe(async (folder) => {
 			if (
 				folder?.data?.model_ids &&
@@ -544,7 +511,6 @@
 	onDestroy(() => {
 		try {
 			pageSubscribe();
-			showControlsSubscribe();
 			selectedFolderSubscribe();
 			chatIdUnsubscriber?.();
 			window.removeEventListener('message', onMessageHandler);
@@ -556,72 +522,12 @@
 
 	// File upload functions
 
-	$: if (history) {
-		getContents();
-	} else {
-		artifactContents.set([]);
-	}
-
-	const getContents = () => {
-		const messages = history ? createMessagesList(history, history.currentId) : [];
-		let contents = [];
-		messages.forEach((message) => {
-			if (message?.role !== 'user' && message?.content) {
-				const {
-					codeBlocks: codeBlocks,
-					html: htmlContent,
-					css: cssContent,
-					js: jsContent
-				} = getCodeBlockContents(message.content);
-
-				if (htmlContent || cssContent || jsContent) {
-					const renderedContent = `
-                        <!DOCTYPE html>
-                        <html lang="en">
-                        <head>
-                            <meta charset="UTF-8">
-                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-							<${''}style>
-								body {
-									background-color: white; /* Ensure the iframe has a white background */
-								}
-
-								${cssContent}
-							</${''}style>
-                        </head>
-                        <body>
-                            ${htmlContent}
-
-							<${''}script>
-                            	${jsContent}
-							</${''}script>
-                        </body>
-                        </html>
-                    `;
-					contents = [...contents, { type: 'iframe', content: renderedContent }];
-				} else {
-					// Check for SVG content
-					for (const block of codeBlocks) {
-						if (block.lang === 'svg' || (block.lang === 'xml' && block.code.includes('<svg'))) {
-							contents = [...contents, { type: 'svg', content: block.code }];
-						}
-					}
-				}
-			}
-		});
-
-		artifactContents.set(contents);
-	};
-
 	//////////////////////////
 	// Web functions
 	//////////////////////////
 
 	const initNewChat = async () => {
 		console.log('initNewChat');
-		if ($user?.role !== 'admin' && $user?.permissions?.chat?.temporary_enforced) {
-			await temporaryChatEnabled.set(true);
-		}
 
 		if ($settings?.temporaryChatByDefault ?? false) {
 			if ($temporaryChatEnabled === false) {
@@ -630,10 +536,6 @@
 				// if set to null set to false; refer to temp chat toggle click handler
 				await temporaryChatEnabled.set(false);
 			}
-		}
-
-		if ($user?.role !== 'admin' && !$user?.permissions?.chat?.temporary) {
-			await temporaryChatEnabled.set(false);
 		}
 
 		const availableModels = $models
@@ -720,10 +622,6 @@
 			}
 		}
 
-		await showControls.set(false);
-		await showOverview.set(false);
-		await showArtifacts.set(false);
-
 		if ($page.url.pathname.includes('/c/')) {
 			window.history.replaceState(history.state, '', `/`);
 		}
@@ -790,9 +688,7 @@
 						? chatContent.models
 						: [chatContent.models ?? ''];
 
-				if (!($user?.role === 'admin' || ($user?.permissions?.chat?.multiple_models ?? true))) {
-					selectedModels = selectedModels.length > 0 ? [selectedModels[0]] : [''];
-				}
+				selectedModels = selectedModels.length > 0 ? [selectedModels[0]] : [''];
 
 				oldSelectedModelIds = JSON.parse(JSON.stringify(selectedModels));
 
@@ -1273,12 +1169,10 @@
 		{
 			messages = null,
 			modelId = null,
-			modelIdx = null,
 			newChat = false
 		}: {
 			messages?: any[] | null;
 			modelId?: string | null;
-			modelIdx?: number | null;
 			newChat?: boolean;
 		} = {}
 	) => {
@@ -1289,51 +1183,43 @@
 		let _chatId = JSON.parse(JSON.stringify($chatId));
 		_history = JSON.parse(JSON.stringify(_history));
 
-		const responseMessageIds: Record<PropertyKey, string> = {};
-		// If modelId is provided, use it, else use selected model
-		let selectedModelIds = modelId
-			? [modelId]
+		const resolvedModelId = modelId
+			? modelId
 			: atSelectedModel !== undefined
-				? [atSelectedModel.id]
-				: selectedModels;
+				? atSelectedModel.id
+				: selectedModels[0];
 
-		// Create response messages for each selected model
-		for (const [_modelIdx, modelId] of selectedModelIds.entries()) {
-			const model = $models.filter((m) => m.id === modelId).at(0);
+		const model = $models.find((m) => m.id === resolvedModelId);
 
-			if (model) {
-				let responseMessageId = uuidv4();
-				let responseMessage = {
-					parentId: parentId,
-					id: responseMessageId,
-					childrenIds: [],
-					role: 'assistant',
-					content: '',
-					model: model.id,
-					modelName: model.name ?? model.id,
-					modelIdx: modelIdx ? modelIdx : _modelIdx,
-					timestamp: Math.floor(Date.now() / 1000) // Unix epoch
-				};
+		if (!model) {
+			toast.error($i18n.t(`Model {{modelId}} not found`, { modelId: resolvedModelId }));
+			return;
+		}
 
-				// Add message to history and Set currentId to messageId
-				history.messages[responseMessageId] = responseMessage;
-				history.currentId = responseMessageId;
+		let responseMessageId = uuidv4();
+		let responseMessage = {
+			parentId: parentId,
+			id: responseMessageId,
+			childrenIds: [],
+			role: 'assistant',
+			content: '',
+			model: model.id,
+			modelName: model.name ?? model.id,
+			modelIdx: 0,
+			timestamp: Math.floor(Date.now() / 1000)
+		};
 
-				// Append messageId to childrenIds of parent message
-				if (parentId !== null && history.messages[parentId]) {
-					// Add null check before accessing childrenIds
-					history.messages[parentId].childrenIds = [
-						...history.messages[parentId].childrenIds,
-						responseMessageId
-					];
-				}
+		history.messages[responseMessageId] = responseMessage;
+		history.currentId = responseMessageId;
 
-				responseMessageIds[`${modelId}-${modelIdx ? modelIdx : _modelIdx}`] = responseMessageId;
-			}
+		if (parentId !== null && history.messages[parentId]) {
+			history.messages[parentId].childrenIds = [
+				...history.messages[parentId].childrenIds,
+				responseMessageId
+			];
 		}
 		history = history;
 
-		// Create new chat if newChat is true and first user message
 		if (newChat && _history.messages[_history.currentId].parentId === null) {
 			_chatId = await initChatHandler(_history);
 		}
@@ -1341,51 +1227,34 @@
 		await tick();
 
 		_history = JSON.parse(JSON.stringify(history));
-		// Save chat after all messages have been created
 		await saveChatHandler(_chatId, _history);
 
-		await Promise.all(
-			selectedModelIds.map(async (modelId, _modelIdx) => {
-				console.log('modelId', modelId);
-				const model = $models.filter((m) => m.id === modelId).at(0);
-
-				if (model) {
-					// If there are image files, check if model is vision capable
-					const hasImages = createMessagesList(_history, parentId).some((message) =>
-						message.files?.some(
-							(file) => file.type === 'image' || (file?.content_type ?? '').startsWith('image/')
-						)
-					);
-
-					if (hasImages && !(model.info?.meta?.capabilities?.vision ?? true)) {
-						toast.error(
-							$i18n.t('Model {{modelName}} is not vision capable', {
-								modelName: model.name ?? model.id
-							})
-						);
-					}
-
-					let responseMessageId =
-						responseMessageIds[`${modelId}-${modelIdx ? modelIdx : _modelIdx}`];
-					const chatEventEmitter = await getChatEventEmitter(model.id, _chatId);
-
-					scrollToBottom();
-					await sendMessageSocket(
-						model,
-						messages && messages.length > 0
-							? messages
-							: createMessagesList(_history, responseMessageId),
-						_history,
-						responseMessageId,
-						_chatId
-					);
-
-					if (chatEventEmitter) clearInterval(chatEventEmitter);
-				} else {
-					toast.error($i18n.t(`Model {{modelId}} not found`, { modelId }));
-				}
-			})
+		const hasImages = createMessagesList(_history, parentId).some((message) =>
+			message.files?.some(
+				(file) => file.type === 'image' || (file?.content_type ?? '').startsWith('image/')
+			)
 		);
+
+		if (hasImages && !(model.info?.meta?.capabilities?.vision ?? true)) {
+			toast.error(
+				$i18n.t('Model {{modelName}} is not vision capable', {
+					modelName: model.name ?? model.id
+				})
+			);
+		}
+
+		const chatEventEmitter = await getChatEventEmitter(model.id, _chatId);
+
+		scrollToBottom();
+		await sendMessageSocket(
+			model,
+			messages && messages.length > 0 ? messages : createMessagesList(_history, responseMessageId),
+			_history,
+			responseMessageId,
+			_chatId
+		);
+
+		if (chatEventEmitter) clearInterval(chatEventEmitter);
 
 		currentChatPage.set(1);
 		chats.set(await getChatList(localStorage.token, $currentChatPage));
@@ -1742,60 +1611,6 @@
 		}
 	};
 
-	const mergeResponses = async (messageId, responses, _chatId) => {
-		console.log('mergeResponses', messageId, responses);
-		const message = history.messages[messageId];
-		const mergedResponse = {
-			status: true,
-			content: ''
-		};
-		message.merged = mergedResponse;
-		history.messages[messageId] = message;
-
-		try {
-			generating = true;
-			const [res, controller] = await generateMoACompletion(
-				localStorage.token,
-				message.model ?? '',
-				message.parentId ? history.messages[message.parentId].content : '',
-				responses
-			);
-
-			if (res && res.ok && res.body && generating) {
-				generationController = controller as AbortController;
-				const textStream = await createOpenAITextStream(
-					res.body,
-					Boolean($settings?.splitLargeChunks ?? false)
-				);
-				for await (const update of textStream) {
-					const { value, done, sources, error, usage } = update;
-					if (error || done) {
-						generating = false;
-						generationController = null;
-						break;
-					}
-
-					if (mergedResponse.content == '' && value == '\n') {
-						continue;
-					} else {
-						mergedResponse.content += value;
-						history.messages[messageId] = message;
-					}
-
-					if (autoScroll) {
-						scrollToBottom();
-					}
-				}
-
-				await saveChatHandler(_chatId, history);
-			} else {
-				console.error(res);
-			}
-		} catch (e) {
-			console.error(e);
-		}
-	};
-
 	const initChatHandler = async (history) => {
 		let _chatId = $chatId;
 
@@ -1957,206 +1772,192 @@
 				/>
 			{/if}
 
-			<PaneGroup direction="horizontal" class="w-full h-full">
-				<Pane defaultSize={50} minSize={30} class="h-full flex relative max-w-full flex-col">
-					<Navbar
-						bind:this={navbarElement}
-						chat={{
-							id: $chatId,
-							chat: {
-								title: $chatTitle,
-								models: selectedModels,
-								system: $settings.system ?? undefined,
-								params: params,
-								history: history,
-								timestamp: Date.now()
+			<div class="w-full h-full flex relative max-w-full flex-col">
+				<Navbar
+					bind:this={navbarElement}
+					chat={{
+						id: $chatId,
+						chat: {
+							title: $chatTitle,
+							models: selectedModels,
+							system: $settings.system ?? undefined,
+							params: params,
+							history: history,
+							timestamp: Date.now()
+						}
+					}}
+					{history}
+					title={$chatTitle}
+					bind:selectedModels
+					shareEnabled={!!history.currentId}
+					{initNewChat}
+					archiveChatHandler={() => {}}
+					{moveChatHandler}
+					onSaveTempChat={async () => {
+						try {
+							if (!history?.currentId || !Object.keys(history.messages).length) {
+								toast.error($i18n.t('No conversation to save'));
+								return;
 							}
-						}}
-						{history}
-						title={$chatTitle}
-						bind:selectedModels
-						shareEnabled={!!history.currentId}
-						{initNewChat}
-						archiveChatHandler={() => {}}
-						{moveChatHandler}
-						onSaveTempChat={async () => {
-							try {
-								if (!history?.currentId || !Object.keys(history.messages).length) {
-									toast.error($i18n.t('No conversation to save'));
-									return;
-								}
-								const messages = createMessagesList(history, history.currentId);
-								const title =
-									messages.find((m) => m.role === 'user')?.content ?? $i18n.t('New Chat');
+							const messages = createMessagesList(history, history.currentId);
+							const title = messages.find((m) => m.role === 'user')?.content ?? $i18n.t('New Chat');
 
-								const savedChat = await createNewChat(
-									localStorage.token,
-									{
-										id: uuidv4(),
-										title: title.length > 50 ? `${title.slice(0, 50)}...` : title,
-										models: selectedModels,
-										history: history,
-										messages: messages,
-										timestamp: Date.now()
-									},
-									null
-								);
+							const savedChat = await createNewChat(
+								localStorage.token,
+								{
+									id: uuidv4(),
+									title: title.length > 50 ? `${title.slice(0, 50)}...` : title,
+									models: selectedModels,
+									history: history,
+									messages: messages,
+									timestamp: Date.now()
+								},
+								null
+							);
 
-								if (savedChat) {
-									temporaryChatEnabled.set(false);
-									chatId.set(savedChat.id);
-									chats.set(await getChatList(localStorage.token, $currentChatPage));
+							if (savedChat) {
+								temporaryChatEnabled.set(false);
+								chatId.set(savedChat.id);
+								chats.set(await getChatList(localStorage.token, $currentChatPage));
 
-									await goto(`/c/${savedChat.id}`);
-									toast.success($i18n.t('Conversation saved successfully'));
-								}
-							} catch (error) {
-								console.error('Error saving conversation:', error);
-								toast.error($i18n.t('Failed to save conversation'));
+								await goto(`/c/${savedChat.id}`);
+								toast.success($i18n.t('Conversation saved successfully'));
 							}
-						}}
-					/>
-
-					<div class="flex flex-col flex-auto z-10 w-full @container overflow-auto">
-						{#if ($settings?.landingPageMode === 'chat' && !$selectedFolder) || createMessagesList(history, history.currentId).length > 0}
-							<div
-								class=" pb-2.5 flex flex-col justify-between w-full flex-auto overflow-auto h-0 max-w-full z-10 scrollbar-hidden"
-								id="messages-container"
-								bind:this={messagesContainerElement}
-								on:scroll={(e) => {
-									autoScroll =
-										messagesContainerElement.scrollHeight - messagesContainerElement.scrollTop <=
-										messagesContainerElement.clientHeight + 5;
-								}}
-							>
-								<div class=" h-full w-full flex flex-col">
-									<Messages
-										chatId={$chatId}
-										bind:history
-										bind:autoScroll
-										bind:prompt
-										setInputText={(text) => {
-											messageInput?.setText(text);
-										}}
-										{selectedModels}
-										{atSelectedModel}
-										{sendMessage}
-										{showMessage}
-										{submitMessage}
-										{continueResponse}
-										{regenerateResponse}
-										{mergeResponses}
-										{addMessages}
-										topPadding={true}
-										bottomPadding={files.length > 0}
-										{onSelect}
-									/>
-								</div>
-							</div>
-
-							<div class=" pb-2 z-10">
-								<MessageInput
-									bind:this={messageInput}
-									{history}
-									{taskIds}
-									{selectedModels}
-									bind:files
-									bind:prompt
-									bind:autoScroll
-									bind:atSelectedModel
-									{generating}
-									{stopResponse}
-									{createMessagePair}
-									{messageQueue}
-									onQueueSendNow={async (id) => {
-										const item = messageQueue.find((m) => m.id === id);
-										if (item) {
-											// Remove from queue
-											messageQueue = messageQueue.filter((m) => m.id !== id);
-											// Stop current generation first
-											await stopResponse();
-											await tick();
-											// Set files and submit
-											files = item.files;
-											await tick();
-											await submitPrompt(item.prompt);
-										}
-									}}
-									onQueueEdit={(id) => {
-										const item = messageQueue.find((m) => m.id === id);
-										if (item) {
-											// Remove from queue
-											messageQueue = messageQueue.filter((m) => m.id !== id);
-											// Set files and restore prompt to input
-											files = item.files;
-											messageInput?.setText(item.prompt);
-										}
-									}}
-									onQueueDelete={(id) => {
-										messageQueue = messageQueue.filter((m) => m.id !== id);
-									}}
-									onChange={(data) => {
-										if (!$temporaryChatEnabled) {
-											saveDraft(data, $chatId);
-										}
-									}}
-									on:submit={async (e) => {
-										clearDraft();
-										if (e.detail || files.length > 0) {
-											await tick();
-
-											submitPrompt(e.detail.replaceAll('\n\n', '\n'));
-										}
-									}}
-								/>
-
-								<div
-									class="absolute bottom-1 text-xs text-gray-500 text-center line-clamp-1 right-0 left-0"
-								>
-									<!-- {$i18n.t('LLMs can make mistakes. Verify important information.')} -->
-								</div>
-							</div>
-						{:else}
-							<div class="flex items-center h-full">
-								<Placeholder
-									{history}
-									{selectedModels}
-									bind:messageInput
-									bind:files
-									bind:prompt
-									bind:autoScroll
-									bind:atSelectedModel
-									{stopResponse}
-									{createMessagePair}
-									{onSelect}
-									onChange={(data) => {
-										if (!$temporaryChatEnabled) {
-											saveDraft(data);
-										}
-									}}
-									on:submit={async (e) => {
-										clearDraft();
-										if (e.detail || files.length > 0) {
-											await tick();
-											submitPrompt(e.detail.replaceAll('\n\n', '\n'));
-										}
-									}}
-								/>
-							</div>
-						{/if}
-					</div>
-				</Pane>
-
-				<ChatControls
-					bind:this={controlPaneComponent}
-					bind:history
-					bind:chatFiles
-					bind:params
-					bind:pane={controlPane}
-					chatId={$chatId}
-					{showMessage}
+						} catch (error) {
+							console.error('Error saving conversation:', error);
+							toast.error($i18n.t('Failed to save conversation'));
+						}
+					}}
 				/>
-			</PaneGroup>
+
+				<div class="flex flex-col flex-auto z-10 w-full @container overflow-auto">
+					{#if ($settings?.landingPageMode === 'chat' && !$selectedFolder) || createMessagesList(history, history.currentId).length > 0}
+						<div
+							class=" pb-2.5 flex flex-col justify-between w-full flex-auto overflow-auto h-0 max-w-full z-10 scrollbar-hidden"
+							id="messages-container"
+							bind:this={messagesContainerElement}
+							on:scroll={(e) => {
+								autoScroll =
+									messagesContainerElement.scrollHeight - messagesContainerElement.scrollTop <=
+									messagesContainerElement.clientHeight + 5;
+							}}
+						>
+							<div class=" h-full w-full flex flex-col">
+								<Messages
+									chatId={$chatId}
+									bind:history
+									bind:autoScroll
+									bind:prompt
+									setInputText={(text) => {
+										messageInput?.setText(text);
+									}}
+									{selectedModels}
+									{atSelectedModel}
+									{sendMessage}
+									{showMessage}
+									{submitMessage}
+									{continueResponse}
+									{regenerateResponse}
+									{addMessages}
+									topPadding={true}
+									bottomPadding={files.length > 0}
+									{onSelect}
+								/>
+							</div>
+						</div>
+
+						<div class=" pb-2 z-10">
+							<MessageInput
+								bind:this={messageInput}
+								{history}
+								{taskIds}
+								{selectedModels}
+								bind:files
+								bind:prompt
+								bind:autoScroll
+								bind:atSelectedModel
+								{generating}
+								{stopResponse}
+								{createMessagePair}
+								{messageQueue}
+								onQueueSendNow={async (id) => {
+									const item = messageQueue.find((m) => m.id === id);
+									if (item) {
+										// Remove from queue
+										messageQueue = messageQueue.filter((m) => m.id !== id);
+										// Stop current generation first
+										await stopResponse();
+										await tick();
+										// Set files and submit
+										files = item.files;
+										await tick();
+										await submitPrompt(item.prompt);
+									}
+								}}
+								onQueueEdit={(id) => {
+									const item = messageQueue.find((m) => m.id === id);
+									if (item) {
+										// Remove from queue
+										messageQueue = messageQueue.filter((m) => m.id !== id);
+										// Set files and restore prompt to input
+										files = item.files;
+										messageInput?.setText(item.prompt);
+									}
+								}}
+								onQueueDelete={(id) => {
+									messageQueue = messageQueue.filter((m) => m.id !== id);
+								}}
+								onChange={(data) => {
+									if (!$temporaryChatEnabled) {
+										saveDraft(data, $chatId);
+									}
+								}}
+								on:submit={async (e) => {
+									clearDraft();
+									if (e.detail || files.length > 0) {
+										await tick();
+
+										submitPrompt(e.detail.replaceAll('\n\n', '\n'));
+									}
+								}}
+							/>
+
+							<div
+								class="absolute bottom-1 text-xs text-gray-500 text-center line-clamp-1 right-0 left-0"
+							>
+								<!-- {$i18n.t('LLMs can make mistakes. Verify important information.')} -->
+							</div>
+						</div>
+					{:else}
+						<div class="flex items-center h-full">
+							<Placeholder
+								{history}
+								{selectedModels}
+								bind:messageInput
+								bind:files
+								bind:prompt
+								bind:autoScroll
+								bind:atSelectedModel
+								{stopResponse}
+								{createMessagePair}
+								{onSelect}
+								onChange={(data) => {
+									if (!$temporaryChatEnabled) {
+										saveDraft(data);
+									}
+								}}
+								on:submit={async (e) => {
+									clearDraft();
+									if (e.detail || files.length > 0) {
+										await tick();
+										submitPrompt(e.detail.replaceAll('\n\n', '\n'));
+									}
+								}}
+							/>
+						</div>
+					{/if}
+				</div>
+			</div>
 		</div>
 	{:else if loading}
 		<div class=" flex items-center justify-center h-full w-full">

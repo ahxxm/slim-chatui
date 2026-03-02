@@ -506,45 +506,6 @@ RESPONSE_WATERMARK = PersistentConfig(
 )
 
 
-USER_PERMISSIONS = {
-    "chat": {
-        "controls": True,
-        "system_prompt": True,
-        "params": True,
-        "file_upload": True,
-        "web_upload": True,
-        "delete": True,
-        "delete_message": True,
-        "continue_response": True,
-        "regenerate_response": True,
-        "rate_response": True,
-        "edit": True,
-        "share": True,
-        "export": True,
-        "multiple_models": True,
-        "temporary": True,
-        "temporary_enforced": False,
-    },
-    "features": {
-        "folders": True,
-    },
-    "settings": {
-        "interface": True,
-    },
-}
-
-ENABLE_FOLDERS = PersistentConfig(
-    "ENABLE_FOLDERS",
-    "folders.enable",
-    os.environ.get("ENABLE_FOLDERS", "True").lower() == "true",
-)
-
-FOLDER_MAX_FILE_COUNT = PersistentConfig(
-    "FOLDER_MAX_FILE_COUNT",
-    "folders.max_file_count",
-    os.environ.get("FOLDER_MAX_FILE_COUNT", ""),
-)
-
 ENABLE_USER_STATUS = PersistentConfig(
     "ENABLE_USER_STATUS",
     "users.enable_status",
@@ -822,13 +783,6 @@ Output:
 DEFAULT_EMOJI_GENERATION_PROMPT_TEMPLATE = """Your task is to reflect the speaker's likely facial expression through a fitting emoji. Interpret emotions from the message and reflect their facial expression using fitting, diverse emojis (e.g., 😊, 😢, 😡, 😱).
 
 Message: ```{{prompt}}```"""
-
-DEFAULT_MOA_GENERATION_PROMPT_TEMPLATE = """You have been provided with a set of responses from various models to the latest user query: "{{prompt}}"
-
-Your task is to synthesize these responses into a single, high-quality response. It is crucial to critically evaluate the information provided in these responses, recognizing that some of it may be biased or incorrect. Your response should not simply replicate the given answers but should offer a refined, accurate, and comprehensive reply to the instruction. Ensure your response is well-structured, coherent, and adheres to the highest standards of accuracy and reliability.
-
-Responses from models: {{responses}}"""
-
 
 ####################################
 # File Image Compression

@@ -13,7 +13,6 @@ from open_webui.utils.task import (
     autocomplete_generation_template,
     tags_generation_template,
     emoji_generation_template,
-    moa_response_generation_template,
 )
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.constants import TASKS
@@ -24,7 +23,6 @@ from open_webui.config import (
     DEFAULT_TAGS_GENERATION_PROMPT_TEMPLATE,
     DEFAULT_AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE,
     DEFAULT_EMOJI_GENERATION_PROMPT_TEMPLATE,
-    DEFAULT_MOA_GENERATION_PROMPT_TEMPLATE,
 )
 
 log = logging.getLogger(__name__)
@@ -448,55 +446,6 @@ async def generate_emoji(
             "task": str(TASKS.EMOJI_GENERATION),
             "task_body": form_data,
             "chat_id": form_data.get("chat_id", None),
-        },
-    }
-
-    try:
-        return await generate_chat_completion(request, form_data=payload, user=user)
-    except Exception as e:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={"detail": str(e)},
-        )
-
-
-@router.post("/moa/completions")
-async def generate_moa_response(
-    request: Request, form_data: dict, user=Depends(get_verified_user)
-):
-
-    if getattr(request.state, "direct", False) and hasattr(request.state, "model"):
-        models = {
-            request.state.model["id"]: request.state.model,
-        }
-    else:
-        models = request.app.state.MODELS
-
-    model_id = form_data["model"]
-
-    if model_id not in models:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Model not found",
-        )
-
-    template = DEFAULT_MOA_GENERATION_PROMPT_TEMPLATE
-
-    content = moa_response_generation_template(
-        template,
-        form_data["prompt"],
-        form_data["responses"],
-    )
-
-    payload = {
-        "model": model_id,
-        "messages": [{"role": "user", "content": content}],
-        "stream": form_data.get("stream", False),
-        "metadata": {
-            **(request.state.metadata if hasattr(request.state, "metadata") else {}),
-            "chat_id": form_data.get("chat_id", None),
-            "task": str(TASKS.MOA_RESPONSE_GENERATION),
-            "task_body": form_data,
         },
     }
 

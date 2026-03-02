@@ -70,4 +70,3 @@ class TASKS(str, Enum):
     TAGS_GENERATION = "tags_generation"
     EMOJI_GENERATION = "emoji_generation"
     AUTOCOMPLETE_GENERATION = "autocomplete_generation"
-    MOA_RESPONSE_GENERATION = "moa_response_generation"

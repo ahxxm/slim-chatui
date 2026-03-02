@@ -43,9 +43,6 @@
 
 	let highContrastMode = false;
 
-	let detectArtifacts = true;
-	let displayMultiModelResponsesInTabs = false;
-
 	let richTextInput = true;
 	let showFormattingToolbar = false;
 	let insertPromptAsRichText = false;
@@ -185,11 +182,9 @@
 
 		highContrastMode = $settings?.highContrastMode ?? false;
 
-		detectArtifacts = $settings?.detectArtifacts ?? true;
 		responseAutoCopy = $settings?.responseAutoCopy ?? false;
 
 		showUsername = $settings?.showUsername ?? false;
-		displayMultiModelResponsesInTabs = $settings?.displayMultiModelResponsesInTabs ?? false;
 		chatFadeStreamingText = $settings?.chatFadeStreamingText ?? true;
 
 		richTextInput = $settings?.richTextInput ?? true;
@@ -667,26 +662,24 @@
 				</div>
 			</div>
 
-			{#if $user.role === 'admin' || $user?.permissions?.chat?.temporary}
-				<div>
-					<div class=" py-0.5 flex w-full justify-between">
-						<div id="temp-chat-default-label" class=" self-center text-xs">
-							{$i18n.t('Temporary Chat by Default')}
-						</div>
+			<div>
+				<div class=" py-0.5 flex w-full justify-between">
+					<div id="temp-chat-default-label" class=" self-center text-xs">
+						{$i18n.t('Temporary Chat by Default')}
+					</div>
 
-						<div class="flex items-center gap-2 p-1">
-							<Switch
-								ariaLabelledbyId="temp-chat-default-label"
-								tooltip={true}
-								bind:state={temporaryChatByDefault}
-								on:change={() => {
-									saveSettings({ temporaryChatByDefault });
-								}}
-							/>
-						</div>
+					<div class="flex items-center gap-2 p-1">
+						<Switch
+							ariaLabelledbyId="temp-chat-default-label"
+							tooltip={true}
+							bind:state={temporaryChatByDefault}
+							on:change={() => {
+								saveSettings({ temporaryChatByDefault });
+							}}
+						/>
 					</div>
 				</div>
-			{/if}
+			</div>
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
@@ -918,25 +911,6 @@
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
-					<div id="keep-followup-prompts-label" class=" self-center text-xs">
-						{$i18n.t('Display Multi-model Responses in Tabs')}
-					</div>
-
-					<div class="flex items-center gap-2 p-1">
-						<Switch
-							ariaLabelledbyId="keep-followup-prompts-label"
-							tooltip={true}
-							bind:state={displayMultiModelResponsesInTabs}
-							on:change={() => {
-								saveSettings({ displayMultiModelResponsesInTabs });
-							}}
-						/>
-					</div>
-				</div>
-			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
 					<div id="scroll-on-branch-change-label" class=" self-center text-xs">
 						{$i18n.t('Scroll On Branch Change')}
 					</div>
@@ -1111,25 +1085,6 @@
 			</div>
 
 			<div class=" my-2 text-sm font-medium">{$i18n.t('Artifacts')}</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="detect-artifacts-label" class=" self-center text-xs">
-						{$i18n.t('Detect Artifacts Automatically')}
-					</div>
-
-					<div class="flex items-center gap-2 p-1">
-						<Switch
-							ariaLabelledbyId="detect-artifacts-label"
-							tooltip={true}
-							bind:state={detectArtifacts}
-							on:change={() => {
-								saveSettings({ detectArtifacts });
-							}}
-						/>
-					</div>
-				</div>
-			</div>
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">

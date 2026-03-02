@@ -90,11 +90,8 @@ from open_webui.config import (
     SHOW_ADMIN_DETAILS,
     JWT_EXPIRES_IN,
     ENABLE_SIGNUP,
-    ENABLE_FOLDERS,
-    FOLDER_MAX_FILE_COUNT,
     ENABLE_USER_STATUS,
     ENABLE_USER_WEBHOOKS,
-    USER_PERMISSIONS,
     DEFAULT_USER_ROLE,
     PENDING_USER_OVERLAY_CONTENT,
     PENDING_USER_OVERLAY_TITLE,
@@ -353,13 +350,9 @@ app.state.config.PENDING_USER_OVERLAY_TITLE = PENDING_USER_OVERLAY_TITLE
 
 app.state.config.RESPONSE_WATERMARK = RESPONSE_WATERMARK
 
-app.state.config.USER_PERMISSIONS = USER_PERMISSIONS
 app.state.config.WEBHOOK_URL = WEBHOOK_URL
 app.state.config.BANNERS = WEBUI_BANNERS
 
-
-app.state.config.ENABLE_FOLDERS = ENABLE_FOLDERS
-app.state.config.FOLDER_MAX_FILE_COUNT = FOLDER_MAX_FILE_COUNT
 app.state.config.ENABLE_USER_WEBHOOKS = ENABLE_USER_WEBHOOKS
 app.state.config.ENABLE_USER_STATUS = ENABLE_USER_STATUS
 
@@ -1083,8 +1076,6 @@ async def get_app_config(request: Request):
             **(
                 {
                     "enable_direct_connections": app.state.config.ENABLE_DIRECT_CONNECTIONS,
-                    "enable_folders": app.state.config.ENABLE_FOLDERS,
-                    "folder_max_file_count": app.state.config.FOLDER_MAX_FILE_COUNT,
                     "enable_autocomplete_generation": app.state.config.ENABLE_AUTOCOMPLETE_GENERATION,
                     "enable_user_webhooks": app.state.config.ENABLE_USER_WEBHOOKS,
                     "enable_user_status": app.state.config.ENABLE_USER_STATUS,
@@ -1107,7 +1098,6 @@ async def get_app_config(request: Request):
                         "height": app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT,
                     },
                 },
-                "permissions": {**app.state.config.USER_PERMISSIONS},
                 "ui": {
                     "pending_user_overlay_title": app.state.config.PENDING_USER_OVERLAY_TITLE,
                     "pending_user_overlay_content": app.state.config.PENDING_USER_OVERLAY_CONTENT,

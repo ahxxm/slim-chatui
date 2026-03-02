@@ -342,10 +342,6 @@
 				return $config?.features?.enable_direct_connections;
 			}
 
-			if (tab.id === 'interface') {
-				return $user?.role === 'admin' || ($user?.permissions?.settings?.interface ?? true);
-			}
-
 			return true;
 		});
 	};

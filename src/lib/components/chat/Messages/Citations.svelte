@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import { embed, showControls, showEmbeds } from '$lib/stores';
 
 	import CitationModal from './Citations/CitationModal.svelte';
 
@@ -44,30 +43,13 @@
 			if (citations[index]?.source?.embed_url) {
 				const embedUrl = citations[index].source.embed_url;
 				if (embedUrl) {
-					if (readOnly) {
-						// Open in new tab if readOnly
-						window.open(embedUrl, '_blank');
-						return;
-					} else {
-						showControls.set(true);
-						showEmbeds.set(true);
-						embed.set({
-							url: embedUrl,
-							title: citations[index]?.source?.name || 'Embedded Content',
-							source: citations[index],
-							chatId: chatId,
-							messageId: id,
-							sourceId: sourceId
-						});
-					}
-				} else {
-					selectedCitation = citations[index];
-					showCitationModal = true;
+					window.open(embedUrl, '_blank');
+					return;
 				}
-			} else {
-				selectedCitation = citations[index];
-				showCitationModal = true;
 			}
+
+			selectedCitation = citations[index];
+			showCitationModal = true;
 		}
 	};
 

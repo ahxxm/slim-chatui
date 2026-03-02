@@ -96,7 +96,6 @@
 		"lowlight": "^3.3.0",
 		"marked": "^9.1.0",
 		"mermaid": "^11.10.1",
-		"paneforge": "^0.0.6",
 		"panzoom": "^9.4.3",
 		"prosemirror-commands": "^1.6.0",
 		"prosemirror-example-setup": "^1.2.3",

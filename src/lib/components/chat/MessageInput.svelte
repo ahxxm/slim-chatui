@@ -20,7 +20,6 @@
 		models,
 		config,
 		user as _user,
-		showControls,
 		temporaryChatEnabled
 	} from '$lib/stores';
 
@@ -441,11 +440,6 @@
 	};
 
 	const uploadFileHandler = async (file, itemData = {}) => {
-		if ($_user?.role !== 'admin' && !($_user?.permissions?.chat?.file_upload ?? true)) {
-			toast.error($i18n.t('You do not have permission to upload files.'));
-			return null;
-		}
-
 		if (fileUploadCapableModels.length !== selectedModels.length) {
 			toast.error($i18n.t('Model(s) do not support file upload'));
 			return null;

@@ -112,7 +112,6 @@ def create_session_response(
         "name": user.name,
         "role": user.role,
         "profile_image_url": f"/api/v1/users/{user.id}/profile/image",
-        "permissions": request.app.state.config.USER_PERMISSIONS,
     }
 
 
@@ -123,7 +122,6 @@ def create_session_response(
 
 class SessionUserResponse(Token, UserProfileImageResponse):
     expires_at: Optional[int] = None
-    permissions: Optional[dict] = None
 
 
 class SessionUserInfoResponse(SessionUserResponse, UserStatus):
@@ -185,7 +183,6 @@ async def get_session_user(
         "status_emoji": user.status_emoji,
         "status_message": user.status_message,
         "status_expires_at": user.status_expires_at,
-        "permissions": request.app.state.config.USER_PERMISSIONS,
     }
 
 
@@ -599,8 +596,6 @@ async def get_admin_config(request: Request, user=Depends(get_admin_user)):
         "ENABLE_SIGNUP": request.app.state.config.ENABLE_SIGNUP,
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
-        "ENABLE_FOLDERS": request.app.state.config.ENABLE_FOLDERS,
-        "FOLDER_MAX_FILE_COUNT": request.app.state.config.FOLDER_MAX_FILE_COUNT,
         "ENABLE_USER_WEBHOOKS": request.app.state.config.ENABLE_USER_WEBHOOKS,
         "ENABLE_USER_STATUS": request.app.state.config.ENABLE_USER_STATUS,
         "PENDING_USER_OVERLAY_TITLE": request.app.state.config.PENDING_USER_OVERLAY_TITLE,
@@ -616,8 +611,6 @@ class AdminConfig(BaseModel):
     ENABLE_SIGNUP: bool
     DEFAULT_USER_ROLE: str
     JWT_EXPIRES_IN: str
-    ENABLE_FOLDERS: bool
-    FOLDER_MAX_FILE_COUNT: Optional[int | str] = None
     ENABLE_USER_WEBHOOKS: bool
     ENABLE_USER_STATUS: bool
     PENDING_USER_OVERLAY_TITLE: Optional[str] = None
@@ -634,10 +627,6 @@ async def update_admin_config(
     request.app.state.config.WEBUI_URL = form_data.WEBUI_URL
     request.app.state.config.ENABLE_SIGNUP = form_data.ENABLE_SIGNUP
 
-    request.app.state.config.ENABLE_FOLDERS = form_data.ENABLE_FOLDERS
-    request.app.state.config.FOLDER_MAX_FILE_COUNT = (
-        int(form_data.FOLDER_MAX_FILE_COUNT) if form_data.FOLDER_MAX_FILE_COUNT else ""
-    )
     if form_data.DEFAULT_USER_ROLE in ["pending", "user", "admin"]:
         request.app.state.config.DEFAULT_USER_ROLE = form_data.DEFAULT_USER_ROLE
 
@@ -666,8 +655,6 @@ async def update_admin_config(
         "ENABLE_SIGNUP": request.app.state.config.ENABLE_SIGNUP,
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
-        "ENABLE_FOLDERS": request.app.state.config.ENABLE_FOLDERS,
-        "FOLDER_MAX_FILE_COUNT": request.app.state.config.FOLDER_MAX_FILE_COUNT,
         "ENABLE_USER_WEBHOOKS": request.app.state.config.ENABLE_USER_WEBHOOKS,
         "ENABLE_USER_STATUS": request.app.state.config.ENABLE_USER_STATUS,
         "PENDING_USER_OVERLAY_TITLE": request.app.state.config.PENDING_USER_OVERLAY_TITLE,

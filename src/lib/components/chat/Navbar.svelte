@@ -10,7 +10,6 @@
 		mobile,
 		settings,
 		showArchivedChats,
-		showControls,
 		showSidebar,
 		temporaryChatEnabled,
 		user
@@ -25,7 +24,6 @@
 	import Tooltip from '../common/Tooltip.svelte';
 	import Menu from '$lib/components/layout/Navbar/Menu.svelte';
 	import UserMenu from '$lib/components/layout/Sidebar/UserMenu.svelte';
-	import AdjustmentsHorizontal from '../icons/AdjustmentsHorizontal.svelte';
 
 	import PencilSquare from '../icons/PencilSquare.svelte';
 	import Banner from '../common/Banner.svelte';
@@ -37,7 +35,6 @@
 	import EllipsisHorizontal from '../icons/EllipsisHorizontal.svelte';
 	import ChatPlus from '../icons/ChatPlus.svelte';
 	import ChatCheck from '../icons/ChatCheck.svelte';
-	import Knobs from '../icons/Knobs.svelte';
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
 
 	const i18n = getContext('i18n');
@@ -119,56 +116,54 @@
 				<div class="self-start flex flex-none items-center text-gray-600 dark:text-gray-400">
 					<!-- <div class="md:hidden flex self-center w-[1px] h-5 mx-2 bg-gray-300 dark:bg-stone-700" /> -->
 
-					{#if $user?.role === 'user' ? ($user?.permissions?.chat?.temporary ?? true) && !($user?.permissions?.chat?.temporary_enforced ?? false) : true}
-						{#if !chat?.id}
-							<Tooltip content={$i18n.t(`Temporary Chat`)}>
-								<button
-									class="flex cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition"
-									id="temporary-chat-button"
-									on:click={async () => {
-										if (($settings?.temporaryChatByDefault ?? false) && $temporaryChatEnabled) {
-											// for proper initNewChat handling
-											await temporaryChatEnabled.set(null);
-										} else {
-											await temporaryChatEnabled.set(!$temporaryChatEnabled);
-										}
+					{#if !chat?.id}
+						<Tooltip content={$i18n.t(`Temporary Chat`)}>
+							<button
+								class="flex cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition"
+								id="temporary-chat-button"
+								on:click={async () => {
+									if (($settings?.temporaryChatByDefault ?? false) && $temporaryChatEnabled) {
+										// for proper initNewChat handling
+										await temporaryChatEnabled.set(null);
+									} else {
+										await temporaryChatEnabled.set(!$temporaryChatEnabled);
+									}
 
-										if ($page.url.pathname !== '/') {
-											await goto('/');
-										}
+									if ($page.url.pathname !== '/') {
+										await goto('/');
+									}
 
-										// add 'temporary-chat=true' to the URL
-										if ($temporaryChatEnabled) {
-											window.history.replaceState(null, '', '?temporary-chat=true');
-										} else {
-											window.history.replaceState(null, '', location.pathname);
-										}
-									}}
-								>
-									<div class=" m-auto self-center">
-										{#if $temporaryChatEnabled}
-											<ChatBubbleDottedChecked className=" size-4.5" strokeWidth="1.5" />
-										{:else}
-											<ChatBubbleDotted className=" size-4.5" strokeWidth="1.5" />
-										{/if}
-									</div>
-								</button>
-							</Tooltip>
-						{:else if $temporaryChatEnabled}
-							<Tooltip content={$i18n.t(`Save Chat`)}>
-								<button
-									class="flex cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition"
-									id="save-temporary-chat-button"
-									on:click={async () => {
-										onSaveTempChat();
-									}}
-								>
-									<div class=" m-auto self-center">
-										<ChatCheck className=" size-4.5" strokeWidth="1.5" />
-									</div>
-								</button>
-							</Tooltip>
-						{/if}
+									// add 'temporary-chat=true' to the URL
+									if ($temporaryChatEnabled) {
+										window.history.replaceState(null, '', '?temporary-chat=true');
+									} else {
+										window.history.replaceState(null, '', location.pathname);
+									}
+								}}
+							>
+								<div class=" m-auto self-center">
+									{#if $temporaryChatEnabled}
+										<ChatBubbleDottedChecked className=" size-4.5" strokeWidth="1.5" />
+									{:else}
+										<ChatBubbleDotted className=" size-4.5" strokeWidth="1.5" />
+									{/if}
+								</div>
+							</button>
+						</Tooltip>
+					{:else if $temporaryChatEnabled}
+						<Tooltip content={$i18n.t(`Save Chat`)}>
+							<button
+								class="flex cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition"
+								id="save-temporary-chat-button"
+								on:click={async () => {
+									onSaveTempChat();
+								}}
+							>
+								<div class=" m-auto self-center">
+									<ChatCheck className=" size-4.5" strokeWidth="1.5" />
+								</div>
+							</button>
+						</Tooltip>
 					{/if}
 
 					{#if $mobile && !$temporaryChatEnabled && chat && chat.id}
@@ -210,22 +205,6 @@
 								</div>
 							</button>
 						</Menu>
-					{/if}
-
-					{#if $user?.role === 'admin' || ($user?.permissions.chat?.controls ?? true)}
-						<Tooltip content={$i18n.t('Controls')}>
-							<button
-								class=" flex cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition"
-								on:click={async () => {
-									await showControls.set(!$showControls);
-								}}
-								aria-label="Controls"
-							>
-								<div class=" m-auto self-center">
-									<Knobs className=" size-5" strokeWidth="1" />
-								</div>
-							</button>
-						</Tooltip>
 					{/if}
 
 					{#if $user !== undefined && $user !== null}

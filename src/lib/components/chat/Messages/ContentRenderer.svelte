@@ -3,16 +3,7 @@
 	const i18n = getContext('i18n');
 
 	import Markdown from './Markdown.svelte';
-	import {
-		artifactCode,
-		chatId,
-		mobile,
-		settings,
-		showArtifacts,
-		showControls,
-		showEmbeds,
-		showOverview
-	} from '$lib/stores';
+	import { mobile, settings } from '$lib/stores';
 	import FloatingButtons from '../ContentRenderer/FloatingButtons.svelte';
 	import { createMessagesList } from '$lib/utils';
 
@@ -176,28 +167,6 @@
 		{onSourceClick}
 		{onTaskClick}
 		{onSave}
-		onUpdate={async (token) => {
-			const { lang, text: code } = token;
-
-			if (
-				($settings?.detectArtifacts ?? true) &&
-				(['html', 'svg'].includes(lang) || (lang === 'xml' && code.includes('svg'))) &&
-				!$mobile &&
-				$chatId
-			) {
-				await tick();
-				showArtifacts.set(true);
-				showControls.set(true);
-			}
-		}}
-		onPreview={async (value) => {
-			console.log('Preview', value);
-			await artifactCode.set(value);
-			await showControls.set(true);
-			await showArtifacts.set(true);
-			await showOverview.set(false);
-			await showEmbeds.set(false);
-		}}
 	/>
 </div>
 
@@ -207,11 +176,7 @@
 		{id}
 		{messageId}
 		actions={$settings?.floatingActionButtons ?? []}
-		model={(selectedModels ?? []).includes(model?.id)
-			? model?.id
-			: (selectedModels ?? []).length > 0
-				? selectedModels.at(0)
-				: model?.id}
+		model={model?.id}
 		messages={createMessagesList(history, messageId)}
 		onAdd={({ modelId, parentId, messages }) => {
 			console.log(modelId, parentId, messages);

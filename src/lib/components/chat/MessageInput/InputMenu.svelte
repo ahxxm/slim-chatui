@@ -32,9 +32,7 @@
 	let tab = '';
 
 	let fileUploadEnabled = true;
-	$: fileUploadEnabled =
-		fileUploadCapableModels.length === selectedModels.length &&
-		($user?.role === 'admin' || $user?.permissions?.chat?.file_upload);
+	$: fileUploadEnabled = fileUploadCapableModels.length === selectedModels.length;
 
 	$: if (!fileUploadEnabled && files.length > 0) {
 		files = [];

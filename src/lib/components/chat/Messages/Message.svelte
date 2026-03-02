@@ -8,7 +8,6 @@
 	import { settings } from '$lib/stores';
 	import { copyToClipboard } from '$lib/utils';
 
-	import MultiResponseMessages from './MultiResponseMessages.svelte';
 	import ResponseMessage from './ResponseMessage.svelte';
 	import UserMessage from './UserMessage.svelte';
 
@@ -34,7 +33,6 @@
 
 	export let regenerateResponse;
 	export let continueResponse;
-	export let mergeResponses;
 
 	export let addMessages;
 	export let triggerScroll;
@@ -71,7 +69,7 @@
 				{editCodeBlock}
 				{topPadding}
 			/>
-		{:else if (history.messages[history.messages[messageId].parentId]?.models?.length ?? 1) === 1}
+		{:else}
 			<ResponseMessage
 				{chatId}
 				{history}
@@ -95,30 +93,6 @@
 				{editCodeBlock}
 				{topPadding}
 			/>
-		{:else}
-			{#key messageId}
-				<MultiResponseMessages
-					bind:history
-					{chatId}
-					{messageId}
-					{selectedModels}
-					isLastMessage={messageId === history?.currentId}
-					{setInputText}
-					{updateChat}
-					{editMessage}
-					{saveMessage}
-					{submitMessage}
-					{deleteMessage}
-					{continueResponse}
-					{regenerateResponse}
-					{mergeResponses}
-					{triggerScroll}
-					{addMessages}
-					{readOnly}
-					{editCodeBlock}
-					{topPadding}
-				/>
-			{/key}
 		{/if}
 	{/if}
 </div>

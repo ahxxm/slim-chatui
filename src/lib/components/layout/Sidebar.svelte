@@ -91,10 +91,6 @@
 	}
 
 	const initFolders = async () => {
-		if ($config?.features?.enable_folders === false) {
-			return;
-		}
-
 		const folderList = await getFolders(localStorage.token).catch((error) => {
 			return [];
 		});
@@ -533,11 +529,7 @@
 		selectedChatId = null;
 		selectedFolder.set(null);
 
-		if ($user?.role !== 'admin' && $user?.permissions?.chat?.temporary_enforced) {
-			await temporaryChatEnabled.set(true);
-		} else {
-			await temporaryChatEnabled.set(false);
-		}
+		await temporaryChatEnabled.set(false);
 
 		setTimeout(() => {
 			if ($mobile) {
@@ -881,59 +873,57 @@
 					</Folder>
 				{/if}
 
-				{#if $config?.features?.enable_folders && ($user?.role === 'admin' || ($user?.permissions?.features?.folders ?? true))}
-					<Folder
-						id="sidebar-folders"
-						bind:open={showFolders}
-						className="px-2 mt-0.5"
-						name={$i18n.t('Folders')}
-						chevron={false}
-						onAdd={() => {
-							showCreateFolderModal = true;
-						}}
-						onAddLabel={$i18n.t('New Folder')}
-						on:drop={async (e) => {
-							const { type, id, item } = e.detail;
+				<Folder
+					id="sidebar-folders"
+					bind:open={showFolders}
+					className="px-2 mt-0.5"
+					name={$i18n.t('Folders')}
+					chevron={false}
+					onAdd={() => {
+						showCreateFolderModal = true;
+					}}
+					onAddLabel={$i18n.t('New Folder')}
+					on:drop={async (e) => {
+						const { type, id, item } = e.detail;
 
-							if (type === 'folder') {
-								if (folders[id].parent_id === null) {
-									return;
-								}
-
-								const res = await updateFolderParentIdById(localStorage.token, id, null).catch(
-									(error) => {
-										toast.error(`${error}`);
-										return null;
-									}
-								);
-
-								if (res) {
-									await initFolders();
-								}
+						if (type === 'folder') {
+							if (folders[id].parent_id === null) {
+								return;
 							}
+
+							const res = await updateFolderParentIdById(localStorage.token, id, null).catch(
+								(error) => {
+									toast.error(`${error}`);
+									return null;
+								}
+							);
+
+							if (res) {
+								await initFolders();
+							}
+						}
+					}}
+				>
+					<Folders
+						bind:folderRegistry
+						{folders}
+						{shiftKey}
+						onDelete={(folderId) => {
+							selectedFolder.set(null);
+							initChatList();
 						}}
-					>
-						<Folders
-							bind:folderRegistry
-							{folders}
-							{shiftKey}
-							onDelete={(folderId) => {
-								selectedFolder.set(null);
-								initChatList();
-							}}
-							on:update={() => {
-								initChatList();
-							}}
-							on:import={(e) => {
-								const { folderId, items } = e.detail;
-								importChatHandler(items, false, folderId);
-							}}
-							on:change={async () => {
-								initChatList();
-							}}
-						/>
-					</Folder>
-				{/if}
+						on:update={() => {
+							initChatList();
+						}}
+						on:import={(e) => {
+							const { folderId, items } = e.detail;
+							importChatHandler(items, false, folderId);
+						}}
+						on:change={async () => {
+							initChatList();
+						}}
+					/>
+				</Folder>
 
 				<Folder
 					id="sidebar-chats"
