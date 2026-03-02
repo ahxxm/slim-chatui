@@ -30,8 +30,6 @@ dependencies = [
     "loguru==0.7.3",
     "asgiref==3.11.1",
 
-    "azure-identity==1.25.1",
-
     "black==26.1.0",
 ]
 readme = "README.md"

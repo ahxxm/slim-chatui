@@ -32,13 +32,8 @@
 	let auth_type = 'bearer';
 
 	let connectionType = 'external';
-	let azure = false;
-	$: azure =
-		(url.includes('azure.') || url.includes('cognitive.microsoft.com')) && !direct ? true : false;
-
 	let prefixId = '';
 	let enable = true;
-	let apiVersion = '';
 	let apiType = ''; // '' = chat completions (default), 'responses' = Responses API
 
 	let headers = '';
@@ -77,8 +72,6 @@
 				key,
 				config: {
 					auth_type,
-					azure: azure,
-					api_version: apiVersion,
 					...(_headers ? { headers: _headers } : {})
 				}
 			},
@@ -108,28 +101,6 @@
 			return;
 		}
 
-		if (azure) {
-			if (!apiVersion) {
-				loading = false;
-
-				toast.error($i18n.t('API Version is required'));
-				return;
-			}
-
-			if (!key && !['azure_ad', 'microsoft_entra_id'].includes(auth_type)) {
-				loading = false;
-
-				toast.error($i18n.t('Key is required'));
-				return;
-			}
-
-			if (modelIds.length === 0) {
-				loading = false;
-				toast.error($i18n.t('Deployment names are required for Azure OpenAI'));
-				return;
-			}
-		}
-
 		if (headers) {
 			try {
 				const _headers = JSON.parse(headers);
@@ -157,7 +128,6 @@
 				connection_type: connectionType,
 				auth_type,
 				headers: headers ? JSON.parse(headers) : undefined,
-				...(azure ? { azure: true, api_version: apiVersion } : {}),
 				...(apiType ? { api_type: apiType } : {})
 			}
 		};
@@ -191,8 +161,6 @@
 			modelIds = connection.config?.model_ids ?? [];
 
 			connectionType = connection.config?.connection_type ?? 'external';
-			azure = connection.config?.azure ?? false;
-			apiVersion = connection.config?.api_version ?? '';
 			apiType = connection.config?.api_type ?? '';
 		}
 	};
@@ -347,11 +315,6 @@
 											<option value="none">{$i18n.t('None')}</option>
 											<option value="bearer">{$i18n.t('Bearer')}</option>
 											<option value="session">{$i18n.t('Session')}</option>
-											{#if !direct}
-												{#if azure}
-													<option value="microsoft_entra_id">{$i18n.t('Entra ID')}</option>
-												{/if}
-											{/if}
 										</select>
 									</div>
 
@@ -373,12 +336,6 @@
 												class={`text-xs self-center translate-y-[1px] ${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500'}`}
 											>
 												{$i18n.t('Forwards system user session credentials to authenticate')}
-											</div>
-										{:else if ['azure_ad', 'microsoft_entra_id'].includes(auth_type)}
-											<div
-												class={`text-xs self-center translate-y-[1px] ${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : 'text-gray-500'}`}
-											>
-												{$i18n.t('Uses DefaultAzureCredential to authenticate')}
 											</div>
 										{/if}
 									</div>
@@ -442,54 +399,6 @@
 								</div>
 							</div>
 						</div>
-
-						{#if !direct}
-							<div class="flex flex-row justify-between items-center w-full mt-2">
-								<label
-									for="prefix-id-input"
-									class={`mb-0.5 text-xs text-gray-500
-								${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : ''}`}
-									>{$i18n.t('Provider Type')}</label
-								>
-
-								<div>
-									<button
-										on:click={() => {
-											azure = !azure;
-										}}
-										type="button"
-										class=" text-xs text-gray-700 dark:text-gray-300"
-									>
-										{azure ? $i18n.t('Azure OpenAI') : $i18n.t('OpenAI')}
-									</button>
-								</div>
-							</div>
-						{/if}
-
-						{#if azure}
-							<div class="flex gap-2 mt-2">
-								<div class="flex flex-col w-full">
-									<label
-										for="api-version-input"
-										class={`mb-0.5 text-xs text-gray-500
-								${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : ''}`}
-										>{$i18n.t('API Version')}</label
-									>
-
-									<div class="flex-1">
-										<input
-											id="api-version-input"
-											class={`w-full text-sm bg-transparent ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : 'outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-700'}`}
-											type="text"
-											bind:value={apiVersion}
-											placeholder={$i18n.t('API Version')}
-											autocomplete="off"
-											required
-										/>
-									</div>
-								</div>
-							</div>
-						{/if}
 
 						{#if !direct}
 							<div class="flex flex-row justify-between items-center w-full mt-1">
@@ -568,13 +477,7 @@
 									class={`text-gray-500 text-xs text-center py-2 px-10
 								${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : ''}`}
 								>
-									{#if azure}
-										{$i18n.t('Deployment names are required for Azure OpenAI')}
-									{:else}
-										{$i18n.t('Leave empty to include all models from "{{url}}/models" endpoint', {
-											url: url
-										})}
-									{/if}
+									url: url })}
 								</div>
 							{/if}
 						</div>
