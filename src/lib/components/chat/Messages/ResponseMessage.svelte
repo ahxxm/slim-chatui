@@ -2,7 +2,6 @@
 	import { toast } from 'svelte-sonner';
 	import dayjs from 'dayjs';
 
-	import { onDestroy } from 'svelte';
 	import { onMount, tick, getContext } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import type { i18n as i18nType } from 'i18next';
@@ -256,27 +255,27 @@
 		}
 	};
 
-	onMount(async () => {
-		// console.log('ResponseMessage mounted');
+	onMount(() => {
+		let isDestroyed = false;
+		let wheelTarget: HTMLElement | null = null;
+		let copyTarget: HTMLElement | null = null;
 
-		await tick();
-		if (buttonsContainerElement) {
-			buttonsContainerElement.addEventListener('wheel', buttonsWheelHandler);
-		}
+		(async () => {
+			await tick();
+			if (isDestroyed) return;
 
-		if (contentContainerElement) {
-			contentContainerElement.addEventListener('copy', contentCopyHandler);
-		}
-	});
+			wheelTarget = buttonsContainerElement;
+			copyTarget = contentContainerElement;
 
-	onDestroy(() => {
-		if (buttonsContainerElement) {
-			buttonsContainerElement.removeEventListener('wheel', buttonsWheelHandler);
-		}
+			wheelTarget?.addEventListener('wheel', buttonsWheelHandler);
+			copyTarget?.addEventListener('copy', contentCopyHandler);
+		})();
 
-		if (contentContainerElement) {
-			contentContainerElement.removeEventListener('copy', contentCopyHandler);
-		}
+		return () => {
+			isDestroyed = true;
+			wheelTarget?.removeEventListener('wheel', buttonsWheelHandler);
+			copyTarget?.removeEventListener('copy', contentCopyHandler);
+		};
 	});
 </script>
 

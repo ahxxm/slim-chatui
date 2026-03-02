@@ -23,6 +23,9 @@
 	let sceneElement: HTMLElement;
 
 	$: if (sceneElement) {
+		if (instance) {
+			instance.dispose();
+		}
 		instance = panzoom(sceneElement, {
 			bounds: true,
 			boundsPadding: 0.1,
@@ -58,6 +61,10 @@
 	}
 
 	onDestroy(() => {
+		if (instance) {
+			instance.dispose();
+		}
+
 		show = false;
 
 		if (previewElement) {

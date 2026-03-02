@@ -28,7 +28,7 @@
 		sidebarWidth,
 		activeChatIds
 	} from '$lib/stores';
-	import { onMount, getContext, tick, onDestroy } from 'svelte';
+	import { onMount, getContext, tick } from 'svelte';
 
 	const i18n = getContext('i18n');
 
@@ -388,7 +388,29 @@
 
 	let unsubscribers = [];
 
-	onMount(async () => {
+	// Handler for chat:active events (defined outside onMount for proper cleanup)
+	const chatActiveEventHandler = (event: {
+		chat_id: string;
+		message_id: string;
+		data: { type: string; data: any };
+	}) => {
+		if (event.data?.type === 'chat:active') {
+			const { active } = event.data.data;
+			activeChatIds.update((ids) => {
+				const newSet = new Set(ids);
+				if (active) {
+					newSet.add(event.chat_id);
+				} else {
+					newSet.delete(event.chat_id);
+				}
+				return newSet;
+			});
+		}
+	};
+
+	onMount(() => {
+		let isDestroyed = false;
+
 		try {
 			const width = Number(localStorage.getItem('sidebarWidth'));
 			if (!Number.isNaN(width) && width >= MIN_WIDTH && width <= MAX_WIDTH) {
@@ -397,11 +419,15 @@
 		} catch {}
 
 		document.documentElement.style.setProperty('--sidebar-width', `${$sidebarWidth}px`);
-		sidebarWidth.subscribe((w) => {
+
+		const sidebarWidthUnsub = sidebarWidth.subscribe((w) => {
 			document.documentElement.style.setProperty('--sidebar-width', `${w}px`);
 		});
 
-		await showSidebar.set(!$mobile ? localStorage.sidebar === 'true' : false);
+		(async () => {
+			await showSidebar.set(!$mobile ? localStorage.sidebar === 'true' : false);
+			if (isDestroyed) return;
+		})();
 
 		unsubscribers = [
 			mobile.subscribe((value) => {
@@ -472,57 +498,33 @@
 		dropZone?.addEventListener('drop', onDrop);
 		dropZone?.addEventListener('dragleave', onDragLeave);
 
-		// Listen for real-time chat:active events via the events channel
 		$socket?.off('events', chatActiveEventHandler);
 		$socket?.on('events', chatActiveEventHandler);
-	});
 
-	// Handler for chat:active events (defined outside onMount for proper cleanup)
-	const chatActiveEventHandler = (event: {
-		chat_id: string;
-		message_id: string;
-		data: { type: string; data: any };
-	}) => {
-		if (event.data?.type === 'chat:active') {
-			const { active } = event.data.data;
-			activeChatIds.update((ids) => {
-				const newSet = new Set(ids);
-				if (active) {
-					newSet.add(event.chat_id);
-				} else {
-					newSet.delete(event.chat_id);
-				}
-				return newSet;
-			});
-		}
-	};
+		return () => {
+			isDestroyed = true;
 
-	onDestroy(() => {
-		if (unsubscribers && unsubscribers.length > 0) {
-			unsubscribers.forEach((unsubscriber) => {
-				if (unsubscriber) {
-					unsubscriber();
-				}
-			});
-		}
+			sidebarWidthUnsub();
 
-		window.removeEventListener('keydown', onKeyDown);
-		window.removeEventListener('keyup', onKeyUp);
+			if (unsubscribers && unsubscribers.length > 0) {
+				unsubscribers.forEach((unsub) => unsub?.());
+			}
 
-		window.removeEventListener('touchstart', onTouchStart);
-		window.removeEventListener('touchend', onTouchEnd);
+			window.removeEventListener('keydown', onKeyDown);
+			window.removeEventListener('keyup', onKeyUp);
 
-		window.removeEventListener('focus', onFocus);
-		window.removeEventListener('blur', onBlur);
+			window.removeEventListener('touchstart', onTouchStart);
+			window.removeEventListener('touchend', onTouchEnd);
 
-		const dropZone = document.getElementById('sidebar');
+			window.removeEventListener('focus', onFocus);
+			window.removeEventListener('blur', onBlur);
 
-		dropZone?.removeEventListener('dragover', onDragOver);
-		dropZone?.removeEventListener('drop', onDrop);
-		dropZone?.removeEventListener('dragleave', onDragLeave);
+			dropZone?.removeEventListener('dragover', onDragOver);
+			dropZone?.removeEventListener('drop', onDrop);
+			dropZone?.removeEventListener('dragleave', onDragLeave);
 
-		// Clean up socket listener
-		$socket?.off('events', chatActiveEventHandler);
+			$socket?.off('events', chatActiveEventHandler);
+		};
 	});
 
 	const newChatHandler = async () => {

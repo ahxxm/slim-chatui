@@ -2,7 +2,7 @@
 	import { v4 as uuidv4 } from 'uuid';
 	import { toast } from 'svelte-sonner';
 
-	import { getContext, onDestroy, onMount, tick } from 'svelte';
+	import { getContext, onMount, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
 	const i18n: Writable<i18nType> = getContext('i18n');
 
@@ -366,6 +366,8 @@
 					eventConfirmationInputPlaceholder = data.placeholder;
 					eventConfirmationInputValue = data?.value ?? '';
 					eventConfirmationInputType = data?.type ?? '';
+				} else if (type === 'chat:active') {
+					// status indicator — ignored
 				} else {
 					console.log('Unknown message type', data);
 				}
@@ -434,10 +436,10 @@
 
 	let pageSubscribe = null;
 	let selectedFolderSubscribe = null;
+	let activeChatEmitter: ReturnType<typeof setInterval> | null = null;
 
 	onMount(async () => {
 		loading = true;
-		console.log('mounted');
 		window.addEventListener('message', onMessageHandler);
 		$socket?.on('events', chatEventHandler);
 
@@ -486,18 +488,22 @@
 
 		const chatInput = document.getElementById('chat-input');
 		chatInput?.focus();
-	});
 
-	onDestroy(() => {
-		try {
+		return () => {
+			if (activeChatEmitter) {
+				clearInterval(activeChatEmitter);
+				activeChatEmitter = null;
+			}
+			if (saveDraftTimeout) {
+				clearTimeout(saveDraftTimeout);
+				saveDraftTimeout = null;
+			}
 			pageSubscribe();
 			selectedFolderSubscribe();
 			chatIdUnsubscriber?.();
 			window.removeEventListener('message', onMessageHandler);
 			$socket?.off('events', chatEventHandler);
-		} catch (e) {
-			console.error(e);
-		}
+		};
 	});
 
 	// File upload functions
@@ -1182,7 +1188,8 @@
 			);
 		}
 
-		const chatEventEmitter = await getChatEventEmitter(model.id, _chatId);
+		if (activeChatEmitter) clearInterval(activeChatEmitter);
+		activeChatEmitter = await getChatEventEmitter(model.id, _chatId);
 
 		scrollToBottom();
 		await sendMessageSocket(
@@ -1193,7 +1200,10 @@
 			_chatId
 		);
 
-		if (chatEventEmitter) clearInterval(chatEventEmitter);
+		if (activeChatEmitter) {
+			clearInterval(activeChatEmitter);
+			activeChatEmitter = null;
+		}
 
 		currentChatPage.set(1);
 		chats.set(await getChatList(localStorage.token, $currentChatPage));

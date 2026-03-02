@@ -9,7 +9,7 @@
 	dayjs.extend(duration);
 	dayjs.extend(relativeTime);
 
-	import { onMount, tick, getContext, createEventDispatcher, onDestroy } from 'svelte';
+	import { onMount, tick, getContext, createEventDispatcher } from 'svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -659,7 +659,10 @@
 		shiftKey = false;
 	};
 
-	onMount(async () => {
+	onMount(() => {
+		let isDestroyed = false;
+		let dropzoneElement: HTMLElement | null = null;
+
 		suggestions = [
 			{
 				char: '@',
@@ -692,30 +695,29 @@
 		window.addEventListener('focus', onFocus);
 		window.addEventListener('blur', onBlur);
 
-		await tick();
+		(async () => {
+			await tick();
+			if (isDestroyed) return;
 
-		const dropzoneElement = document.getElementById('chat-container');
+			dropzoneElement = document.getElementById('chat-container');
+			dropzoneElement?.addEventListener('dragover', onDragOver);
+			dropzoneElement?.addEventListener('drop', onDrop);
+			dropzoneElement?.addEventListener('dragleave', onDragLeave);
+		})();
 
-		dropzoneElement?.addEventListener('dragover', onDragOver);
-		dropzoneElement?.addEventListener('drop', onDrop);
-		dropzoneElement?.addEventListener('dragleave', onDragLeave);
-	});
+		return () => {
+			isDestroyed = true;
 
-	onDestroy(() => {
-		console.log('destroy');
-		window.removeEventListener('keydown', onKeyDown);
-		window.removeEventListener('keyup', onKeyUp);
+			window.removeEventListener('keydown', onKeyDown);
+			window.removeEventListener('keyup', onKeyUp);
 
-		window.removeEventListener('focus', onFocus);
-		window.removeEventListener('blur', onBlur);
+			window.removeEventListener('focus', onFocus);
+			window.removeEventListener('blur', onBlur);
 
-		const dropzoneElement = document.getElementById('chat-container');
-
-		if (dropzoneElement) {
 			dropzoneElement?.removeEventListener('dragover', onDragOver);
 			dropzoneElement?.removeEventListener('drop', onDrop);
 			dropzoneElement?.removeEventListener('dragleave', onDragLeave);
-		}
+		};
 	});
 </script>
 

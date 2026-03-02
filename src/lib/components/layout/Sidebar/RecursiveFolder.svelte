@@ -1,5 +1,5 @@
 <script>
-	import { getContext, createEventDispatcher, onMount, onDestroy, tick } from 'svelte';
+	import { getContext, createEventDispatcher, onMount, tick } from 'svelte';
 
 	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();
@@ -248,43 +248,41 @@
 		dragged = false;
 	};
 
-	onMount(async () => {
+	onMount(() => {
 		open = folders[folderId].is_expanded;
 		folderRegistry[folderId] = {
 			setFolderItems: () => {
 				setFolderItems();
 			}
 		};
+
 		if (folderElement) {
 			folderElement.addEventListener('dragover', onDragOver);
 			folderElement.addEventListener('drop', onDrop);
 			folderElement.addEventListener('dragleave', onDragLeave);
-
-			// Event listener for when dragging starts
 			folderElement.addEventListener('dragstart', onDragStart);
-			// Event listener for when dragging occurs (optional)
 			folderElement.addEventListener('drag', onDrag);
-			// Event listener for when dragging ends
 			folderElement.addEventListener('dragend', onDragEnd);
 		}
 
 		if (folders[folderId]?.new) {
 			delete folders[folderId].new;
-			await tick();
-			renameHandler();
+			(async () => {
+				await tick();
+				renameHandler();
+			})();
 		}
-	});
 
-	onDestroy(() => {
-		if (folderElement) {
-			folderElement.addEventListener('dragover', onDragOver);
-			folderElement.removeEventListener('drop', onDrop);
-			folderElement.removeEventListener('dragleave', onDragLeave);
-
-			folderElement.removeEventListener('dragstart', onDragStart);
-			folderElement.removeEventListener('drag', onDrag);
-			folderElement.removeEventListener('dragend', onDragEnd);
-		}
+		return () => {
+			if (folderElement) {
+				folderElement.removeEventListener('dragover', onDragOver);
+				folderElement.removeEventListener('drop', onDrop);
+				folderElement.removeEventListener('dragleave', onDragLeave);
+				folderElement.removeEventListener('dragstart', onDragStart);
+				folderElement.removeEventListener('drag', onDrag);
+				folderElement.removeEventListener('dragend', onDragEnd);
+			}
+		};
 	});
 
 	let showDeleteConfirm = false;

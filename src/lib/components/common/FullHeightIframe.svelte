@@ -1,5 +1,10 @@
+<script context="module" lang="ts">
+	let alpinePromise: Promise<any> | null = null;
+	let chartjsPromise: Promise<any> | null = null;
+</script>
+
 <script lang="ts">
-	import { onDestroy, onMount, tick } from 'svelte';
+	import { onMount, tick } from 'svelte';
 
 	// Props
 	export let src: string | null = null; // URL or raw HTML (auto-detected)
@@ -87,7 +92,8 @@
 		const hasAlpineDirectives = alpineDirectives.some((dir) => html.includes(dir));
 		if (hasAlpineDirectives) {
 			try {
-				const { default: alpineCode } = await import('alpinejs/dist/cdn.min.js?raw');
+				const { default: alpineCode } = await (alpinePromise ??=
+					import('alpinejs/dist/cdn.min.js?raw'));
 				const alpineBlob = new Blob([alpineCode], { type: 'text/javascript' });
 				const alpineUrl = URL.createObjectURL(alpineBlob);
 				const alpineTag = `<script src="${alpineUrl}" defer><\/script>`;
@@ -103,7 +109,7 @@
 		if (hasChartJsDirectives) {
 			try {
 				// import chartUrl from 'chart.js/auto?url';
-				const { default: Chart } = await import('chart.js/auto');
+				const { default: Chart } = await (chartjsPromise ??= import('chart.js/auto'));
 				(window as any).Chart = Chart;
 
 				const chartTag = `<script>
@@ -182,10 +188,7 @@ window.Chart = parent.Chart; // Chart previously assigned on parent
 	// Ensure event listener bound only while component lives
 	onMount(() => {
 		window.addEventListener('message', onMessage);
-	});
-
-	onDestroy(() => {
-		window.removeEventListener('message', onMessage);
+		return () => window.removeEventListener('message', onMessage);
 	});
 </script>
 

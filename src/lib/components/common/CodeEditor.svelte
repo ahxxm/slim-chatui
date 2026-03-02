@@ -233,6 +233,7 @@
 		document.addEventListener('keydown', keydownHandler);
 
 		return () => {
+			codeEditor.destroy();
 			observer.disconnect();
 			document.removeEventListener('keydown', keydownHandler);
 		};

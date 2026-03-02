@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { config, models, settings, user } from '$lib/stores';
-	import { createEventDispatcher, onMount, onDestroy, getContext } from 'svelte';
+	import { createEventDispatcher, onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { updateUserInfo } from '$lib/apis/users';
