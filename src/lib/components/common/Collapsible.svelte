@@ -86,16 +86,15 @@
 
 				<div class="">
 					{#if attributes?.type === 'reasoning'}
-						{#if attributes?.done === 'true' && attributes?.duration}
-							{#if attributes.duration < 1}
-								{$i18n.t('Thought for less than a second')}
-							{:else if attributes.duration < 60}
+						{@const seconds = parseFloat(attributes?.duration)}
+						{#if attributes?.done === 'true' && seconds > 0}
+							{#if seconds < 60}
 								{$i18n.t('Thought for {{DURATION}} seconds', {
-									DURATION: attributes.duration
+									DURATION: seconds
 								})}
 							{:else}
 								{$i18n.t('Thought for {{DURATION}}', {
-									DURATION: dayjs.duration(attributes.duration, 'seconds').humanize()
+									DURATION: dayjs.duration(seconds, 'seconds').humanize()
 								})}
 							{/if}
 						{:else}
