@@ -8,7 +8,6 @@ from typing import Generic, Optional, TypeVar
 from urllib.parse import urlparse
 
 from pydantic import BaseModel
-from sqlalchemy import JSON, Column, DateTime, Integer, func
 
 from open_webui.env import (
     DATA_DIR,
@@ -20,7 +19,8 @@ from open_webui.env import (
     WEBUI_NAME,
     log,
 )
-from open_webui.internal.db import Base, get_db
+from open_webui.internal.db import get_db
+from open_webui.models.config import Config
 
 
 class EndpointFilter(logging.Filter):
@@ -56,16 +56,6 @@ def run_migrations():
 
 if ENABLE_DB_MIGRATIONS:
     run_migrations()
-
-
-class Config(Base):
-    __tablename__ = "config"
-
-    id = Column(Integer, primary_key=True)
-    data = Column(JSON, nullable=False)
-    version = Column(Integer, nullable=False, default=0)
-    created_at = Column(DateTime, nullable=False, server_default=func.now())
-    updated_at = Column(DateTime, nullable=True, onupdate=func.now())
 
 
 def load_json_config():
@@ -196,7 +186,7 @@ class PersistentConfig(Generic[T]):
                 sub_config[key] = {}
             sub_config = sub_config[key]
         sub_config[path_parts[-1]] = self.value
-        save_to_db(CONFIG_DATA)
+        save_config(CONFIG_DATA)
         self.config_value = self.value
 
 

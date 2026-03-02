@@ -27,7 +27,6 @@ from open_webui.config import (
     CACHE_DIR,
 )
 from open_webui.env import (
-    MODELS_CACHE_TTL,
     AIOHTTP_CLIENT_SESSION_SSL,
     AIOHTTP_CLIENT_TIMEOUT,
     AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST,
@@ -408,7 +407,7 @@ async def get_all_models_responses(request: Request, user: UserModel) -> list:
 
 
 @cached(
-    ttl=MODELS_CACHE_TTL,
+    ttl=60,
     key=lambda _, user: f"openai_all_models_{user.id}" if user else "openai_all_models",
 )
 async def get_all_models(request: Request, user: UserModel) -> dict[str, list]:

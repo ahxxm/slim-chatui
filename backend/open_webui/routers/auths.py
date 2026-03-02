@@ -3,7 +3,6 @@ import uuid
 import time
 import datetime
 import logging
-import urllib
 
 
 from open_webui.models.auths import (
@@ -24,8 +23,6 @@ from open_webui.models.users import (
 from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
 from open_webui.env import (
     WEBUI_AUTH,
-    WEBUI_AUTH_TRUSTED_EMAIL_HEADER,
-    WEBUI_AUTH_TRUSTED_NAME_HEADER,
     WEBUI_AUTH_COOKIE_SAME_SITE,
     WEBUI_AUTH_COOKIE_SECURE,
     WEBUI_AUTH_SIGNOUT_REDIRECT_URL,
@@ -244,8 +241,6 @@ async def update_password(
     session_user=Depends(get_current_user),
     db: Session = Depends(get_session),
 ):
-    if WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
-        raise HTTPException(400, detail=ERROR_MESSAGES.ACTION_PROHIBITED)
     if session_user:
         user = Auths.authenticate_user(
             session_user.email,
@@ -278,32 +273,7 @@ async def signin(
     form_data: SigninForm,
     db: Session = Depends(get_session),
 ):
-    if WEBUI_AUTH_TRUSTED_EMAIL_HEADER:
-        if WEBUI_AUTH_TRUSTED_EMAIL_HEADER not in request.headers:
-            raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_TRUSTED_HEADER)
-
-        email = request.headers[WEBUI_AUTH_TRUSTED_EMAIL_HEADER].lower()
-        name = email
-
-        if WEBUI_AUTH_TRUSTED_NAME_HEADER:
-            name = request.headers.get(WEBUI_AUTH_TRUSTED_NAME_HEADER, email)
-            try:
-                name = urllib.parse.unquote(name, encoding="utf-8")
-            except Exception as e:
-                pass
-
-        if not Users.get_user_by_email(email.lower(), db=db):
-            await signup_handler(
-                request,
-                email,
-                str(uuid.uuid4()),
-                name,
-                db=db,
-            )
-
-        user = Auths.authenticate_user_by_email(email, db=db)
-
-    elif WEBUI_AUTH == False:
+    if WEBUI_AUTH == False:
         admin_email = "admin@localhost"
         admin_password = "admin"
 

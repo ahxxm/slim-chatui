@@ -230,6 +230,7 @@ class ChatTable:
                             chat_id=id,
                             user_id=user_id,
                             data=message,
+                            db=db,
                         )
             except Exception as e:
                 log.warning(
@@ -291,6 +292,7 @@ class ChatTable:
                                 chat_id=chat_obj.id,
                                 user_id=user_id,
                                 data=message,
+                                db=db,
                             )
             except Exception as e:
                 log.warning(
@@ -774,102 +776,40 @@ class ChatTable:
 
             query = query.order_by(Chat.updated_at.desc())
 
-            # Check if the database dialect is either 'sqlite' or 'postgresql'
-            dialect_name = db.bind.dialect.name
-            if dialect_name == "sqlite":
-                # SQLite case: using JSON1 extension for JSON searching
-                sqlite_content_sql = (
-                    "EXISTS ("
-                    "    SELECT 1 "
-                    "    FROM json_each(Chat.chat, '$.messages') AS message "
-                    "    WHERE LOWER(message.value->>'content') LIKE '%' || :content_key || '%'"
-                    ")"
+            content_sql = (
+                "EXISTS ("
+                "    SELECT 1 "
+                "    FROM json_each(Chat.chat, '$.messages') AS message "
+                "    WHERE LOWER(message.value->>'content') LIKE '%' || :content_key || '%'"
+                ")"
+            )
+            query = query.filter(
+                or_(Chat.title.ilike(bindparam("title_key")), text(content_sql)).params(
+                    title_key=f"%{search_text}%", content_key=search_text
                 )
-                sqlite_content_clause = text(sqlite_content_sql)
-                query = query.filter(
-                    or_(
-                        Chat.title.ilike(bindparam("title_key")), sqlite_content_clause
-                    ).params(title_key=f"%{search_text}%", content_key=search_text)
-                )
+            )
 
-                # Check if there are any tags to filter, it should have all the tags
-                if "none" in tag_ids:
-                    query = query.filter(text("""
-                            NOT EXISTS (
-                                SELECT 1
-                                FROM json_each(Chat.meta, '$.tags') AS tag
-                            )
-                            """))
-                elif tag_ids:
-                    query = query.filter(
-                        and_(
-                            *[
-                                text(f"""
-                                    EXISTS (
-                                        SELECT 1
-                                        FROM json_each(Chat.meta, '$.tags') AS tag
-                                        WHERE tag.value = :tag_id_{tag_idx}
-                                    )
-                                    """).params(**{f"tag_id_{tag_idx}": tag_id})
-                                for tag_idx, tag_id in enumerate(tag_ids)
-                            ]
+            if "none" in tag_ids:
+                query = query.filter(text("""
+                        NOT EXISTS (
+                            SELECT 1
+                            FROM json_each(Chat.meta, '$.tags') AS tag
                         )
-                    )
-
-            elif dialect_name == "postgresql":
-                # PostgreSQL doesn't allow null bytes in text. We filter those out by checking
-                # the JSON representation for \u0000 before attempting text extraction
-
-                # Safety filter: JSON field must not contain \u0000
-                query = query.filter(text("Chat.chat::text NOT LIKE '%\\\\u0000%'"))
-
-                # Safety filter: title must not contain actual null bytes
-                query = query.filter(text("Chat.title::text NOT LIKE '%\\x00%'"))
-
-                postgres_content_sql = """
-                EXISTS (
-                    SELECT 1
-                    FROM json_array_elements(Chat.chat->'messages') AS message
-                    WHERE json_typeof(message->'content') = 'string'
-                    AND LOWER(message->>'content') LIKE '%' || :content_key || '%'
-                )
-                """
-
-                postgres_content_clause = text(postgres_content_sql)
-
+                        """))
+            elif tag_ids:
                 query = query.filter(
-                    or_(
-                        Chat.title.ilike(bindparam("title_key")),
-                        postgres_content_clause,
+                    and_(
+                        *[
+                            text(f"""
+                                EXISTS (
+                                    SELECT 1
+                                    FROM json_each(Chat.meta, '$.tags') AS tag
+                                    WHERE tag.value = :tag_id_{tag_idx}
+                                )
+                                """).params(**{f"tag_id_{tag_idx}": tag_id})
+                            for tag_idx, tag_id in enumerate(tag_ids)
+                        ]
                     )
-                ).params(title_key=f"%{search_text}%", content_key=search_text.lower())
-
-                # Check if there are any tags to filter, it should have all the tags
-                if "none" in tag_ids:
-                    query = query.filter(text("""
-                            NOT EXISTS (
-                                SELECT 1
-                                FROM json_array_elements_text(Chat.meta->'tags') AS tag
-                            )
-                            """))
-                elif tag_ids:
-                    query = query.filter(
-                        and_(
-                            *[
-                                text(f"""
-                                    EXISTS (
-                                        SELECT 1
-                                        FROM json_array_elements_text(Chat.meta->'tags') AS tag
-                                        WHERE tag = :tag_id_{tag_idx}
-                                    )
-                                    """).params(**{f"tag_id_{tag_idx}": tag_id})
-                                for tag_idx, tag_id in enumerate(tag_ids)
-                            ]
-                        )
-                    )
-            else:
-                raise NotImplementedError(
-                    f"Unsupported dialect: {db.bind.dialect.name}"
                 )
 
             # Perform pagination at the SQL level
@@ -951,25 +891,11 @@ class ChatTable:
             query = db.query(Chat).filter_by(user_id=user_id)
             tag_id = tag_name.replace(" ", "_").lower()
 
-            log.info(f"DB dialect name: {db.bind.dialect.name}")
-            if db.bind.dialect.name == "sqlite":
-                # SQLite JSON1 querying for tags within the meta JSON field
-                query = query.filter(
-                    text(
-                        f"EXISTS (SELECT 1 FROM json_each(Chat.meta, '$.tags') WHERE json_each.value = :tag_id)"
-                    )
-                ).params(tag_id=tag_id)
-            elif db.bind.dialect.name == "postgresql":
-                # PostgreSQL JSON query for tags within the meta JSON field (for `json` type)
-                query = query.filter(
-                    text(
-                        "EXISTS (SELECT 1 FROM json_array_elements_text(Chat.meta->'tags') elem WHERE elem = :tag_id)"
-                    )
-                ).params(tag_id=tag_id)
-            else:
-                raise NotImplementedError(
-                    f"Unsupported dialect: {db.bind.dialect.name}"
+            query = query.filter(
+                text(
+                    "EXISTS (SELECT 1 FROM json_each(Chat.meta, '$.tags') WHERE json_each.value = :tag_id)"
                 )
+            ).params(tag_id=tag_id)
 
             all_chats = query.all()
             log.debug(f"all_chats: {all_chats}")
@@ -1001,22 +927,11 @@ class ChatTable:
             query = db.query(Chat).filter_by(user_id=user_id)
             tag_id = tag_name.replace(" ", "_").lower()
 
-            if db.bind.dialect.name == "sqlite":
-                query = query.filter(
-                    text(
-                        "EXISTS (SELECT 1 FROM json_each(Chat.meta, '$.tags') WHERE json_each.value = :tag_id)"
-                    )
-                ).params(tag_id=tag_id)
-            elif db.bind.dialect.name == "postgresql":
-                query = query.filter(
-                    text(
-                        "EXISTS (SELECT 1 FROM json_array_elements_text(Chat.meta->'tags') elem WHERE elem = :tag_id)"
-                    )
-                ).params(tag_id=tag_id)
-            else:
-                raise NotImplementedError(
-                    f"Unsupported dialect: {db.bind.dialect.name}"
+            query = query.filter(
+                text(
+                    "EXISTS (SELECT 1 FROM json_each(Chat.meta, '$.tags') WHERE json_each.value = :tag_id)"
                 )
+            ).params(tag_id=tag_id)
 
             return query.count()
 

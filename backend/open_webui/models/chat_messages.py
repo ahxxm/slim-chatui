@@ -345,26 +345,12 @@ class ChatMessageTable:
         with get_db_context(db) as db:
             from sqlalchemy import func, cast, Integer
 
-            dialect = db.bind.dialect.name
-
-            if dialect == "sqlite":
-                input_tokens = cast(
-                    func.json_extract(ChatMessage.usage, "$.input_tokens"), Integer
-                )
-                output_tokens = cast(
-                    func.json_extract(ChatMessage.usage, "$.output_tokens"), Integer
-                )
-            elif dialect == "postgresql":
-                input_tokens = cast(
-                    func.json_extract_path_text(ChatMessage.usage, "input_tokens"),
-                    Integer,
-                )
-                output_tokens = cast(
-                    func.json_extract_path_text(ChatMessage.usage, "output_tokens"),
-                    Integer,
-                )
-            else:
-                raise NotImplementedError(f"Unsupported dialect: {dialect}")
+            input_tokens = cast(
+                func.json_extract(ChatMessage.usage, "$.input_tokens"), Integer
+            )
+            output_tokens = cast(
+                func.json_extract(ChatMessage.usage, "$.output_tokens"), Integer
+            )
 
             query = db.query(
                 ChatMessage.model_id,
@@ -405,27 +391,12 @@ class ChatMessageTable:
         with get_db_context(db) as db:
             from sqlalchemy import func, cast, Integer
 
-            dialect = db.bind.dialect.name
-
-            if dialect == "sqlite":
-                input_tokens = cast(
-                    func.json_extract(ChatMessage.usage, "$.input_tokens"), Integer
-                )
-                output_tokens = cast(
-                    func.json_extract(ChatMessage.usage, "$.output_tokens"), Integer
-                )
-            elif dialect == "postgresql":
-                # Use json_extract_path_text for PostgreSQL JSON columns
-                input_tokens = cast(
-                    func.json_extract_path_text(ChatMessage.usage, "input_tokens"),
-                    Integer,
-                )
-                output_tokens = cast(
-                    func.json_extract_path_text(ChatMessage.usage, "output_tokens"),
-                    Integer,
-                )
-            else:
-                raise NotImplementedError(f"Unsupported dialect: {dialect}")
+            input_tokens = cast(
+                func.json_extract(ChatMessage.usage, "$.input_tokens"), Integer
+            )
+            output_tokens = cast(
+                func.json_extract(ChatMessage.usage, "$.output_tokens"), Integer
+            )
 
             query = db.query(
                 ChatMessage.user_id,

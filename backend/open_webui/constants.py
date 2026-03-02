@@ -31,7 +31,6 @@ class ERROR_MESSAGES(str, Enum):
     INCORRECT_PASSWORD = (
         "The password provided is incorrect. Please check for typos and try again."
     )
-    INVALID_TRUSTED_HEADER = "Your provider has not provided a trusted header. Please contact your administrator for assistance."
 
     EXISTING_USERS = "You can't turn off authentication because there are existing users. If you want to disable WEBUI_AUTH, make sure your web interface doesn't have any existing users and is a fresh installation."
 
@@ -49,8 +48,6 @@ class ERROR_MESSAGES(str, Enum):
     OPENAI_NOT_FOUND = lambda name="": "OpenAI API was not found"
 
     EMPTY_CONTENT = "The content provided is empty. Please ensure that there is text or data present before proceeding."
-
-    DB_NOT_SQLITE = "This feature is only available when running with SQLite databases."
 
     INVALID_PASSWORD = lambda err="": (
         err if err else "The password does not meet the required validation criteria."
