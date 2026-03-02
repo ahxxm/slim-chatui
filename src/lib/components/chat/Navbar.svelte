@@ -49,7 +49,6 @@
 	export let showModelSelector = true;
 
 	export let onSaveTempChat: () => {};
-	export let archiveChatHandler: (id: string) => void;
 	export let moveChatHandler: (id: string, folderId: string) => void;
 
 	let closedBannerIds = [];
@@ -190,9 +189,6 @@
 							{shareEnabled}
 							shareHandler={() => {
 								showShareChatModal = !showShareChatModal;
-							}}
-							archiveChatHandler={() => {
-								archiveChatHandler(chat.id);
 							}}
 							{moveChatHandler}
 						>

@@ -87,7 +87,6 @@ export const SUPPORTED_FILE_EXTENSIONS = [
 ];
 
 export const DEFAULT_CAPABILITIES = {
-	file_context: false,
 	vision: true,
 	file_upload: true,
 	citations: true,

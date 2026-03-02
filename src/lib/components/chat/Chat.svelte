@@ -1733,7 +1733,6 @@
 					bind:selectedModels
 					shareEnabled={!!history.currentId}
 					{initNewChat}
-					archiveChatHandler={() => {}}
 					{moveChatHandler}
 					onSaveTempChat={async () => {
 						try {
