@@ -180,8 +180,6 @@
 						files = input.files;
 					}
 				} catch (e) {}
-			} else {
-				await setDefaults();
 			}
 
 			const chatInput = document.getElementById('chat-input');
@@ -1731,9 +1729,7 @@
 					{history}
 					title={$chatTitle}
 					bind:selectedModels
-					shareEnabled={!!history.currentId}
 					{initNewChat}
-					archiveChatHandler={() => {}}
 					{moveChatHandler}
 					onSaveTempChat={async () => {
 						try {
@@ -1789,7 +1785,6 @@
 									chatId={$chatId}
 									bind:history
 									bind:autoScroll
-									bind:prompt
 									setInputText={(text) => {
 										messageInput?.setText(text);
 									}}

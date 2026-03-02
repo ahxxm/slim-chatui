@@ -78,8 +78,6 @@ class ChatModel(BaseModel):
     created_at: int  # timestamp in epoch
     updated_at: int  # timestamp in epoch
 
-    share_id: Optional[str] = None
-    archived: bool = False
     pinned: Optional[bool] = False
 
     meta: dict = {}
@@ -150,8 +148,6 @@ class ChatResponse(BaseModel):
     chat: dict
     updated_at: int  # timestamp in epoch
     created_at: int  # timestamp in epoch
-    share_id: Optional[str] = None  # id of the chat to be shared
-    archived: bool
     pinned: Optional[bool] = False
     meta: dict = {}
     folder_id: Optional[str] = None
@@ -160,14 +156,6 @@ class ChatResponse(BaseModel):
 class ChatTitleIdResponse(BaseModel):
     id: str
     title: str
-    updated_at: int
-    created_at: int
-
-
-class SharedChatResponse(BaseModel):
-    id: str
-    title: str
-    share_id: Optional[str] = None
     updated_at: int
     created_at: int
 
@@ -473,117 +461,6 @@ class ChatTable:
             self.update_chat_by_id(id, chat, db=db)
             return message_files
 
-    def insert_shared_chat_by_chat_id(
-        self, chat_id: str, db: Optional[Session] = None
-    ) -> Optional[ChatModel]:
-        with get_db_context(db) as db:
-            # Get the existing chat to share
-            chat = db.get(Chat, chat_id)
-            # Check if chat exists
-            if not chat:
-                return None
-            # Check if the chat is already shared
-            if chat.share_id:
-                return self.get_chat_by_id_and_user_id(chat.share_id, "shared", db=db)
-            # Create a new chat with the same data, but with a new ID
-            shared_chat = ChatModel(
-                **{
-                    "id": str(uuid.uuid4()),
-                    "user_id": f"shared-{chat_id}",
-                    "title": chat.title,
-                    "chat": chat.chat,
-                    "meta": chat.meta,
-                    "pinned": chat.pinned,
-                    "folder_id": chat.folder_id,
-                    "created_at": chat.created_at,
-                    "updated_at": int(time.time()),
-                }
-            )
-            shared_result = Chat(**shared_chat.model_dump())
-            db.add(shared_result)
-            db.commit()
-            db.refresh(shared_result)
-
-            # Update the original chat with the share_id
-            result = (
-                db.query(Chat)
-                .filter_by(id=chat_id)
-                .update({"share_id": shared_chat.id})
-            )
-            db.commit()
-            return shared_chat if (shared_result and result) else None
-
-    def update_shared_chat_by_chat_id(
-        self, chat_id: str, db: Optional[Session] = None
-    ) -> Optional[ChatModel]:
-        try:
-            with get_db_context(db) as db:
-                chat = db.get(Chat, chat_id)
-                shared_chat = (
-                    db.query(Chat).filter_by(user_id=f"shared-{chat_id}").first()
-                )
-
-                if shared_chat is None:
-                    return self.insert_shared_chat_by_chat_id(chat_id, db=db)
-
-                shared_chat.title = chat.title
-                shared_chat.chat = chat.chat
-                shared_chat.meta = chat.meta
-                shared_chat.pinned = chat.pinned
-                shared_chat.folder_id = chat.folder_id
-                shared_chat.updated_at = int(time.time())
-                db.commit()
-                db.refresh(shared_chat)
-
-                return ChatModel.model_validate(shared_chat)
-        except Exception:
-            return None
-
-    def delete_shared_chat_by_chat_id(
-        self, chat_id: str, db: Optional[Session] = None
-    ) -> bool:
-        try:
-            with get_db_context(db) as db:
-                # Use subquery to delete chat_messages for shared chats
-                shared_chat_id_subquery = (
-                    db.query(Chat.id)
-                    .filter_by(user_id=f"shared-{chat_id}")
-                    .scalar_subquery()
-                )
-                db.query(ChatMessage).filter(
-                    ChatMessage.chat_id.in_(shared_chat_id_subquery)
-                ).delete(synchronize_session=False)
-                db.query(Chat).filter_by(user_id=f"shared-{chat_id}").delete()
-                db.commit()
-
-                return True
-        except Exception:
-            return False
-
-    def unarchive_all_chats_by_user_id(
-        self, user_id: str, db: Optional[Session] = None
-    ) -> bool:
-        try:
-            with get_db_context(db) as db:
-                db.query(Chat).filter_by(user_id=user_id).update({"archived": False})
-                db.commit()
-                return True
-        except Exception:
-            return False
-
-    def update_chat_share_id_by_id(
-        self, id: str, share_id: Optional[str], db: Optional[Session] = None
-    ) -> Optional[ChatModel]:
-        try:
-            with get_db_context(db) as db:
-                chat = db.get(Chat, id)
-                chat.share_id = share_id
-                db.commit()
-                db.refresh(chat)
-                return ChatModel.model_validate(chat)
-        except Exception:
-            return None
-
     def toggle_chat_pinned_by_id(
         self, id: str, db: Optional[Session] = None
     ) -> Optional[ChatModel]:
@@ -598,157 +475,9 @@ class ChatTable:
         except Exception:
             return None
 
-    def toggle_chat_archive_by_id(
-        self, id: str, db: Optional[Session] = None
-    ) -> Optional[ChatModel]:
-        try:
-            with get_db_context(db) as db:
-                chat = db.get(Chat, id)
-                chat.archived = not chat.archived
-                chat.folder_id = None
-                chat.updated_at = int(time.time())
-                db.commit()
-                db.refresh(chat)
-                return ChatModel.model_validate(chat)
-        except Exception:
-            return None
-
-    def archive_all_chats_by_user_id(
-        self, user_id: str, db: Optional[Session] = None
-    ) -> bool:
-        try:
-            with get_db_context(db) as db:
-                db.query(Chat).filter_by(user_id=user_id).update({"archived": True})
-                db.commit()
-                return True
-        except Exception:
-            return False
-
-    def get_archived_chat_list_by_user_id(
-        self,
-        user_id: str,
-        filter: Optional[dict] = None,
-        skip: int = 0,
-        limit: int = 50,
-        db: Optional[Session] = None,
-    ) -> list[ChatTitleIdResponse]:
-
-        with get_db_context(db) as db:
-            query = db.query(Chat).filter_by(user_id=user_id, archived=True)
-
-            if filter:
-                query_key = filter.get("query")
-                if query_key:
-                    query = query.filter(Chat.title.ilike(f"%{query_key}%"))
-
-                order_by = filter.get("order_by")
-                direction = filter.get("direction")
-
-                if order_by and direction:
-                    if not getattr(Chat, order_by, None):
-                        raise ValueError("Invalid order_by field")
-
-                    if direction.lower() == "asc":
-                        query = query.order_by(getattr(Chat, order_by).asc())
-                    elif direction.lower() == "desc":
-                        query = query.order_by(getattr(Chat, order_by).desc())
-                    else:
-                        raise ValueError("Invalid direction for ordering")
-            else:
-                query = query.order_by(Chat.updated_at.desc())
-
-            query = query.with_entities(
-                Chat.id, Chat.title, Chat.updated_at, Chat.created_at
-            )
-
-            if skip:
-                query = query.offset(skip)
-            if limit:
-                query = query.limit(limit)
-
-            all_chats = query.all()
-            return [
-                ChatTitleIdResponse.model_validate(
-                    {
-                        "id": chat[0],
-                        "title": chat[1],
-                        "updated_at": chat[2],
-                        "created_at": chat[3],
-                    }
-                )
-                for chat in all_chats
-            ]
-
-    def get_shared_chat_list_by_user_id(
-        self,
-        user_id: str,
-        filter: Optional[dict] = None,
-        skip: int = 0,
-        limit: int = 50,
-        db: Optional[Session] = None,
-    ) -> list[SharedChatResponse]:
-
-        with get_db_context(db) as db:
-            query = (
-                db.query(Chat)
-                .filter_by(user_id=user_id)
-                .filter(Chat.share_id.isnot(None))
-            )
-
-            if filter:
-                query_key = filter.get("query")
-                if query_key:
-                    query = query.filter(Chat.title.ilike(f"%{query_key}%"))
-
-                order_by = filter.get("order_by")
-                direction = filter.get("direction")
-
-                if order_by and direction:
-                    if not getattr(Chat, order_by, None):
-                        raise ValueError("Invalid order_by field")
-
-                    if direction.lower() == "asc":
-                        query = query.order_by(getattr(Chat, order_by).asc())
-                    elif direction.lower() == "desc":
-                        query = query.order_by(getattr(Chat, order_by).desc())
-                    else:
-                        raise ValueError("Invalid direction for ordering")
-            else:
-                query = query.order_by(Chat.updated_at.desc())
-
-            # Select only the columns needed for SharedChatResponse
-            # to avoid loading the heavy chat JSON blob
-            query = query.with_entities(
-                Chat.id,
-                Chat.title,
-                Chat.share_id,
-                Chat.updated_at,
-                Chat.created_at,
-            )
-
-            if skip:
-                query = query.offset(skip)
-            if limit:
-                query = query.limit(limit)
-
-            all_chats = query.all()
-            return [
-                SharedChatResponse.model_validate(
-                    {
-                        "id": chat[0],
-                        "title": chat[1],
-                        "share_id": chat[2],
-                        "updated_at": chat[3],
-                        "created_at": chat[4],
-                    }
-                )
-                for chat in all_chats
-            ]
-
     def get_chat_list_by_user_id(
         self,
         user_id: str,
-        include_archived: bool = False,
         filter: Optional[dict] = None,
         skip: int = 0,
         limit: int = 50,
@@ -756,8 +485,6 @@ class ChatTable:
     ) -> list[ChatModel]:
         with get_db_context(db) as db:
             query = db.query(Chat).filter_by(user_id=user_id)
-            if not include_archived:
-                query = query.filter_by(archived=False)
 
             if filter:
                 query_key = filter.get("query")
@@ -788,7 +515,6 @@ class ChatTable:
     def get_chat_title_id_list_by_user_id(
         self,
         user_id: str,
-        include_archived: bool = False,
         include_folders: bool = False,
         include_pinned: bool = False,
         skip: Optional[int] = None,
@@ -803,9 +529,6 @@ class ChatTable:
 
             if not include_pinned:
                 query = query.filter(or_(Chat.pinned == False, Chat.pinned == None))
-
-            if not include_archived:
-                query = query.filter_by(archived=False)
 
             query = query.order_by(Chat.updated_at.desc()).with_entities(
                 Chat.id, Chat.title, Chat.updated_at, Chat.created_at
@@ -842,7 +565,6 @@ class ChatTable:
             all_chats = (
                 db.query(Chat)
                 .filter(Chat.id.in_(chat_ids))
-                .filter_by(archived=False)
                 .order_by(Chat.updated_at.desc())
                 .all()
             )
@@ -862,22 +584,6 @@ class ChatTable:
                     db.refresh(chat_item)
 
                 return ChatModel.model_validate(chat_item)
-        except Exception:
-            return None
-
-    def get_chat_by_share_id(
-        self, id: str, db: Optional[Session] = None
-    ) -> Optional[ChatModel]:
-        try:
-            with get_db_context(db) as db:
-                # it is possible that the shared link was deleted. hence,
-                # we check if the chat is still shared by checking if a chat with the share_id exists
-                chat = db.query(Chat).filter_by(share_id=id).first()
-
-                if chat:
-                    return self.get_chat_by_id(id, db=db)
-                else:
-                    return None
         except Exception:
             return None
 
@@ -985,7 +691,7 @@ class ChatTable:
         with get_db_context(db) as db:
             all_chats = (
                 db.query(Chat)
-                .filter_by(user_id=user_id, pinned=True, archived=False)
+                .filter_by(user_id=user_id, pinned=True)
                 .order_by(Chat.updated_at.desc())
                 .with_entities(Chat.id, Chat.title, Chat.updated_at, Chat.created_at)
             )
@@ -1001,22 +707,10 @@ class ChatTable:
                 for chat in all_chats
             ]
 
-    def get_archived_chats_by_user_id(
-        self, user_id: str, db: Optional[Session] = None
-    ) -> list[ChatModel]:
-        with get_db_context(db) as db:
-            all_chats = (
-                db.query(Chat)
-                .filter_by(user_id=user_id, archived=True)
-                .order_by(Chat.updated_at.desc())
-            )
-            return [ChatModel.model_validate(chat) for chat in all_chats]
-
     def get_chats_by_user_id_and_search_text(
         self,
         user_id: str,
         search_text: str,
-        include_archived: bool = False,
         skip: int = 0,
         limit: int = 60,
         db: Optional[Session] = None,
@@ -1028,7 +722,7 @@ class ChatTable:
 
         if not search_text:
             return self.get_chat_list_by_user_id(
-                user_id, include_archived, filter={}, skip=skip, limit=limit, db=db
+                user_id, filter={}, skip=skip, limit=limit, db=db
             )
 
         search_text_words = search_text.split(" ")
@@ -1057,18 +751,6 @@ class ChatTable:
         elif "pinned:false" in search_text_words:
             is_pinned = False
 
-        is_archived = None
-        if "archived:true" in search_text_words:
-            is_archived = True
-        elif "archived:false" in search_text_words:
-            is_archived = False
-
-        is_shared = None
-        if "shared:true" in search_text_words:
-            is_shared = True
-        elif "shared:false" in search_text_words:
-            is_shared = False
-
         search_text_words = [
             word
             for word in search_text_words
@@ -1076,8 +758,6 @@ class ChatTable:
                 not word.startswith("tag:")
                 and not word.startswith("folder:")
                 and not word.startswith("pinned:")
-                and not word.startswith("archived:")
-                and not word.startswith("shared:")
             )
         ]
 
@@ -1086,19 +766,8 @@ class ChatTable:
         with get_db_context(db) as db:
             query = db.query(Chat).filter(Chat.user_id == user_id)
 
-            if is_archived is not None:
-                query = query.filter(Chat.archived == is_archived)
-            elif not include_archived:
-                query = query.filter(Chat.archived == False)
-
             if is_pinned is not None:
                 query = query.filter(Chat.pinned == is_pinned)
-
-            if is_shared is not None:
-                if is_shared:
-                    query = query.filter(Chat.share_id.isnot(None))
-                else:
-                    query = query.filter(Chat.share_id.is_(None))
 
             if folder_ids:
                 query = query.filter(Chat.folder_id.in_(folder_ids))
@@ -1222,7 +891,6 @@ class ChatTable:
         with get_db_context(db) as db:
             query = db.query(Chat).filter_by(folder_id=folder_id, user_id=user_id)
             query = query.filter(or_(Chat.pinned == False, Chat.pinned == None))
-            query = query.filter_by(archived=False)
 
             query = query.order_by(Chat.updated_at.desc())
 
@@ -1242,7 +910,6 @@ class ChatTable:
                 Chat.folder_id.in_(folder_ids), Chat.user_id == user_id
             )
             query = query.filter(or_(Chat.pinned == False, Chat.pinned == None))
-            query = query.filter_by(archived=False)
 
             query = query.order_by(Chat.updated_at.desc())
 
@@ -1331,7 +998,7 @@ class ChatTable:
         self, tag_name: str, user_id: str, db: Optional[Session] = None
     ) -> int:
         with get_db_context(db) as db:
-            query = db.query(Chat).filter_by(user_id=user_id, archived=False)
+            query = db.query(Chat).filter_by(user_id=user_id)
             tag_id = tag_name.replace(" ", "_").lower()
 
             if db.bind.dialect.name == "sqlite":
@@ -1361,8 +1028,7 @@ class ChatTable:
         db: Optional[Session] = None,
     ) -> None:
         """Delete tag rows from *tag_ids* that appear in at most *threshold*
-        non-archived chats for *user_id*.  One query to find orphans, one to
-        delete them.
+        chats for *user_id*.  One query to find orphans, one to delete them.
 
         Use threshold=0 after a tag is already removed from a chat's meta.
         Use threshold=1 when the chat itself is about to be deleted (the
@@ -1431,8 +1097,7 @@ class ChatTable:
                 db.query(ChatMessage).filter_by(chat_id=id).delete()
                 db.query(Chat).filter_by(id=id).delete()
                 db.commit()
-
-                return True and self.delete_shared_chat_by_chat_id(id, db=db)
+                return True
         except Exception:
             return False
 
@@ -1444,8 +1109,7 @@ class ChatTable:
                 db.query(ChatMessage).filter_by(chat_id=id).delete()
                 db.query(Chat).filter_by(id=id, user_id=user_id).delete()
                 db.commit()
-
-                return True and self.delete_shared_chat_by_chat_id(id, db=db)
+                return True
         except Exception:
             return False
 
@@ -1454,8 +1118,6 @@ class ChatTable:
     ) -> bool:
         try:
             with get_db_context(db) as db:
-                self.delete_shared_chats_by_user_id(user_id, db=db)
-
                 chat_id_subquery = (
                     db.query(Chat.id).filter_by(user_id=user_id).subquery()
                 )
@@ -1501,30 +1163,6 @@ class ChatTable:
                 db.query(Chat).filter_by(user_id=user_id, folder_id=folder_id).update(
                     {"folder_id": new_folder_id}
                 )
-                db.commit()
-
-                return True
-        except Exception:
-            return False
-
-    def delete_shared_chats_by_user_id(
-        self, user_id: str, db: Optional[Session] = None
-    ) -> bool:
-        try:
-            with get_db_context(db) as db:
-                chats_by_user = db.query(Chat).filter_by(user_id=user_id).all()
-                shared_chat_ids = [f"shared-{chat.id}" for chat in chats_by_user]
-
-                # Use subquery to delete chat_messages for shared chats
-                shared_id_subq = (
-                    db.query(Chat.id)
-                    .filter(Chat.user_id.in_(shared_chat_ids))
-                    .subquery()
-                )
-                db.query(ChatMessage).filter(
-                    ChatMessage.chat_id.in_(shared_id_subq)
-                ).delete(synchronize_session=False)
-                db.query(Chat).filter(Chat.user_id.in_(shared_chat_ids)).delete()
                 db.commit()
 
                 return True
@@ -1613,20 +1251,6 @@ class ChatTable:
                 return True
         except Exception:
             return False
-
-    def get_shared_chats_by_file_id(
-        self, file_id: str, db: Optional[Session] = None
-    ) -> list[ChatModel]:
-        with get_db_context(db) as db:
-            # Join Chat and ChatFile tables to get shared chats associated with the file_id
-            all_chats = (
-                db.query(Chat)
-                .join(ChatFile, Chat.id == ChatFile.chat_id)
-                .filter(ChatFile.file_id == file_id, Chat.share_id.isnot(None))
-                .all()
-            )
-
-            return [ChatModel.model_validate(chat) for chat in all_chats]
 
 
 Chats = ChatTable()

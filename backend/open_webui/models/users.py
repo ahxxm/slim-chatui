@@ -5,10 +5,7 @@ from sqlalchemy.orm import Session, defer
 from open_webui.internal.db import Base, get_db_context
 
 
-from open_webui.env import DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL
-
 from open_webui.models.chats import Chats
-from open_webui.utils.misc import throttle
 from open_webui.utils.validate import validate_profile_image_url
 
 
@@ -26,7 +23,6 @@ import datetime
 class UserSettings(BaseModel):
     ui: Optional[dict] = {}
     model_config = ConfigDict(extra="allow")
-    pass
 
 
 class User(Base):
@@ -47,14 +43,8 @@ class User(Base):
     date_of_birth = Column(Date, nullable=True)
     timezone = Column(String, nullable=True)
 
-    presence_state = Column(String, nullable=True)
-    status_emoji = Column(String, nullable=True)
-    status_message = Column(Text, nullable=True)
-    status_expires_at = Column(BigInteger, nullable=True)
-
     info = Column(JSON, nullable=True)
     settings = Column(JSON, nullable=True)
-    last_active_at = Column(BigInteger)
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
 
@@ -76,14 +66,8 @@ class UserModel(BaseModel):
     date_of_birth: Optional[datetime.date] = None
     timezone: Optional[str] = None
 
-    presence_state: Optional[str] = None
-    status_emoji: Optional[str] = None
-    status_message: Optional[str] = None
-    status_expires_at: Optional[int] = None
-
     info: Optional[dict] = None
     settings: Optional[UserSettings] = None
-    last_active_at: int  # timestamp in epoch
     updated_at: int  # timestamp in epoch
     created_at: int  # timestamp in epoch
 
@@ -123,24 +107,12 @@ class UserListResponse(BaseModel):
     total: int
 
 
-class UserStatus(BaseModel):
-    status_emoji: Optional[str] = None
-    status_message: Optional[str] = None
-    status_expires_at: Optional[int] = None
-
-
-class UserInfoResponse(UserStatus):
+class UserInfoResponse(BaseModel):
     id: str
     name: str
     email: str
     role: str
     bio: Optional[str] = None
-    is_active: bool = False
-
-
-class UserIdNameResponse(BaseModel):
-    id: str
-    name: str
 
 
 class UserInfoListResponse(BaseModel):
@@ -161,11 +133,6 @@ class UserResponse(UserNameResponse):
 class UserProfileImageResponse(UserNameResponse):
     email: str
     profile_image_url: str
-
-
-class UserRoleUpdateForm(BaseModel):
-    id: str
-    role: str
 
 
 class UserUpdateForm(BaseModel):
@@ -194,26 +161,20 @@ class UsersTable:
     ) -> Optional[UserModel]:
         with get_db_context(db) as db:
             user = UserModel(
-                **{
-                    "id": id,
-                    "email": email,
-                    "name": name,
-                    "role": role,
-                    "profile_image_url": profile_image_url,
-                    "last_active_at": int(time.time()),
-                    "created_at": int(time.time()),
-                    "updated_at": int(time.time()),
-                    "username": username,
-                }
+                id=id,
+                email=email,
+                name=name,
+                role=role,
+                profile_image_url=profile_image_url,
+                created_at=int(time.time()),
+                updated_at=int(time.time()),
+                username=username,
             )
             result = User(**user.model_dump())
             db.add(result)
             db.commit()
             db.refresh(result)
-            if result:
-                return user
-            else:
-                return None
+            return user
 
     def get_user_by_id(
         self, id: str, db: Optional[Session] = None
@@ -294,12 +255,6 @@ class UsersTable:
                     else:
                         query = query.order_by(User.created_at.desc())
 
-                elif order_by == "last_active_at":
-                    if direction == "asc":
-                        query = query.order_by(User.last_active_at.asc())
-                    else:
-                        query = query.order_by(User.last_active_at.desc())
-
                 elif order_by == "updated_at":
                     if direction == "asc":
                         query = query.order_by(User.updated_at.asc())
@@ -373,15 +328,6 @@ class UsersTable:
         except Exception:
             return None
 
-    def get_num_users_active_today(self, db: Optional[Session] = None) -> Optional[int]:
-        with get_db_context(db) as db:
-            current_timestamp = int(datetime.datetime.now().timestamp())
-            today_midnight_timestamp = current_timestamp - (current_timestamp % 86400)
-            query = db.query(User).filter(
-                User.last_active_at > today_midnight_timestamp
-            )
-            return query.count()
-
     def update_user_role_by_id(
         self, id: str, role: str, db: Optional[Session] = None
     ) -> Optional[UserModel]:
@@ -397,22 +343,6 @@ class UsersTable:
         except Exception:
             return None
 
-    def update_user_status_by_id(
-        self, id: str, form_data: UserStatus, db: Optional[Session] = None
-    ) -> Optional[UserModel]:
-        try:
-            with get_db_context(db) as db:
-                user = db.query(User).filter_by(id=id).first()
-                if not user:
-                    return None
-                for key, value in form_data.model_dump(exclude_none=True).items():
-                    setattr(user, key, value)
-                db.commit()
-                db.refresh(user)
-                return UserModel.model_validate(user)
-        except Exception:
-            return None
-
     def update_user_profile_image_url_by_id(
         self, id: str, profile_image_url: str, db: Optional[Session] = None
     ) -> Optional[UserModel]:
@@ -422,22 +352,6 @@ class UsersTable:
                 if not user:
                     return None
                 user.profile_image_url = profile_image_url
-                db.commit()
-                db.refresh(user)
-                return UserModel.model_validate(user)
-        except Exception:
-            return None
-
-    @throttle(DATABASE_USER_ACTIVE_STATUS_UPDATE_INTERVAL)
-    def update_last_active_by_id(
-        self, id: str, db: Optional[Session] = None
-    ) -> Optional[UserModel]:
-        try:
-            with get_db_context(db) as db:
-                user = db.query(User).filter_by(id=id).first()
-                if not user:
-                    return None
-                user.last_active_at = int(time.time())
                 db.commit()
                 db.refresh(user)
                 return UserModel.model_validate(user)
@@ -514,32 +428,6 @@ class UsersTable:
                 return UserModel.model_validate(user)
             else:
                 return None
-
-    def get_active_user_count(self, db: Optional[Session] = None) -> int:
-        with get_db_context(db) as db:
-            # Consider user active if last_active_at within the last 3 minutes
-            three_minutes_ago = int(time.time()) - 180
-            count = (
-                db.query(User).filter(User.last_active_at >= three_minutes_ago).count()
-            )
-            return count
-
-    @staticmethod
-    def is_active(user: UserModel) -> bool:
-        """Compute active status from an already-loaded UserModel (no DB hit)."""
-        if user.last_active_at:
-            three_minutes_ago = int(time.time()) - 180
-            return user.last_active_at >= three_minutes_ago
-        return False
-
-    def is_user_active(self, user_id: str, db: Optional[Session] = None) -> bool:
-        with get_db_context(db) as db:
-            user = db.query(User).filter_by(id=user_id).first()
-            if user and user.last_active_at:
-                # Consider user active if last_active_at within the last 3 minutes
-                three_minutes_ago = int(time.time()) - 180
-                return user.last_active_at >= three_minutes_ago
-            return False
 
 
 Users = UsersTable()

@@ -288,11 +288,7 @@
 				}}
 			/>
 		{:else if selectedTab === 'db'}
-			<Database
-				saveHandler={() => {
-					toast.success($i18n.t('Settings saved successfully!'));
-				}}
-			/>
+			<Database />
 		{/if}
 	</div>
 </div>

@@ -53,7 +53,7 @@ RUN chown -R $UID:$GID /app $HOME
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     git build-essential gcc netcat-openbsd curl jq \
-    python3-dev zstd \
+    python3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --chown=$UID:$GID ./package.json ./LICENSE ./README.md ./pyproject.toml ./hatch_build.py /app/
@@ -62,6 +62,7 @@ COPY --chown=$UID:$GID --from=build /app/build /app/build
 
 RUN SKIP_FRONTEND_BUILD=1 pip3 install --no-cache-dir uv && \
     SKIP_FRONTEND_BUILD=1 uv pip install --system --no-cache-dir '/app[all]' && \
+    pip3 uninstall -y uv pip && \
     mkdir -p /app/backend/data && chown -R $UID:$GID /app/backend/data/
 
 EXPOSE 8080

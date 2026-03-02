@@ -47,7 +47,7 @@
 	{#if token.type === 'escape'}
 		{unescapeHtml(token.text)}
 	{:else if token.type === 'html'}
-		<HtmlToken {id} {token} {onSourceClick} />
+		<HtmlToken {token} {onSourceClick} />
 	{:else if token.type === 'link'}
 		{#if token.tokens}
 			<a
@@ -105,7 +105,7 @@
 		) || ''}
 	{:else if token.type === 'citation'}
 		{#if (sourceIds ?? []).length > 0}
-			<SourceToken {id} {token} {sourceIds} onClick={onSourceClick} />
+			<SourceToken {token} {sourceIds} onClick={onSourceClick} />
 		{:else}
 			<TextToken {token} {done} />
 		{/if}

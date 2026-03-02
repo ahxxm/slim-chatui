@@ -14,17 +14,13 @@ from open_webui.config import (
 
 from open_webui.env import (
     ENABLE_WEBSOCKET_SUPPORT,
+    GLOBAL_LOG_LEVEL,
     WEBSOCKET_SERVER_PING_TIMEOUT,
     WEBSOCKET_SERVER_PING_INTERVAL,
     WEBSOCKET_SERVER_LOGGING,
     WEBSOCKET_SERVER_ENGINEIO_LOGGING,
 )
 from open_webui.utils.auth import decode_token
-
-
-from open_webui.env import (
-    GLOBAL_LOG_LEVEL,
-)
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
@@ -46,15 +42,18 @@ sio = socketio.AsyncServer(
 )
 
 
-# Timeout duration in seconds
-TIMEOUT_DURATION = 3
 SESSION_POOL_TIMEOUT = 120  # seconds without heartbeat before session is reaped
-
-# Dictionary to maintain the user pool
 
 MODELS = {}
 SESSION_POOL = {}
-USAGE_POOL = {}
+
+_USER_SESSION_EXCLUDE_FIELDS = [
+    "profile_image_url",
+    "profile_banner_image_url",
+    "date_of_birth",
+    "bio",
+    "gender",
+]
 
 
 async def periodic_session_pool_cleanup():
@@ -68,36 +67,10 @@ async def periodic_session_pool_cleanup():
         await asyncio.sleep(SESSION_POOL_TIMEOUT)
 
 
-async def periodic_usage_pool_cleanup():
-    while True:
-        now = int(time.time())
-        for model_id, connections in list(USAGE_POOL.items()):
-            expired_sids = [
-                sid
-                for sid, details in connections.items()
-                if now - details["updated_at"] > TIMEOUT_DURATION
-            ]
-
-            for sid in expired_sids:
-                del connections[sid]
-
-            if not connections:
-                log.debug(f"Cleaning up model {model_id} from usage pool")
-                del USAGE_POOL[model_id]
-
-        await asyncio.sleep(TIMEOUT_DURATION)
-
-
 app = socketio.ASGIApp(
     sio,
     socketio_path="/ws/socket.io",
 )
-
-
-def get_models_in_use():
-    # List models that are currently in use
-    models_in_use = list(USAGE_POOL.keys())
-    return models_in_use
 
 
 def get_user_id_from_session_pool(sid):
@@ -114,21 +87,6 @@ def get_session_ids_from_room(room):
         room=room,
     )
     return [session_id[0] for session_id in active_session_ids]
-
-
-def get_user_ids_from_room(room):
-    active_session_ids = get_session_ids_from_room(room)
-
-    active_user_ids = list(
-        set(
-            [
-                SESSION_POOL.get(session_id)["id"]
-                for session_id in active_session_ids
-                if SESSION_POOL.get(session_id) is not None
-            ]
-        )
-    )
-    return active_user_ids
 
 
 async def emit_to_users(event: str, data: dict, user_ids: list[str]):
@@ -163,20 +121,6 @@ async def enter_room_for_users(room: str, user_ids: list[str]):
         log.debug(f"Failed to make users {user_ids} join room {room}: {e}")
 
 
-@sio.on("usage")
-async def usage(sid, data):
-    if sid in SESSION_POOL:
-        model_id = data["model"]
-        # Record the timestamp for the last update
-        current_time = int(time.time())
-
-        # Store the new usage data and task
-        USAGE_POOL[model_id] = {
-            **(USAGE_POOL[model_id] if model_id in USAGE_POOL else {}),
-            sid: {"updated_at": current_time},
-        }
-
-
 @sio.event
 async def connect(sid, environ, auth):
     user = None
@@ -188,15 +132,7 @@ async def connect(sid, environ, auth):
 
         if user:
             SESSION_POOL[sid] = {
-                **user.model_dump(
-                    exclude=[
-                        "profile_image_url",
-                        "profile_banner_image_url",
-                        "date_of_birth",
-                        "bio",
-                        "gender",
-                    ]
-                ),
+                **user.model_dump(exclude=_USER_SESSION_EXCLUDE_FIELDS),
                 "last_seen_at": int(time.time()),
             }
             await sio.enter_room(sid, f"user:{user.id}")
@@ -205,7 +141,7 @@ async def connect(sid, environ, auth):
 @sio.on("user-join")
 async def user_join(sid, data):
 
-    auth = data["auth"] if "auth" in data else None
+    auth = data.get("auth")
     if not auth or "token" not in auth:
         return
 
@@ -218,15 +154,7 @@ async def user_join(sid, data):
         return
 
     SESSION_POOL[sid] = {
-        **user.model_dump(
-            exclude=[
-                "profile_image_url",
-                "profile_banner_image_url",
-                "date_of_birth",
-                "bio",
-                "gender",
-            ]
-        ),
+        **user.model_dump(exclude=_USER_SESSION_EXCLUDE_FIELDS),
         "last_seen_at": int(time.time()),
     }
 
@@ -240,23 +168,12 @@ async def heartbeat(sid, data):
     user = SESSION_POOL.get(sid)
     if user:
         SESSION_POOL[sid] = {**user, "last_seen_at": int(time.time())}
-        Users.update_last_active_by_id(user["id"])
 
 
 @sio.event
 async def disconnect(sid):
     if sid in SESSION_POOL:
         del SESSION_POOL[sid]
-
-        # Clean up USAGE_POOL entries for this session
-        for model_id in list(USAGE_POOL.keys()):
-            connections = USAGE_POOL.get(model_id)
-            if connections and sid in connections:
-                del connections[sid]
-                if not connections:
-                    del USAGE_POOL[model_id]
-                else:
-                    USAGE_POOL[model_id] = connections
 
 
 def get_event_emitter(request_info, update_db=True):

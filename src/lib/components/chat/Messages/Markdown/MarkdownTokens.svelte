@@ -212,7 +212,7 @@
 	{:else if token.type === 'blockquote'}
 		{@const alert = alertComponent(token)}
 		{#if alert}
-			<AlertRenderer {token} {alert} />
+			<AlertRenderer {alert} />
 		{:else}
 			<blockquote dir="auto">
 				<svelte:self
@@ -356,7 +356,7 @@
 			/>
 		{/if}
 	{:else if token.type === 'html'}
-		<HtmlToken {id} {token} {onSourceClick} />
+		<HtmlToken {token} {onSourceClick} />
 	{:else if token.type === 'iframe'}
 		<iframe
 			src="{WEBUI_BASE_URL}/api/v1/files/{token.fileId}/content"

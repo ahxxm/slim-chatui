@@ -9,7 +9,6 @@
 		config,
 		mobile,
 		settings,
-		showArchivedChats,
 		showSidebar,
 		temporaryChatEnabled,
 		user
@@ -19,7 +18,6 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 
-	import ShareChatModal from '../chat/ShareChatModal.svelte';
 	import ModelSelector from '../chat/ModelSelector.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import Menu from '$lib/components/layout/Navbar/Menu.svelte';
@@ -40,25 +38,16 @@
 	const i18n = getContext('i18n');
 
 	export let initNewChat: Function;
-	export let shareEnabled: boolean = false;
-	export let scrollTop = 0;
 
 	export let chat;
 	export let history;
 	export let selectedModels;
-	export let showModelSelector = true;
 
 	export let onSaveTempChat: () => {};
-	export let archiveChatHandler: (id: string) => void;
 	export let moveChatHandler: (id: string, folderId: string) => void;
 
 	let closedBannerIds = [];
-
-	let showShareChatModal = false;
-	let showDownloadChatModal = false;
 </script>
-
-<ShareChatModal bind:show={showShareChatModal} chatId={$chatId} />
 
 <button
 	id="new-chat-button"
@@ -108,9 +97,7 @@
 			{$showSidebar ? 'ml-1' : ''}
 			"
 				>
-					{#if showModelSelector}
-						<ModelSelector bind:selectedModels showSetDefault={!shareEnabled} />
-					{/if}
+					<ModelSelector bind:selectedModels />
 				</div>
 
 				<div class="self-start flex flex-none items-center text-gray-600 dark:text-gray-400">
@@ -184,18 +171,8 @@
 						</Tooltip>
 					{/if}
 
-					{#if shareEnabled && chat && (chat.id || $temporaryChatEnabled)}
-						<Menu
-							{chat}
-							{shareEnabled}
-							shareHandler={() => {
-								showShareChatModal = !showShareChatModal;
-							}}
-							archiveChatHandler={() => {
-								archiveChatHandler(chat.id);
-							}}
-							{moveChatHandler}
-						>
+					{#if chat && (chat.id || $temporaryChatEnabled)}
+						<Menu {chat} {moveChatHandler}>
 							<button
 								class="flex cursor-pointer px-2 py-2 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-850 transition"
 								id="chat-context-menu-button"
@@ -208,16 +185,7 @@
 					{/if}
 
 					{#if $user !== undefined && $user !== null}
-						<UserMenu
-							className="max-w-[240px]"
-							role={$user?.role}
-							help={true}
-							on:show={(e) => {
-								if (e.detail === 'archived-chat') {
-									showArchivedChats.set(true);
-								}
-							}}
-						>
+						<UserMenu className="max-w-[240px]" role={$user?.role} help={true}>
 							<div
 								class="select-none flex rounded-xl p-1.5 w-full hover:bg-gray-50 dark:hover:bg-gray-850 transition"
 							>

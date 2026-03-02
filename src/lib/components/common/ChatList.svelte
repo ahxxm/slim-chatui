@@ -21,7 +21,6 @@
 	export let loading = false;
 	export let allLoaded = false;
 	export let showUserInfo = false;
-	export let shareUrl = false;
 	export let emptyMessage = 'No chats found';
 	export let onLoadMore: (() => void) | null = null;
 	export let onChatClick: ((chatId: string) => void) | null = null;
@@ -81,7 +80,7 @@
 					{/if}
 					<a
 						class={showUserInfo ? 'flex-1' : 'basis-3/5'}
-						href={shareUrl ? `/s/${chat.id}` : `/c/${chat.id}`}
+						href={`/c/${chat.id}`}
 						on:click={() => onChatClick?.(chat.id)}
 					>
 						<div class="text-ellipsis line-clamp-1 w-full">

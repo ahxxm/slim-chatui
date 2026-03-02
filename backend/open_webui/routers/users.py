@@ -7,19 +7,16 @@ import io
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from fastapi.responses import Response, StreamingResponse, FileResponse
-from pydantic import ConfigDict
-
 
 from open_webui.models.auths import Auths
 
 from open_webui.models.chats import Chats
 from open_webui.models.users import (
     UserModel,
+    UserModelResponse,
     UserListResponse,
     UserInfoResponse,
     UserInfoListResponse,
-    UserRoleUpdateForm,
-    UserStatus,
     Users,
     UserSettings,
     UserUpdateForm,
@@ -151,60 +148,6 @@ async def update_user_settings_by_session_user(
 
 
 ############################
-# GetUserStatusBySessionUser
-############################
-
-
-@router.get("/user/status")
-async def get_user_status_by_session_user(
-    request: Request,
-    user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
-):
-    if not request.app.state.config.ENABLE_USER_STATUS:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=ERROR_MESSAGES.ACTION_PROHIBITED,
-        )
-    user = Users.get_user_by_id(user.id, db=db)
-    if user:
-        return user
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.USER_NOT_FOUND,
-        )
-
-
-############################
-# UpdateUserStatusBySessionUser
-############################
-
-
-@router.post("/user/status/update")
-async def update_user_status_by_session_user(
-    request: Request,
-    form_data: UserStatus,
-    user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
-):
-    if not request.app.state.config.ENABLE_USER_STATUS:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail=ERROR_MESSAGES.ACTION_PROHIBITED,
-        )
-    user = Users.get_user_by_id(user.id, db=db)
-    if user:
-        user = Users.update_user_status_by_id(user.id, form_data, db=db)
-        return user
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.USER_NOT_FOUND,
-        )
-
-
-############################
 # GetUserInfoBySessionUser
 ############################
 
@@ -259,15 +202,7 @@ async def update_user_info_by_session_user(
 ############################
 
 
-class UserActiveResponse(UserStatus):
-    name: str
-    profile_image_url: Optional[str] = None
-
-    is_active: bool
-    model_config = ConfigDict(extra="allow")
-
-
-@router.get("/{user_id}", response_model=UserActiveResponse)
+@router.get("/{user_id}", response_model=UserModelResponse)
 async def get_user_by_id(
     user_id: str, user=Depends(get_admin_user), db: Session = Depends(get_session)
 ):
@@ -286,12 +221,7 @@ async def get_user_by_id(
 
     user = Users.get_user_by_id(user_id, db=db)
     if user:
-        return UserActiveResponse(
-            **{
-                **user.model_dump(),
-                "is_active": Users.is_user_active(user_id, db=db),
-            }
-        )
+        return user
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -305,12 +235,7 @@ async def get_user_info_by_id(
 ):
     user = Users.get_user_by_id(user_id, db=db)
     if user:
-        return UserInfoResponse(
-            **{
-                **user.model_dump(),
-                "is_active": Users.is_user_active(user_id, db=db),
-            }
-        )
+        return UserInfoResponse(**user.model_dump())
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -354,20 +279,6 @@ def get_user_profile_image_by_id(user_id: str, user=Depends(get_verified_user)):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.USER_NOT_FOUND,
         )
-
-
-############################
-# GetUserActiveStatusById
-############################
-
-
-@router.get("/{user_id}/active", response_model=dict)
-async def get_user_active_status_by_id(
-    user_id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    return {
-        "active": Users.is_user_active(user_id, db=db),
-    }
 
 
 ############################

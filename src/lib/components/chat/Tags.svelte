@@ -75,7 +75,6 @@
 <Tags
 	{tags}
 	{disabled}
-	suggestionTags={$_tags ?? []}
 	on:delete={(e) => {
 		deleteTag(e.detail);
 	}}

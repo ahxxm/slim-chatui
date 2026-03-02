@@ -1,8 +1,7 @@
 import black
 import logging
-import markdown
 
-from open_webui.config import DATA_DIR, ENABLE_ADMIN_EXPORT
+from open_webui.config import ENABLE_ADMIN_EXPORT
 from open_webui.constants import ERROR_MESSAGES
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -35,17 +34,6 @@ async def format_code(form_data: CodeForm, user=Depends(get_admin_user)):
         return {"code": form_data.code}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
-
-class MarkdownForm(BaseModel):
-    md: str
-
-
-@router.post("/markdown")
-async def get_html_from_markdown(
-    form_data: MarkdownForm, user=Depends(get_verified_user)
-):
-    return {"html": markdown.markdown(form_data.md)}
 
 
 @router.get("/db/download")

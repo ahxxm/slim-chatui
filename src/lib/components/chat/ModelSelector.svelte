@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { models, settings, user, config } from '$lib/stores';
-	import { onMount, tick, getContext } from 'svelte';
+	import { models, settings } from '$lib/stores';
+	import { getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Selector from './ModelSelector/Selector.svelte';
 
@@ -8,9 +8,6 @@
 	const i18n = getContext('i18n');
 
 	export let selectedModels = [''];
-	export let disabled = false;
-
-	export let showSetDefault = true;
 
 	const saveDefaultModel = async () => {
 		if (!selectedModels[0]) {
@@ -63,10 +60,8 @@
 	</div>
 </div>
 
-{#if showSetDefault}
-	<div
-		class="relative text-left mt-[1px] ml-1 text-[0.7rem] text-gray-600 dark:text-gray-400 font-primary"
-	>
-		<button on:click={saveDefaultModel}> {$i18n.t('Set as default')}</button>
-	</div>
-{/if}
+<div
+	class="relative text-left mt-[1px] ml-1 text-[0.7rem] text-gray-600 dark:text-gray-400 font-primary"
+>
+	<button on:click={saveDefaultModel}> {$i18n.t('Set as default')}</button>
+</div>

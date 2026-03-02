@@ -11,7 +11,6 @@
 	} from '$lib/stores';
 
 	import {
-		archiveAllChats,
 		deleteAllChats,
 		getAllChats,
 		getChatList,
@@ -22,22 +21,15 @@
 	import { onMount, getContext } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
-	import ArchivedChatsModal from '$lib/components/layout/ArchivedChatsModal.svelte';
-	import SharedChatsModal from '$lib/components/layout/SharedChatsModal.svelte';
 	import FilesModal from '$lib/components/layout/FilesModal.svelte';
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 
 	const i18n = getContext('i18n');
 
-	export let saveSettings: Function;
-
 	// Chats
 	let importFiles;
 
-	let showArchiveConfirmDialog = false;
 	let showDeleteConfirmDialog = false;
-	let showArchivedChatsModal = false;
-	let showSharedChatsModal = false;
 	let showFilesModal = false;
 
 	let chatImportInputElement: HTMLInputElement;
@@ -107,18 +99,6 @@
 		saveAs(blob, `chat-export-${Date.now()}.json`);
 	};
 
-	const archiveAllChatsHandler = async () => {
-		await goto('/');
-		await archiveAllChats(localStorage.token).catch((error) => {
-			toast.error(`${error}`);
-		});
-
-		currentChatPage.set(1);
-		await chats.set(await getChatList(localStorage.token, $currentChatPage));
-		pinnedChats.set([]);
-		scrollPaginationEnabled.set(true);
-	};
-
 	const deleteAllChatsHandler = async () => {
 		await goto('/');
 		await deleteAllChats(localStorage.token).catch((error) => {
@@ -129,28 +109,9 @@
 		await chats.set(await getChatList(localStorage.token, $currentChatPage));
 		scrollPaginationEnabled.set(true);
 	};
-
-	const handleArchivedChatsChange = async () => {
-		currentChatPage.set(1);
-		await chats.set(await getChatList(localStorage.token, $currentChatPage));
-
-		scrollPaginationEnabled.set(true);
-	};
 </script>
 
-<ArchivedChatsModal bind:show={showArchivedChatsModal} onUpdate={handleArchivedChatsChange} />
-<SharedChatsModal bind:show={showSharedChatsModal} />
 <FilesModal bind:show={showFilesModal} />
-
-<ConfirmDialog
-	title={$i18n.t('Archive All Chats')}
-	message={$i18n.t('Are you sure you want to archive all chats? This action cannot be undone.')}
-	bind:show={showArchiveConfirmDialog}
-	on:confirm={archiveAllChatsHandler}
-	on:cancel={() => {
-		showArchiveConfirmDialog = false;
-	}}
-/>
 
 <ConfirmDialog
 	title={$i18n.t('Delete All Chats')}
@@ -202,51 +163,6 @@
 						type="button"
 					>
 						<span class="self-center">{$i18n.t('Export')}</span>
-					</button>
-				</div>
-			</div>
-
-			<div>
-				<div class="py-0.5 flex w-full justify-between">
-					<div class="self-center text-xs">{$i18n.t('Archived Chats')}</div>
-					<button
-						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
-							showArchivedChatsModal = true;
-						}}
-						type="button"
-					>
-						<span class="self-center">{$i18n.t('Manage')}</span>
-					</button>
-				</div>
-			</div>
-
-			<div>
-				<div class="py-0.5 flex w-full justify-between">
-					<div class="self-center text-xs">{$i18n.t('Shared Chats')}</div>
-					<button
-						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
-							showSharedChatsModal = true;
-						}}
-						type="button"
-					>
-						<span class="self-center">{$i18n.t('Manage')}</span>
-					</button>
-				</div>
-			</div>
-
-			<div>
-				<div class="py-0.5 flex w-full justify-between">
-					<div class="self-center text-xs">{$i18n.t('Archive All Chats')}</div>
-					<button
-						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
-							showArchiveConfirmDialog = true;
-						}}
-						type="button"
-					>
-						<span class="self-center">{$i18n.t('Archive All')}</span>
 					</button>
 				</div>
 			</div>

@@ -30,8 +30,6 @@ from open_webui.models.files import (
     FileModelResponse,
     Files,
 )
-from open_webui.models.chats import Chats
-
 from open_webui.storage.provider import Storage
 
 from open_webui.utils.auth import get_admin_user, get_verified_user
@@ -39,32 +37,6 @@ from open_webui.utils.auth import get_admin_user, get_verified_user
 log = logging.getLogger(__name__)
 
 router = APIRouter()
-
-
-############################
-# Check if the current user has access to a file (via shared chats).
-############################
-
-
-def has_access_to_file(
-    file_id: Optional[str],
-    access_type: str,
-    user=Depends(get_verified_user),
-    db: Optional[Session] = None,
-) -> bool:
-    file = Files.get_file_by_id(file_id, db=db)
-    log.debug(f"Checking if user has {access_type} access to file")
-    if not file:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-    chats = Chats.get_shared_chats_by_file_id(file_id, db=db)
-    if chats:
-        return True
-
-    return False
 
 
 ############################
@@ -256,11 +228,7 @@ async def get_file_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or has_access_to_file(id, "read", user, db=db)
-    ):
+    if file.user_id == user.id or user.role == "admin":
         return file
     else:
         raise HTTPException(
@@ -289,11 +257,7 @@ async def get_file_content_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or has_access_to_file(id, "read", user, db=db)
-    ):
+    if file.user_id == user.id or user.role == "admin":
         try:
             file_path = Path(file.path)
 
@@ -362,11 +326,7 @@ async def get_html_file_content_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or has_access_to_file(id, "read", user, db=db)
-    ):
+    if file.user_id == user.id or user.role == "admin":
         try:
             file_path = Path(file.path)
 
@@ -406,11 +366,7 @@ async def get_file_content_by_id_and_name(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or has_access_to_file(id, "read", user, db=db)
-    ):
+    if file.user_id == user.id or user.role == "admin":
         filename = file.meta.get("name", file.filename)
         encoded_filename = quote(filename)
         headers = {
@@ -449,12 +405,7 @@ async def delete_file_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if (
-        file.user_id == user.id
-        or user.role == "admin"
-        or has_access_to_file(id, "write", user, db=db)
-    ):
-
+    if file.user_id == user.id or user.role == "admin":
         result = Files.delete_file_by_id(id, db=db)
         if result:
             try:
