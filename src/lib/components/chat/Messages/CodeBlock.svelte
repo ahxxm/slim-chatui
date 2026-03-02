@@ -22,11 +22,8 @@
 	export let edit = true;
 
 	export let onSave = (e) => {};
-	export let onUpdate = (e) => {};
-	export let onPreview = (e) => {};
 
 	export let save = false;
-	export let preview = false;
 	export let collapsed = false;
 
 	export let token;
@@ -85,10 +82,6 @@
 		}, 1000);
 	};
 
-	const previewCode = () => {
-		onPreview(code);
-	};
-
 	let mermaid = null;
 	const renderMermaid = async (code) => {
 		if (!mermaid) {
@@ -98,7 +91,6 @@
 	};
 
 	const render = async () => {
-		onUpdate(token);
 		if (lang === 'mermaid' && (token?.raw ?? '').slice(-4).includes('```')) {
 			try {
 				renderHTML = await renderMermaid(code);
@@ -157,11 +149,7 @@
 		}
 	};
 
-	onMount(async () => {
-		if (token) {
-			onUpdate(token);
-		}
-	});
+	onMount(async () => {});
 </script>
 
 <div>
@@ -225,17 +213,6 @@
 						class="copy-code-button bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
 						on:click={copyCode}>{copied ? $i18n.t('Copied') : $i18n.t('Copy')}</button
 					>
-
-					{#if preview && ['html', 'svg'].includes(lang)}
-						<button
-							class="flex gap-1 items-center run-code-button bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
-							on:click={previewCode}
-						>
-							<div>
-								{$i18n.t('Preview')}
-							</div>
-						</button>
-					{/if}
 				</div>
 			</div>
 

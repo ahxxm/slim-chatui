@@ -20,9 +20,6 @@ class ERROR_MESSAGES(str, Enum):
     DELETE_USER_ERROR = "Oops! Something went wrong. We encountered an issue while trying to delete the user. Please give it another shot."
     EMAIL_TAKEN = "Uh-oh! This email is already registered. Sign in with your existing account or choose another email to start anew."
     PASSWORD_TOO_LONG = "Uh-oh! The password you entered is too long. Please make sure your password is less than 72 bytes long."
-    COMMAND_TAKEN = "Uh-oh! This command is already registered. Please choose another command string."
-
-    ID_TAKEN = "Uh-oh! This id is already registered. Please choose another id string."
     MODEL_ID_TAKEN = "Uh-oh! This model id is already registered. Please choose another model id string."
     MODEL_ID_TOO_LONG = "The model id is too long. Please make sure your model id is less than 256 characters long."
 

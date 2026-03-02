@@ -33,7 +33,6 @@
 	export let done = true;
 
 	export let save = false;
-	export let preview = false;
 
 	export let paragraphTag = 'p';
 
@@ -41,8 +40,6 @@
 	export let topPadding = false;
 
 	export let onSave: Function = () => {};
-	export let onUpdate: Function = () => {};
-	export let onPreview: Function = () => {};
 
 	export let onTaskClick: Function = () => {};
 	export let onSourceClick: Function = () => {};
@@ -114,7 +111,6 @@
 				code={token?.text ?? ''}
 				{attributes}
 				{save}
-				{preview}
 				edit={editCodeBlock}
 				stickyButtonsClassName={topPadding ? 'top-10' : 'top-0'}
 				onSave={(value) => {
@@ -124,8 +120,6 @@
 						newContent: value
 					});
 				}}
-				{onUpdate}
-				{onPreview}
 			/>
 		{:else}
 			{token.text}

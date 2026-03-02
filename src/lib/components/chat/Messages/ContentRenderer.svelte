@@ -13,14 +13,11 @@
 	export let history;
 	export let messageId;
 
-	export let selectedModels = [];
-
 	export let done = true;
 	export let model = null;
 	export let sources = null;
 
 	export let save = false;
-	export let preview = false;
 	export let floatingButtons = true;
 
 	export let editCodeBlock = true;
@@ -130,7 +127,6 @@
 		{content}
 		{model}
 		{save}
-		{preview}
 		{done}
 		{editCodeBlock}
 		{topPadding}

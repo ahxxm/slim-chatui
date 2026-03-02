@@ -1084,7 +1084,7 @@
 				</div>
 			</div>
 
-			<div class=" my-2 text-sm font-medium">{$i18n.t('Artifacts')}</div>
+			<div class=" my-2 text-sm font-medium">{$i18n.t('Iframe Security')}</div>
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">

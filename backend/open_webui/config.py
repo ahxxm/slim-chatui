@@ -361,16 +361,6 @@ OPENAI_API_CONFIGS = PersistentConfig(
     {},
 )
 
-# Get the actual OpenAI API key based on the base URL
-OPENAI_API_KEY = ""
-try:
-    OPENAI_API_KEY = OPENAI_API_KEYS.value[
-        OPENAI_API_BASE_URLS.value.index("https://api.openai.com/v1")
-    ]
-except Exception:
-    pass
-OPENAI_API_BASE_URL = "https://api.openai.com/v1"
-
 
 ####################################
 # MODELS

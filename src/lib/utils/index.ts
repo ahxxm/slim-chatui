@@ -1370,69 +1370,6 @@ export const renderVegaVisualization = async (spec: string, i18n?: any) => {
 	return svg;
 };
 
-export const getCodeBlockContents = (content: string): object => {
-	const codeBlockContents = content.match(/```[\s\S]*?```/g);
-
-	let codeBlocks = [];
-
-	let htmlContent = '';
-	let cssContent = '';
-	let jsContent = '';
-
-	if (codeBlockContents) {
-		codeBlockContents.forEach((block) => {
-			const lang = block.split('\n')[0].replace('```', '').trim().toLowerCase();
-			const code = block.replace(/```[\s\S]*?\n/, '').replace(/```$/, '');
-			codeBlocks.push({ lang, code });
-		});
-
-		codeBlocks.forEach((block) => {
-			const { lang, code } = block;
-
-			if (lang === 'html') {
-				htmlContent += code + '\n';
-			} else if (lang === 'css') {
-				cssContent += code + '\n';
-			} else if (lang === 'javascript' || lang === 'js') {
-				jsContent += code + '\n';
-			}
-		});
-	} else {
-		// Remove details tags from the content to check if there are any code blocks
-		// hidden in the details tags (e.g. reasoning, etc.)
-		content = removeAllDetails(content);
-
-		const inlineHtml = content.match(/<html>[\s\S]*?<\/html>/gi);
-		const inlineCss = content.match(/<style>[\s\S]*?<\/style>/gi);
-		const inlineJs = content.match(/<script>[\s\S]*?<\/script>/gi);
-
-		if (inlineHtml) {
-			inlineHtml.forEach((block) => {
-				const content = block.replace(/<\/?html>/gi, ''); // Remove <html> tags
-				htmlContent += content + '\n';
-			});
-		}
-		if (inlineCss) {
-			inlineCss.forEach((block) => {
-				const content = block.replace(/<\/?style>/gi, ''); // Remove <style> tags
-				cssContent += content + '\n';
-			});
-		}
-		if (inlineJs) {
-			inlineJs.forEach((block) => {
-				const content = block.replace(/<\/?script>/gi, ''); // Remove <script> tags
-				jsContent += content + '\n';
-			});
-		}
-	}
-
-	return {
-		codeBlocks: codeBlocks,
-		html: htmlContent.trim(),
-		css: cssContent.trim(),
-		js: jsContent.trim()
-	};
-};
 export const parseFrontmatter = (content) => {
 	const match = content.match(/^---\s*\n([\s\S]*?)\n---/);
 	if (match) {

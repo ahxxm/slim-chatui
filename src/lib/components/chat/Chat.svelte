@@ -95,12 +95,6 @@
 
 	let selectedModels = [''];
 	let atSelectedModel: Model | undefined;
-	let selectedModelIds = [];
-	$: if (atSelectedModel !== undefined) {
-		selectedModelIds = [atSelectedModel.id];
-	} else {
-		selectedModelIds = selectedModels;
-	}
 
 	let generating = false;
 	let generationController = null;
@@ -226,15 +220,6 @@
 		}
 		sessionStorage.selectedModels = selectedModelsString;
 		console.log('saveSessionSelectedModels', selectedModels, sessionStorage.selectedModels);
-	};
-
-	let oldSelectedModelIds = [''];
-	$: if (JSON.stringify(selectedModelIds) !== JSON.stringify(oldSelectedModelIds)) {
-		onSelectedModelIdsChange();
-	}
-
-	const onSelectedModelIdsChange = () => {
-		oldSelectedModelIds = JSON.parse(JSON.stringify(selectedModelIds));
 	};
 
 	const showMessage = async (message, scroll = true) => {
@@ -690,8 +675,6 @@
 
 				selectedModels = selectedModels.length > 0 ? [selectedModels[0]] : [''];
 
-				oldSelectedModelIds = JSON.parse(JSON.stringify(selectedModels));
-
 				history =
 					(chatContent?.history ?? undefined) !== undefined
 						? chatContent.history
@@ -858,7 +841,6 @@
 
 				model: modelId,
 				modelName: model.name ?? model.id,
-				modelIdx: 0,
 				timestamp: Math.floor(Date.now() / 1000)
 			};
 
@@ -918,7 +900,6 @@
 					done: true,
 					model: model.id,
 					modelName: model.name ?? model.id,
-					modelIdx: 0,
 					timestamp: Math.floor(Date.now() / 1000),
 					...message
 				};
@@ -1205,7 +1186,6 @@
 			content: '',
 			model: model.id,
 			modelName: model.name ?? model.id,
-			modelIdx: 0,
 			timestamp: Math.floor(Date.now() / 1000)
 		};
 
@@ -1573,13 +1553,6 @@
 									content: suggestionPrompt
 								}
 							]
-						}
-					: {}),
-				...((userMessage?.models ?? [...selectedModels]).length > 1
-					? {
-							// If multiple models are selected, use the model from the message
-							modelId: message.model,
-							modelIdx: message.modelIdx
 						}
 					: {})
 			});
