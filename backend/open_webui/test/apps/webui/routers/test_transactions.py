@@ -108,8 +108,9 @@ class TestAuthUserLifecycle(IntegrationTest):
 
 
 class TestDBAtomicity(IntegrationTest):
+    """Model methods should respect the caller's session transaction."""
 
-    def test_rollback_undoes_model_write(self):
+    def test_rollback_undoes_email_update(self):
         _, admin_headers = self.sign_up()
         user_data, _ = self.add_user(admin_headers)
         uid = user_data["id"]
@@ -122,7 +123,81 @@ class TestDBAtomicity(IntegrationTest):
             session.rollback()
 
         with get_db() as db:
-            assert db.get(Auth, uid).email == user_data["email"], "rollback should undo model write"
+            assert db.get(Auth, uid).email == user_data["email"], "rollback should undo email update"
+
+    def test_rollback_undoes_insert_new_auth(self):
+        self.sign_up()
+
+        from open_webui.internal.db import get_db
+        from open_webui.models.auths import Auths, Auth
+        from open_webui.models.users import User
+
+        with get_db() as session:
+            Auths.insert_new_auth(
+                "rollback@test.com", "hashed", "Rollback User", db=session
+            )
+            session.rollback()
+
+        with get_db() as db:
+            assert db.query(Auth).filter_by(email="rollback@test.com").first() is None, \
+                "rollback should undo auth insert"
+            assert db.query(User).filter_by(email="rollback@test.com").first() is None, \
+                "rollback should undo user insert"
+
+    def test_rollback_undoes_delete_auth(self):
+        _, admin_headers = self.sign_up()
+        user_data, user_headers = self.add_user(admin_headers)
+        uid = user_data["id"]
+
+        # create a chat so delete cascades through chats too
+        chat_resp = self.fast_api_client.post(
+            "/api/v1/chats/new",
+            json={"chat": {"messages": []}},
+            headers=user_headers,
+        )
+        chat_id = chat_resp.json()["id"]
+
+        from open_webui.internal.db import get_db
+        from open_webui.models.auths import Auths, Auth
+        from open_webui.models.users import User
+        from open_webui.models.chats import Chat
+
+        with get_db() as session:
+            Auths.delete_auth_by_id(uid, db=session)
+            session.rollback()
+
+        with get_db() as db:
+            assert db.get(Auth, uid) is not None, "rollback should undo auth delete"
+            assert db.get(User, uid) is not None, "rollback should undo user delete"
+            assert db.get(Chat, chat_id) is not None, "rollback should undo chat delete"
+
+    def test_rollback_undoes_add_tag(self):
+        admin_data, headers = self.sign_up()
+        uid = admin_data["id"]
+
+        chat_resp = self.fast_api_client.post(
+            "/api/v1/chats/new",
+            json={"chat": {"messages": []}},
+            headers=headers,
+        )
+        chat_id = chat_resp.json()["id"]
+
+        from open_webui.internal.db import get_db
+        from open_webui.models.chats import Chats, Chat
+        from open_webui.models.tags import Tag
+
+        with get_db() as session:
+            Chats.add_chat_tag_by_id_and_user_id_and_tag_name(
+                chat_id, uid, "rollback tag", db=session
+            )
+            session.rollback()
+
+        with get_db() as db:
+            chat = db.get(Chat, chat_id)
+            assert "rollback_tag" not in chat.meta.get("tags", []), \
+                "rollback should undo tag addition to chat meta"
+            assert db.query(Tag).filter_by(id="rollback_tag").first() is None, \
+                "rollback should undo tag row creation"
 
 
 class TestChatTagOperations(IntegrationTest):
