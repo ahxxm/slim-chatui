@@ -582,7 +582,10 @@ class AdminConfig(BaseModel):
 
 @router.post("/admin/config")
 async def update_admin_config(
-    request: Request, form_data: AdminConfig, user=Depends(get_admin_user)
+    request: Request,
+    form_data: AdminConfig,
+    user=Depends(get_admin_user),
+    db: Session = Depends(get_session),
 ):
     request.app.state.config.SHOW_ADMIN_DETAILS = form_data.SHOW_ADMIN_DETAILS
     request.app.state.config.ADMIN_EMAIL = form_data.ADMIN_EMAIL
@@ -606,6 +609,7 @@ async def update_admin_config(
     request.app.state.config.PENDING_USER_OVERLAY_CONTENT = (
         form_data.PENDING_USER_OVERLAY_CONTENT
     )
+    request.app.state.config.persist(db)
 
     return {
         "SHOW_ADMIN_DETAILS": request.app.state.config.SHOW_ADMIN_DETAILS,

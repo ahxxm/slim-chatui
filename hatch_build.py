@@ -10,7 +10,8 @@ from hatchling.builders.hooks.plugin.interface import BuildHookInterface
 class CustomBuildHook(BuildHookInterface):
     def initialize(self, version, build_data):
         super().initialize(version, build_data)
-        if os.environ.get("SKIP_FRONTEND_BUILD"):
+        if version == "editable" or os.environ.get("SKIP_FRONTEND_BUILD"):
+            os.makedirs("build", exist_ok=True)
             return
         stderr.write(">>> Building Open Webui frontend\n")
         npm = shutil.which("npm")

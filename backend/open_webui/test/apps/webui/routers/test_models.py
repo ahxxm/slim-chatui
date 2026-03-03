@@ -1,61 +1,84 @@
-from test.util.abstract_integration_test import AbstractPostgresTest
-from test.util.mock_user import mock_webui_user
+from test.util.abstract_integration_test import IntegrationTest
 
 
-class TestModels(AbstractPostgresTest):
+class TestModels(IntegrationTest):
     BASE_PATH = "/api/v1/models"
 
+    @classmethod
     def setup_class(cls):
         super().setup_class()
-        from open_webui.models.models import Model
+        from open_webui.models.models import Models
 
-        cls.models = Model
+        cls.models = Models
 
-    def test_models(self):
-        with mock_webui_user(id="2"):
-            response = self.fast_api_client.get(self.create_url("/"))
+    def test_create_and_list_models(self):
+        _, headers = self.sign_up()
+
+        # empty at start
+        response = self.fast_api_client.get(self.create_url("/list"), headers=headers)
         assert response.status_code == 200
-        assert len(response.json()) == 0
+        assert response.json()["total"] == 0
 
-        with mock_webui_user(id="2"):
-            response = self.fast_api_client.post(
-                self.create_url("/add"),
-                json={
-                    "id": "my-model",
-                    "base_model_id": "base-model-id",
-                    "name": "Hello World",
-                    "meta": {
-                        "profile_image_url": "/static/favicon.png",
-                        "description": "description",
-                        "capabilities": None,
-                        "model_config": {},
-                    },
-                    "params": {},
+        # create
+        response = self.fast_api_client.post(
+            self.create_url("/create"),
+            json={
+                "id": "my-model",
+                "base_model_id": "base-model-id",
+                "name": "Hello World",
+                "meta": {
+                    "profile_image_url": "/static/favicon.png",
+                    "description": "description",
+                    "capabilities": None,
+                    "model_config": {},
                 },
-            )
+                "params": {},
+            },
+            headers=headers,
+        )
         assert response.status_code == 200
 
-        with mock_webui_user(id="2"):
-            response = self.fast_api_client.get(self.create_url("/"))
+        # list shows one
+        response = self.fast_api_client.get(self.create_url("/list"), headers=headers)
         assert response.status_code == 200
-        assert len(response.json()) == 1
+        assert response.json()["total"] == 1
 
-        with mock_webui_user(id="2"):
-            response = self.fast_api_client.get(
-                self.create_url(query_params={"id": "my-model"})
-            )
+        # get by id
+        response = self.fast_api_client.get(
+            self.create_url("/model", query_params={"id": "my-model"}),
+            headers=headers,
+        )
         assert response.status_code == 200
-        data = response.json()[0]
-        assert data["id"] == "my-model"
-        assert data["name"] == "Hello World"
+        assert response.json()["id"] == "my-model"
+        assert response.json()["name"] == "Hello World"
 
-        with mock_webui_user(id="2"):
-            response = self.fast_api_client.delete(
-                self.create_url("/delete?id=my-model")
-            )
+    def test_delete_model(self):
+        _, headers = self.sign_up()
+
+        self.fast_api_client.post(
+            self.create_url("/create"),
+            json={
+                "id": "my-model",
+                "base_model_id": "base-model-id",
+                "name": "Hello World",
+                "meta": {
+                    "profile_image_url": "/static/favicon.png",
+                    "description": "description",
+                    "capabilities": None,
+                    "model_config": {},
+                },
+                "params": {},
+            },
+            headers=headers,
+        )
+
+        response = self.fast_api_client.post(
+            self.create_url("/model/delete"),
+            json={"id": "my-model"},
+            headers=headers,
+        )
         assert response.status_code == 200
 
-        with mock_webui_user(id="2"):
-            response = self.fast_api_client.get(self.create_url("/"))
+        response = self.fast_api_client.get(self.create_url("/list"), headers=headers)
         assert response.status_code == 200
-        assert len(response.json()) == 0
+        assert response.json()["total"] == 0

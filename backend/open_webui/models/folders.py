@@ -104,7 +104,7 @@ class FolderTable:
             try:
                 result = Folder(**folder.model_dump())
                 db.add(result)
-                db.commit()
+                db.flush()
                 db.refresh(result)
                 if result:
                     return FolderModel.model_validate(result)
@@ -214,7 +214,7 @@ class FolderTable:
                 folder.parent_id = parent_id
                 folder.updated_at = int(time.time())
 
-                db.commit()
+                db.flush()
 
                 return FolderModel.model_validate(folder)
         except Exception as e:
@@ -264,7 +264,7 @@ class FolderTable:
                     }
 
                 folder.updated_at = int(time.time())
-                db.commit()
+                db.flush()
 
                 return FolderModel.model_validate(folder)
         except Exception as e:
@@ -284,7 +284,7 @@ class FolderTable:
                 folder.is_expanded = is_expanded
                 folder.updated_at = int(time.time())
 
-                db.commit()
+                db.flush()
 
                 return FolderModel.model_validate(folder)
         except Exception as e:
@@ -315,11 +315,11 @@ class FolderTable:
 
                         folder = db.query(Folder).filter_by(id=folder_child.id).first()
                         db.delete(folder)
-                        db.commit()
+                        db.flush()
 
                 delete_children(folder)
                 db.delete(folder)
-                db.commit()
+                db.flush()
                 return folder_ids
         except Exception as e:
             log.error(f"delete_folder: {e}")

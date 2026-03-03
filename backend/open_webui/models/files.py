@@ -112,7 +112,7 @@ class FilesTable:
             try:
                 result = File(**file.model_dump())
                 db.add(result)
-                db.commit()
+                db.flush()
                 db.refresh(result)
                 if result:
                     return FileModel.model_validate(result)
@@ -209,7 +209,7 @@ class FilesTable:
         with get_db_context(db) as db:
             try:
                 db.query(File).filter_by(id=id).delete()
-                db.commit()
+                db.flush()
                 return True
             except Exception:
                 return False
@@ -218,7 +218,7 @@ class FilesTable:
         with get_db_context(db) as db:
             try:
                 db.query(File).delete()
-                db.commit()
+                db.flush()
                 return True
             except Exception:
                 return False
