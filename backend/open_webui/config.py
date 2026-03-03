@@ -11,7 +11,6 @@ from pydantic import BaseModel
 
 from open_webui.env import (
     DATA_DIR,
-    ENABLE_DB_MIGRATIONS,
     FRONTEND_BUILD_DIR,
     OPEN_WEBUI_DIR,
     WEBUI_AUTH,
@@ -55,8 +54,7 @@ def run_migrations():
         log.exception(f"Error running migrations: {e}")
 
 
-if ENABLE_DB_MIGRATIONS:
-    run_migrations()
+run_migrations()
 
 
 def load_json_config():
@@ -132,11 +130,6 @@ def save_config(config):
 
 T = TypeVar("T")
 
-ENABLE_PERSISTENT_CONFIG = (
-    os.environ.get("ENABLE_PERSISTENT_CONFIG", "True").lower() == "true"
-)
-
-
 class PersistentConfig(Generic[T]):
     def __init__(self, env_name: str, config_path: str, env_value: T):
         self.env_name = env_name
@@ -144,7 +137,7 @@ class PersistentConfig(Generic[T]):
         self.env_value = env_value
         self.config_value = get_config_value(config_path)
 
-        if self.config_value is not None and ENABLE_PERSISTENT_CONFIG:
+        if self.config_value is not None:
             log.info(f"'{env_name}' loaded from the latest database entry")
             self.value = self.config_value
         else:
