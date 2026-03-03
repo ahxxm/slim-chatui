@@ -40,6 +40,7 @@ logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 def run_migrations():
     log.info("Running migrations")
     try:
+        # +11MB RSS: alembic+mako stay resident after this one-time run
         from alembic import command
         from alembic.config import Config
 
