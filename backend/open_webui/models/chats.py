@@ -320,7 +320,8 @@ class ChatTable:
                 db.refresh(chat_item)
 
                 return ChatModel.model_validate(chat_item)
-        except Exception:
+        except Exception as e:
+            log.exception(f"update_chat_by_id failed: {e}")
             return None
 
     def update_chat_title_by_id(self, id: str, title: str) -> Optional[ChatModel]:

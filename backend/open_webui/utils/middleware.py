@@ -186,9 +186,20 @@ def handle_responses_streaming_event(
     if event_type == "response.output_item.added":
         item = data.get("item", {})
         if item:
+            now = time.time()
             new_output = list(current_output)
+            # Close the previous reasoning block's duration when a new item arrives
+            if new_output:
+                prev = new_output[-1]
+                if (
+                    prev.get("type") == "reasoning"
+                    and "started_at" in prev
+                    and "duration" not in prev
+                ):
+                    prev = {**prev, "duration": now - prev["started_at"]}
+                    new_output[-1] = prev
             if item.get("type") == "reasoning":
-                item = {**item, "started_at": time.time()}
+                item = {**item, "started_at": now}
             new_output.append(item)
             return new_output, None
         return current_output, None
@@ -471,11 +482,16 @@ def handle_responses_streaming_event(
         response_data = data.get("response", {})
         final_output = response_data.get("output")
 
-        # Carry over timing from tracked reasoning items
+        # Carry over per-block timing and durations already computed
         timing = {}
+        computed_durations = {}
         for item in current_output:
-            if item.get("type") == "reasoning" and "started_at" in item:
-                timing[item.get("id")] = item["started_at"]
+            if item.get("type") == "reasoning":
+                item_id = item.get("id")
+                if "started_at" in item:
+                    timing[item_id] = item["started_at"]
+                if "duration" in item:
+                    computed_durations[item_id] = item["duration"]
 
         new_output = final_output if final_output is not None else current_output
 
@@ -485,8 +501,11 @@ def handle_responses_streaming_event(
                 if item.get("type") == "reasoning":
                     if item.get("status") != "completed":
                         item["status"] = "completed"
-                    if "duration" not in item:
-                        started = timing.get(item.get("id"))
+                    item_id = item.get("id")
+                    if item_id in computed_durations:
+                        item["duration"] = computed_durations[item_id]
+                    elif "duration" not in item:
+                        started = timing.get(item_id)
                         item["duration"] = (now - started) if started else 0
 
         return new_output, {"usage": response_data.get("usage"), "done": True}

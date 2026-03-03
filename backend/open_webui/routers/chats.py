@@ -368,12 +368,11 @@ async def update_chat_by_id(
     id: str,
     form_data: ChatForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
+    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
     if chat:
         updated_chat = {**chat.chat, **form_data.chat}
-        chat = Chats.update_chat_by_id(id, updated_chat, db=db)
+        chat = Chats.update_chat_by_id(id, updated_chat)
         return ChatResponse(**chat.model_dump())
     else:
         raise HTTPException(
