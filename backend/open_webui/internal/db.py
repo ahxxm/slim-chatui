@@ -8,8 +8,7 @@ from typing import Any
 
 from open_webui.env import DATABASE_URL
 from sqlalchemy import Dialect, create_engine, MetaData, event, types
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from sqlalchemy.sql.type_api import _T
 from typing_extensions import Self
 

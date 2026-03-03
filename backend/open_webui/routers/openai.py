@@ -187,7 +187,10 @@ class OpenAIConfigForm(BaseModel):
 
 @router.post("/config/update")
 async def update_config(
-    request: Request, form_data: OpenAIConfigForm, user=Depends(get_admin_user)
+    request: Request,
+    form_data: OpenAIConfigForm,
+    user=Depends(get_admin_user),
+    db: Session = Depends(get_session),
 ):
     request.app.state.config.ENABLE_OPENAI_API = form_data.ENABLE_OPENAI_API
     request.app.state.config.OPENAI_API_BASE_URLS = form_data.OPENAI_API_BASE_URLS
@@ -220,6 +223,7 @@ async def update_config(
         for key, value in request.app.state.config.OPENAI_API_CONFIGS.items()
         if key in keys
     }
+    request.app.state.config.persist(db)
 
     return {
         "ENABLE_OPENAI_API": request.app.state.config.ENABLE_OPENAI_API,

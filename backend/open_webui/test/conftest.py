@@ -8,7 +8,7 @@ os.close(_db_fd)
 os.environ["DATABASE_URL"] = f"sqlite:///{_db_path}"
 os.environ["WEBUI_AUTH"] = "False"
 os.environ["ENABLE_DB_MIGRATIONS"] = "True"
-os.environ["WEBUI_SECRET_KEY"] = "test-secret"
+os.environ["WEBUI_SECRET_KEY"] = "test-secret-key-that-is-at-least-32-bytes"
 os.environ["FRONTEND_BUILD_DIR"] = "/nonexistent"
 os.environ["DATA_DIR"] = tempfile.mkdtemp()
 

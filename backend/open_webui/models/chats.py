@@ -1033,15 +1033,14 @@ class ChatTable:
     ) -> bool:
         try:
             with get_db_context(db) as db:
-                chat_id_subquery = (
-                    db.query(Chat.id).filter_by(user_id=user_id).subquery()
+                chat_ids = (
+                    db.query(Chat.id).filter_by(user_id=user_id).scalar_subquery()
                 )
-                db.query(ChatMessage).filter(
-                    ChatMessage.chat_id.in_(chat_id_subquery)
-                ).delete(synchronize_session=False)
+                db.query(ChatMessage).filter(ChatMessage.chat_id.in_(chat_ids)).delete(
+                    synchronize_session=False
+                )
                 db.query(Chat).filter_by(user_id=user_id).delete()
                 db.flush()
-
                 return True
         except Exception:
             return False

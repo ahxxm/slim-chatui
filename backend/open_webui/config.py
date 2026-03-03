@@ -191,6 +191,8 @@ class AppConfig:
         super().__setattr__("_state", {})
 
     def __setattr__(self, key, value):
+        # In-memory + CONFIG_DATA only. No DB write here — persist(db) does that.
+        # DB writes here deadlock with any open request transaction (SQLite single-writer).
         if isinstance(value, PersistentConfig):
             self._state[key] = value
         else:
