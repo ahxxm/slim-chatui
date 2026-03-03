@@ -136,8 +136,6 @@ type Config = {
 	features: {
 		auth: boolean;
 		enable_signup: boolean;
-		enable_admin_export: boolean;
-		enable_admin_chat_access: boolean;
 		enable_autocomplete_generation: boolean;
 		enable_direct_connections: boolean;
 		enable_version_update_check: boolean;

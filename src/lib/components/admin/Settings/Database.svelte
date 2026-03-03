@@ -109,8 +109,7 @@
 			</div>
 		</div>
 
-		{#if $config?.features.enable_admin_export ?? true}
-			<div>
+		<div>
 				<div class="mb-1 text-sm font-medium">{$i18n.t('Database')}</div>
 
 				<div>
@@ -159,7 +158,6 @@
 						</button>
 					</div>
 				</div>
-			</div>
-		{/if}
+		</div>
 	</div>
 </div>
