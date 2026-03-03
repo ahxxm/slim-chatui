@@ -1,11 +1,12 @@
 services:
   slim-chatui:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/ahxxm/slim-chatui:main
+    # build:
+    #   context: .
+    #   dockerfile: Dockerfile
     container_name: slim-chatui
     volumes:
-      - slim-chatui:/app/backend/data
+      - ./slim-chatui:/app/backend/data
     ports:
       - ${PORT-3000}:8080
     environment:
@@ -13,6 +14,9 @@ services:
     extra_hosts:
       - host.docker.internal:host-gateway
     restart: unless-stopped
-
-volumes:
-  slim-chatui: {}
+    depends_on:
+      - litellm
+    environment:
+      - OPENAI_API_BASE_URLS=http://litellm:4000
+      - OPENAI_API_KEYS=sk-0001
+      - WEBUI_SECRET_KEY=some-32-byte-key-to-avoid-warnings

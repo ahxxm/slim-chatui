@@ -33,7 +33,6 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response, StreamingResponse
-from starlette.datastructures import Headers
 
 from open_webui.utils import logger
 from open_webui.utils.audit import AuditLevel, AuditLoggingMiddleware
@@ -65,14 +64,11 @@ from open_webui.models.chats import Chats
 
 from open_webui.config import (
     # OpenAI
-    ENABLE_OPENAI_API,
     OPENAI_API_BASE_URLS,
     OPENAI_API_KEYS,
     OPENAI_API_CONFIGS,
     # Direct Connections
     ENABLE_DIRECT_CONNECTIONS,
-    # Model list
-    ENABLE_BASE_MODELS_CACHE,
     # Thread pool size for FastAPI/AnyIO
     THREAD_POOL_SIZE,
     # File
@@ -104,20 +100,14 @@ from open_webui.config import (
     CORS_ALLOW_ORIGIN,
     DEFAULT_LOCALE,
     WEBUI_URL,
-    # Admin
-    ENABLE_ADMIN_CHAT_ACCESS,
-    ENABLE_ADMIN_EXPORT,
     # Tasks
     TASK_MODEL,
     ENABLE_TAGS_GENERATION,
     ENABLE_TITLE_GENERATION,
     ENABLE_FOLLOW_UP_GENERATION,
-    ENABLE_AUTOCOMPLETE_GENERATION,
     TITLE_GENERATION_PROMPT_TEMPLATE,
     FOLLOW_UP_GENERATION_PROMPT_TEMPLATE,
     TAGS_GENERATION_PROMPT_TEMPLATE,
-    AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE,
-    AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH,
     AppConfig,
 )
 from open_webui.env import (
@@ -233,30 +223,6 @@ async def lifespan(app: FastAPI):
 
     asyncio.create_task(periodic_session_pool_cleanup())
 
-    if app.state.config.ENABLE_BASE_MODELS_CACHE:
-        try:
-            await get_all_models(
-                Request(
-                    # Creating a mock request object to pass to get_all_models
-                    {
-                        "type": "http",
-                        "asgi.version": "3.0",
-                        "asgi.spec_version": "2.0",
-                        "method": "GET",
-                        "path": "/internal",
-                        "query_string": b"",
-                        "headers": Headers({}).raw,
-                        "client": ("127.0.0.1", 12345),
-                        "server": ("127.0.0.1", 80),
-                        "scheme": "http",
-                        "app": app,
-                    }
-                ),
-                None,
-            )
-        except Exception as e:
-            log.warning(f"Failed to pre-fetch models at startup: {e}")
-
     yield
 
 
@@ -280,7 +246,6 @@ app.state.WEBUI_NAME = WEBUI_NAME
 #
 ########################################
 
-app.state.config.ENABLE_OPENAI_API = ENABLE_OPENAI_API
 app.state.config.OPENAI_API_BASE_URLS = OPENAI_API_BASE_URLS
 app.state.config.OPENAI_API_KEYS = OPENAI_API_KEYS
 app.state.config.OPENAI_API_CONFIGS = OPENAI_API_CONFIGS
@@ -301,7 +266,6 @@ app.state.config.ENABLE_DIRECT_CONNECTIONS = ENABLE_DIRECT_CONNECTIONS
 #
 ########################################
 
-app.state.config.ENABLE_BASE_MODELS_CACHE = ENABLE_BASE_MODELS_CACHE
 app.state.BASE_MODELS = []
 
 ########################################
@@ -359,7 +323,6 @@ app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT = FILE_IMAGE_COMPRESSION_HEIGHT
 app.state.config.TASK_MODEL = TASK_MODEL
 
 
-app.state.config.ENABLE_AUTOCOMPLETE_GENERATION = ENABLE_AUTOCOMPLETE_GENERATION
 app.state.config.ENABLE_TAGS_GENERATION = ENABLE_TAGS_GENERATION
 app.state.config.ENABLE_TITLE_GENERATION = ENABLE_TITLE_GENERATION
 app.state.config.ENABLE_FOLLOW_UP_GENERATION = ENABLE_FOLLOW_UP_GENERATION
@@ -369,13 +332,6 @@ app.state.config.TITLE_GENERATION_PROMPT_TEMPLATE = TITLE_GENERATION_PROMPT_TEMP
 app.state.config.TAGS_GENERATION_PROMPT_TEMPLATE = TAGS_GENERATION_PROMPT_TEMPLATE
 app.state.config.FOLLOW_UP_GENERATION_PROMPT_TEMPLATE = (
     FOLLOW_UP_GENERATION_PROMPT_TEMPLATE
-)
-
-app.state.config.AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE = (
-    AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE
-)
-app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH = (
-    AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH
 )
 
 
@@ -533,10 +489,8 @@ if audit_level != AuditLevel.NONE:
 
 @app.get("/api/models")
 @app.get("/api/v1/models")  # Experimental: Compatibility with OpenAI API
-async def get_models(
-    request: Request, refresh: bool = False, user=Depends(get_verified_user)
-):
-    all_models = await get_all_models(request, refresh=refresh, user=user)
+async def get_models(request: Request, user=Depends(get_verified_user)):
+    all_models = await get_all_models(request, user=user)
 
     models = []
     for model in all_models:
@@ -686,17 +640,12 @@ async def chat_completion(
         stream_delta_chunk_size = form_data.get("params", {}).get(
             "stream_delta_chunk_size"
         )
-        reasoning_tags = form_data.get("params", {}).get("reasoning_tags")
-
         # Model Params
         if model_info_params.get("stream_response") is not None:
             form_data["stream"] = model_info_params.get("stream_response")
 
         if model_info_params.get("stream_delta_chunk_size"):
             stream_delta_chunk_size = model_info_params.get("stream_delta_chunk_size")
-
-        if model_info_params.get("reasoning_tags") is not None:
-            reasoning_tags = model_info_params.get("reasoning_tags")
 
         metadata = {
             "user_id": user.id,
@@ -712,7 +661,6 @@ async def chat_completion(
             "direct": model_item.get("direct", False),
             "params": {
                 "stream_delta_chunk_size": stream_delta_chunk_size,
-                "reasoning_tags": reasoning_tags,
             },
         }
 
@@ -1035,10 +983,7 @@ async def get_app_config(request: Request):
             **(
                 {
                     "enable_direct_connections": app.state.config.ENABLE_DIRECT_CONNECTIONS,
-                    "enable_autocomplete_generation": app.state.config.ENABLE_AUTOCOMPLETE_GENERATION,
                     "enable_user_webhooks": app.state.config.ENABLE_USER_WEBHOOKS,
-                    "enable_admin_export": ENABLE_ADMIN_EXPORT,
-                    "enable_admin_chat_access": ENABLE_ADMIN_CHAT_ACCESS,
                 }
                 if user is not None
                 else {}

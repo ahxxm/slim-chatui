@@ -13,9 +13,6 @@
 	export let value = null;
 	export let inputContent = null;
 
-	export let autocomplete = false;
-	export let generateAutoCompletion = null;
-
 	export let onChange = () => {};
 	export let onClose = () => {};
 
@@ -70,8 +67,6 @@
 					showFormattingToolbar={$settings?.showFormattingToolbar ?? false}
 					floatingMenuPlacement={'top-start'}
 					insertPromptAsRichText={$settings?.insertPromptAsRichText ?? false}
-					{autocomplete}
-					{generateAutoCompletion}
 				/>
 			</div>
 		</div>

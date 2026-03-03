@@ -116,8 +116,6 @@
 	import { Decoration, DecorationSet } from 'prosemirror-view';
 	import { Editor, Extension, mergeAttributes } from '@tiptap/core';
 
-	import { AIAutocompletion } from './RichTextInput/AutoCompletion.js';
-
 	import StarterKit from '@tiptap/starter-kit';
 
 	// Bubble and Floating menus are currently fixed to v2 due to styling issues in v3
@@ -245,8 +243,6 @@
 	export let showFormattingToolbar = true;
 
 	export let preserveBreaks = false;
-	export let generateAutoCompletion: Function = async () => null;
-	export let autocomplete = false;
 	export let messageInput = false;
 	export let shiftEnter = false;
 	export let largeTextAsFile = false;
@@ -728,24 +724,6 @@
 							FileHandler.configure({
 								onDrop: onFileDrop,
 								onPaste: onFilePaste
-							})
-						]
-					: []),
-				...(autocomplete
-					? [
-							AIAutocompletion.configure({
-								generateCompletion: async (text) => {
-									if (text.trim().length === 0) {
-										return null;
-									}
-
-									const suggestion = await generateAutoCompletion(text).catch(() => null);
-									if (!suggestion || suggestion.trim().length === 0) {
-										return null;
-									}
-
-									return suggestion;
-								}
 							})
 						]
 					: []),

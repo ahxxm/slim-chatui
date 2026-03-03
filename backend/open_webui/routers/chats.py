@@ -17,7 +17,6 @@ from open_webui.models.tags import TagModel, Tags
 from open_webui.models.folders import Folders
 from open_webui.internal.db import get_session
 
-from open_webui.config import ENABLE_ADMIN_CHAT_ACCESS, ENABLE_ADMIN_EXPORT
 from open_webui.constants import ERROR_MESSAGES
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
@@ -95,12 +94,6 @@ async def get_user_chat_list_by_user_id(
     user=Depends(get_admin_user),
     db: Session = Depends(get_session),
 ):
-    if not ENABLE_ADMIN_CHAT_ACCESS:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
-
     if page is None:
         page = 1
 
@@ -301,11 +294,6 @@ async def get_all_user_tags(
 async def get_all_user_chats_in_db(
     user=Depends(get_admin_user), db: Session = Depends(get_session)
 ):
-    if not ENABLE_ADMIN_EXPORT:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
     return [ChatResponse(**chat.model_dump()) for chat in Chats.get_chats(db=db)]
 
 

@@ -39,7 +39,6 @@
 		getWeekday
 	} from '$lib/utils';
 	import { uploadFile } from '$lib/apis/files';
-	import { generateAutoCompletion } from '$lib/apis';
 	import { deleteFileById } from '$lib/apis/files';
 	import { getSessionUser } from '$lib/apis/auths';
 	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
@@ -1016,29 +1015,6 @@
 														)}
 													placeholder={placeholder ? placeholder : $i18n.t('Send a Message')}
 													largeTextAsFile={($settings?.largeTextAsFile ?? false) && !shiftKey}
-													autocomplete={$config?.features?.enable_autocomplete_generation &&
-														($settings?.promptAutocomplete ?? false)}
-													generateAutoCompletion={async (text) => {
-														if (!activeModelId) {
-															toast.error($i18n.t('Please select a model first.'));
-														}
-
-														const res = await generateAutoCompletion(
-															localStorage.token,
-															activeModelId,
-															text,
-															history?.currentId
-																? createMessagesList(history, history.currentId)
-																: null
-														).catch((error) => {
-															console.log(error);
-
-															return null;
-														});
-
-														console.log(res);
-														return res;
-													}}
 													{suggestions}
 													oncompositionstart={() => (isComposing = true)}
 													oncompositionend={(e) => {
