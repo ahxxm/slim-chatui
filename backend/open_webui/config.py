@@ -343,12 +343,6 @@ OPENAI_API_CONFIGS = PersistentConfig(
 # MODELS
 ####################################
 
-ENABLE_BASE_MODELS_CACHE = PersistentConfig(
-    "ENABLE_BASE_MODELS_CACHE",
-    "models.base_models_cache",
-    os.environ.get("ENABLE_BASE_MODELS_CACHE", "False").lower() == "true",
-)
-
 
 ####################################
 # WEBUI

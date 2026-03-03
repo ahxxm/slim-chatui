@@ -219,30 +219,6 @@
 					</div>
 				</div>
 
-				<hr class=" border-gray-100/30 dark:border-gray-850/30 my-2" />
-
-				<div class="my-2">
-					<div class="flex justify-between items-center text-sm">
-						<div class=" text-xs font-medium">{$i18n.t('Cache Base Model List')}</div>
-
-						<div class="flex items-center">
-							<div class="">
-								<Switch
-									bind:state={connectionsConfig.ENABLE_BASE_MODELS_CACHE}
-									on:change={async () => {
-										updateConnectionsHandler();
-									}}
-								/>
-							</div>
-						</div>
-					</div>
-
-					<div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-						{$i18n.t(
-							'Base Model List Cache speeds up access by fetching base models only at startup or on settings save—faster, but may not show recent base model changes.'
-						)}
-					</div>
-				</div>
 			</div>
 		{:else}
 			<div class="flex h-full justify-center">

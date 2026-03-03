@@ -33,7 +33,6 @@ from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response, StreamingResponse
-from starlette.datastructures import Headers
 
 from open_webui.utils import logger
 from open_webui.utils.audit import AuditLevel, AuditLoggingMiddleware
@@ -70,8 +69,6 @@ from open_webui.config import (
     OPENAI_API_CONFIGS,
     # Direct Connections
     ENABLE_DIRECT_CONNECTIONS,
-    # Model list
-    ENABLE_BASE_MODELS_CACHE,
     # Thread pool size for FastAPI/AnyIO
     THREAD_POOL_SIZE,
     # File
@@ -232,30 +229,6 @@ async def lifespan(app: FastAPI):
 
     asyncio.create_task(periodic_session_pool_cleanup())
 
-    if app.state.config.ENABLE_BASE_MODELS_CACHE:
-        try:
-            await get_all_models(
-                Request(
-                    # Creating a mock request object to pass to get_all_models
-                    {
-                        "type": "http",
-                        "asgi.version": "3.0",
-                        "asgi.spec_version": "2.0",
-                        "method": "GET",
-                        "path": "/internal",
-                        "query_string": b"",
-                        "headers": Headers({}).raw,
-                        "client": ("127.0.0.1", 12345),
-                        "server": ("127.0.0.1", 80),
-                        "scheme": "http",
-                        "app": app,
-                    }
-                ),
-                None,
-            )
-        except Exception as e:
-            log.warning(f"Failed to pre-fetch models at startup: {e}")
-
     yield
 
 
@@ -299,7 +272,6 @@ app.state.config.ENABLE_DIRECT_CONNECTIONS = ENABLE_DIRECT_CONNECTIONS
 #
 ########################################
 
-app.state.config.ENABLE_BASE_MODELS_CACHE = ENABLE_BASE_MODELS_CACHE
 app.state.BASE_MODELS = []
 
 ########################################
@@ -531,10 +503,8 @@ if audit_level != AuditLevel.NONE:
 
 @app.get("/api/models")
 @app.get("/api/v1/models")  # Experimental: Compatibility with OpenAI API
-async def get_models(
-    request: Request, refresh: bool = False, user=Depends(get_verified_user)
-):
-    all_models = await get_all_models(request, refresh=refresh, user=user)
+async def get_models(request: Request, user=Depends(get_verified_user)):
+    all_models = await get_all_models(request, user=user)
 
     models = []
     for model in all_models:
