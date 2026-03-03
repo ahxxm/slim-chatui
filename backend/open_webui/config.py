@@ -130,6 +130,7 @@ def save_config(config):
 
 T = TypeVar("T")
 
+
 class PersistentConfig(Generic[T]):
     def __init__(self, env_name: str, config_path: str, env_value: T):
         self.env_name = env_name
@@ -308,7 +309,6 @@ ENABLE_DIRECT_CONNECTIONS = PersistentConfig(
 ####################################
 
 
-
 OPENAI_API_BASE_URL = os.environ.get("OPENAI_API_BASE_URL", "").rstrip("/")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
 
@@ -317,7 +317,11 @@ OPENAI_API_KEYS_STR = os.environ.get("OPENAI_API_KEYS", "")
 
 if OPENAI_API_BASE_URLS_STR:
     OPENAI_API_BASE_URLS = [u.strip() for u in OPENAI_API_BASE_URLS_STR.split(";")]
-    OPENAI_API_KEYS = [k.strip() for k in OPENAI_API_KEYS_STR.split(";")] if OPENAI_API_KEYS_STR else [""] * len(OPENAI_API_BASE_URLS)
+    OPENAI_API_KEYS = (
+        [k.strip() for k in OPENAI_API_KEYS_STR.split(";")]
+        if OPENAI_API_KEYS_STR
+        else [""] * len(OPENAI_API_BASE_URLS)
+    )
 elif OPENAI_API_BASE_URL:
     OPENAI_API_BASE_URLS = [OPENAI_API_BASE_URL]
     OPENAI_API_KEYS = [OPENAI_API_KEY]
@@ -464,7 +468,6 @@ WEBHOOK_URL = PersistentConfig(
 )
 
 
-
 ENABLE_USER_WEBHOOKS = PersistentConfig(
     "ENABLE_USER_WEBHOOKS",
     "ui.enable_user_webhooks",
@@ -472,8 +475,8 @@ ENABLE_USER_WEBHOOKS = PersistentConfig(
 )
 
 # FastAPI / AnyIO settings
+# 40 by default as of this comment, dynamically allocated.
 THREAD_POOL_SIZE = os.getenv("THREAD_POOL_SIZE", None)
-
 if THREAD_POOL_SIZE is not None and isinstance(THREAD_POOL_SIZE, str):
     try:
         THREAD_POOL_SIZE = int(THREAD_POOL_SIZE)
@@ -658,68 +661,6 @@ ENABLE_TITLE_GENERATION = PersistentConfig(
     "task.title.enable",
     os.environ.get("ENABLE_TITLE_GENERATION", "True").lower() == "true",
 )
-
-
-ENABLE_AUTOCOMPLETE_GENERATION = PersistentConfig(
-    "ENABLE_AUTOCOMPLETE_GENERATION",
-    "task.autocomplete.enable",
-    os.environ.get("ENABLE_AUTOCOMPLETE_GENERATION", "False").lower() == "true",
-)
-
-AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH = PersistentConfig(
-    "AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH",
-    "task.autocomplete.input_max_length",
-    int(os.environ.get("AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH", "-1")),
-)
-
-AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE = PersistentConfig(
-    "AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE",
-    "task.autocomplete.prompt_template",
-    os.environ.get("AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE", ""),
-)
-
-
-DEFAULT_AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE = """### Task:
-You are an autocompletion system. Continue the text in `<text>` based on the **completion type** in `<type>` and the given language.  
-
-### **Instructions**:
-1. Analyze `<text>` for context and meaning.  
-2. Use `<type>` to guide your output:  
-   - **General**: Provide a natural, concise continuation.  
-   - **Search Query**: Complete as if generating a realistic search query.  
-3. Start as if you are directly continuing `<text>`. Do **not** repeat, paraphrase, or respond as a model. Simply complete the text.  
-4. Ensure the continuation:
-   - Flows naturally from `<text>`.  
-   - Avoids repetition, overexplaining, or unrelated ideas.  
-5. If unsure, return: `{ "text": "" }`.  
-
-### **Output Rules**:
-- Respond only in JSON format: `{ "text": "<your_completion>" }`.
-
-### **Examples**:
-#### Example 1:  
-Input:  
-<type>General</type>  
-<text>The sun was setting over the horizon, painting the sky</text>  
-Output:  
-{ "text": "with vibrant shades of orange and pink." }
-
-#### Example 2:  
-Input:  
-<type>Search Query</type>  
-<text>Top-rated restaurants in</text>  
-Output:  
-{ "text": "New York City for Italian cuisine." }  
-
----
-### Context:
-<chat_history>
-{{MESSAGES:END:6}}
-</chat_history>
-<type>{{TYPE}}</type>  
-<text>{{PROMPT}}</text>  
-#### Output:
-"""
 
 
 DEFAULT_EMOJI_GENERATION_PROMPT_TEMPLATE = """Your task is to reflect the speaker's likely facial expression through a fitting emoji. Interpret emotions from the message and reflect their facial expression using fitting, diverse emojis (e.g., 😊, 😢, 😡, 😱).

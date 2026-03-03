@@ -90,7 +90,6 @@ type Settings = {
 	textScale?: number;
 	widescreenMode?: null;
 	largeTextAsFile?: boolean;
-	promptAutocomplete?: boolean;
 	hapticFeedback?: boolean;
 	responseAutoCopy?: any;
 	richTextInput?: boolean;
@@ -136,7 +135,6 @@ type Config = {
 	features: {
 		auth: boolean;
 		enable_signup: boolean;
-		enable_autocomplete_generation: boolean;
 		enable_direct_connections: boolean;
 		enable_version_update_check: boolean;
 	};

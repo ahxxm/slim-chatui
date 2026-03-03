@@ -184,8 +184,7 @@
 
 										let newConfig = {};
 										OPENAI_API_BASE_URLS.forEach((url, newIdx) => {
-											newConfig[newIdx] =
-												OPENAI_API_CONFIGS[newIdx < idx ? newIdx : newIdx + 1];
+											newConfig[newIdx] = OPENAI_API_CONFIGS[newIdx < idx ? newIdx : newIdx + 1];
 										});
 										OPENAI_API_CONFIGS = newConfig;
 										updateOpenAIHandler();
@@ -218,7 +217,6 @@
 						)}
 					</div>
 				</div>
-
 			</div>
 		{:else}
 			<div class="flex h-full justify-center">

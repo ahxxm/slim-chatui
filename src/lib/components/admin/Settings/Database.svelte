@@ -110,54 +110,54 @@
 		</div>
 
 		<div>
-				<div class="mb-1 text-sm font-medium">{$i18n.t('Database')}</div>
+			<div class="mb-1 text-sm font-medium">{$i18n.t('Database')}</div>
 
-				<div>
-					<div class="py-0.5 flex w-full justify-between">
-						<div class="self-center text-xs">{$i18n.t('Download Database')}</div>
-						<button
-							class="p-1 px-3 text-xs flex rounded-sm transition"
-							on:click={() => {
-								downloadDatabase(localStorage.token).catch((error) => {
-									toast.error(`${error}`);
-								});
-							}}
-							type="button"
-						>
-							<span class="self-center">{$i18n.t('Download')}</span>
-						</button>
-					</div>
+			<div>
+				<div class="py-0.5 flex w-full justify-between">
+					<div class="self-center text-xs">{$i18n.t('Download Database')}</div>
+					<button
+						class="p-1 px-3 text-xs flex rounded-sm transition"
+						on:click={() => {
+							downloadDatabase(localStorage.token).catch((error) => {
+								toast.error(`${error}`);
+							});
+						}}
+						type="button"
+					>
+						<span class="self-center">{$i18n.t('Download')}</span>
+					</button>
 				</div>
+			</div>
 
-				<div>
-					<div class="py-0.5 flex w-full justify-between">
-						<div class="self-center text-xs">{$i18n.t('Export All Chats (All Users)')}</div>
-						<button
-							class="p-1 px-3 text-xs flex rounded-sm transition"
-							on:click={() => {
-								exportAllUserChats();
-							}}
-							type="button"
-						>
-							<span class="self-center">{$i18n.t('Export')}</span>
-						</button>
-					</div>
+			<div>
+				<div class="py-0.5 flex w-full justify-between">
+					<div class="self-center text-xs">{$i18n.t('Export All Chats (All Users)')}</div>
+					<button
+						class="p-1 px-3 text-xs flex rounded-sm transition"
+						on:click={() => {
+							exportAllUserChats();
+						}}
+						type="button"
+					>
+						<span class="self-center">{$i18n.t('Export')}</span>
+					</button>
 				</div>
+			</div>
 
-				<div>
-					<div class="py-0.5 flex w-full justify-between">
-						<div class="self-center text-xs">{$i18n.t('Export Users')}</div>
-						<button
-							class="p-1 px-3 text-xs flex rounded-sm transition"
-							on:click={() => {
-								exportUsers();
-							}}
-							type="button"
-						>
-							<span class="self-center">{$i18n.t('Export')}</span>
-						</button>
-					</div>
+			<div>
+				<div class="py-0.5 flex w-full justify-between">
+					<div class="self-center text-xs">{$i18n.t('Export Users')}</div>
+					<button
+						class="p-1 px-3 text-xs flex rounded-sm transition"
+						on:click={() => {
+							exportUsers();
+						}}
+						type="button"
+					>
+						<span class="self-center">{$i18n.t('Export')}</span>
+					</button>
 				</div>
+			</div>
 		</div>
 	</div>
 </div>
