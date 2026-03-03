@@ -43,7 +43,6 @@ def apply_system_prompt_to_body(
 
 OPEN_WEBUI_PARAMS = {
     "stream_delta_chunk_size",
-    "reasoning_tags",
     "system",
 }
 
