@@ -13,7 +13,6 @@ from open_webui.utils.task import (
     get_task_model_id,
     title_generation_template,
     follow_up_generation_template,
-    autocomplete_generation_template,
     tags_generation_template,
     emoji_generation_template,
 )
@@ -24,7 +23,6 @@ from open_webui.config import (
     DEFAULT_TITLE_GENERATION_PROMPT_TEMPLATE,
     DEFAULT_FOLLOW_UP_GENERATION_PROMPT_TEMPLATE,
     DEFAULT_TAGS_GENERATION_PROMPT_TEMPLATE,
-    DEFAULT_AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE,
     DEFAULT_EMOJI_GENERATION_PROMPT_TEMPLATE,
 )
 
@@ -60,8 +58,6 @@ async def get_task_config(request: Request, user=Depends(get_verified_user)):
     return {
         "TASK_MODEL": request.app.state.config.TASK_MODEL,
         "TITLE_GENERATION_PROMPT_TEMPLATE": request.app.state.config.TITLE_GENERATION_PROMPT_TEMPLATE,
-        "ENABLE_AUTOCOMPLETE_GENERATION": request.app.state.config.ENABLE_AUTOCOMPLETE_GENERATION,
-        "AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH": request.app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH,
         "TAGS_GENERATION_PROMPT_TEMPLATE": request.app.state.config.TAGS_GENERATION_PROMPT_TEMPLATE,
         "FOLLOW_UP_GENERATION_PROMPT_TEMPLATE": request.app.state.config.FOLLOW_UP_GENERATION_PROMPT_TEMPLATE,
         "ENABLE_FOLLOW_UP_GENERATION": request.app.state.config.ENABLE_FOLLOW_UP_GENERATION,
@@ -74,8 +70,6 @@ class TaskConfigForm(BaseModel):
     TASK_MODEL: Optional[str]
     ENABLE_TITLE_GENERATION: bool
     TITLE_GENERATION_PROMPT_TEMPLATE: str
-    ENABLE_AUTOCOMPLETE_GENERATION: bool
-    AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH: int
     TAGS_GENERATION_PROMPT_TEMPLATE: str
     FOLLOW_UP_GENERATION_PROMPT_TEMPLATE: str
     ENABLE_FOLLOW_UP_GENERATION: bool
@@ -102,13 +96,6 @@ async def update_task_config(
         form_data.FOLLOW_UP_GENERATION_PROMPT_TEMPLATE
     )
 
-    request.app.state.config.ENABLE_AUTOCOMPLETE_GENERATION = (
-        form_data.ENABLE_AUTOCOMPLETE_GENERATION
-    )
-    request.app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH = (
-        form_data.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH
-    )
-
     request.app.state.config.TAGS_GENERATION_PROMPT_TEMPLATE = (
         form_data.TAGS_GENERATION_PROMPT_TEMPLATE
     )
@@ -119,8 +106,6 @@ async def update_task_config(
         "TASK_MODEL": request.app.state.config.TASK_MODEL,
         "ENABLE_TITLE_GENERATION": request.app.state.config.ENABLE_TITLE_GENERATION,
         "TITLE_GENERATION_PROMPT_TEMPLATE": request.app.state.config.TITLE_GENERATION_PROMPT_TEMPLATE,
-        "ENABLE_AUTOCOMPLETE_GENERATION": request.app.state.config.ENABLE_AUTOCOMPLETE_GENERATION,
-        "AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH": request.app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH,
         "TAGS_GENERATION_PROMPT_TEMPLATE": request.app.state.config.TAGS_GENERATION_PROMPT_TEMPLATE,
         "ENABLE_TAGS_GENERATION": request.app.state.config.ENABLE_TAGS_GENERATION,
         "ENABLE_FOLLOW_UP_GENERATION": request.app.state.config.ENABLE_FOLLOW_UP_GENERATION,
@@ -316,85 +301,6 @@ async def generate_chat_tags(
         "metadata": {
             **(request.state.metadata if hasattr(request.state, "metadata") else {}),
             "task": str(TASKS.TAGS_GENERATION),
-            "task_body": form_data,
-            "chat_id": form_data.get("chat_id", None),
-        },
-    }
-
-    try:
-        return await generate_chat_completion(request, form_data=payload, user=user)
-    except Exception as e:
-        log.error(f"Error generating chat completion: {e}")
-        return JSONResponse(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            content={"detail": "An internal error has occurred."},
-        )
-
-
-@router.post("/auto/completions")
-async def generate_autocompletion(
-    request: Request, form_data: dict, user=Depends(get_verified_user)
-):
-    if not request.app.state.config.ENABLE_AUTOCOMPLETE_GENERATION:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Autocompletion generation is disabled",
-        )
-
-    type = form_data.get("type")
-    prompt = form_data.get("prompt")
-    messages = form_data.get("messages")
-
-    if request.app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH > 0:
-        if (
-            len(prompt)
-            > request.app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH
-        ):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Input prompt exceeds maximum length of {request.app.state.config.AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH}",
-            )
-
-    if getattr(request.state, "direct", False) and hasattr(request.state, "model"):
-        models = {
-            request.state.model["id"]: request.state.model,
-        }
-    else:
-        models = request.app.state.MODELS
-
-    model_id = form_data["model"]
-    if model_id not in models:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Model not found",
-        )
-
-    # Check if the user has a custom task model
-    # If the user has a custom task model, use that model
-    task_model_id = get_task_model_id(
-        model_id,
-        request.app.state.config.TASK_MODEL,
-        models,
-    )
-
-    log.debug(
-        f"generating autocompletion using model {task_model_id} for user {user.email}"
-    )
-
-    if (request.app.state.config.AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE).strip() != "":
-        template = request.app.state.config.AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE
-    else:
-        template = DEFAULT_AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE
-
-    content = autocomplete_generation_template(template, prompt, messages, type, user)
-
-    payload = {
-        "model": task_model_id,
-        "messages": [{"role": "user", "content": content}],
-        "stream": False,
-        "metadata": {
-            **(request.state.metadata if hasattr(request.state, "metadata") else {}),
-            "task": str(TASKS.AUTOCOMPLETE_GENERATION),
             "task_body": form_data,
             "chat_id": form_data.get("chat_id", None),
         },

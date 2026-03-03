@@ -34,46 +34,41 @@
 	let OPENAI_API_BASE_URLS = [''];
 	let OPENAI_API_CONFIGS = {};
 
-	let ENABLE_OPENAI_API: null | boolean = null;
-
 	let connectionsConfig = null;
 
 	let showAddOpenAIConnectionModal = false;
 
 	const updateOpenAIHandler = async () => {
-		if (ENABLE_OPENAI_API !== null) {
-			// Remove trailing slashes
-			OPENAI_API_BASE_URLS = OPENAI_API_BASE_URLS.map((url) => url.replace(/\/$/, ''));
+		// Remove trailing slashes
+		OPENAI_API_BASE_URLS = OPENAI_API_BASE_URLS.map((url) => url.replace(/\/$/, ''));
 
-			// Check if API KEYS length is same than API URLS length
-			if (OPENAI_API_KEYS.length !== OPENAI_API_BASE_URLS.length) {
-				// if there are more keys than urls, remove the extra keys
-				if (OPENAI_API_KEYS.length > OPENAI_API_BASE_URLS.length) {
-					OPENAI_API_KEYS = OPENAI_API_KEYS.slice(0, OPENAI_API_BASE_URLS.length);
-				}
-
-				// if there are more urls than keys, add empty keys
-				if (OPENAI_API_KEYS.length < OPENAI_API_BASE_URLS.length) {
-					const diff = OPENAI_API_BASE_URLS.length - OPENAI_API_KEYS.length;
-					for (let i = 0; i < diff; i++) {
-						OPENAI_API_KEYS.push('');
-					}
-				}
+		// Check if API KEYS length is same than API URLS length
+		if (OPENAI_API_KEYS.length !== OPENAI_API_BASE_URLS.length) {
+			// if there are more keys than urls, remove the extra keys
+			if (OPENAI_API_KEYS.length > OPENAI_API_BASE_URLS.length) {
+				OPENAI_API_KEYS = OPENAI_API_KEYS.slice(0, OPENAI_API_BASE_URLS.length);
 			}
 
-			const res = await updateOpenAIConfig(localStorage.token, {
-				ENABLE_OPENAI_API: ENABLE_OPENAI_API,
-				OPENAI_API_BASE_URLS: OPENAI_API_BASE_URLS,
-				OPENAI_API_KEYS: OPENAI_API_KEYS,
-				OPENAI_API_CONFIGS: OPENAI_API_CONFIGS
-			}).catch((error) => {
-				toast.error(`${error}`);
-			});
-
-			if (res) {
-				toast.success($i18n.t('OpenAI API settings updated'));
-				await models.set(await getModels());
+			// if there are more urls than keys, add empty keys
+			if (OPENAI_API_KEYS.length < OPENAI_API_BASE_URLS.length) {
+				const diff = OPENAI_API_BASE_URLS.length - OPENAI_API_KEYS.length;
+				for (let i = 0; i < diff; i++) {
+					OPENAI_API_KEYS.push('');
+				}
 			}
+		}
+
+		const res = await updateOpenAIConfig(localStorage.token, {
+			OPENAI_API_BASE_URLS: OPENAI_API_BASE_URLS,
+			OPENAI_API_KEYS: OPENAI_API_KEYS,
+			OPENAI_API_CONFIGS: OPENAI_API_CONFIGS
+		}).catch((error) => {
+			toast.error(`${error}`);
+		});
+
+		if (res) {
+			toast.success($i18n.t('OpenAI API settings updated'));
+			await models.set(await getModels());
 		}
 	};
 
@@ -110,29 +105,25 @@
 				})()
 			]);
 
-			ENABLE_OPENAI_API = openaiConfig.ENABLE_OPENAI_API;
-
 			OPENAI_API_BASE_URLS = openaiConfig.OPENAI_API_BASE_URLS;
 			OPENAI_API_KEYS = openaiConfig.OPENAI_API_KEYS;
 			OPENAI_API_CONFIGS = openaiConfig.OPENAI_API_CONFIGS;
 
-			if (ENABLE_OPENAI_API) {
-				// get url and idx
-				for (const [idx, url] of OPENAI_API_BASE_URLS.entries()) {
-					if (!OPENAI_API_CONFIGS[idx]) {
-						// Legacy support, url as key
-						OPENAI_API_CONFIGS[idx] = OPENAI_API_CONFIGS[url] || {};
-					}
+			// get url and idx
+			for (const [idx, url] of OPENAI_API_BASE_URLS.entries()) {
+				if (!OPENAI_API_CONFIGS[idx]) {
+					// Legacy support, url as key
+					OPENAI_API_CONFIGS[idx] = OPENAI_API_CONFIGS[url] || {};
 				}
-
-				OPENAI_API_BASE_URLS.forEach(async (url, idx) => {
-					OPENAI_API_CONFIGS[idx] = OPENAI_API_CONFIGS[idx] || {};
-					if (!(OPENAI_API_CONFIGS[idx]?.enable ?? true)) {
-						return;
-					}
-					await getOpenAIModels(localStorage.token, idx);
-				});
 			}
+
+			OPENAI_API_BASE_URLS.forEach(async (url, idx) => {
+				OPENAI_API_CONFIGS[idx] = OPENAI_API_CONFIGS[idx] || {};
+				if (!(OPENAI_API_CONFIGS[idx]?.enable ?? true)) {
+					return;
+				}
+				await getOpenAIModels(localStorage.token, idx);
+			});
 		}
 	});
 
@@ -152,7 +143,7 @@
 
 <form class="flex flex-col h-full justify-between text-sm" on:submit|preventDefault={submitHandler}>
 	<div class=" overflow-y-scroll scrollbar-hidden h-full">
-		{#if ENABLE_OPENAI_API !== null && connectionsConfig !== null}
+		{#if connectionsConfig !== null}
 			<div class="mb-3.5">
 				<div class=" mt-0.5 mb-2.5 text-base font-medium">{$i18n.t('General')}</div>
 
@@ -163,64 +154,44 @@
 						<div class="flex justify-between items-center text-sm">
 							<div class="  font-medium">{$i18n.t('OpenAI API')}</div>
 
-							<div class="flex items-center">
-								<div class="">
-									<Switch
-										bind:state={ENABLE_OPENAI_API}
-										on:change={async () => {
-											updateOpenAIHandler();
-										}}
-									/>
-								</div>
-							</div>
+							<Tooltip content={$i18n.t(`Add Connection`)}>
+								<button
+									class="px-1"
+									on:click={() => {
+										showAddOpenAIConnectionModal = true;
+									}}
+									type="button"
+								>
+									<Plus />
+								</button>
+							</Tooltip>
 						</div>
 
-						{#if ENABLE_OPENAI_API}
-							<div class="">
-								<div class="flex justify-between items-center">
-									<div class="font-medium text-xs">{$i18n.t('Manage OpenAI API Connections')}</div>
+						<div class="flex flex-col gap-1.5 mt-1.5">
+							{#each OPENAI_API_BASE_URLS as url, idx}
+								<OpenAIConnection
+									bind:url={OPENAI_API_BASE_URLS[idx]}
+									bind:key={OPENAI_API_KEYS[idx]}
+									bind:config={OPENAI_API_CONFIGS[idx]}
+									onSubmit={() => {
+										updateOpenAIHandler();
+									}}
+									onDelete={() => {
+										OPENAI_API_BASE_URLS = OPENAI_API_BASE_URLS.filter(
+											(url, urlIdx) => idx !== urlIdx
+										);
+										OPENAI_API_KEYS = OPENAI_API_KEYS.filter((key, keyIdx) => idx !== keyIdx);
 
-									<Tooltip content={$i18n.t(`Add Connection`)}>
-										<button
-											class="px-1"
-											on:click={() => {
-												showAddOpenAIConnectionModal = true;
-											}}
-											type="button"
-										>
-											<Plus />
-										</button>
-									</Tooltip>
-								</div>
-
-								<div class="flex flex-col gap-1.5 mt-1.5">
-									{#each OPENAI_API_BASE_URLS as url, idx}
-										<OpenAIConnection
-											bind:url={OPENAI_API_BASE_URLS[idx]}
-											bind:key={OPENAI_API_KEYS[idx]}
-											bind:config={OPENAI_API_CONFIGS[idx]}
-											onSubmit={() => {
-												updateOpenAIHandler();
-											}}
-											onDelete={() => {
-												OPENAI_API_BASE_URLS = OPENAI_API_BASE_URLS.filter(
-													(url, urlIdx) => idx !== urlIdx
-												);
-												OPENAI_API_KEYS = OPENAI_API_KEYS.filter((key, keyIdx) => idx !== keyIdx);
-
-												let newConfig = {};
-												OPENAI_API_BASE_URLS.forEach((url, newIdx) => {
-													newConfig[newIdx] =
-														OPENAI_API_CONFIGS[newIdx < idx ? newIdx : newIdx + 1];
-												});
-												OPENAI_API_CONFIGS = newConfig;
-												updateOpenAIHandler();
-											}}
-										/>
-									{/each}
-								</div>
-							</div>
-						{/if}
+										let newConfig = {};
+										OPENAI_API_BASE_URLS.forEach((url, newIdx) => {
+											newConfig[newIdx] = OPENAI_API_CONFIGS[newIdx < idx ? newIdx : newIdx + 1];
+										});
+										OPENAI_API_CONFIGS = newConfig;
+										updateOpenAIHandler();
+									}}
+								/>
+							{/each}
+						</div>
 					</div>
 				</div>
 
@@ -243,31 +214,6 @@
 					<div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
 						{$i18n.t(
 							'Direct Connections allow users to connect to their own OpenAI compatible API endpoints.'
-						)}
-					</div>
-				</div>
-
-				<hr class=" border-gray-100/30 dark:border-gray-850/30 my-2" />
-
-				<div class="my-2">
-					<div class="flex justify-between items-center text-sm">
-						<div class=" text-xs font-medium">{$i18n.t('Cache Base Model List')}</div>
-
-						<div class="flex items-center">
-							<div class="">
-								<Switch
-									bind:state={connectionsConfig.ENABLE_BASE_MODELS_CACHE}
-									on:change={async () => {
-										updateConnectionsHandler();
-									}}
-								/>
-							</div>
-						</div>
-					</div>
-
-					<div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-						{$i18n.t(
-							'Base Model List Cache speeds up access by fetching base models only at startup or on settings save—faster, but may not show recent base model changes.'
 						)}
 					</div>
 				</div>

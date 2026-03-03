@@ -541,13 +541,6 @@ input[type='number'] {
 	}
 }
 
-.ai-autocompletion::after {
-	color: #a0a0a0;
-
-	content: attr(data-suggestion);
-	pointer-events: none;
-}
-
 .tiptap pre > code {
 	border-radius: 0.4rem;
 	font-size: 0.85rem;

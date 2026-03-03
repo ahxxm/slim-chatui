@@ -1,12 +1,8 @@
 import os
 
-import black
 import logging
 
-from open_webui.config import ENABLE_ADMIN_EXPORT
-from open_webui.constants import ERROR_MESSAGES
-from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends
 from starlette.background import BackgroundTask
 from starlette.responses import FileResponse
 
@@ -24,28 +20,8 @@ async def get_gravatar(email: str, user=Depends(get_verified_user)):
     return get_gravatar_url(email)
 
 
-class CodeForm(BaseModel):
-    code: str
-
-
-@router.post("/code/format")
-async def format_code(form_data: CodeForm, user=Depends(get_admin_user)):
-    try:
-        formatted_code = black.format_str(form_data.code, mode=black.Mode())
-        return {"code": formatted_code}
-    except black.NothingChanged:
-        return {"code": form_data.code}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/db/download")
 async def download_db(user=Depends(get_admin_user)):
-    if not ENABLE_ADMIN_EXPORT:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
     from open_webui.internal.db import backup_db
 
     backup_path = backup_db()

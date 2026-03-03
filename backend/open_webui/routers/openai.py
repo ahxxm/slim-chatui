@@ -171,7 +171,6 @@ router = APIRouter()
 @router.get("/config")
 async def get_config(request: Request, user=Depends(get_admin_user)):
     return {
-        "ENABLE_OPENAI_API": request.app.state.config.ENABLE_OPENAI_API,
         "OPENAI_API_BASE_URLS": request.app.state.config.OPENAI_API_BASE_URLS,
         "OPENAI_API_KEYS": request.app.state.config.OPENAI_API_KEYS,
         "OPENAI_API_CONFIGS": request.app.state.config.OPENAI_API_CONFIGS,
@@ -179,7 +178,6 @@ async def get_config(request: Request, user=Depends(get_admin_user)):
 
 
 class OpenAIConfigForm(BaseModel):
-    ENABLE_OPENAI_API: Optional[bool] = None
     OPENAI_API_BASE_URLS: list[str]
     OPENAI_API_KEYS: list[str]
     OPENAI_API_CONFIGS: dict
@@ -192,7 +190,6 @@ async def update_config(
     user=Depends(get_admin_user),
     db: Session = Depends(get_session),
 ):
-    request.app.state.config.ENABLE_OPENAI_API = form_data.ENABLE_OPENAI_API
     request.app.state.config.OPENAI_API_BASE_URLS = form_data.OPENAI_API_BASE_URLS
     request.app.state.config.OPENAI_API_KEYS = form_data.OPENAI_API_KEYS
 
@@ -227,7 +224,6 @@ async def update_config(
     await get_all_models.cache.clear()
 
     return {
-        "ENABLE_OPENAI_API": request.app.state.config.ENABLE_OPENAI_API,
         "OPENAI_API_BASE_URLS": request.app.state.config.OPENAI_API_BASE_URLS,
         "OPENAI_API_KEYS": request.app.state.config.OPENAI_API_KEYS,
         "OPENAI_API_CONFIGS": request.app.state.config.OPENAI_API_CONFIGS,
@@ -310,9 +306,6 @@ async def speech(request: Request, user=Depends(get_verified_user)):
 
 
 async def get_all_models_responses(request: Request, user: UserModel) -> list:
-    if not request.app.state.config.ENABLE_OPENAI_API:
-        return []
-
     api_base_urls = request.app.state.config.OPENAI_API_BASE_URLS
     api_keys = list(request.app.state.config.OPENAI_API_KEYS)
     api_configs = request.app.state.config.OPENAI_API_CONFIGS
@@ -418,9 +411,6 @@ async def get_all_models_responses(request: Request, user: UserModel) -> list:
 async def get_all_models(request: Request, user: UserModel) -> dict[str, list]:
     log.info("get_all_models()")
 
-    if not request.app.state.config.ENABLE_OPENAI_API:
-        return {"data": []}
-
     api_base_urls = request.app.state.config.OPENAI_API_BASE_URLS
 
     responses = await get_all_models_responses(request, user=user)
@@ -488,9 +478,6 @@ async def get_all_models(request: Request, user: UserModel) -> dict[str, list]:
 async def get_models(
     request: Request, url_idx: Optional[int] = None, user=Depends(get_verified_user)
 ):
-    if not request.app.state.config.ENABLE_OPENAI_API:
-        raise HTTPException(status_code=503, detail="OpenAI API is disabled")
-
     models = {
         "data": [],
     }

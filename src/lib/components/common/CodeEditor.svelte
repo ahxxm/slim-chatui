@@ -13,9 +13,6 @@
 
 	import { onMount, createEventDispatcher, getContext, tick } from 'svelte';
 
-	import { formatPythonCode } from '$lib/apis/utils';
-	import { toast } from 'svelte-sonner';
-
 	const dispatch = createEventDispatcher();
 	const i18n = getContext('i18n');
 
@@ -112,30 +109,6 @@
 		return await language?.load();
 	};
 
-	export const formatPythonCodeHandler = async () => {
-		if (codeEditor) {
-			const res = await formatPythonCode(localStorage.token, _value).catch((error) => {
-				toast.error(`${error}`);
-				return null;
-			});
-			if (res && res.code) {
-				const formattedCode = res.code;
-				codeEditor.dispatch({
-					changes: [{ from: 0, to: codeEditor.state.doc.length, insert: formattedCode }]
-				});
-
-				_value = formattedCode;
-				onChange(_value);
-				await tick();
-
-				toast.success($i18n.t('Code formatted successfully'));
-				return true;
-			}
-			return false;
-		}
-		return false;
-	};
-
 	let extensions = [
 		basicSetup,
 		keymap.of([{ key: 'Tab', run: acceptCompletion }, indentWithTab]),
@@ -219,14 +192,7 @@
 		const keydownHandler = async (e) => {
 			if ((e.ctrlKey || e.metaKey) && e.key === 's') {
 				e.preventDefault();
-
 				onSave();
-			}
-
-			// Format code when Ctrl + Shift + F is pressed
-			if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'f') {
-				e.preventDefault();
-				await formatPythonCodeHandler();
 			}
 		};
 

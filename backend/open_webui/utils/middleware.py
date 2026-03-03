@@ -56,19 +56,6 @@ logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 
 
-DEFAULT_REASONING_TAGS = [
-    ("<think>", "</think>"),
-    ("<thinking>", "</thinking>"),
-    ("<reason>", "</reason>"),
-    ("<reasoning>", "</reasoning>"),
-    ("<thought>", "</thought>"),
-    ("<Thought>", "</Thought>"),
-    ("<|begin_of_thought|>", "<|end_of_thought|>"),
-    ("◁think▷", "◁/think▷"),
-]
-DEFAULT_SOLUTION_TAGS = [("<|begin_of_solution|>", "<|end_of_solution|>")]
-
-
 def output_id(prefix: str) -> str:
     """Generate OR-style ID: prefix + 24-char hex UUID."""
     return f"{prefix}_{uuid4().hex[:24]}"
@@ -555,7 +542,7 @@ def apply_params_to_form_data(form_data):
     params = form_data.pop("params", {})
     custom_params = params.pop("custom_params", {})
 
-    open_webui_only_keys = {"stream_delta_chunk_size", "reasoning_tags", "system"}
+    open_webui_only_keys = {"stream_delta_chunk_size", "system"}
     for key in open_webui_only_keys:
         params.pop(key, None)
 
@@ -1199,223 +1186,6 @@ async def streaming_chat_response_handler(response, ctx):
 
         # Handle as a background task
         async def response_handler(response):
-            def tag_output_handler(content_type, tags, output):
-                """
-                Detect special tags (reasoning, solution) in streaming
-                content and create corresponding OR-aligned output items directly.
-                Operates on output items instead of content_blocks.
-
-                Uses the text from the output items themselves for tag detection,
-                eliminating state divergence between accumulated content and items.
-                """
-                end_flag = False
-
-                def extract_attributes(tag_content):
-                    """Extract attributes from a tag if they exist."""
-                    attributes = {}
-                    if not tag_content:
-                        return attributes
-                    matches = re.findall(r'(\w+)\s*=\s*"([^"]+)"', tag_content)
-                    for key, value in matches:
-                        attributes[key] = value
-                    return attributes
-
-                def get_last_text(out):
-                    """Get text from last message item, or empty string."""
-                    if out and out[-1].get("type") == "message":
-                        parts = out[-1].get("content", [])
-                        if parts and parts[-1].get("type") == "output_text":
-                            return parts[-1].get("text", "")
-                    return ""
-
-                def set_last_text(out, text):
-                    """Set text on last message item's output_text."""
-                    if out and out[-1].get("type") == "message":
-                        parts = out[-1].get("content", [])
-                        if parts and parts[-1].get("type") == "output_text":
-                            parts[-1]["text"] = text
-
-                # Map content_type to output item type
-                output_type_map = {
-                    "reasoning": "reasoning",
-                    "solution": "message",  # solution tags just produce text
-                }
-                output_item_type = output_type_map.get(content_type, content_type)
-
-                last_type = output[-1].get("type", "") if output else ""
-
-                if last_type == "message":
-                    # Use the output item's own text for tag detection
-                    item_text = get_last_text(output)
-                    for start_tag, end_tag in tags:
-
-                        start_tag_pattern = rf"{re.escape(start_tag)}"
-                        if start_tag.startswith("<") and start_tag.endswith(">"):
-                            start_tag_pattern = (
-                                rf"<{re.escape(start_tag[1:-1])}(\s.*?)?>"
-                            )
-
-                        match = re.search(start_tag_pattern, item_text)
-                        if match:
-                            try:
-                                attr_content = match.group(1) if match.group(1) else ""
-                            except:
-                                attr_content = ""
-
-                            attributes = extract_attributes(attr_content)
-
-                            before_tag = item_text[: match.start()]
-                            after_tag = item_text[match.end() :]
-
-                            # Keep only text before the tag in the message
-                            set_last_text(output, before_tag)
-
-                            if not before_tag.strip():
-                                # Remove empty message item
-                                if output and output[-1].get("type") == "message":
-                                    output.pop()
-
-                            # Append the new output item
-                            if output_item_type == "reasoning":
-                                output.append(
-                                    {
-                                        "type": "reasoning",
-                                        "id": output_id("r"),
-                                        "status": "in_progress",
-                                        "start_tag": start_tag,
-                                        "end_tag": end_tag,
-                                        "attributes": attributes,
-                                        "content": [],
-                                        "summary": None,
-                                        "started_at": time.time(),
-                                    }
-                                )
-                            else:
-                                # solution or other text-producing tag
-                                output.append(
-                                    {
-                                        "type": "message",
-                                        "id": output_id("msg"),
-                                        "status": "in_progress",
-                                        "role": "assistant",
-                                        "content": [
-                                            {"type": "output_text", "text": ""}
-                                        ],
-                                        "_tag_type": content_type,
-                                        "start_tag": start_tag,
-                                        "end_tag": end_tag,
-                                        "attributes": attributes,
-                                        "started_at": time.time(),
-                                    }
-                                )
-
-                            if after_tag:
-                                # Set the after_tag content on the new item
-                                if output_item_type == "reasoning":
-                                    output[-1]["content"] = [
-                                        {"type": "output_text", "text": after_tag}
-                                    ]
-                                else:
-                                    set_last_text(output, after_tag)
-
-                                _, recursive_end = tag_output_handler(
-                                    content_type, tags, output
-                                )
-                                if recursive_end:
-                                    end_flag = True
-
-                            break
-
-                elif (last_type == "reasoning" and content_type == "reasoning") or (
-                    last_type == "message"
-                    and output[-1].get("_tag_type") == content_type
-                ):
-                    item = output[-1]
-                    start_tag = item.get("start_tag", "")
-                    end_tag = item.get("end_tag", "")
-
-                    end_tag_pattern = rf"{re.escape(end_tag)}"
-
-                    # Get the block content from the item itself
-                    if last_type == "reasoning":
-                        parts = item.get("content", [])
-                        block_content = ""
-                        if parts and parts[-1].get("type") == "output_text":
-                            block_content = parts[-1].get("text", "")
-                    else:
-                        block_content = get_last_text(output)
-
-                    if re.search(end_tag_pattern, block_content):
-                        end_flag = True
-
-                        # Strip start and end tags from content
-                        start_tag_pattern = rf"{re.escape(start_tag)}"
-                        if start_tag.startswith("<") and start_tag.endswith(">"):
-                            start_tag_pattern = (
-                                rf"<{re.escape(start_tag[1:-1])}(\s.*?)?>"
-                            )
-                        block_content = re.sub(
-                            start_tag_pattern, "", block_content
-                        ).strip()
-
-                        end_tag_regex = re.compile(end_tag_pattern, re.DOTALL)
-                        split_content = end_tag_regex.split(block_content, maxsplit=1)
-
-                        block_content = (
-                            split_content[0].strip() if split_content else ""
-                        )
-                        leftover_content = (
-                            split_content[1].strip() if len(split_content) > 1 else ""
-                        )
-
-                        if block_content:
-                            # Update the item with final content
-                            if last_type == "reasoning":
-                                item["content"] = [
-                                    {"type": "output_text", "text": block_content}
-                                ]
-                                item["ended_at"] = time.time()
-                                item["duration"] = item["ended_at"] - item["started_at"]
-                                item["status"] = "completed"
-                            else:
-                                set_last_text(output, block_content)
-                                item["ended_at"] = time.time()
-
-                            # Reset by appending a new message item for leftover
-                            output.append(
-                                {
-                                    "type": "message",
-                                    "id": output_id("msg"),
-                                    "status": "in_progress",
-                                    "role": "assistant",
-                                    "content": [
-                                        {
-                                            "type": "output_text",
-                                            "text": leftover_content,
-                                        }
-                                    ],
-                                }
-                            )
-                        else:
-                            # Remove the block if content is empty
-                            output.pop()
-                            output.append(
-                                {
-                                    "type": "message",
-                                    "id": output_id("msg"),
-                                    "status": "in_progress",
-                                    "role": "assistant",
-                                    "content": [
-                                        {
-                                            "type": "output_text",
-                                            "text": leftover_content,
-                                        }
-                                    ],
-                                }
-                            )
-
-                return output, end_flag
-
             message = Chats.get_message_by_id_and_message_id(
                 metadata["chat_id"], metadata["message_id"]
             )
@@ -1455,21 +1225,6 @@ async def streaming_chat_response_handler(response, ctx):
                     output = []
 
             usage = None
-
-            reasoning_tags_param = metadata.get("params", {}).get("reasoning_tags")
-            DETECT_REASONING_TAGS = reasoning_tags_param is not False
-
-            reasoning_tags = []
-            if DETECT_REASONING_TAGS:
-                if (
-                    isinstance(reasoning_tags_param, list)
-                    and len(reasoning_tags_param) == 2
-                ):
-                    reasoning_tags = [
-                        (reasoning_tags_param[0], reasoning_tags_param[1])
-                    ]
-                else:
-                    reasoning_tags = DEFAULT_REASONING_TAGS
 
             try:
 
@@ -1573,11 +1328,7 @@ async def streaming_chat_response_handler(response, ctx):
                                 else:
                                     choices = data.get("choices", [])
 
-                                    # Normalize usage data to standard format
                                     raw_usage = data.get("usage", {}) or {}
-                                    raw_usage.update(
-                                        data.get("timings", {})
-                                    )  # llama.cpp
                                     if raw_usage:
                                         usage = normalize_usage(raw_usage)
                                         await event_emitter(
@@ -1753,117 +1504,39 @@ async def streaming_chat_response_handler(response, ctx):
 
                                         content = f"{content}{value}"
 
-                                        # Check if we're inside a tag-based block
-                                        # (reasoning, code_interpreter, or solution).
-                                        # If so, append to the existing in-progress
-                                        # item instead of creating a new message —
-                                        # otherwise tag_output_handler re-detects the
-                                        # start tag on every chunk and fragments the
-                                        # output.
-                                        last_item = output[-1] if output else None
-                                        last_item_type = (
-                                            last_item.get("type", "")
-                                            if last_item
-                                            else ""
-                                        )
-                                        inside_tag_block = (
-                                            last_item is not None
-                                            and last_item.get("status") == "in_progress"
-                                            and last_item.get("attributes", {}).get(
-                                                "type"
+                                        if (
+                                            not output
+                                            or output[-1].get("type") != "message"
+                                        ):
+                                            output.append(
+                                                {
+                                                    "type": "message",
+                                                    "id": output_id("msg"),
+                                                    "status": "in_progress",
+                                                    "role": "assistant",
+                                                    "content": [
+                                                        {
+                                                            "type": "output_text",
+                                                            "text": "",
+                                                        }
+                                                    ],
+                                                }
                                             )
-                                            != "reasoning_content"
-                                            and (
-                                                last_item_type == "reasoning"
-                                                or (
-                                                    last_item_type == "message"
-                                                    and last_item.get("_tag_type")
-                                                    is not None
-                                                )
-                                            )
-                                        )
 
-                                        if inside_tag_block:
-                                            # Append to the existing tag-based item
-                                            if last_item_type == "reasoning":
-                                                parts = last_item.get("content", [])
-                                                if (
-                                                    parts
-                                                    and parts[-1].get("type")
-                                                    == "output_text"
-                                                ):
-                                                    parts[-1]["text"] += value
-                                                else:
-                                                    last_item["content"] = [
-                                                        {
-                                                            "type": "output_text",
-                                                            "text": value,
-                                                        }
-                                                    ]
-                                            else:
-                                                # solution or other _tag_type message
-                                                msg_parts = last_item.get("content", [])
-                                                if (
-                                                    msg_parts
-                                                    and msg_parts[-1].get("type")
-                                                    == "output_text"
-                                                ):
-                                                    msg_parts[-1]["text"] += value
-                                                else:
-                                                    last_item["content"] = [
-                                                        {
-                                                            "type": "output_text",
-                                                            "text": value,
-                                                        }
-                                                    ]
+                                        msg_parts = output[-1].get("content", [])
+                                        if (
+                                            msg_parts
+                                            and msg_parts[-1].get("type")
+                                            == "output_text"
+                                        ):
+                                            msg_parts[-1]["text"] += value
                                         else:
-                                            if (
-                                                not output
-                                                or output[-1].get("type") != "message"
-                                            ):
-                                                output.append(
-                                                    {
-                                                        "type": "message",
-                                                        "id": output_id("msg"),
-                                                        "status": "in_progress",
-                                                        "role": "assistant",
-                                                        "content": [
-                                                            {
-                                                                "type": "output_text",
-                                                                "text": "",
-                                                            }
-                                                        ],
-                                                    }
-                                                )
-
-                                            # Append value to last message item's text
-                                            msg_parts = output[-1].get("content", [])
-                                            if (
-                                                msg_parts
-                                                and msg_parts[-1].get("type")
-                                                == "output_text"
-                                            ):
-                                                msg_parts[-1]["text"] += value
-                                            else:
-                                                output[-1]["content"] = [
-                                                    {
-                                                        "type": "output_text",
-                                                        "text": value,
-                                                    }
-                                                ]
-
-                                        if DETECT_REASONING_TAGS:
-                                            output, _ = tag_output_handler(
-                                                "reasoning",
-                                                reasoning_tags,
-                                                output,
-                                            )
-
-                                            output, _ = tag_output_handler(
-                                                "solution",
-                                                DEFAULT_SOLUTION_TAGS,
-                                                output,
-                                            )
+                                            output[-1]["content"] = [
+                                                {
+                                                    "type": "output_text",
+                                                    "text": value,
+                                                }
+                                            ]
 
                                         if ENABLE_REALTIME_CHAT_SAVE:
                                             # Save message in the database
