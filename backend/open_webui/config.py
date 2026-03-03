@@ -76,12 +76,6 @@ def save_to_db(data):
         db.commit()
 
 
-def reset_config():
-    with get_db() as db:
-        db.query(Config).delete()
-        db.commit()
-
-
 # When initializing, check if config.json exists and migrate it to the database
 if os.path.exists(f"{DATA_DIR}/config.json"):
     data = load_json_config()
@@ -100,6 +94,8 @@ def get_config():
         return config_entry.data if config_entry else DEFAULT_CONFIG
 
 
+# In-memory config blob. Loaded from DB at startup, updated by stage(),
+# written back to DB only by persist(db). Ahead of the DB row until persisted.
 CONFIG_DATA = get_config()
 
 
@@ -177,8 +173,7 @@ class PersistentConfig(Generic[T]):
             self.value = new_value
             log.info(f"Updated {self.env_name} to new value {self.value}")
 
-    def save(self):
-        log.info(f"Saving '{self.env_name}' to the database")
+    def stage(self):
         path_parts = self.config_path.split(".")
         sub_config = CONFIG_DATA
         for key in path_parts[:-1]:
@@ -186,7 +181,6 @@ class PersistentConfig(Generic[T]):
                 sub_config[key] = {}
             sub_config = sub_config[key]
         sub_config[path_parts[-1]] = self.value
-        save_config(CONFIG_DATA)
         self.config_value = self.value
 
 
@@ -197,16 +191,28 @@ class AppConfig:
         super().__setattr__("_state", {})
 
     def __setattr__(self, key, value):
+        # In-memory + CONFIG_DATA only. No DB write here — persist(db) does that.
+        # DB writes here deadlock with any open request transaction (SQLite single-writer).
         if isinstance(value, PersistentConfig):
             self._state[key] = value
         else:
             self._state[key].value = value
-            self._state[key].save()
+            self._state[key].stage()
 
     def __getattr__(self, key):
         if key not in self._state:
             raise AttributeError(f"Config key '{key}' not found")
         return self._state[key].value
+
+    def persist(self, db):
+        existing = db.query(Config).first()
+        if not existing:
+            existing = Config(data=CONFIG_DATA, version=0)
+            db.add(existing)
+        else:
+            existing.data = CONFIG_DATA
+            existing.updated_at = datetime.now()
+        db.flush()
 
 
 ####################################

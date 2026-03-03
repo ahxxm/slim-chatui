@@ -175,7 +175,7 @@ class ChatMessageTable:
                 if usage:
                     existing.usage = usage
                 existing.updated_at = now
-                db.commit()
+                db.flush()
                 db.refresh(existing)
                 return ChatMessageModel.model_validate(existing)
             else:
@@ -206,7 +206,7 @@ class ChatMessageTable:
                     updated_at=now,
                 )
                 db.add(message)
-                db.commit()
+                db.flush()
                 db.refresh(message)
                 return ChatMessageModel.model_validate(message)
 
@@ -306,7 +306,7 @@ class ChatMessageTable:
     ) -> bool:
         with get_db_context(db) as db:
             db.query(ChatMessage).filter_by(chat_id=chat_id).delete()
-            db.commit()
+            db.flush()
             return True
 
     # Analytics methods

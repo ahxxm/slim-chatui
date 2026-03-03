@@ -60,7 +60,7 @@ class TagTable:
             try:
                 result = Tag(**tag.model_dump())
                 db.add(result)
-                db.commit()
+                db.flush()
                 db.refresh(result)
                 if result:
                     return TagModel.model_validate(result)
@@ -109,7 +109,7 @@ class TagTable:
                 id = name.replace(" ", "_").lower()
                 res = db.query(Tag).filter_by(id=id, user_id=user_id).delete()
                 log.debug(f"res: {res}")
-                db.commit()
+                db.flush()
                 return True
         except Exception as e:
             log.error(f"delete_tag: {e}")
@@ -126,7 +126,7 @@ class TagTable:
                 db.query(Tag).filter(Tag.id.in_(ids), Tag.user_id == user_id).delete(
                     synchronize_session=False
                 )
-                db.commit()
+                db.flush()
                 return True
         except Exception as e:
             log.error(f"delete_tags_by_ids: {e}")
@@ -153,7 +153,7 @@ class TagTable:
             ]
             if new_tags:
                 db.add_all(new_tags)
-                db.commit()
+                db.flush()
 
 
 Tags = TagTable()

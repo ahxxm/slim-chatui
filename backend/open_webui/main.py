@@ -119,7 +119,6 @@ from open_webui.config import (
     AUTOCOMPLETE_GENERATION_PROMPT_TEMPLATE,
     AUTOCOMPLETE_GENERATION_INPUT_MAX_LENGTH,
     AppConfig,
-    reset_config,
 )
 from open_webui.env import (
     ENV,

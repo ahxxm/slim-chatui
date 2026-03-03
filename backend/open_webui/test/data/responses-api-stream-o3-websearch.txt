@@ -1,0 +1,549 @@
+event: response.created
+data: {"type":"response.created","response":{"id":"resp_1","object":"response","created_at":1772512308,"status":"in_progress","background":false,"completed_at":null,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":null,"max_tool_calls":null,"model":"o3-2025-04-16","output":[],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":null,"reasoning":{"effort":"high","summary":"detailed"},"safety_identifier":null,"service_tier":"priority","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tools":[{"type":"web_search_preview","search_context_size":"medium","user_location":{"type":"approximate","city":null,"country":"TW","region":null,"timezone":null}}],"top_logprobs":0,"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":0}
+
+event: response.in_progress
+data: {"type":"response.in_progress","response":{"id":"resp_1","object":"response","created_at":1772512308,"status":"in_progress","background":false,"completed_at":null,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":null,"max_tool_calls":null,"model":"o3-2025-04-16","output":[],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":null,"reasoning":{"effort":"high","summary":"detailed"},"safety_identifier":null,"service_tier":"priority","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tools":[{"type":"web_search_preview","search_context_size":"medium","user_location":{"type":"approximate","city":null,"country":"TW","region":null,"timezone":null}}],"top_logprobs":0,"top_p":1.0,"truncation":"disabled","usage":null,"user":null,"metadata":{}},"sequence_number":1}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"rs_1","type":"reasoning","summary":[]},"output_index":0,"sequence_number":2}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"rs_1","type":"reasoning","summary":[]},"output_index":0,"sequence_number":3}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"ws_1","type":"web_search_call","status":"in_progress"},"output_index":1,"sequence_number":4}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","item_id":"ws_1","output_index":1,"sequence_number":5}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","item_id":"ws_1","output_index":1,"sequence_number":6}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","item_id":"ws_1","output_index":1,"sequence_number":7}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"ws_1","type":"web_search_call","status":"completed","action":{"type":"search","queries":["OpenAI O3 model pricing"],"query":"OpenAI O3 model pricing"}},"output_index":1,"sequence_number":8}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"rs_2","type":"reasoning","summary":[]},"output_index":2,"sequence_number":9}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"rs_2","type":"reasoning","summary":[]},"output_index":2,"sequence_number":10}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"ws_2","type":"web_search_call","status":"in_progress"},"output_index":3,"sequence_number":11}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","item_id":"ws_2","output_index":3,"sequence_number":12}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","item_id":"ws_2","output_index":3,"sequence_number":13}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","item_id":"ws_2","output_index":3,"sequence_number":14}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"ws_2","type":"web_search_call","status":"completed","action":{"type":"search","queries":["OpenAI o3 price drop March 2026","OpenAI o3 pricing update 2026"],"query":"OpenAI o3 price drop March 2026"}},"output_index":3,"sequence_number":15}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"rs_3","type":"reasoning","summary":[]},"output_index":4,"sequence_number":16}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"rs_3","type":"reasoning","summary":[]},"output_index":4,"sequence_number":17}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"ws_3","type":"web_search_call","status":"in_progress"},"output_index":5,"sequence_number":18}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","item_id":"ws_3","output_index":5,"sequence_number":19}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","item_id":"ws_3","output_index":5,"sequence_number":20}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","item_id":"ws_3","output_index":5,"sequence_number":21}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"ws_3","type":"web_search_call","status":"completed","action":{"type":"search","queries":["o3 price March 2026 openai"],"query":"o3 price March 2026 openai"}},"output_index":5,"sequence_number":22}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"rs_4","type":"reasoning","summary":[]},"output_index":6,"sequence_number":23}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"rs_4","type":"reasoning","summary":[]},"output_index":6,"sequence_number":24}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"ws_4","type":"web_search_call","status":"in_progress"},"output_index":7,"sequence_number":25}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","item_id":"ws_4","output_index":7,"sequence_number":26}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","item_id":"ws_4","output_index":7,"sequence_number":27}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","item_id":"ws_4","output_index":7,"sequence_number":28}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"ws_4","type":"web_search_call","status":"completed","action":{"type":"search","queries":["o3 flex processing pricing openai","o3 priority processing openai"],"query":"o3 flex processing pricing openai"}},"output_index":7,"sequence_number":29}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"rs_5","type":"reasoning","summary":[]},"output_index":8,"sequence_number":30}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"rs_5","type":"reasoning","summary":[]},"output_index":8,"sequence_number":31}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"ws_5","type":"web_search_call","status":"in_progress"},"output_index":9,"sequence_number":32}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","item_id":"ws_5","output_index":9,"sequence_number":33}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","item_id":"ws_5","output_index":9,"sequence_number":34}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","item_id":"ws_5","output_index":9,"sequence_number":35}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"ws_5","type":"web_search_call","status":"completed","action":{"type":"search","queries":["OpenAI O3 price increase March 2026","OpenAI o3 model pricing March 2026 update"],"query":"OpenAI O3 price increase March 2026"}},"output_index":9,"sequence_number":36}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"rs_6","type":"reasoning","summary":[]},"output_index":10,"sequence_number":37}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"rs_6","type":"reasoning","summary":[]},"output_index":10,"sequence_number":38}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"ws_6","type":"web_search_call","status":"in_progress"},"output_index":11,"sequence_number":39}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","item_id":"ws_6","output_index":11,"sequence_number":40}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","item_id":"ws_6","output_index":11,"sequence_number":41}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","item_id":"ws_6","output_index":11,"sequence_number":42}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"ws_6","type":"web_search_call","status":"completed","action":{"type":"search","queries":["openai blog February 2026 o3 pricing"],"query":"openai blog February 2026 o3 pricing"}},"output_index":11,"sequence_number":43}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"rs_7","type":"reasoning","summary":[]},"output_index":12,"sequence_number":44}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"rs_7","type":"reasoning","summary":[]},"output_index":12,"sequence_number":45}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"ws_7","type":"web_search_call","status":"in_progress"},"output_index":13,"sequence_number":46}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","item_id":"ws_7","output_index":13,"sequence_number":47}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","item_id":"ws_7","output_index":13,"sequence_number":48}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","item_id":"ws_7","output_index":13,"sequence_number":49}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"ws_7","type":"web_search_call","status":"completed","action":{"type":"search","queries":["Sam Altman o3 price 2026"],"query":"Sam Altman o3 price 2026"}},"output_index":13,"sequence_number":50}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"rs_8","type":"reasoning","summary":[]},"output_index":14,"sequence_number":51}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"rs_8","type":"reasoning","summary":[]},"output_index":14,"sequence_number":52}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"ws_8","type":"web_search_call","status":"in_progress"},"output_index":15,"sequence_number":53}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","item_id":"ws_8","output_index":15,"sequence_number":54}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","item_id":"ws_8","output_index":15,"sequence_number":55}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","item_id":"ws_8","output_index":15,"sequence_number":56}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"ws_8","type":"web_search_call","status":"completed","action":{"type":"search","queries":["o3 batch api discount 50% openai"],"query":"o3 batch api discount 50% openai"}},"output_index":15,"sequence_number":57}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"rs_9","type":"reasoning","summary":[]},"output_index":16,"sequence_number":58}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"rs_9","type":"reasoning","summary":[]},"output_index":16,"sequence_number":59}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"ws_9","type":"web_search_call","status":"in_progress"},"output_index":17,"sequence_number":60}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","item_id":"ws_9","output_index":17,"sequence_number":61}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","item_id":"ws_9","output_index":17,"sequence_number":62}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","item_id":"ws_9","output_index":17,"sequence_number":63}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"ws_9","type":"web_search_call","status":"completed","action":{"type":"search","queries":["priority processing o3 price $3.50 openai"],"query":"priority processing o3 price $3.50 openai"}},"output_index":17,"sequence_number":64}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"rs_10","type":"reasoning","summary":[]},"output_index":18,"sequence_number":65}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"rs_10","type":"reasoning","summary":[]},"output_index":18,"sequence_number":66}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"ws_10","type":"web_search_call","status":"in_progress"},"output_index":19,"sequence_number":67}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","item_id":"ws_10","output_index":19,"sequence_number":68}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","item_id":"ws_10","output_index":19,"sequence_number":69}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","item_id":"ws_10","output_index":19,"sequence_number":70}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"ws_10","type":"web_search_call","status":"completed","action":{"type":"search","queries":["o3 pricing unchanged 2026"],"query":"o3 pricing unchanged 2026"}},"output_index":19,"sequence_number":71}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"rs_11","type":"reasoning","summary":[]},"output_index":20,"sequence_number":72}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"rs_11","type":"reasoning","summary":[]},"output_index":20,"sequence_number":73}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"ws_11","type":"web_search_call","status":"in_progress"},"output_index":21,"sequence_number":74}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","item_id":"ws_11","output_index":21,"sequence_number":75}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","item_id":"ws_11","output_index":21,"sequence_number":76}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","item_id":"ws_11","output_index":21,"sequence_number":77}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"ws_11","type":"web_search_call","status":"completed","action":{"type":"search","queries":["OpenAI announces Priority processing tier November 2025"],"query":"OpenAI announces Priority processing tier November 2025"}},"output_index":21,"sequence_number":78}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"rs_12","type":"reasoning","summary":[]},"output_index":22,"sequence_number":79}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"rs_12","type":"reasoning","summary":[]},"output_index":22,"sequence_number":80}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","item":{"id":"msg_1","type":"message","status":"in_progress","content":[],"role":"assistant"},"output_index":23,"sequence_number":81}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","content_index":0,"item_id":"msg_1","output_index":23,"part":{"type":"output_text","annotations":[],"logprobs":[],"text":""},"sequence_number":82}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"Here’s the state of play on Open","item_id":"msg_1","logprobs":[],"obfuscation":"","output_index":23,"sequence_number":83}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"AI’s O-series","item_id":"msg_1","logprobs":[],"obfuscation":"dxs","output_index":23,"sequence_number":84}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" (“o3”) pricing as of today (Tuesday 3","item_id":"msg_1","logprobs":[],"obfuscation":"jiiCllXmGO","output_index":23,"sequence_number":85}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" March 2026).\n\n","item_id":"msg_1","logprobs":[],"obfuscation":"b","output_index":23,"sequence_number":86}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"1. Standard “pay-as-you-go” price (unch","item_id":"msg_1","logprobs":[],"obfuscation":"LuCIcwHjC","output_index":23,"sequence_number":87}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"anged since the 80 % drop in June 2025)  \n","item_id":"msg_1","logprobs":[],"obfuscation":"576VCn","output_index":23,"sequence_number":88}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"   • o3: $2.","item_id":"msg_1","logprobs":[],"obfuscation":"W5RZ","output_index":23,"sequence_number":89}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"00 / M input tokens, $","item_id":"msg_1","logprobs":[],"obfuscation":"Xr2EJAINnt","output_index":23,"sequence_number":90}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"0.50 / M cached-input tokens, $8.00","item_id":"msg_1","logprobs":[],"obfuscation":"VG5ecW4VOGbdv","output_index":23,"sequence_number":91}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" / M output tokens. ","item_id":"msg_1","logprobs":[],"obfuscation":"BECZxjUDselp","output_index":23,"sequence_number":92}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"([platform.openai.com](https://platform.openai.com/docs/pricing?utm_source=openai)","item_id":"msg_1","logprobs":[],"obfuscation":"ut3clpWecYIqUh","output_index":23,"sequence_number":93}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":")  \n   The 10 June","item_id":"msg_1","logprobs":[],"obfuscation":"1j9QzWdFWTLzY6","output_index":23,"sequence_number":94}
+
+event: response.output_text.annotation.added
+data: {"type":"response.output_text.annotation.added","annotation":{"type":"url_citation","end_index":351,"start_index":268,"title":"Pricing | OpenAI API","url":"https://platform.openai.com/docs/pricing?utm_source=openai"},"annotation_index":0,"content_index":0,"item_id":"msg_1","output_index":23,"sequence_number":95}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" 2025 cut—announced by Sam Altman on X—took","item_id":"msg_1","logprobs":[],"obfuscation":"wdIHY","output_index":23,"sequence_number":96}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" the rate down from $10 / $40 to today’s $","item_id":"msg_1","logprobs":[],"obfuscation":"lUcBdh","output_index":23,"sequence_number":97}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"2 / $8 and has not","item_id":"msg_1","logprobs":[],"obfuscation":"bbAWVOFi0dhb0e","output_index":23,"sequence_number":98}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" changed since. ","item_id":"msg_1","logprobs":[],"obfuscation":"","output_index":23,"sequence_number":99}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"([ctol.digital](https://www.ctol.digital/news/openai-cuts-flagship-o3-model-prices-80-percent-ai-market-competition/?utm_source=openai))  \n\n2. Current price","item_id":"msg_1","logprobs":[],"obfuscation":"IzGA","output_index":23,"sequence_number":100}
+
+event: response.output_text.annotation.added
+data: {"type":"response.output_text.annotation.added","annotation":{"type":"url_citation","end_index":623,"start_index":487,"title":"OpenAI Cuts Flagship O3 Model Prices by 80% as AI Market Competition Intensifies - CTOL Digital Solutions","url":"https://www.ctol.digital/news/openai-cuts-flagship-o3-model-prices-80-percent-ai-market-competition/?utm_source=openai"},"annotation_index":1,"content_index":0,"item_id":"msg_1","output_index":23,"sequence_number":101}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" card for every o3 variant  \n   •","item_id":"msg_1","logprobs":[],"obfuscation":"dtpuzle2CNWYmLr","output_index":23,"sequence_number":102}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" o3-mini  $1.","item_id":"msg_1","logprobs":[],"obfuscation":"bPP","output_index":23,"sequence_number":103}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"10 in / $0.55 cached / $4.","item_id":"msg_1","logprobs":[],"obfuscation":"u9n0Di","output_index":23,"sequence_number":104}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"40 out per M","item_id":"msg_1","logprobs":[],"obfuscation":"lUxo","output_index":23,"sequence_number":105}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" tokens (launched 31 Jan 2025)","item_id":"msg_1","logprobs":[],"obfuscation":"lD","output_index":23,"sequence_number":106}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" ([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai)","item_id":"msg_1","logprobs":[],"obfuscation":"","output_index":23,"sequence_number":107}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":")  \n   • o3","item_id":"msg_1","logprobs":[],"obfuscation":"u0cr5","output_index":23,"sequence_number":108}
+
+event: response.output_text.annotation.added
+data: {"type":"response.output_text.annotation.added","annotation":{"type":"url_citation","end_index":854,"start_index":758,"title":"o3 pricing - OpenAI","url":"https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai"},"annotation_index":2,"content_index":0,"item_id":"msg_1","output_index":23,"sequence_number":109}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" (standard) $2.00 / $0.50","item_id":"msg_1","logprobs":[],"obfuscation":"uvs5t7N","output_index":23,"sequence_number":110}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" / $8.00 (80 % cut) ","item_id":"msg_1","logprobs":[],"obfuscation":"BBtVynq1YIBu","output_index":23,"sequence_number":111}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"([platform.openai.com](https://platform.openai.com/docs/pricing?utm_source=openai))  \n   •","item_id":"msg_1","logprobs":[],"obfuscation":"cdRn1j","output_index":23,"sequence_number":112}
+
+event: response.output_text.annotation.added
+data: {"type":"response.output_text.annotation.added","annotation":{"type":"url_citation","end_index":992,"start_index":909,"title":"Pricing | OpenAI API","url":"https://platform.openai.com/docs/pricing?utm_source=openai"},"annotation_index":3,"content_index":0,"item_id":"msg_1","output_index":23,"sequence_number":113}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" o3-deep-research $10 / ","item_id":"msg_1","logprobs":[],"obfuscation":"DQiMUxM5","output_index":23,"sequence_number":114}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"$2.50 / $40 (extra-long-context,","item_id":"msg_1","logprobs":[],"obfuscation":"","output_index":23,"sequence_number":115}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" research use) ","item_id":"msg_1","logprobs":[],"obfuscation":"m","output_index":23,"sequence_number":116}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai))  \n   • o3-pro  ","item_id":"msg_1","logprobs":[],"obfuscation":"","output_index":23,"sequence_number":117}
+
+event: response.output_text.annotation.added
+data: {"type":"response.output_text.annotation.added","annotation":{"type":"url_citation","end_index":1166,"start_index":1070,"title":"o3 pricing - OpenAI","url":"https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai"},"annotation_index":4,"content_index":0,"item_id":"msg_1","output_index":23,"sequence_number":118}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"$20 in / $80","item_id":"msg_1","logprobs":[],"obfuscation":"qxtj","output_index":23,"sequence_number":119}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" out (high-compute version launched alongside the price cut) ","item_id":"msg_1","logprobs":[],"obfuscation":"p4A","output_index":23,"sequence_number":120}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"([developers.openai.com](https://developers.openai.com/api/docs/models/o3-pro?utm_source=openai))","item_id":"msg_1","logprobs":[],"obfuscation":"DIp52X96pZC2hOJ","output_index":23,"sequence_number":121}
+
+event: response.output_text.annotation.added
+data: {"type":"response.output_text.annotation.added","annotation":{"type":"url_citation","end_index":1352,"start_index":1255,"title":"o3-pro Model | OpenAI API","url":"https://developers.openai.com/api/docs/models/o3-pro?utm_source=openai"},"annotation_index":5,"content_index":0,"item_id":"msg_1","output_index":23,"sequence_number":122}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"  \n\n3. Service-tier","item_id":"msg_1","logprobs":[],"obfuscation":"wtnH4lM4lFSiw","output_index":23,"sequence_number":123}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" modifiers (you select them with","item_id":"msg_1","logprobs":[],"obfuscation":"","output_index":23,"sequence_number":124}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" service_tier in the API):  \n  ","item_id":"msg_1","logprobs":[],"obfuscation":"2","output_index":23,"sequence_number":125}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" • Flex processing (beta","item_id":"msg_1","logprobs":[],"obfuscation":"Zch1ZmvB","output_index":23,"sequence_number":126}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"): ~½","item_id":"msg_1","logprobs":[],"obfuscation":"fjueNzg75Gs","output_index":23,"sequence_number":127}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" the standard price for slower, best-effort jobs. For o3","item_id":"msg_1","logprobs":[],"obfuscation":"RYmTzEBK","output_index":23,"sequence_number":128}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" that is $1 in / $","item_id":"msg_1","logprobs":[],"obfuscation":"93XvbHCH4iTMOF","output_index":23,"sequence_number":129}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"4 out per M tokens. ","item_id":"msg_1","logprobs":[],"obfuscation":"j4HiCI33UtGR","output_index":23,"sequence_number":130}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai)","item_id":"msg_1","logprobs":[],"obfuscation":"S","output_index":23,"sequence_number":131}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":")  \n   • Batch","item_id":"msg_1","logprobs":[],"obfuscation":"0S","output_index":23,"sequence_number":132}
+
+event: response.output_text.annotation.added
+data: {"type":"response.output_text.annotation.added","annotation":{"type":"url_citation","end_index":1653,"start_index":1557,"title":"o3 pricing - OpenAI","url":"https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai"},"annotation_index":6,"content_index":0,"item_id":"msg_1","output_index":23,"sequence_number":133}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" API: asynchronous jobs billed at exactly 50","item_id":"msg_1","logprobs":[],"obfuscation":"s0cR","output_index":23,"sequence_number":134}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" % of the synchronous rate ($1 in /","item_id":"msg_1","logprobs":[],"obfuscation":"7OFnmNsSIbY5L","output_index":23,"sequence_number":135}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" $4 out for o3). ","item_id":"msg_1","logprobs":[],"obfuscation":"IMkVKcXtp8gebNa","output_index":23,"sequence_number":136}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"([help.openai.com](https://help.openai.com/en/articles/9197833-batch-api-faq.gz?utm_source=openai))  \n   • Priority processing (","item_id":"msg_1","logprobs":[],"obfuscation":"","output_index":23,"sequence_number":137}
+
+event: response.output_text.annotation.added
+data: {"type":"response.output_text.annotation.added","annotation":{"type":"url_citation","end_index":1861,"start_index":1762,"title":"Batch API FAQ | OpenAI Help Center","url":"https://help.openai.com/en/articles/9197833-batch-api-faq.gz?utm_source=openai"},"annotation_index":7,"content_index":0,"item_id":"msg_1","output_index":23,"sequence_number":138}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"Enterprise): premium latency & 99.9 % uptime","item_id":"msg_1","logprobs":[],"obfuscation":"Ao12","output_index":23,"sequence_number":139}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":", priced higher—$3.50 in / $0","item_id":"msg_1","logprobs":[],"obfuscation":"77O","output_index":23,"sequence_number":140}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":".875 cached / $14 out per","item_id":"msg_1","logprobs":[],"obfuscation":"ISIAlgN","output_index":23,"sequence_number":141}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" M tokens for o3. ","item_id":"msg_1","logprobs":[],"obfuscation":"dtgwzQnHVD8GkB","output_index":23,"sequence_number":142}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"([openai.com](https://openai.com/pt-BR/api-priority-processing/?utm_source=openai)","item_id":"msg_1","logprobs":[],"obfuscation":"8taaAgZoX490nr","output_index":23,"sequence_number":143}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":")  \n\n4. What’s","item_id":"msg_1","logprobs":[],"obfuscation":"M4","output_index":23,"sequence_number":144}
+
+event: response.output_text.annotation.added
+data: {"type":"response.output_text.annotation.added","annotation":{"type":"url_citation","end_index":2089,"start_index":2006,"title":"Priority Processing para clientes da API | OpenAI","url":"https://openai.com/pt-BR/api-priority-processing/?utm_source=openai"},"annotation_index":8,"content_index":0,"item_id":"msg_1","output_index":23,"sequence_number":145}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" changed recently—and what has **not**  ","item_id":"msg_1","logprobs":[],"obfuscation":"IshZtibI","output_index":23,"sequence_number":146}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"\n   • Since the big ","item_id":"msg_1","logprobs":[],"obfuscation":"fCBcOYJHN1k9","output_index":23,"sequence_number":147}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"2025 cut there have been no additional price reductions or increases","item_id":"msg_1","logprobs":[],"obfuscation":"CIUAyK4B7X8T","output_index":23,"sequence_number":148}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" for o3-standard. Every recent change","item_id":"msg_1","logprobs":[],"obfuscation":"6bZjOkEGJos","output_index":23,"sequence_number":149}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" (Flex, Batch, Priority) is a","item_id":"msg_1","logprobs":[],"obfuscation":"Uwv","output_index":23,"sequence_number":150}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" billing option layered on top of the same $","item_id":"msg_1","logprobs":[],"obfuscation":"yhgx","output_index":23,"sequence_number":151}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"2 / $8 base price.  \n   •","item_id":"msg_1","logprobs":[],"obfuscation":"i9nCURE","output_index":23,"sequence_number":152}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" No 2026 roadmap item","item_id":"msg_1","logprobs":[],"obfuscation":"03MGda2wxr7","output_index":23,"sequence_number":153}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" or OpenAI support article hints at another o","item_id":"msg_1","logprobs":[],"obfuscation":"N3N","output_index":23,"sequence_number":154}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"3 price move; the company","item_id":"msg_1","logprobs":[],"obfuscation":"e3DqXEE","output_index":23,"sequence_number":155}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" is steering new workloads toward GPT-5 while","item_id":"msg_1","logprobs":[],"obfuscation":"ffs","output_index":23,"sequence_number":156}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" keeping o3 available at the June 2025 rate.","item_id":"msg_1","logprobs":[],"obfuscation":"IIw4","output_index":23,"sequence_number":157}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" ([platform.openai.com](https://platform.openai.com/docs/models/o3?utm_source=openai))  \n\n5. Cost-saving tips","item_id":"msg_1","logprobs":[],"obfuscation":"9js","output_index":23,"sequence_number":158}
+
+event: response.output_text.annotation.added
+data: {"type":"response.output_text.annotation.added","annotation":{"type":"url_citation","end_index":2631,"start_index":2546,"title":"o3 Model | OpenAI API","url":"https://platform.openai.com/docs/models/o3?utm_source=openai"},"annotation_index":9,"content_index":0,"item_id":"msg_1","output_index":23,"sequence_number":159}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" developers are using today  \n  ","item_id":"msg_1","logprobs":[],"obfuscation":"","output_index":23,"sequence_number":160}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" • Cache prompts aggressively—cached","item_id":"msg_1","logprobs":[],"obfuscation":"8vUFMRYtYqqn","output_index":23,"sequence_number":161}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" input is 75 % cheaper than raw input.  ","item_id":"msg_1","logprobs":[],"obfuscation":"j2n0ZuK3","output_index":23,"sequence_number":162}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"\n   • Use Flex or Batch for non-","item_id":"msg_1","logprobs":[],"obfuscation":"","output_index":23,"sequence_number":163}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"interactive jobs; combine with o","item_id":"msg_1","logprobs":[],"obfuscation":"","output_index":23,"sequence_number":164}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"3-mini where quality allows.  \n  ","item_id":"msg_1","logprobs":[],"obfuscation":"RR8tCCNTY9lAnWE","output_index":23,"sequence_number":165}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" • Reserve Priority processing only for user-facing endpoints that","item_id":"msg_1","logprobs":[],"obfuscation":"MCIsrlgLpfb1Mu","output_index":23,"sequence_number":166}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" need <500 ms first","item_id":"msg_1","logprobs":[],"obfuscation":"jRJq2LKYSbAzC","output_index":23,"sequence_number":167}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"-token latency; otherwise stick","item_id":"msg_1","logprobs":[],"obfuscation":"a","output_index":23,"sequence_number":168}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" to Standard or Flex.\n\nBottom line: the “headline” o3 price","item_id":"msg_1","logprobs":[],"obfuscation":"Gu5Hb","output_index":23,"sequence_number":169}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" is still the post-cut","item_id":"msg_1","logprobs":[],"obfuscation":"Uza9lQwj3L","output_index":23,"sequence_number":170}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" $2 / $8, but you can now","item_id":"msg_1","logprobs":[],"obfuscation":"dERF6Bu","output_index":23,"sequence_number":171}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" pay anywhere from $1 / $","item_id":"msg_1","logprobs":[],"obfuscation":"CggnJ7i","output_index":23,"sequence_number":172}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"4 (Flex/Batch) to $3.5 / $","item_id":"msg_1","logprobs":[],"obfuscation":"fAUqHg","output_index":23,"sequence_number":173}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"14 (Priority) depending on","item_id":"msg_1","logprobs":[],"obfuscation":"59NAR0","output_index":23,"sequence_number":174}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" the latency SLA you pick,","item_id":"msg_1","logprobs":[],"obfuscation":"09wTBp","output_index":23,"sequence_number":175}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":" and cheaper o3-mini remains the lowest","item_id":"msg_1","logprobs":[],"obfuscation":"dRAGabQoB","output_index":23,"sequence_number":176}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"-cost entry point to the full o-","item_id":"msg_1","logprobs":[],"obfuscation":"","output_index":23,"sequence_number":177}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","content_index":0,"delta":"series family.","item_id":"msg_1","logprobs":[],"obfuscation":"Jt","output_index":23,"sequence_number":178}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","content_index":0,"item_id":"msg_1","logprobs":[],"output_index":23,"sequence_number":179,"text":"Here’s the state of play on OpenAI’s O-series (“o3”) pricing as of today (Tuesday 3 March 2026).\n\n1. Standard “pay-as-you-go” price (unchanged since the 80 % drop in June 2025)  \n   • o3: $2.00 / M input tokens, $0.50 / M cached-input tokens, $8.00 / M output tokens. ([platform.openai.com](https://platform.openai.com/docs/pricing?utm_source=openai))  \n   The 10 June 2025 cut—announced by Sam Altman on X—took the rate down from $10 / $40 to today’s $2 / $8 and has not changed since. ([ctol.digital](https://www.ctol.digital/news/openai-cuts-flagship-o3-model-prices-80-percent-ai-market-competition/?utm_source=openai))  \n\n2. Current price card for every o3 variant  \n   • o3-mini  $1.10 in / $0.55 cached / $4.40 out per M tokens (launched 31 Jan 2025) ([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai))  \n   • o3 (standard) $2.00 / $0.50 / $8.00 (80 % cut) ([platform.openai.com](https://platform.openai.com/docs/pricing?utm_source=openai))  \n   • o3-deep-research $10 / $2.50 / $40 (extra-long-context, research use) ([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai))  \n   • o3-pro  $20 in / $80 out (high-compute version launched alongside the price cut) ([developers.openai.com](https://developers.openai.com/api/docs/models/o3-pro?utm_source=openai))  \n\n3. Service-tier modifiers (you select them with service_tier in the API):  \n   • Flex processing (beta): ~½ the standard price for slower, best-effort jobs. For o3 that is $1 in / $4 out per M tokens. ([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai))  \n   • Batch API: asynchronous jobs billed at exactly 50 % of the synchronous rate ($1 in / $4 out for o3). ([help.openai.com](https://help.openai.com/en/articles/9197833-batch-api-faq.gz?utm_source=openai))  \n   • Priority processing (Enterprise): premium latency & 99.9 % uptime, priced higher—$3.50 in / $0.875 cached / $14 out per M tokens for o3. ([openai.com](https://openai.com/pt-BR/api-priority-processing/?utm_source=openai))  \n\n4. What’s changed recently—and what has **not**  \n   • Since the big 2025 cut there have been no additional price reductions or increases for o3-standard. Every recent change (Flex, Batch, Priority) is a billing option layered on top of the same $2 / $8 base price.  \n   • No 2026 roadmap item or OpenAI support article hints at another o3 price move; the company is steering new workloads toward GPT-5 while keeping o3 available at the June 2025 rate. ([platform.openai.com](https://platform.openai.com/docs/models/o3?utm_source=openai))  \n\n5. Cost-saving tips developers are using today  \n   • Cache prompts aggressively—cached input is 75 % cheaper than raw input.  \n   • Use Flex or Batch for non-interactive jobs; combine with o3-mini where quality allows.  \n   • Reserve Priority processing only for user-facing endpoints that need <500 ms first-token latency; otherwise stick to Standard or Flex.\n\nBottom line: the “headline” o3 price is still the post-cut $2 / $8, but you can now pay anywhere from $1 / $4 (Flex/Batch) to $3.5 / $14 (Priority) depending on the latency SLA you pick, and cheaper o3-mini remains the lowest-cost entry point to the full o-series family."}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","content_index":0,"item_id":"msg_1","output_index":23,"part":{"type":"output_text","annotations":[{"type":"url_citation","end_index":351,"start_index":268,"title":"Pricing | OpenAI API","url":"https://platform.openai.com/docs/pricing?utm_source=openai"},{"type":"url_citation","end_index":623,"start_index":487,"title":"OpenAI Cuts Flagship O3 Model Prices by 80% as AI Market Competition Intensifies - CTOL Digital Solutions","url":"https://www.ctol.digital/news/openai-cuts-flagship-o3-model-prices-80-percent-ai-market-competition/?utm_source=openai"},{"type":"url_citation","end_index":854,"start_index":758,"title":"o3 pricing - OpenAI","url":"https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai"},{"type":"url_citation","end_index":992,"start_index":909,"title":"Pricing | OpenAI API","url":"https://platform.openai.com/docs/pricing?utm_source=openai"},{"type":"url_citation","end_index":1166,"start_index":1070,"title":"o3 pricing - OpenAI","url":"https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai"},{"type":"url_citation","end_index":1352,"start_index":1255,"title":"o3-pro Model | OpenAI API","url":"https://developers.openai.com/api/docs/models/o3-pro?utm_source=openai"},{"type":"url_citation","end_index":1653,"start_index":1557,"title":"o3 pricing - OpenAI","url":"https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai"},{"type":"url_citation","end_index":1861,"start_index":1762,"title":"Batch API FAQ | OpenAI Help Center","url":"https://help.openai.com/en/articles/9197833-batch-api-faq.gz?utm_source=openai"},{"type":"url_citation","end_index":2089,"start_index":2006,"title":"Priority Processing para clientes da API | OpenAI","url":"https://openai.com/pt-BR/api-priority-processing/?utm_source=openai"},{"type":"url_citation","end_index":2631,"start_index":2546,"title":"o3 Model | OpenAI API","url":"https://platform.openai.com/docs/models/o3?utm_source=openai"}],"logprobs":[],"text":"Here’s the state of play on OpenAI’s O-series (“o3”) pricing as of today (Tuesday 3 March 2026).\n\n1. Standard “pay-as-you-go” price (unchanged since the 80 % drop in June 2025)  \n   • o3: $2.00 / M input tokens, $0.50 / M cached-input tokens, $8.00 / M output tokens. ([platform.openai.com](https://platform.openai.com/docs/pricing?utm_source=openai))  \n   The 10 June 2025 cut—announced by Sam Altman on X—took the rate down from $10 / $40 to today’s $2 / $8 and has not changed since. ([ctol.digital](https://www.ctol.digital/news/openai-cuts-flagship-o3-model-prices-80-percent-ai-market-competition/?utm_source=openai))  \n\n2. Current price card for every o3 variant  \n   • o3-mini  $1.10 in / $0.55 cached / $4.40 out per M tokens (launched 31 Jan 2025) ([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai))  \n   • o3 (standard) $2.00 / $0.50 / $8.00 (80 % cut) ([platform.openai.com](https://platform.openai.com/docs/pricing?utm_source=openai))  \n   • o3-deep-research $10 / $2.50 / $40 (extra-long-context, research use) ([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai))  \n   • o3-pro  $20 in / $80 out (high-compute version launched alongside the price cut) ([developers.openai.com](https://developers.openai.com/api/docs/models/o3-pro?utm_source=openai))  \n\n3. Service-tier modifiers (you select them with service_tier in the API):  \n   • Flex processing (beta): ~½ the standard price for slower, best-effort jobs. For o3 that is $1 in / $4 out per M tokens. ([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai))  \n   • Batch API: asynchronous jobs billed at exactly 50 % of the synchronous rate ($1 in / $4 out for o3). ([help.openai.com](https://help.openai.com/en/articles/9197833-batch-api-faq.gz?utm_source=openai))  \n   • Priority processing (Enterprise): premium latency & 99.9 % uptime, priced higher—$3.50 in / $0.875 cached / $14 out per M tokens for o3. ([openai.com](https://openai.com/pt-BR/api-priority-processing/?utm_source=openai))  \n\n4. What’s changed recently—and what has **not**  \n   • Since the big 2025 cut there have been no additional price reductions or increases for o3-standard. Every recent change (Flex, Batch, Priority) is a billing option layered on top of the same $2 / $8 base price.  \n   • No 2026 roadmap item or OpenAI support article hints at another o3 price move; the company is steering new workloads toward GPT-5 while keeping o3 available at the June 2025 rate. ([platform.openai.com](https://platform.openai.com/docs/models/o3?utm_source=openai))  \n\n5. Cost-saving tips developers are using today  \n   • Cache prompts aggressively—cached input is 75 % cheaper than raw input.  \n   • Use Flex or Batch for non-interactive jobs; combine with o3-mini where quality allows.  \n   • Reserve Priority processing only for user-facing endpoints that need <500 ms first-token latency; otherwise stick to Standard or Flex.\n\nBottom line: the “headline” o3 price is still the post-cut $2 / $8, but you can now pay anywhere from $1 / $4 (Flex/Batch) to $3.5 / $14 (Priority) depending on the latency SLA you pick, and cheaper o3-mini remains the lowest-cost entry point to the full o-series family."},"sequence_number":180}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","item":{"id":"msg_1","type":"message","status":"completed","content":[{"type":"output_text","annotations":[{"type":"url_citation","end_index":351,"start_index":268,"title":"Pricing | OpenAI API","url":"https://platform.openai.com/docs/pricing?utm_source=openai"},{"type":"url_citation","end_index":623,"start_index":487,"title":"OpenAI Cuts Flagship O3 Model Prices by 80% as AI Market Competition Intensifies - CTOL Digital Solutions","url":"https://www.ctol.digital/news/openai-cuts-flagship-o3-model-prices-80-percent-ai-market-competition/?utm_source=openai"},{"type":"url_citation","end_index":854,"start_index":758,"title":"o3 pricing - OpenAI","url":"https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai"},{"type":"url_citation","end_index":992,"start_index":909,"title":"Pricing | OpenAI API","url":"https://platform.openai.com/docs/pricing?utm_source=openai"},{"type":"url_citation","end_index":1166,"start_index":1070,"title":"o3 pricing - OpenAI","url":"https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai"},{"type":"url_citation","end_index":1352,"start_index":1255,"title":"o3-pro Model | OpenAI API","url":"https://developers.openai.com/api/docs/models/o3-pro?utm_source=openai"},{"type":"url_citation","end_index":1653,"start_index":1557,"title":"o3 pricing - OpenAI","url":"https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai"},{"type":"url_citation","end_index":1861,"start_index":1762,"title":"Batch API FAQ | OpenAI Help Center","url":"https://help.openai.com/en/articles/9197833-batch-api-faq.gz?utm_source=openai"},{"type":"url_citation","end_index":2089,"start_index":2006,"title":"Priority Processing para clientes da API | OpenAI","url":"https://openai.com/pt-BR/api-priority-processing/?utm_source=openai"},{"type":"url_citation","end_index":2631,"start_index":2546,"title":"o3 Model | OpenAI API","url":"https://platform.openai.com/docs/models/o3?utm_source=openai"}],"logprobs":[],"text":"Here’s the state of play on OpenAI’s O-series (“o3”) pricing as of today (Tuesday 3 March 2026).\n\n1. Standard “pay-as-you-go” price (unchanged since the 80 % drop in June 2025)  \n   • o3: $2.00 / M input tokens, $0.50 / M cached-input tokens, $8.00 / M output tokens. ([platform.openai.com](https://platform.openai.com/docs/pricing?utm_source=openai))  \n   The 10 June 2025 cut—announced by Sam Altman on X—took the rate down from $10 / $40 to today’s $2 / $8 and has not changed since. ([ctol.digital](https://www.ctol.digital/news/openai-cuts-flagship-o3-model-prices-80-percent-ai-market-competition/?utm_source=openai))  \n\n2. Current price card for every o3 variant  \n   • o3-mini  $1.10 in / $0.55 cached / $4.40 out per M tokens (launched 31 Jan 2025) ([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai))  \n   • o3 (standard) $2.00 / $0.50 / $8.00 (80 % cut) ([platform.openai.com](https://platform.openai.com/docs/pricing?utm_source=openai))  \n   • o3-deep-research $10 / $2.50 / $40 (extra-long-context, research use) ([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai))  \n   • o3-pro  $20 in / $80 out (high-compute version launched alongside the price cut) ([developers.openai.com](https://developers.openai.com/api/docs/models/o3-pro?utm_source=openai))  \n\n3. Service-tier modifiers (you select them with service_tier in the API):  \n   • Flex processing (beta): ~½ the standard price for slower, best-effort jobs. For o3 that is $1 in / $4 out per M tokens. ([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai))  \n   • Batch API: asynchronous jobs billed at exactly 50 % of the synchronous rate ($1 in / $4 out for o3). ([help.openai.com](https://help.openai.com/en/articles/9197833-batch-api-faq.gz?utm_source=openai))  \n   • Priority processing (Enterprise): premium latency & 99.9 % uptime, priced higher—$3.50 in / $0.875 cached / $14 out per M tokens for o3. ([openai.com](https://openai.com/pt-BR/api-priority-processing/?utm_source=openai))  \n\n4. What’s changed recently—and what has **not**  \n   • Since the big 2025 cut there have been no additional price reductions or increases for o3-standard. Every recent change (Flex, Batch, Priority) is a billing option layered on top of the same $2 / $8 base price.  \n   • No 2026 roadmap item or OpenAI support article hints at another o3 price move; the company is steering new workloads toward GPT-5 while keeping o3 available at the June 2025 rate. ([platform.openai.com](https://platform.openai.com/docs/models/o3?utm_source=openai))  \n\n5. Cost-saving tips developers are using today  \n   • Cache prompts aggressively—cached input is 75 % cheaper than raw input.  \n   • Use Flex or Batch for non-interactive jobs; combine with o3-mini where quality allows.  \n   • Reserve Priority processing only for user-facing endpoints that need <500 ms first-token latency; otherwise stick to Standard or Flex.\n\nBottom line: the “headline” o3 price is still the post-cut $2 / $8, but you can now pay anywhere from $1 / $4 (Flex/Batch) to $3.5 / $14 (Priority) depending on the latency SLA you pick, and cheaper o3-mini remains the lowest-cost entry point to the full o-series family."}],"role":"assistant"},"output_index":23,"sequence_number":181}
+
+event: response.completed
+data: {"type":"response.completed","response":{"id":"resp_1","object":"response","created_at":1772512308,"status":"completed","background":false,"completed_at":1772512340,"error":null,"frequency_penalty":0.0,"incomplete_details":null,"instructions":null,"max_output_tokens":null,"max_tool_calls":null,"model":"o3-2025-04-16","output":[{"id":"rs_1","type":"reasoning","summary":[]},{"id":"ws_1","type":"web_search_call","status":"completed","action":{"type":"search","queries":["OpenAI O3 model pricing"],"query":"OpenAI O3 model pricing"}},{"id":"rs_2","type":"reasoning","summary":[]},{"id":"ws_2","type":"web_search_call","status":"completed","action":{"type":"search","queries":["OpenAI o3 price drop March 2026","OpenAI o3 pricing update 2026"],"query":"OpenAI o3 price drop March 2026"}},{"id":"rs_3","type":"reasoning","summary":[]},{"id":"ws_3","type":"web_search_call","status":"completed","action":{"type":"search","queries":["o3 price March 2026 openai"],"query":"o3 price March 2026 openai"}},{"id":"rs_4","type":"reasoning","summary":[]},{"id":"ws_4","type":"web_search_call","status":"completed","action":{"type":"search","queries":["o3 flex processing pricing openai","o3 priority processing openai"],"query":"o3 flex processing pricing openai"}},{"id":"rs_5","type":"reasoning","summary":[]},{"id":"ws_5","type":"web_search_call","status":"completed","action":{"type":"search","queries":["OpenAI O3 price increase March 2026","OpenAI o3 model pricing March 2026 update"],"query":"OpenAI O3 price increase March 2026"}},{"id":"rs_6","type":"reasoning","summary":[]},{"id":"ws_6","type":"web_search_call","status":"completed","action":{"type":"search","queries":["openai blog February 2026 o3 pricing"],"query":"openai blog February 2026 o3 pricing"}},{"id":"rs_7","type":"reasoning","summary":[]},{"id":"ws_7","type":"web_search_call","status":"completed","action":{"type":"search","queries":["Sam Altman o3 price 2026"],"query":"Sam Altman o3 price 2026"}},{"id":"rs_8","type":"reasoning","summary":[]},{"id":"ws_8","type":"web_search_call","status":"completed","action":{"type":"search","queries":["o3 batch api discount 50% openai"],"query":"o3 batch api discount 50% openai"}},{"id":"rs_9","type":"reasoning","summary":[]},{"id":"ws_9","type":"web_search_call","status":"completed","action":{"type":"search","queries":["priority processing o3 price $3.50 openai"],"query":"priority processing o3 price $3.50 openai"}},{"id":"rs_10","type":"reasoning","summary":[]},{"id":"ws_10","type":"web_search_call","status":"completed","action":{"type":"search","queries":["o3 pricing unchanged 2026"],"query":"o3 pricing unchanged 2026"}},{"id":"rs_11","type":"reasoning","summary":[]},{"id":"ws_11","type":"web_search_call","status":"completed","action":{"type":"search","queries":["OpenAI announces Priority processing tier November 2025"],"query":"OpenAI announces Priority processing tier November 2025"}},{"id":"rs_12","type":"reasoning","summary":[]},{"id":"msg_1","type":"message","status":"completed","content":[{"type":"output_text","annotations":[{"type":"url_citation","end_index":351,"start_index":268,"title":"Pricing | OpenAI API","url":"https://platform.openai.com/docs/pricing?utm_source=openai"},{"type":"url_citation","end_index":623,"start_index":487,"title":"OpenAI Cuts Flagship O3 Model Prices by 80% as AI Market Competition Intensifies - CTOL Digital Solutions","url":"https://www.ctol.digital/news/openai-cuts-flagship-o3-model-prices-80-percent-ai-market-competition/?utm_source=openai"},{"type":"url_citation","end_index":854,"start_index":758,"title":"o3 pricing - OpenAI","url":"https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai"},{"type":"url_citation","end_index":992,"start_index":909,"title":"Pricing | OpenAI API","url":"https://platform.openai.com/docs/pricing?utm_source=openai"},{"type":"url_citation","end_index":1166,"start_index":1070,"title":"o3 pricing - OpenAI","url":"https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai"},{"type":"url_citation","end_index":1352,"start_index":1255,"title":"o3-pro Model | OpenAI API","url":"https://developers.openai.com/api/docs/models/o3-pro?utm_source=openai"},{"type":"url_citation","end_index":1653,"start_index":1557,"title":"o3 pricing - OpenAI","url":"https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai"},{"type":"url_citation","end_index":1861,"start_index":1762,"title":"Batch API FAQ | OpenAI Help Center","url":"https://help.openai.com/en/articles/9197833-batch-api-faq.gz?utm_source=openai"},{"type":"url_citation","end_index":2089,"start_index":2006,"title":"Priority Processing para clientes da API | OpenAI","url":"https://openai.com/pt-BR/api-priority-processing/?utm_source=openai"},{"type":"url_citation","end_index":2631,"start_index":2546,"title":"o3 Model | OpenAI API","url":"https://platform.openai.com/docs/models/o3?utm_source=openai"}],"logprobs":[],"text":"Here’s the state of play on OpenAI’s O-series (“o3”) pricing as of today (Tuesday 3 March 2026).\n\n1. Standard “pay-as-you-go” price (unchanged since the 80 % drop in June 2025)  \n   • o3: $2.00 / M input tokens, $0.50 / M cached-input tokens, $8.00 / M output tokens. ([platform.openai.com](https://platform.openai.com/docs/pricing?utm_source=openai))  \n   The 10 June 2025 cut—announced by Sam Altman on X—took the rate down from $10 / $40 to today’s $2 / $8 and has not changed since. ([ctol.digital](https://www.ctol.digital/news/openai-cuts-flagship-o3-model-prices-80-percent-ai-market-competition/?utm_source=openai))  \n\n2. Current price card for every o3 variant  \n   • o3-mini  $1.10 in / $0.55 cached / $4.40 out per M tokens (launched 31 Jan 2025) ([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai))  \n   • o3 (standard) $2.00 / $0.50 / $8.00 (80 % cut) ([platform.openai.com](https://platform.openai.com/docs/pricing?utm_source=openai))  \n   • o3-deep-research $10 / $2.50 / $40 (extra-long-context, research use) ([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai))  \n   • o3-pro  $20 in / $80 out (high-compute version launched alongside the price cut) ([developers.openai.com](https://developers.openai.com/api/docs/models/o3-pro?utm_source=openai))  \n\n3. Service-tier modifiers (you select them with service_tier in the API):  \n   • Flex processing (beta): ~½ the standard price for slower, best-effort jobs. For o3 that is $1 in / $4 out per M tokens. ([economize.cloud](https://www.economize.cloud/resources/open-ai/pricing/o3/?utm_source=openai))  \n   • Batch API: asynchronous jobs billed at exactly 50 % of the synchronous rate ($1 in / $4 out for o3). ([help.openai.com](https://help.openai.com/en/articles/9197833-batch-api-faq.gz?utm_source=openai))  \n   • Priority processing (Enterprise): premium latency & 99.9 % uptime, priced higher—$3.50 in / $0.875 cached / $14 out per M tokens for o3. ([openai.com](https://openai.com/pt-BR/api-priority-processing/?utm_source=openai))  \n\n4. What’s changed recently—and what has **not**  \n   • Since the big 2025 cut there have been no additional price reductions or increases for o3-standard. Every recent change (Flex, Batch, Priority) is a billing option layered on top of the same $2 / $8 base price.  \n   • No 2026 roadmap item or OpenAI support article hints at another o3 price move; the company is steering new workloads toward GPT-5 while keeping o3 available at the June 2025 rate. ([platform.openai.com](https://platform.openai.com/docs/models/o3?utm_source=openai))  \n\n5. Cost-saving tips developers are using today  \n   • Cache prompts aggressively—cached input is 75 % cheaper than raw input.  \n   • Use Flex or Batch for non-interactive jobs; combine with o3-mini where quality allows.  \n   • Reserve Priority processing only for user-facing endpoints that need <500 ms first-token latency; otherwise stick to Standard or Flex.\n\nBottom line: the “headline” o3 price is still the post-cut $2 / $8, but you can now pay anywhere from $1 / $4 (Flex/Batch) to $3.5 / $14 (Priority) depending on the latency SLA you pick, and cheaper o3-mini remains the lowest-cost entry point to the full o-series family."}],"role":"assistant"}],"parallel_tool_calls":true,"presence_penalty":0.0,"previous_response_id":null,"prompt_cache_key":null,"prompt_cache_retention":null,"reasoning":{"effort":"high","summary":"detailed"},"safety_identifier":null,"service_tier":"priority","store":false,"temperature":1.0,"text":{"format":{"type":"text"},"verbosity":"medium"},"tool_choice":"auto","tools":[{"type":"web_search_preview","search_context_size":"medium","user_location":{"type":"approximate","city":null,"country":"TW","region":null,"timezone":null}}],"top_logprobs":0,"top_p":1.0,"truncation":"disabled","usage":{"input_tokens":22416,"input_tokens_details":{"cached_tokens":1280},"output_tokens":3188,"output_tokens_details":{"reasoning_tokens":1920},"total_tokens":25604},"user":null,"metadata":{}},"sequence_number":182}
+

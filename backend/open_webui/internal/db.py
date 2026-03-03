@@ -8,8 +8,7 @@ from typing import Any
 
 from open_webui.env import DATABASE_URL
 from sqlalchemy import Dialect, create_engine, MetaData, event, types
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from sqlalchemy.sql.type_api import _T
 from typing_extensions import Self
 
@@ -57,6 +56,10 @@ def get_session():
     db = SessionLocal()
     try:
         yield db
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
     finally:
         db.close()
 
@@ -66,8 +69,12 @@ get_db = contextmanager(get_session)
 
 @contextmanager
 def get_db_context(db: Session | None = None):
-    with get_db() as session:
-        yield session
+    if db is not None:
+        yield db  # caller owns the transaction
+    else:
+        with get_db() as session:
+            yield session
+            session.commit()  # we own it, commit on clean exit
 
 
 def backup_db() -> str:

@@ -172,7 +172,7 @@ class UsersTable:
             )
             result = User(**user.model_dump())
             db.add(result)
-            db.commit()
+            db.flush()
             db.refresh(result)
             return user
 
@@ -337,7 +337,7 @@ class UsersTable:
                 if not user:
                     return None
                 user.role = role
-                db.commit()
+                db.flush()
                 db.refresh(user)
                 return UserModel.model_validate(user)
         except Exception:
@@ -352,7 +352,7 @@ class UsersTable:
                 if not user:
                     return None
                 user.profile_image_url = profile_image_url
-                db.commit()
+                db.flush()
                 db.refresh(user)
                 return UserModel.model_validate(user)
         except Exception:
@@ -368,7 +368,7 @@ class UsersTable:
                     return None
                 for key, value in updated.items():
                     setattr(user, key, value)
-                db.commit()
+                db.flush()
                 db.refresh(user)
                 return UserModel.model_validate(user)
         except Exception as e:
@@ -392,7 +392,7 @@ class UsersTable:
                 user_settings.update(updated)
 
                 db.query(User).filter_by(id=id).update({"settings": user_settings})
-                db.commit()
+                db.flush()
 
                 user = db.query(User).filter_by(id=id).first()
                 return UserModel.model_validate(user)
@@ -406,7 +406,7 @@ class UsersTable:
                 with get_db_context(db) as db:
                     # Delete User
                     db.query(User).filter_by(id=id).delete()
-                    db.commit()
+                    db.flush()
 
                 return True
             else:

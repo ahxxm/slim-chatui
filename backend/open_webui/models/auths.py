@@ -3,8 +3,8 @@ import uuid
 from typing import Optional
 
 from sqlalchemy.orm import Session
-from open_webui.internal.db import Base, get_db_context
-from open_webui.models.users import User, UserModel, UserProfileImageResponse, Users
+from open_webui.internal.db import Base, get_db, get_db_context
+from open_webui.models.users import UserModel, UserProfileImageResponse, Users
 from open_webui.utils.validate import validate_profile_image_url
 from pydantic import BaseModel, field_validator
 from sqlalchemy import Boolean, Column, String, Text
@@ -103,7 +103,7 @@ class AuthsTable:
                 id, name, email, profile_image_url, role, db=db
             )
 
-            db.commit()
+            db.flush()
             db.refresh(result)
 
             if result and user:
@@ -141,7 +141,7 @@ class AuthsTable:
                 result = (
                     db.query(Auth).filter_by(id=id).update({"password": new_password})
                 )
-                db.commit()
+                db.flush()
                 return True if result == 1 else False
         except Exception:
             return False
@@ -151,9 +151,9 @@ class AuthsTable:
     ) -> bool:
         try:
             with get_db_context(db) as db:
-                result = db.query(Auth).filter_by(id=id).update({"email": email})
-                db.commit()
-                return True if result == 1 else False
+                db.query(Auth).filter_by(id=id).update({"email": email})
+                db.flush()
+                return True
         except Exception:
             return False
 
@@ -165,7 +165,7 @@ class AuthsTable:
 
                 if result:
                     db.query(Auth).filter_by(id=id).delete()
-                    db.commit()
+                    db.flush()
 
                     return True
                 else:

@@ -136,7 +136,7 @@ class ModelsTable:
                     }
                 )
                 db.add(result)
-                db.commit()
+                db.flush()
                 db.refresh(result)
 
                 if result:
@@ -293,7 +293,7 @@ class ModelsTable:
 
                 model.is_active = not model.is_active
                 model.updated_at = int(time.time())
-                db.commit()
+                db.flush()
                 db.refresh(model)
 
                 return ModelModel.model_validate(model)
@@ -307,7 +307,7 @@ class ModelsTable:
             with get_db_context(db) as db:
                 data = model.model_dump(exclude={"id"})
                 db.query(Model).filter_by(id=id).update(data)
-                db.commit()
+                db.flush()
 
                 return self.get_model_by_id(id, db=db)
         except Exception as e:
@@ -318,7 +318,7 @@ class ModelsTable:
         try:
             with get_db_context(db) as db:
                 db.query(Model).filter_by(id=id).delete()
-                db.commit()
+                db.flush()
                 return True
         except Exception:
             return False
@@ -327,7 +327,7 @@ class ModelsTable:
         try:
             with get_db_context(db) as db:
                 db.query(Model).delete()
-                db.commit()
+                db.flush()
                 return True
         except Exception:
             return False
@@ -364,7 +364,7 @@ class ModelsTable:
                     if model.id not in new_model_ids:
                         db.delete(model)
 
-                db.commit()
+                db.flush()
 
                 return [
                     ModelModel.model_validate(model) for model in db.query(Model).all()
