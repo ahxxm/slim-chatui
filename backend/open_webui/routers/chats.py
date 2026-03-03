@@ -369,9 +369,17 @@ async def update_chat_by_id(
     form_data: ChatForm,
     user=Depends(get_verified_user),
 ):
+    from open_webui.utils.middleware import serialize_output
+
     chat = Chats.get_chat_by_id_and_user_id(id, user.id)
     if chat:
         updated_chat = {**chat.chat, **form_data.chat}
+        # Re-serialize content from output for messages that have it,
+        # since the frontend may send stale content from intermediate
+        # streaming states (e.g. web_search queries only arrive at end)
+        for msg in updated_chat.get("history", {}).get("messages", {}).values():
+            if msg.get("output"):
+                msg["content"] = serialize_output(msg["output"])
         chat = Chats.update_chat_by_id(id, updated_chat)
         return ChatResponse(**chat.model_dump())
     else:

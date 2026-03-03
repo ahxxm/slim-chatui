@@ -94,7 +94,7 @@ def serialize_output(output: list) -> str:
         elif item_type == "web_search_call":
             status = item.get("status", "in_progress")
             action = item.get("action", {})
-            query = html.escape(action.get("query", ""))
+            query = action.get("query", "").strip().replace('"', "'")
             if content and not content.endswith("\n"):
                 content += "\n"
             if status == "completed":
@@ -159,6 +159,23 @@ def deep_merge(target, source):
         return target + source
     else:
         return source
+
+
+def _replace_output_item_by_id(
+    data: dict, current_output: list
+) -> tuple[list, dict | None]:
+    item = data.get("item")
+    if not item or not item.get("id"):
+        return current_output, None
+
+    new_output = list(current_output)
+    for idx, existing in enumerate(new_output):
+        if existing.get("id") == item["id"]:
+            if "started_at" in existing and "started_at" not in item:
+                item = {**item, "started_at": existing["started_at"]}
+            new_output[idx] = item
+            return new_output, {}
+    return current_output, None
 
 
 def handle_responses_streaming_event(
@@ -415,9 +432,10 @@ def handle_responses_streaming_event(
                             return new_output, {}
                 return current_output, None
 
-            # 2. Skip Output Item done (handled specifically below)
+            # 2. Output Item done — replace by id (not output_index, which
+            #    may not match our array if we inserted extra items)
             if type_name == "output_item":
-                pass
+                return _replace_output_item_by_id(data, current_output)
 
             # 3. Generic Field Done (text.done, audio.done)
             elif type_name not in ["completed", "failed"]:
@@ -464,18 +482,6 @@ def handle_responses_streaming_event(
                         return new_output, {}
 
         return current_output, None
-
-    elif event_type == "response.output_item.done":
-        # Delta Event: Output item complete
-        item = data.get("item")
-        output_index = data.get("output_index", len(current_output) - 1)
-
-        new_output = list(current_output)
-        if item and 0 <= output_index < len(current_output):
-            new_output[output_index] = item
-        elif item:
-            new_output.append(item)
-        return new_output, {}
 
     elif event_type == "response.completed":
         # State Machine Event: Completed

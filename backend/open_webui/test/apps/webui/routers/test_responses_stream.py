@@ -72,6 +72,22 @@ class TestResponsesStream:
             html.rstrip().split("</details>")[-1].strip()
         ), "expect message text after details blocks"
 
+    def test_web_search_queries_available_before_response_completed(self):
+        """
+        Web search queries should be in the output before response.completed —
+        the frontend needs them to show "Searched: ..." during streaming.
+        """
+        events = parse_sse_events(TEST_DATA / "responses-api-stream-o3-websearch.txt")
+        pre_completed_events = [e for e in events if e["type"] != "response.completed"]
+        output = []
+        for event in pre_completed_events:
+            output, _ = handle_responses_streaming_event(event, output)
+
+        web_searches = [i for i in output if i["type"] == "web_search_call"]
+        assert len(web_searches) > 0, "expect web search items"
+        queries = [i.get("action", {}).get("query", "") for i in web_searches]
+        assert all(queries), f"all web searches should have queries, got {queries}"
+
     def test_reasoning_durations_are_per_block_not_cumulative(self):
         """
         Each reasoning block's duration should reflect only that block's time,
