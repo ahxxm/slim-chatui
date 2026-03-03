@@ -33,7 +33,6 @@ export const getOpenAIConfig = async (token: string = '') => {
 };
 
 type OpenAIConfig = {
-	ENABLE_OPENAI_API: boolean;
 	OPENAI_API_BASE_URLS: string[];
 	OPENAI_API_KEYS: string[];
 	OPENAI_API_CONFIGS: object;

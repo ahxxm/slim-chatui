@@ -16,10 +16,8 @@ log = logging.getLogger(__name__)
 
 
 async def get_all_base_models(request: Request, user: UserModel = None):
-    if request.app.state.config.ENABLE_OPENAI_API:
-        response = await openai.get_all_models(request, user=user)
-        return response["data"]
-    return []
+    response = await openai.get_all_models(request, user=user)
+    return response["data"]
 
 
 async def get_all_models(request, refresh: bool = False, user: UserModel = None):

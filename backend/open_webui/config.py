@@ -308,39 +308,26 @@ ENABLE_DIRECT_CONNECTIONS = PersistentConfig(
 ####################################
 
 
-ENABLE_OPENAI_API = PersistentConfig(
-    "ENABLE_OPENAI_API",
-    "openai.enable",
-    os.environ.get("ENABLE_OPENAI_API", "True").lower() == "true",
-)
 
-
+OPENAI_API_BASE_URL = os.environ.get("OPENAI_API_BASE_URL", "").rstrip("/")
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
-OPENAI_API_BASE_URL = os.environ.get("OPENAI_API_BASE_URL", "")
 
-if OPENAI_API_BASE_URL == "":
-    OPENAI_API_BASE_URL = "https://api.openai.com/v1"
+OPENAI_API_BASE_URLS_STR = os.environ.get("OPENAI_API_BASE_URLS", "")
+OPENAI_API_KEYS_STR = os.environ.get("OPENAI_API_KEYS", "")
+
+if OPENAI_API_BASE_URLS_STR:
+    OPENAI_API_BASE_URLS = [u.strip() for u in OPENAI_API_BASE_URLS_STR.split(";")]
+    OPENAI_API_KEYS = [k.strip() for k in OPENAI_API_KEYS_STR.split(";")] if OPENAI_API_KEYS_STR else [""] * len(OPENAI_API_BASE_URLS)
+elif OPENAI_API_BASE_URL:
+    OPENAI_API_BASE_URLS = [OPENAI_API_BASE_URL]
+    OPENAI_API_KEYS = [OPENAI_API_KEY]
 else:
-    if OPENAI_API_BASE_URL.endswith("/"):
-        OPENAI_API_BASE_URL = OPENAI_API_BASE_URL[:-1]
+    OPENAI_API_BASE_URLS = []
+    OPENAI_API_KEYS = []
 
-OPENAI_API_KEYS = os.environ.get("OPENAI_API_KEYS", "")
-OPENAI_API_KEYS = OPENAI_API_KEYS if OPENAI_API_KEYS != "" else OPENAI_API_KEY
-
-OPENAI_API_KEYS = [url.strip() for url in OPENAI_API_KEYS.split(";")]
 OPENAI_API_KEYS = PersistentConfig(
     "OPENAI_API_KEYS", "openai.api_keys", OPENAI_API_KEYS
 )
-
-OPENAI_API_BASE_URLS = os.environ.get("OPENAI_API_BASE_URLS", "")
-OPENAI_API_BASE_URLS = (
-    OPENAI_API_BASE_URLS if OPENAI_API_BASE_URLS != "" else OPENAI_API_BASE_URL
-)
-
-OPENAI_API_BASE_URLS = [
-    url.strip() if url != "" else "https://api.openai.com/v1"
-    for url in OPENAI_API_BASE_URLS.split(";")
-]
 OPENAI_API_BASE_URLS = PersistentConfig(
     "OPENAI_API_BASE_URLS", "openai.api_base_urls", OPENAI_API_BASE_URLS
 )
