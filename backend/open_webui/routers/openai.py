@@ -224,6 +224,7 @@ async def update_config(
         if key in keys
     }
     request.app.state.config.persist(db)
+    await get_all_models.cache.clear()
 
     return {
         "ENABLE_OPENAI_API": request.app.state.config.ENABLE_OPENAI_API,
