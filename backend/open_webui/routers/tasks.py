@@ -1,9 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import JSONResponse
+from sqlalchemy.orm import Session
 
 from pydantic import BaseModel
 from typing import Optional
 import logging
+
+from open_webui.internal.db import get_session
 
 from open_webui.utils.chat import generate_chat_completion
 from open_webui.utils.task import (
@@ -81,7 +84,10 @@ class TaskConfigForm(BaseModel):
 
 @router.post("/config/update")
 async def update_task_config(
-    request: Request, form_data: TaskConfigForm, user=Depends(get_admin_user)
+    request: Request,
+    form_data: TaskConfigForm,
+    user=Depends(get_admin_user),
+    db: Session = Depends(get_session),
 ):
     request.app.state.config.TASK_MODEL = form_data.TASK_MODEL
     request.app.state.config.ENABLE_TITLE_GENERATION = form_data.ENABLE_TITLE_GENERATION
@@ -107,6 +113,7 @@ async def update_task_config(
         form_data.TAGS_GENERATION_PROMPT_TEMPLATE
     )
     request.app.state.config.ENABLE_TAGS_GENERATION = form_data.ENABLE_TAGS_GENERATION
+    request.app.state.config.persist(db)
 
     return {
         "TASK_MODEL": request.app.state.config.TASK_MODEL,
