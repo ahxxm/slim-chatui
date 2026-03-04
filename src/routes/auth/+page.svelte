@@ -14,7 +14,7 @@
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { WEBUI_NAME, config, user, socket } from '$lib/stores';
 
-	import { generateInitialsImage, canvasPixelTest, getUserTimezone } from '$lib/utils';
+	import { defaultUserImage, getUserTimezone } from '$lib/utils';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import OnBoarding from '$lib/components/OnBoarding.svelte';
@@ -73,7 +73,7 @@
 			}
 		}
 
-		const sessionUser = await userSignUp(name, email, password, generateInitialsImage(name)).catch(
+		const sessionUser = await userSignUp(name, email, password, defaultUserImage()).catch(
 			(error) => {
 				toast.error(`${error}`);
 				return null;

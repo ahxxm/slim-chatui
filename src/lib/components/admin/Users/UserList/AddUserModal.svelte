@@ -8,7 +8,7 @@
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
-	import { generateInitialsImage } from '$lib/utils';
+	import { defaultUserImage } from '$lib/utils';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 
@@ -52,7 +52,7 @@
 				_user.email,
 				_user.password,
 				_user.role,
-				generateInitialsImage(_user.name)
+				defaultUserImage()
 			).catch((error) => {
 				toast.error(`${error}`);
 			});
@@ -89,7 +89,7 @@
 									columns[1],
 									columns[2],
 									columns[3].toLowerCase(),
-									generateInitialsImage(columns[0])
+									defaultUserImage()
 								).catch((error) => {
 									toast.error(`Row ${idx + 1}: ${error}`);
 									return null;

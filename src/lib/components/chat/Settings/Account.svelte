@@ -6,7 +6,7 @@
 	import { updateUserProfile, getSessionUser } from '$lib/apis/auths';
 
 	import UpdatePassword from './Account/UpdatePassword.svelte';
-	import { generateInitialsImage } from '$lib/utils';
+	import { defaultUserImage } from '$lib/utils';
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import UserProfileImage from './Account/UserProfileImage.svelte';
 
@@ -29,8 +29,8 @@
 
 	const submitHandler = async () => {
 		if (name !== $user?.name) {
-			if (profileImageUrl === generateInitialsImage($user?.name) || profileImageUrl === '') {
-				profileImageUrl = generateInitialsImage(name);
+			if (profileImageUrl === defaultUserImage() || profileImageUrl === '') {
+				profileImageUrl = defaultUserImage();
 			}
 		}
 
