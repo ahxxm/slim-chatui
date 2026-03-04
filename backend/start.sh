@@ -3,16 +3,6 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR" || exit
 
-# Add conditional Playwright browser installation
-if [[ "${WEB_LOADER_ENGINE,,}" == "playwright" ]]; then
-    if [[ -z "${PLAYWRIGHT_WS_URL}" ]]; then
-        echo "Installing Playwright browsers..."
-        playwright install chromium
-        playwright install-deps chromium
-    fi
-
-fi
-
 if [ -n "${WEBUI_SECRET_KEY_FILE}" ]; then
     KEY_FILE="${WEBUI_SECRET_KEY_FILE}"
 else
@@ -49,4 +39,5 @@ WEBUI_SECRET_KEY="$WEBUI_SECRET_KEY" exec "$PYTHON_CMD" -m uvicorn open_webui.ma
     --host "$HOST" \
     --port "$PORT" \
     --forwarded-allow-ips '*' \
+    --timeout-keep-alive 75 \
     "${ARGS[@]}"

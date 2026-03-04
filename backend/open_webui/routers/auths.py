@@ -20,7 +20,7 @@ from open_webui.models.users import (
     Users,
     UpdateProfileForm,
 )
-from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
+from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import (
     WEBUI_AUTH,
     WEBUI_AUTH_COOKIE_SAME_SITE,
@@ -46,8 +46,6 @@ from open_webui.utils.auth import (
 )
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
-from open_webui.utils.webhook import post_webhook
-
 from open_webui.utils.rate_limit import RateLimiter
 
 
@@ -287,17 +285,11 @@ async def signin(
             if Users.has_users(db=db):
                 raise HTTPException(400, detail=ERROR_MESSAGES.EXISTING_USERS)
 
-            await signup_handler(
+            user = signup_handler(
                 request,
                 admin_email,
                 admin_password,
                 "User",
-                db=db,
-            )
-
-            user = Auths.authenticate_user(
-                admin_email.lower(),
-                lambda pw: verify_password(admin_password, pw),
                 db=db,
             )
     else:
@@ -333,7 +325,7 @@ async def signin(
 ############################
 
 
-async def signup_handler(
+def signup_handler(
     request: Request,
     email: str,
     password: str,
@@ -342,47 +334,26 @@ async def signup_handler(
     *,
     db: Session,
 ) -> UserModel:
-    """
-    Core user-creation logic shared by the signup endpoint and
-    trusted-header / no-auth auto-registration flows.
+    # Create a user. Used by signin (no-auth auto-create) and signup.
+    # Safe from concurrent first-signup race: insert's flush() escalates
+    # the DEFERRED transaction to RESERVED, blocking other writers until commit.
+    first_user = not Users.has_users(db=db)
+    role = "admin" if first_user else request.app.state.config.DEFAULT_USER_ROLE
 
-    Returns the newly created UserModel.
-    Raises HTTPException on failure.
-    """
-    # Insert with default role first to avoid TOCTOU race on first signup.
-    # If has_users() is checked before insert, concurrent requests during
-    # first-user registration can all see an empty table and each get admin.
     hashed = get_password_hash(password)
-
     user = Auths.insert_new_auth(
         email=email.lower(),
         password=hashed,
         name=name,
         profile_image_url=profile_image_url,
-        role=request.app.state.config.DEFAULT_USER_ROLE,
+        role=role,
         db=db,
     )
     if not user:
         raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
 
-    # Atomically check if this is the only user *after* the insert.
-    # Only the single user present at this point should become admin.
-    if Users.get_num_users(db=db) == 1:
-        Users.update_user_role_by_id(user.id, "admin", db=db)
-        user = Users.get_user_by_id(user.id, db=db)
+    if first_user:
         request.app.state.config.ENABLE_SIGNUP = False
-
-    if request.app.state.config.WEBHOOK_URL:
-        await post_webhook(
-            request.app.state.WEBUI_NAME,
-            request.app.state.config.WEBHOOK_URL,
-            WEBHOOK_MESSAGES.USER_SIGNUP(user.name),
-            {
-                "action": "signup",
-                "message": WEBHOOK_MESSAGES.USER_SIGNUP(user.name),
-                "user": user.model_dump_json(exclude_none=True),
-            },
-        )
 
     return user
 
@@ -422,7 +393,7 @@ async def signup(
         except Exception as e:
             raise HTTPException(400, detail=str(e))
 
-        user = await signup_handler(
+        user = signup_handler(
             request,
             form_data.email,
             form_data.password,
@@ -562,7 +533,6 @@ async def get_admin_config(request: Request, user=Depends(get_admin_user)):
         "ENABLE_SIGNUP": request.app.state.config.ENABLE_SIGNUP,
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
-        "ENABLE_USER_WEBHOOKS": request.app.state.config.ENABLE_USER_WEBHOOKS,
         "PENDING_USER_OVERLAY_TITLE": request.app.state.config.PENDING_USER_OVERLAY_TITLE,
         "PENDING_USER_OVERLAY_CONTENT": request.app.state.config.PENDING_USER_OVERLAY_CONTENT,
     }
@@ -575,7 +545,6 @@ class AdminConfig(BaseModel):
     ENABLE_SIGNUP: bool
     DEFAULT_USER_ROLE: str
     JWT_EXPIRES_IN: str
-    ENABLE_USER_WEBHOOKS: bool
     PENDING_USER_OVERLAY_TITLE: Optional[str] = None
     PENDING_USER_OVERLAY_CONTENT: Optional[str] = None
 
@@ -601,8 +570,6 @@ async def update_admin_config(
     if re.match(pattern, form_data.JWT_EXPIRES_IN):
         request.app.state.config.JWT_EXPIRES_IN = form_data.JWT_EXPIRES_IN
 
-    request.app.state.config.ENABLE_USER_WEBHOOKS = form_data.ENABLE_USER_WEBHOOKS
-
     request.app.state.config.PENDING_USER_OVERLAY_TITLE = (
         form_data.PENDING_USER_OVERLAY_TITLE
     )
@@ -618,7 +585,6 @@ async def update_admin_config(
         "ENABLE_SIGNUP": request.app.state.config.ENABLE_SIGNUP,
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
-        "ENABLE_USER_WEBHOOKS": request.app.state.config.ENABLE_USER_WEBHOOKS,
         "PENDING_USER_OVERLAY_TITLE": request.app.state.config.PENDING_USER_OVERLAY_TITLE,
         "PENDING_USER_OVERLAY_CONTENT": request.app.state.config.PENDING_USER_OVERLAY_CONTENT,
     }

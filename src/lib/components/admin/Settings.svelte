@@ -63,7 +63,6 @@
 				'roles',
 				'authentication',
 				'reverse proxy',
-				'webhook',
 				'community'
 			]
 		},

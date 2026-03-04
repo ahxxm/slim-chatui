@@ -25,7 +25,6 @@
 	let gender = '';
 	let dateOfBirth = '';
 
-	let webhookUrl = '';
 	let profileImageInputElement: HTMLInputElement;
 
 	const submitHandler = async () => {
@@ -33,15 +32,6 @@
 			if (profileImageUrl === generateInitialsImage($user?.name) || profileImageUrl === '') {
 				profileImageUrl = generateInitialsImage(name);
 			}
-		}
-
-		if (webhookUrl !== $settings?.notifications?.webhook_url) {
-			saveSettings({
-				notifications: {
-					...$settings.notifications,
-					webhook_url: webhookUrl
-				}
-			});
 		}
 
 		const updatedUser = await updateUserProfile(localStorage.token, {
@@ -83,8 +73,6 @@
 
 			dateOfBirth = user?.date_of_birth ?? '';
 		}
-
-		webhookUrl = $settings?.notifications?.webhook_url ?? '';
 
 		loaded = true;
 	});
@@ -192,25 +180,6 @@
 				</div>
 			</div>
 		</div>
-
-		{#if $config?.features?.enable_user_webhooks}
-			<div class="mt-2">
-				<div class="flex flex-col w-full">
-					<div class=" mb-1 text-xs font-medium">{$i18n.t('Notification Webhook')}</div>
-
-					<div class="flex-1">
-						<input
-							class="w-full text-sm outline-hidden"
-							type="url"
-							placeholder={$i18n.t('Enter your webhook URL')}
-							aria-label={$i18n.t('Notification Webhook')}
-							bind:value={webhookUrl}
-							required
-						/>
-					</div>
-				</div>
-			</div>
-		{/if}
 
 		<hr class="border-gray-50 dark:border-gray-850/30 my-4" />
 
