@@ -18,10 +18,6 @@ from fastapi.responses import (
 )
 from pydantic import BaseModel, ConfigDict
 
-from sqlalchemy.orm import Session
-
-from open_webui.internal.db import get_session
-
 from open_webui.models.models import Models
 from open_webui.config import (
     CACHE_DIR,
@@ -188,7 +184,6 @@ async def update_config(
     request: Request,
     form_data: OpenAIConfigForm,
     user=Depends(get_admin_user),
-    db: Session = Depends(get_session),
 ):
     request.app.state.config.OPENAI_API_BASE_URLS = form_data.OPENAI_API_BASE_URLS
     request.app.state.config.OPENAI_API_KEYS = form_data.OPENAI_API_KEYS
@@ -220,7 +215,7 @@ async def update_config(
         for key, value in request.app.state.config.OPENAI_API_CONFIGS.items()
         if key in keys
     }
-    request.app.state.config.persist(db)
+    request.app.state.config.persist()
     await get_all_models.cache.clear()
 
     return {

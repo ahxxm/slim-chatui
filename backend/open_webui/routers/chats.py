@@ -1,7 +1,6 @@
 import json
 import logging
 from typing import Optional
-from sqlalchemy.orm import Session
 
 
 from open_webui.socket.main import get_event_emitter
@@ -15,7 +14,6 @@ from open_webui.models.chats import (
 )
 from open_webui.models.tags import TagModel, Tags
 from open_webui.models.folders import Folders
-from open_webui.internal.db import get_session
 
 from open_webui.constants import ERROR_MESSAGES
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -40,7 +38,6 @@ def get_session_user_chat_list(
     page: Optional[int] = None,
     include_pinned: Optional[bool] = False,
     include_folders: Optional[bool] = False,
-    db: Session = Depends(get_session),
 ):
     try:
         if page is not None:
@@ -53,14 +50,12 @@ def get_session_user_chat_list(
                 include_pinned=include_pinned,
                 skip=skip,
                 limit=limit,
-                db=db,
             )
         else:
             return Chats.get_chat_title_id_list_by_user_id(
                 user.id,
                 include_folders=include_folders,
                 include_pinned=include_pinned,
-                db=db,
             )
     except Exception as e:
         log.exception(e)
@@ -72,10 +67,9 @@ def get_session_user_chat_list(
 @router.delete("/", response_model=bool)
 async def delete_all_user_chats(
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
 
-    result = Chats.delete_chats_by_user_id(user.id, db=db)
+    result = Chats.delete_chats_by_user_id(user.id)
     return result
 
 
@@ -92,7 +86,6 @@ async def get_user_chat_list_by_user_id(
     order_by: Optional[str] = None,
     direction: Optional[str] = None,
     user=Depends(get_admin_user),
-    db: Session = Depends(get_session),
 ):
     if page is None:
         page = 1
@@ -109,7 +102,7 @@ async def get_user_chat_list_by_user_id(
         filter["direction"] = direction
 
     return Chats.get_chat_list_by_user_id(
-        user_id, filter=filter, skip=skip, limit=limit, db=db
+        user_id, filter=filter, skip=skip, limit=limit
     )
 
 
@@ -122,10 +115,9 @@ async def get_user_chat_list_by_user_id(
 async def create_new_chat(
     form_data: ChatForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     try:
-        chat = Chats.insert_new_chat(user.id, form_data, db=db)
+        chat = Chats.insert_new_chat(user.id, form_data)
         return ChatResponse(**chat.model_dump())
     except Exception as e:
         log.exception(e)
@@ -143,10 +135,9 @@ async def create_new_chat(
 async def import_chats(
     form_data: ChatsImportForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     try:
-        chats = Chats.import_chats(user.id, form_data.chats, db=db)
+        chats = Chats.import_chats(user.id, form_data.chats)
         return chats
     except Exception as e:
         log.exception(e)
@@ -165,7 +156,6 @@ def search_user_chats(
     text: str,
     page: Optional[int] = None,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     if page is None:
         page = 1
@@ -176,7 +166,7 @@ def search_user_chats(
     chat_list = [
         ChatTitleIdResponse(**chat.model_dump())
         for chat in Chats.get_chats_by_user_id_and_search_text(
-            user.id, text, skip=skip, limit=limit, db=db
+            user.id, text, skip=skip, limit=limit
         )
     ]
 
@@ -185,9 +175,9 @@ def search_user_chats(
     if page == 1 and len(words) == 1 and words[0].startswith("tag:"):
         tag_id = words[0].replace("tag:", "")
         if len(chat_list) == 0:
-            if Tags.get_tag_by_name_and_user_id(tag_id, user.id, db=db):
+            if Tags.get_tag_by_name_and_user_id(tag_id, user.id):
                 log.debug(f"deleting tag: {tag_id}")
-                Tags.delete_tag_by_name_and_user_id(tag_id, user.id, db=db)
+                Tags.delete_tag_by_name_and_user_id(tag_id, user.id)
 
     return chat_list
 
@@ -198,21 +188,17 @@ def search_user_chats(
 
 
 @router.get("/folder/{folder_id}", response_model=list[ChatResponse])
-async def get_chats_by_folder_id(
-    folder_id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
+async def get_chats_by_folder_id(folder_id: str, user=Depends(get_verified_user)):
     folder_ids = [folder_id]
     children_folders = Folders.get_children_folders_by_id_and_user_id(
-        folder_id, user.id, db=db
+        folder_id, user.id
     )
     if children_folders:
         folder_ids.extend([folder.id for folder in children_folders])
 
     return [
         ChatResponse(**chat.model_dump())
-        for chat in Chats.get_chats_by_folder_ids_and_user_id(
-            folder_ids, user.id, db=db
-        )
+        for chat in Chats.get_chats_by_folder_ids_and_user_id(folder_ids, user.id)
     ]
 
 
@@ -221,7 +207,6 @@ async def get_chat_list_by_folder_id(
     folder_id: str,
     page: Optional[int] = 1,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     try:
         limit = 10
@@ -230,7 +215,7 @@ async def get_chat_list_by_folder_id(
         return [
             {"title": chat.title, "id": chat.id, "updated_at": chat.updated_at}
             for chat in Chats.get_chats_by_folder_id_and_user_id(
-                folder_id, user.id, skip=skip, limit=limit, db=db
+                folder_id, user.id, skip=skip, limit=limit
             )
         ]
 
@@ -247,10 +232,8 @@ async def get_chat_list_by_folder_id(
 
 
 @router.get("/pinned", response_model=list[ChatTitleIdResponse])
-async def get_user_pinned_chats(
-    user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    return Chats.get_pinned_chats_by_user_id(user.id, db=db)
+async def get_user_pinned_chats(user=Depends(get_verified_user)):
+    return Chats.get_pinned_chats_by_user_id(user.id)
 
 
 ############################
@@ -259,10 +242,8 @@ async def get_user_pinned_chats(
 
 
 @router.get("/all", response_model=list[ChatResponse])
-async def get_user_chats(
-    user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    result = Chats.get_chats_by_user_id(user.id, db=db)
+async def get_user_chats(user=Depends(get_verified_user)):
+    result = Chats.get_chats_by_user_id(user.id)
     return [ChatResponse(**chat.model_dump()) for chat in result.items]
 
 
@@ -273,10 +254,10 @@ async def get_user_chats(
 
 @router.get("/all/tags", response_model=list[TagModel])
 async def get_all_user_tags(
-    user=Depends(get_verified_user), db: Session = Depends(get_session)
+    user=Depends(get_verified_user),
 ):
     try:
-        tags = Tags.get_tags_by_user_id(user.id, db=db)
+        tags = Tags.get_tags_by_user_id(user.id)
         return tags
     except Exception as e:
         log.exception(e)
@@ -292,9 +273,9 @@ async def get_all_user_tags(
 
 @router.get("/all/db", response_model=list[ChatResponse])
 async def get_all_user_chats_in_db(
-    user=Depends(get_admin_user), db: Session = Depends(get_session)
+    user=Depends(get_admin_user),
 ):
-    return [ChatResponse(**chat.model_dump()) for chat in Chats.get_chats(db=db)]
+    return [ChatResponse(**chat.model_dump()) for chat in Chats.get_chats()]
 
 
 ############################
@@ -315,13 +296,12 @@ class TagFilterForm(TagForm):
 async def get_user_chat_list_by_tag_name(
     form_data: TagFilterForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     chats = Chats.get_chat_list_by_user_id_and_tag_name(
-        user.id, form_data.name, form_data.skip, form_data.limit, db=db
+        user.id, form_data.name, form_data.skip, form_data.limit
     )
     if len(chats) == 0:
-        Tags.delete_tag_by_name_and_user_id(form_data.name, user.id, db=db)
+        Tags.delete_tag_by_name_and_user_id(form_data.name, user.id)
 
     return chats
 
@@ -332,10 +312,8 @@ async def get_user_chat_list_by_tag_name(
 
 
 @router.get("/{id}", response_model=Optional[ChatResponse])
-async def get_chat_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
+async def get_chat_by_id(id: str, user=Depends(get_verified_user)):
+    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
 
     if chat:
         return ChatResponse(**chat.model_dump())
@@ -390,9 +368,8 @@ async def update_chat_message_by_id(
     message_id: str,
     form_data: MessageForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
-    chat = Chats.get_chat_by_id(id, db=db)
+    chat = Chats.get_chat_by_id(id)
 
     if not chat:
         raise HTTPException(
@@ -412,7 +389,6 @@ async def update_chat_message_by_id(
         {
             "content": form_data.content,
         },
-        db=db,
     )
 
     event_emitter = get_event_emitter(
@@ -453,9 +429,8 @@ async def send_chat_message_event_by_id(
     message_id: str,
     form_data: EventForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
-    chat = Chats.get_chat_by_id(id, db=db)
+    chat = Chats.get_chat_by_id(id)
 
     if not chat:
         raise HTTPException(
@@ -496,34 +471,33 @@ async def send_chat_message_event_by_id(
 async def delete_chat_by_id(
     id: str,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     if user.role == "admin":
-        chat = Chats.get_chat_by_id(id, db=db)
+        chat = Chats.get_chat_by_id(id)
         if not chat:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=ERROR_MESSAGES.NOT_FOUND,
             )
         Chats.delete_orphan_tags_for_user(
-            chat.meta.get("tags", []), user.id, threshold=1, db=db
+            chat.meta.get("tags", []), user.id, threshold=1
         )
 
-        result = Chats.delete_chat_by_id(id, db=db)
+        result = Chats.delete_chat_by_id(id)
 
         return result
     else:
-        chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
+        chat = Chats.get_chat_by_id_and_user_id(id, user.id)
         if not chat:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=ERROR_MESSAGES.NOT_FOUND,
             )
         Chats.delete_orphan_tags_for_user(
-            chat.meta.get("tags", []), user.id, threshold=1, db=db
+            chat.meta.get("tags", []), user.id, threshold=1
         )
 
-        result = Chats.delete_chat_by_id_and_user_id(id, user.id, db=db)
+        result = Chats.delete_chat_by_id_and_user_id(id, user.id)
         return result
 
 
@@ -533,10 +507,8 @@ async def delete_chat_by_id(
 
 
 @router.get("/{id}/pinned", response_model=Optional[bool])
-async def get_pinned_status_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
+async def get_pinned_status_by_id(id: str, user=Depends(get_verified_user)):
+    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
     if chat:
         return chat.pinned
     else:
@@ -551,12 +523,10 @@ async def get_pinned_status_by_id(
 
 
 @router.post("/{id}/pin", response_model=Optional[ChatResponse])
-async def pin_chat_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
+async def pin_chat_by_id(id: str, user=Depends(get_verified_user)):
+    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
     if chat:
-        chat = Chats.toggle_chat_pinned_by_id(id, db=db)
+        chat = Chats.toggle_chat_pinned_by_id(id)
         return chat
     else:
         raise HTTPException(
@@ -578,9 +548,8 @@ async def clone_chat_by_id(
     form_data: CloneForm,
     id: str,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
+    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
     if chat:
         updated_chat = {
             **chat.chat,
@@ -601,7 +570,6 @@ async def clone_chat_by_id(
                     }
                 )
             ],
-            db=db,
         )
 
         if chats:
@@ -632,12 +600,11 @@ async def update_chat_folder_id_by_id(
     id: str,
     form_data: ChatFolderIdForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
+    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
     if chat:
         chat = Chats.update_chat_folder_id_by_id_and_user_id(
-            id, user.id, form_data.folder_id, db=db
+            id, user.id, form_data.folder_id
         )
         return ChatResponse(**chat.model_dump())
     else:
@@ -652,13 +619,11 @@ async def update_chat_folder_id_by_id(
 
 
 @router.get("/{id}/tags", response_model=list[TagModel])
-async def get_chat_tags_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
+async def get_chat_tags_by_id(id: str, user=Depends(get_verified_user)):
+    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
     if chat:
         tags = chat.meta.get("tags", [])
-        return Tags.get_tags_by_ids_and_user_id(tags, user.id, db=db)
+        return Tags.get_tags_by_ids_and_user_id(tags, user.id)
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.NOT_FOUND
@@ -675,9 +640,8 @@ async def add_tag_by_id_and_tag_name(
     id: str,
     form_data: TagForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
+    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
     if chat:
         tags = chat.meta.get("tags", [])
         tag_id = form_data.name.replace(" ", "_").lower()
@@ -690,12 +654,12 @@ async def add_tag_by_id_and_tag_name(
 
         if tag_id not in tags:
             Chats.add_chat_tag_by_id_and_user_id_and_tag_name(
-                id, user.id, form_data.name, db=db
+                id, user.id, form_data.name
             )
 
-        chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
+        chat = Chats.get_chat_by_id_and_user_id(id, user.id)
         tags = chat.meta.get("tags", [])
-        return Tags.get_tags_by_ids_and_user_id(tags, user.id, db=db)
+        return Tags.get_tags_by_ids_and_user_id(tags, user.id)
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.DEFAULT()
@@ -712,23 +676,17 @@ async def delete_tag_by_id_and_tag_name(
     id: str,
     form_data: TagForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
+    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
     if chat:
-        Chats.delete_tag_by_id_and_user_id_and_tag_name(
-            id, user.id, form_data.name, db=db
-        )
+        Chats.delete_tag_by_id_and_user_id_and_tag_name(id, user.id, form_data.name)
 
-        if (
-            Chats.count_chats_by_tag_name_and_user_id(form_data.name, user.id, db=db)
-            == 0
-        ):
-            Tags.delete_tag_by_name_and_user_id(form_data.name, user.id, db=db)
+        if Chats.count_chats_by_tag_name_and_user_id(form_data.name, user.id) == 0:
+            Tags.delete_tag_by_name_and_user_id(form_data.name, user.id)
 
-        chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
+        chat = Chats.get_chat_by_id_and_user_id(id, user.id)
         tags = chat.meta.get("tags", [])
-        return Tags.get_tags_by_ids_and_user_id(tags, user.id, db=db)
+        return Tags.get_tags_by_ids_and_user_id(tags, user.id)
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.NOT_FOUND
@@ -741,14 +699,12 @@ async def delete_tag_by_id_and_tag_name(
 
 
 @router.delete("/{id}/tags/all", response_model=Optional[bool])
-async def delete_all_tags_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id, db=db)
+async def delete_all_tags_by_id(id: str, user=Depends(get_verified_user)):
+    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
     if chat:
         old_tags = chat.meta.get("tags", [])
-        Chats.delete_all_tags_by_id_and_user_id(id, user.id, db=db)
-        Chats.delete_orphan_tags_for_user(old_tags, user.id, db=db)
+        Chats.delete_all_tags_by_id_and_user_id(id, user.id)
+        Chats.delete_orphan_tags_for_user(old_tags, user.id)
 
         return True
     else:

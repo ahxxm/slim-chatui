@@ -199,15 +199,16 @@ class AppConfig:
             raise AttributeError(f"Config key '{key}' not found")
         return self._state[key].value
 
-    def persist(self, db):
-        existing = db.query(Config).first()
-        if not existing:
-            existing = Config(data=CONFIG_DATA, version=0)
-            db.add(existing)
-        else:
-            existing.data = CONFIG_DATA
-            existing.updated_at = datetime.now()
-        db.flush()
+    def persist(self):
+        with get_db() as db:
+            existing = db.query(Config).first()
+            if not existing:
+                existing = Config(data=CONFIG_DATA, version=0)
+                db.add(existing)
+            else:
+                existing.data = CONFIG_DATA
+                existing.updated_at = datetime.now()
+            db.flush()
 
 
 ####################################
