@@ -9,7 +9,7 @@ dependencies = [
     "fastapi>=0.135.1",
     "uvicorn>=0.41.0",
     "pydantic>=2.12.5",
-    "python-multipart>=0.0.22",
+    "python-multipart>=0.0.22", # lazy import but hard dependency of FastAPI
 
     "python-socketio>=5.16.1",
 
@@ -27,9 +27,6 @@ dependencies = [
     "loguru>=0.7.3",
     "asgiref>=3.11.1",
 
-    "black>=26.1.0",
-
-    "typer",
 ]
 readme = "README.md"
 requires-python = ">= 3.12, < 3.13.0a1"
@@ -42,9 +39,6 @@ classifiers = [
     "Topic :: Communications :: Chat",
     "Topic :: Multimedia",
 ]
-
-[project.scripts]
-open-webui = "open_webui:app"
 
 [build-system]
 requires = ["hatchling"]
@@ -84,6 +78,7 @@ source = ["backend/open_webui"]
 
 [dependency-groups]
 dev = [
+    "black>=26.1.0",
     "pytest>=8.0.0",
     "pytest-asyncio>=1.0.0",
     "pytest-cov",
