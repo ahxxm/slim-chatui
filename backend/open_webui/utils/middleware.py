@@ -22,7 +22,6 @@ from open_webui.routers.tasks import (
     generate_follow_ups,
     generate_chat_tags,
 )
-from open_webui.utils.webhook import post_webhook
 from open_webui.utils.files import (
     convert_markdown_base64_images,
     get_image_base64_from_url,
@@ -1141,20 +1140,6 @@ async def non_streaming_chat_response_handler(response, ctx):
                         },
                     )
 
-                    webhook_url = Users.get_user_webhook_url_by_id(user.id)
-                    if webhook_url:
-                        await post_webhook(
-                            request.app.state.WEBUI_NAME,
-                            webhook_url,
-                            f"{title} - {request.app.state.config.WEBUI_URL}/c/{metadata['chat_id']}\n\n{content}",
-                            {
-                                "action": "chat",
-                                "message": content,
-                                "title": title,
-                                "url": f"{request.app.state.config.WEBUI_URL}/c/{metadata['chat_id']}",
-                            },
-                        )
-
                     await background_tasks_handler(ctx)
 
             response = build_response_object(response, response_data)
@@ -1641,20 +1626,6 @@ async def streaming_chat_response_handler(response, ctx):
                         metadata["chat_id"],
                         metadata["message_id"],
                         {"usage": usage},
-                    )
-
-                webhook_url = Users.get_user_webhook_url_by_id(user.id)
-                if webhook_url:
-                    await post_webhook(
-                        request.app.state.WEBUI_NAME,
-                        webhook_url,
-                        f"{title} - {request.app.state.config.WEBUI_URL}/c/{metadata['chat_id']}\n\n{content}",
-                        {
-                            "action": "chat",
-                            "message": content,
-                            "title": title,
-                            "url": f"{request.app.state.config.WEBUI_URL}/c/{metadata['chat_id']}",
-                        },
                     )
 
                 await event_emitter(

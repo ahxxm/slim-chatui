@@ -20,7 +20,7 @@ from open_webui.models.users import (
     Users,
     UpdateProfileForm,
 )
-from open_webui.constants import ERROR_MESSAGES, WEBHOOK_MESSAGES
+from open_webui.constants import ERROR_MESSAGES
 from open_webui.env import (
     WEBUI_AUTH,
     WEBUI_AUTH_COOKIE_SAME_SITE,
@@ -46,8 +46,6 @@ from open_webui.utils.auth import (
 )
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
-from open_webui.utils.webhook import post_webhook
-
 from open_webui.utils.rate_limit import RateLimiter
 
 
@@ -372,18 +370,6 @@ async def signup_handler(
         user = Users.get_user_by_id(user.id, db=db)
         request.app.state.config.ENABLE_SIGNUP = False
 
-    if request.app.state.config.WEBHOOK_URL:
-        await post_webhook(
-            request.app.state.WEBUI_NAME,
-            request.app.state.config.WEBHOOK_URL,
-            WEBHOOK_MESSAGES.USER_SIGNUP(user.name),
-            {
-                "action": "signup",
-                "message": WEBHOOK_MESSAGES.USER_SIGNUP(user.name),
-                "user": user.model_dump_json(exclude_none=True),
-            },
-        )
-
     return user
 
 
@@ -562,7 +548,6 @@ async def get_admin_config(request: Request, user=Depends(get_admin_user)):
         "ENABLE_SIGNUP": request.app.state.config.ENABLE_SIGNUP,
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
-        "ENABLE_USER_WEBHOOKS": request.app.state.config.ENABLE_USER_WEBHOOKS,
         "PENDING_USER_OVERLAY_TITLE": request.app.state.config.PENDING_USER_OVERLAY_TITLE,
         "PENDING_USER_OVERLAY_CONTENT": request.app.state.config.PENDING_USER_OVERLAY_CONTENT,
     }
@@ -575,7 +560,6 @@ class AdminConfig(BaseModel):
     ENABLE_SIGNUP: bool
     DEFAULT_USER_ROLE: str
     JWT_EXPIRES_IN: str
-    ENABLE_USER_WEBHOOKS: bool
     PENDING_USER_OVERLAY_TITLE: Optional[str] = None
     PENDING_USER_OVERLAY_CONTENT: Optional[str] = None
 
@@ -601,8 +585,6 @@ async def update_admin_config(
     if re.match(pattern, form_data.JWT_EXPIRES_IN):
         request.app.state.config.JWT_EXPIRES_IN = form_data.JWT_EXPIRES_IN
 
-    request.app.state.config.ENABLE_USER_WEBHOOKS = form_data.ENABLE_USER_WEBHOOKS
-
     request.app.state.config.PENDING_USER_OVERLAY_TITLE = (
         form_data.PENDING_USER_OVERLAY_TITLE
     )
@@ -618,7 +600,6 @@ async def update_admin_config(
         "ENABLE_SIGNUP": request.app.state.config.ENABLE_SIGNUP,
         "DEFAULT_USER_ROLE": request.app.state.config.DEFAULT_USER_ROLE,
         "JWT_EXPIRES_IN": request.app.state.config.JWT_EXPIRES_IN,
-        "ENABLE_USER_WEBHOOKS": request.app.state.config.ENABLE_USER_WEBHOOKS,
         "PENDING_USER_OVERLAY_TITLE": request.app.state.config.PENDING_USER_OVERLAY_TITLE,
         "PENDING_USER_OVERLAY_CONTENT": request.app.state.config.PENDING_USER_OVERLAY_CONTENT,
     }
