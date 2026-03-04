@@ -285,17 +285,11 @@ async def signin(
             if Users.has_users(db=db):
                 raise HTTPException(400, detail=ERROR_MESSAGES.EXISTING_USERS)
 
-            await signup_handler(
+            user = signup_handler(
                 request,
                 admin_email,
                 admin_password,
                 "User",
-                db=db,
-            )
-
-            user = Auths.authenticate_user(
-                admin_email.lower(),
-                lambda pw: verify_password(admin_password, pw),
                 db=db,
             )
     else:
@@ -331,7 +325,7 @@ async def signin(
 ############################
 
 
-async def signup_handler(
+def signup_handler(
     request: Request,
     email: str,
     password: str,
@@ -340,34 +334,25 @@ async def signup_handler(
     *,
     db: Session,
 ) -> UserModel:
-    """
-    Core user-creation logic shared by the signup endpoint and
-    trusted-header / no-auth auto-registration flows.
+    $ Create a user. Used by signin (no-auth auto-create) and signup.
+    # Safe from concurrent first-signup race: insert's flush() escalates
+    # the DEFERRED transaction to RESERVED, blocking other writers until commit.
+    first_user = not Users.has_users(db=db)
+    role = "admin" if first_user else request.app.state.config.DEFAULT_USER_ROLE
 
-    Returns the newly created UserModel.
-    Raises HTTPException on failure.
-    """
-    # Insert with default role first to avoid TOCTOU race on first signup.
-    # If has_users() is checked before insert, concurrent requests during
-    # first-user registration can all see an empty table and each get admin.
     hashed = get_password_hash(password)
-
     user = Auths.insert_new_auth(
         email=email.lower(),
         password=hashed,
         name=name,
         profile_image_url=profile_image_url,
-        role=request.app.state.config.DEFAULT_USER_ROLE,
+        role=role,
         db=db,
     )
     if not user:
         raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
 
-    # Atomically check if this is the only user *after* the insert.
-    # Only the single user present at this point should become admin.
-    if Users.get_num_users(db=db) == 1:
-        Users.update_user_role_by_id(user.id, "admin", db=db)
-        user = Users.get_user_by_id(user.id, db=db)
+    if first_user:
         request.app.state.config.ENABLE_SIGNUP = False
 
     return user
@@ -408,7 +393,7 @@ async def signup(
         except Exception as e:
             raise HTTPException(400, detail=str(e))
 
-        user = await signup_handler(
+        user = signup_handler(
             request,
             form_data.email,
             form_data.password,
