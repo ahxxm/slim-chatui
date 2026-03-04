@@ -331,15 +331,9 @@
 		checkDirection();
 	};
 
-	const onKeyDown = (e) => {
-		if (e.key === 'Shift') {
-			shiftKey = true;
-		}
-	};
-
-	const onKeyUp = (e) => {
-		if (e.key === 'Shift') {
-			shiftKey = false;
+	const syncShiftKey = (e) => {
+		if (e.shiftKey !== shiftKey) {
+			shiftKey = e.shiftKey;
 		}
 	};
 
@@ -481,8 +475,9 @@
 			})
 		];
 
-		window.addEventListener('keydown', onKeyDown);
-		window.addEventListener('keyup', onKeyUp);
+		window.addEventListener('keydown', syncShiftKey);
+		window.addEventListener('keyup', syncShiftKey);
+		window.addEventListener('mousemove', syncShiftKey, { passive: true });
 
 		window.addEventListener('touchstart', onTouchStart);
 		window.addEventListener('touchend', onTouchEnd);
@@ -508,8 +503,9 @@
 				unsubscribers.forEach((unsub) => unsub?.());
 			}
 
-			window.removeEventListener('keydown', onKeyDown);
-			window.removeEventListener('keyup', onKeyUp);
+			window.removeEventListener('keydown', syncShiftKey);
+			window.removeEventListener('keyup', syncShiftKey);
+			window.removeEventListener('mousemove', syncShiftKey);
 
 			window.removeEventListener('touchstart', onTouchStart);
 			window.removeEventListener('touchend', onTouchEnd);

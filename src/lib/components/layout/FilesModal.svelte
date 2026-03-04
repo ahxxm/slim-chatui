@@ -149,15 +149,9 @@
 	}
 
 	onMount(() => {
-		const onKeyDown = (event: KeyboardEvent) => {
-			if (event.key === 'Shift') {
-				shiftKey = true;
-			}
-		};
-
-		const onKeyUp = (event: KeyboardEvent) => {
-			if (event.key === 'Shift') {
-				shiftKey = false;
+		const syncShiftKey = (e: KeyboardEvent | MouseEvent) => {
+			if (e.shiftKey !== shiftKey) {
+				shiftKey = e.shiftKey;
 			}
 		};
 
@@ -165,14 +159,16 @@
 			shiftKey = false;
 		};
 
-		window.addEventListener('keydown', onKeyDown);
-		window.addEventListener('keyup', onKeyUp);
+		window.addEventListener('keydown', syncShiftKey);
+		window.addEventListener('keyup', syncShiftKey);
+		window.addEventListener('mousemove', syncShiftKey, { passive: true });
 		window.addEventListener('blur', onBlur);
 
 		return () => {
 			clearTimeout(searchDebounceTimer);
-			window.removeEventListener('keydown', onKeyDown);
-			window.removeEventListener('keyup', onKeyUp);
+			window.removeEventListener('keydown', syncShiftKey);
+			window.removeEventListener('keyup', syncShiftKey);
+			window.removeEventListener('mousemove', syncShiftKey);
 			window.removeEventListener('blur', onBlur);
 		};
 	});
