@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Això eliminarà tots els models incloent els personalitzats i no es pot desfer",
 	"Thought for {{DURATION}}": "He pensat durant {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "He pensat durant {{DURATION}} segons",
+	"Thought shortly": "He pensat breument",
 	"Title": "Títol",
 	"Title Auto-Generation": "Generació automàtica de títol",
 	"Title cannot be an empty string.": "El títol no pot ser una cadena buida.",

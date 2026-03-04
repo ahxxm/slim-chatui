@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "",
 	"Thought for {{DURATION}}": "",
 	"Thought for {{DURATION}} seconds": "",
+	"Thought shortly": "কিছুক্ষণ ভেবেছে",
 	"Title": "শিরোনাম",
 	"Title Auto-Generation": "স্বয়ংক্রিয় শিরোনামগঠন",
 	"Title cannot be an empty string.": "শিরোনাম অবশ্যই একটি পাশাপাশি শব্দ হতে হবে।",

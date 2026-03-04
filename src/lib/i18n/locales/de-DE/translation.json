@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Dies löscht alle Modelle, einschließlich benutzerdefinierter Modelle, und kann nicht rückgängig gemacht werden.",
 	"Thought for {{DURATION}}": "Nachgedacht für {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "Nachgedacht für {{DURATION}} Sekunden",
+	"Thought shortly": "Kurz nachgedacht",
 	"Title": "Titel",
 	"Title Auto-Generation": "Titel automatisch generieren",
 	"Title cannot be an empty string.": "Titel darf nicht leer sein.",

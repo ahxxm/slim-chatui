@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "这将删除所有模型，包括自定义模型，且无法撤销。",
 	"Thought for {{DURATION}}": "思考用时 {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "思考用时 {{DURATION}} 秒",
+	"Thought shortly": "短暂思考",
 	"Title": "标题",
 	"Title Auto-Generation": "自动生成标题",
 	"Title cannot be an empty string.": "标题不能为空",

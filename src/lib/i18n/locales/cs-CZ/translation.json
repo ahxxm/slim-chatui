@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Tím se smažou všechny modely včetně vlastních a tuto akci nelze vrátit zpět.",
 	"Thought for {{DURATION}}": "Přemýšlel po dobu {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "Přemýšlel po dobu {{DURATION}} sekund",
+	"Thought shortly": "Přemýšlel chvíli",
 	"Title": "Název",
 	"Title Auto-Generation": "Automatické generování názvu",
 	"Title cannot be an empty string.": "Název nemůže být prázdný řetězec.",
