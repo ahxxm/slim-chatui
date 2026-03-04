@@ -7,7 +7,9 @@ authors = [
 license = { file = "LICENSE" }
 dependencies = [
     "fastapi>=0.135.1",
-    "uvicorn[standard]>=0.41.0",
+    "uvicorn>=0.41.0",
+    "httptools>=0.7.0",
+    "websockets>=15.0",
     "pydantic>=2.12.5",
     "python-multipart>=0.0.22",
 
