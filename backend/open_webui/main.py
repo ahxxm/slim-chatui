@@ -21,9 +21,7 @@ from fastapi import (
     HTTPException,
     Request,
     status,
-    applications,
 )
-from fastapi.openapi.docs import get_swagger_ui_html
 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
@@ -223,8 +221,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Open WebUI",
-    docs_url="/docs" if ENV == "dev" else None,
-    openapi_url="/openapi.json" if ENV == "dev" else None,
+    docs_url=None,
+    openapi_url=None,
     redoc_url=None,
     lifespan=lifespan,
 )
@@ -1062,18 +1060,6 @@ async def serve_cache_file(
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path)
 
-
-def swagger_ui_html(*args, **kwargs):
-    return get_swagger_ui_html(
-        *args,
-        **kwargs,
-        swagger_js_url="/static/swagger-ui/swagger-ui-bundle.js",
-        swagger_css_url="/static/swagger-ui/swagger-ui.css",
-        swagger_favicon_url="/static/swagger-ui/favicon.png",
-    )
-
-
-applications.get_swagger_ui_html = swagger_ui_html
 
 if os.path.exists(FRONTEND_BUILD_DIR):
     mimetypes.add_type("text/javascript", ".js")
