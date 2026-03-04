@@ -310,24 +310,6 @@ class UsersTable:
         except Exception:
             return None
 
-    def get_user_webhook_url_by_id(
-        self, id: str, db: Optional[Session] = None
-    ) -> Optional[str]:
-        try:
-            with get_db_context(db) as db:
-                user = db.query(User).filter_by(id=id).first()
-
-                if user.settings is None:
-                    return None
-                else:
-                    return (
-                        user.settings.get("ui", {})
-                        .get("notifications", {})
-                        .get("webhook_url", None)
-                    )
-        except Exception:
-            return None
-
     def update_user_role_by_id(
         self, id: str, role: str, db: Optional[Session] = None
     ) -> Optional[UserModel]:

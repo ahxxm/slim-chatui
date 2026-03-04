@@ -463,17 +463,6 @@ PENDING_USER_OVERLAY_CONTENT = PersistentConfig(
     os.environ.get("PENDING_USER_OVERLAY_CONTENT", ""),
 )
 
-WEBHOOK_URL = PersistentConfig(
-    "WEBHOOK_URL", "webhook_url", os.environ.get("WEBHOOK_URL", "")
-)
-
-
-ENABLE_USER_WEBHOOKS = PersistentConfig(
-    "ENABLE_USER_WEBHOOKS",
-    "ui.enable_user_webhooks",
-    os.environ.get("ENABLE_USER_WEBHOOKS", "True").lower() == "true",
-)
-
 # FastAPI / AnyIO settings
 # 40 by default as of this comment, dynamically allocated.
 THREAD_POOL_SIZE = os.getenv("THREAD_POOL_SIZE", None)

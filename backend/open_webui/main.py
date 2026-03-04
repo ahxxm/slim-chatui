@@ -21,9 +21,7 @@ from fastapi import (
     HTTPException,
     Request,
     status,
-    applications,
 )
-from fastapi.openapi.docs import get_swagger_ui_html
 
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
@@ -32,11 +30,10 @@ from fastapi.staticfiles import StaticFiles
 
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.gzip import GZipMiddleware
 from starlette.responses import Response, StreamingResponse
 
-from open_webui.utils import logger
-from open_webui.utils.audit import AuditLevel, AuditLoggingMiddleware
-from open_webui.utils.logger import start_logger
+from open_webui.utils.logger import configure_logging
 from open_webui.socket.main import (
     MODELS,
     app as socket_app,
@@ -78,12 +75,10 @@ from open_webui.config import (
     WEBUI_AUTH,
     WEBUI_NAME,
     WEBUI_BANNERS,
-    WEBHOOK_URL,
     ADMIN_EMAIL,
     SHOW_ADMIN_DETAILS,
     JWT_EXPIRES_IN,
     ENABLE_SIGNUP,
-    ENABLE_USER_WEBHOOKS,
     DEFAULT_USER_ROLE,
     PENDING_USER_OVERLAY_CONTENT,
     PENDING_USER_OVERLAY_TITLE,
@@ -113,10 +108,7 @@ from open_webui.config import (
 from open_webui.env import (
     ENV,
     ENABLE_CUSTOM_MODEL_FALLBACK,
-    AUDIT_EXCLUDED_PATHS,
-    AUDIT_LOG_LEVEL,
     GLOBAL_LOG_LEVEL,
-    MAX_BODY_LOG_SIZE,
     SAFE_MODE,
     VERSION,
     DEPLOYMENT_ID,
@@ -141,7 +133,6 @@ from open_webui.utils.models import (
 from open_webui.utils.chat import (
     generate_chat_completion as chat_completion_handler,
 )
-from open_webui.utils.embeddings import generate_embeddings
 from open_webui.utils.middleware import (
     build_chat_response_context,
     process_chat_payload,
@@ -209,7 +200,7 @@ async def lifespan(app: FastAPI):
     # This allows sync functions to schedule work on the main loop without blocking health checks
     app.state.main_loop = asyncio.get_running_loop()
     app.state.instance_id = INSTANCE_ID
-    start_logger()
+    configure_logging()
 
     # Create admin account from env vars if specified and no users exist
     if WEBUI_ADMIN_EMAIL and WEBUI_ADMIN_PASSWORD:
@@ -228,8 +219,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Open WebUI",
-    docs_url="/docs" if ENV == "dev" else None,
-    openapi_url="/openapi.json" if ENV == "dev" else None,
+    docs_url=None,
+    openapi_url=None,
     redoc_url=None,
     lifespan=lifespan,
 )
@@ -296,10 +287,7 @@ app.state.config.DEFAULT_USER_ROLE = DEFAULT_USER_ROLE
 app.state.config.PENDING_USER_OVERLAY_CONTENT = PENDING_USER_OVERLAY_CONTENT
 app.state.config.PENDING_USER_OVERLAY_TITLE = PENDING_USER_OVERLAY_TITLE
 
-app.state.config.WEBHOOK_URL = WEBHOOK_URL
 app.state.config.BANNERS = WEBUI_BANNERS
-
-app.state.config.ENABLE_USER_WEBHOOKS = ENABLE_USER_WEBHOOKS
 
 app.state.EXTERNAL_PWA_MANIFEST_URL = EXTERNAL_PWA_MANIFEST_URL
 
@@ -387,6 +375,7 @@ class RedirectMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(RedirectMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(GZipMiddleware, minimum_size=500)
 
 
 @app.middleware("http")
@@ -467,19 +456,6 @@ app.include_router(files.router, prefix="/api/v1/files", tags=["files"])
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 
 
-try:
-    audit_level = AuditLevel(AUDIT_LOG_LEVEL)
-except ValueError as e:
-    logger.error(f"Invalid audit level: {AUDIT_LOG_LEVEL}. Error: {e}")
-    audit_level = AuditLevel.NONE
-
-if audit_level != AuditLevel.NONE:
-    app.add_middleware(
-        AuditLoggingMiddleware,
-        audit_level=audit_level,
-        excluded_paths=AUDIT_EXCLUDED_PATHS,
-        max_body_size=MAX_BODY_LOG_SIZE,
-    )
 ##################################
 #
 # Chat Endpoints
@@ -535,38 +511,6 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
 async def get_base_models(request: Request, user=Depends(get_admin_user)):
     models = await get_all_base_models(request, user=user)
     return {"data": models}
-
-
-##################################
-# Embeddings
-##################################
-
-
-@app.post("/api/embeddings")
-@app.post("/api/v1/embeddings")  # Experimental: Compatibility with OpenAI API
-async def embeddings(
-    request: Request, form_data: dict, user=Depends(get_verified_user)
-):
-    """
-    OpenAI-compatible embeddings endpoint.
-
-    This handler:
-      - Performs user/model checks and dispatches to the correct backend.
-      - Supports OpenAI and any compatible provider.
-
-    Args:
-        request (Request): Request context.
-        form_data (dict): OpenAI-like payload (e.g., {"model": "...", "input": [...]})
-        user: Authenticated user.
-
-    Returns:
-        dict: OpenAI-compatible embeddings response.
-    """
-    # Make sure models are loaded in app state
-    if not request.app.state.MODELS:
-        await get_all_models(request, user=user)
-    # Use generic dispatcher in utils.embeddings
-    return await generate_embeddings(request, form_data, user)
 
 
 @app.post("/api/chat/completions")
@@ -983,7 +927,6 @@ async def get_app_config(request: Request):
             **(
                 {
                     "enable_direct_connections": app.state.config.ENABLE_DIRECT_CONNECTIONS,
-                    "enable_user_webhooks": app.state.config.ENABLE_USER_WEBHOOKS,
                 }
                 if user is not None
                 else {}
@@ -1021,24 +964,6 @@ async def get_app_config(request: Request):
             }
         ),
     }
-
-
-class UrlForm(BaseModel):
-    url: str
-
-
-@app.get("/api/webhook")
-async def get_webhook_url(user=Depends(get_admin_user)):
-    return {
-        "url": app.state.config.WEBHOOK_URL,
-    }
-
-
-@app.post("/api/webhook")
-async def update_webhook_url(form_data: UrlForm, user=Depends(get_admin_user)):
-    app.state.config.WEBHOOK_URL = form_data.url
-    app.state.WEBHOOK_URL = app.state.config.WEBHOOK_URL
-    return {"url": app.state.config.WEBHOOK_URL}
 
 
 @app.get("/api/version")
@@ -1083,21 +1008,6 @@ async def get_manifest_json():
         }
 
 
-@app.get("/opensearch.xml")
-async def get_opensearch_xml():
-    xml_content = rf"""
-    <OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/" xmlns:moz="http://www.mozilla.org/2006/browser/search/">
-    <ShortName>{app.state.WEBUI_NAME}</ShortName>
-    <Description>Search {app.state.WEBUI_NAME}</Description>
-    <InputEncoding>UTF-8</InputEncoding>
-    <Image width="16" height="16" type="image/x-icon">{app.state.config.WEBUI_URL}/static/favicon.png</Image>
-    <Url type="text/html" method="get" template="{app.state.config.WEBUI_URL}/?q={"{searchTerms}"}"/>
-    <moz:SearchForm>{app.state.config.WEBUI_URL}</moz:SearchForm>
-    </OpenSearchDescription>
-    """
-    return Response(content=xml_content, media_type="application/xml")
-
-
 @app.get("/health")
 async def healthcheck():
     return {"status": True}
@@ -1126,18 +1036,6 @@ async def serve_cache_file(
         raise HTTPException(status_code=404, detail="File not found")
     return FileResponse(file_path)
 
-
-def swagger_ui_html(*args, **kwargs):
-    return get_swagger_ui_html(
-        *args,
-        **kwargs,
-        swagger_js_url="/static/swagger-ui/swagger-ui-bundle.js",
-        swagger_css_url="/static/swagger-ui/swagger-ui.css",
-        swagger_favicon_url="/static/swagger-ui/favicon.png",
-    )
-
-
-applications.get_swagger_ui_html = swagger_ui_html
 
 if os.path.exists(FRONTEND_BUILD_DIR):
     mimetypes.add_type("text/javascript", ".js")

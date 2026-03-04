@@ -30,13 +30,6 @@ BACKEND_DIR = OPEN_WEBUI_DIR.parent
 # BASE_DIR is the parent of BACKEND_DIR (open-webui-dev/)
 BASE_DIR = BACKEND_DIR.parent
 
-try:
-    from dotenv import find_dotenv, load_dotenv
-
-    load_dotenv(find_dotenv(str(BASE_DIR / ".env")))
-except ImportError:
-    print("dotenv not installed, skipping...")
-
 DOCKER = os.environ.get("DOCKER", "False").lower() == "true"
 
 ####################################
@@ -288,7 +281,7 @@ WEBUI_AUTH_SIGNOUT_REDIRECT_URL = os.environ.get(
 WEBUI_SECRET_KEY = os.environ.get(
     "WEBUI_SECRET_KEY",
     os.environ.get(
-        "WEBUI_JWT_SECRET_KEY", "t0p-s3cr3t"
+        "WEBUI_JWT_SECRET_KEY", "t0p-s3cr3t-loooooooonger-than-32"
     ),  # DEPRECATED: remove at next major version
 )
 
@@ -422,40 +415,6 @@ else:
         AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST = int(AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST)
     except Exception:
         AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST = 10
-
-####################################
-# AUDIT LOGGING
-####################################
-ENABLE_AUDIT_STDOUT = os.getenv("ENABLE_AUDIT_STDOUT", "False").lower() == "true"
-ENABLE_AUDIT_LOGS_FILE = os.getenv("ENABLE_AUDIT_LOGS_FILE", "True").lower() == "true"
-
-# Where to store log file
-# Defaults to the DATA_DIR/audit.log. To set AUDIT_LOGS_FILE_PATH you need to
-# provide the whole path, like: /app/audit.log
-AUDIT_LOGS_FILE_PATH = os.getenv("AUDIT_LOGS_FILE_PATH", f"{DATA_DIR}/audit.log")
-# Maximum size of a file before rotating into a new log file
-AUDIT_LOG_FILE_ROTATION_SIZE = os.getenv("AUDIT_LOG_FILE_ROTATION_SIZE", "10MB")
-
-# Comma separated list of logger names to use for audit logging
-# Default is "uvicorn.access" which is the access log for Uvicorn
-# You can add more logger names to this list if you want to capture more logs
-AUDIT_UVICORN_LOGGER_NAMES = os.getenv(
-    "AUDIT_UVICORN_LOGGER_NAMES", "uvicorn.access"
-).split(",")
-
-# METADATA | REQUEST | REQUEST_RESPONSE
-AUDIT_LOG_LEVEL = os.getenv("AUDIT_LOG_LEVEL", "NONE").upper()
-try:
-    MAX_BODY_LOG_SIZE = int(os.environ.get("MAX_BODY_LOG_SIZE") or 2048)
-except ValueError:
-    MAX_BODY_LOG_SIZE = 2048
-
-# Comma separated list for urls to exclude from audit
-AUDIT_EXCLUDED_PATHS = os.getenv("AUDIT_EXCLUDED_PATHS", "/chats,/chat,/folders").split(
-    ","
-)
-AUDIT_EXCLUDED_PATHS = [path.strip() for path in AUDIT_EXCLUDED_PATHS]
-AUDIT_EXCLUDED_PATHS = [path.lstrip("/") for path in AUDIT_EXCLUDED_PATHS]
 
 
 ####################################

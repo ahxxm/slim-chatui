@@ -236,8 +236,6 @@
 				'login',
 				'new password',
 				'newpassword',
-				'notification webhook url',
-				'notificationwebhookurl',
 				'personal settings',
 				'personalsettings',
 				'privacy settings',
@@ -264,9 +262,7 @@
 				'userdata',
 				'username',
 				'userpreferences',
-				'userprofile',
-				'webhook url',
-				'webhookurl'
+				'userprofile'
 			]
 		},
 		{
