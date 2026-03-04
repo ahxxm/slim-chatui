@@ -18,8 +18,6 @@ from fastapi import (
 )
 
 from fastapi.responses import FileResponse
-from sqlalchemy.orm import Session
-from open_webui.internal.db import get_session
 
 from open_webui.constants import ERROR_MESSAGES
 
@@ -50,14 +48,12 @@ def upload_file(
     file: UploadFile = File(...),
     metadata: Optional[dict | str] = Form(None),
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     return upload_file_handler(
         request,
         file=file,
         metadata=metadata,
         user=user,
-        db=db,
     )
 
 
@@ -66,7 +62,6 @@ def upload_file_handler(
     file: UploadFile = File(...),
     metadata: Optional[dict | str] = Form(None),
     user=Depends(get_verified_user),
-    db: Optional[Session] = None,
 ):
     log.info(f"file.content_type: {file.content_type}")
 
@@ -109,7 +104,6 @@ def upload_file_handler(
                     },
                 }
             ),
-            db=db,
         )
 
         if file_item:
@@ -138,12 +132,11 @@ def upload_file_handler(
 @router.get("/", response_model=list[FileModelResponse])
 async def list_files(
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     if user.role == "admin":
-        return Files.get_files(db=db)
+        return Files.get_files()
     else:
-        return Files.get_files_by_user_id(user.id, db=db)
+        return Files.get_files_by_user_id(user.id)
 
 
 ############################
@@ -162,7 +155,6 @@ async def search_files(
         100, ge=1, le=1000, description="Maximum number of files to return"
     ),
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     user_id = None if user.role == "admin" else user.id
 
@@ -171,7 +163,6 @@ async def search_files(
         filename=filename,
         skip=skip,
         limit=limit,
-        db=db,
     )
 
     if not files:
@@ -190,9 +181,9 @@ async def search_files(
 
 @router.delete("/all")
 async def delete_all_files(
-    user=Depends(get_admin_user), db: Session = Depends(get_session)
+    user=Depends(get_admin_user),
 ):
-    result = Files.delete_all_files(db=db)
+    result = Files.delete_all_files()
     if result:
         try:
             Storage.delete_all_files()
@@ -217,10 +208,8 @@ async def delete_all_files(
 
 
 @router.get("/{id}", response_model=Optional[FileModel])
-async def get_file_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    file = Files.get_file_by_id(id, db=db)
+async def get_file_by_id(id: str, user=Depends(get_verified_user)):
+    file = Files.get_file_by_id(id)
 
     if not file:
         raise HTTPException(
@@ -247,9 +236,8 @@ async def get_file_content_by_id(
     id: str,
     user=Depends(get_verified_user),
     attachment: bool = Query(False),
-    db: Session = Depends(get_session),
 ):
-    file = Files.get_file_by_id(id, db=db)
+    file = Files.get_file_by_id(id)
 
     if not file:
         raise HTTPException(
@@ -308,10 +296,8 @@ async def get_file_content_by_id(
 
 
 @router.get("/{id}/content/html")
-async def get_html_file_content_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    file = Files.get_file_by_id(id, db=db)
+async def get_html_file_content_by_id(id: str, user=Depends(get_verified_user)):
+    file = Files.get_file_by_id(id)
 
     if not file:
         raise HTTPException(
@@ -319,7 +305,7 @@ async def get_html_file_content_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    file_user = Users.get_user_by_id(file.user_id, db=db)
+    file_user = Users.get_user_by_id(file.user_id)
     if not file_user.role == "admin":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -355,10 +341,8 @@ async def get_html_file_content_by_id(
 
 
 @router.get("/{id}/content/{file_name}")
-async def get_file_content_by_id_and_name(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    file = Files.get_file_by_id(id, db=db)
+async def get_file_content_by_id_and_name(id: str, user=Depends(get_verified_user)):
+    file = Files.get_file_by_id(id)
 
     if not file:
         raise HTTPException(
@@ -394,10 +378,8 @@ async def get_file_content_by_id_and_name(
 
 
 @router.delete("/{id}")
-async def delete_file_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    file = Files.get_file_by_id(id, db=db)
+async def delete_file_by_id(id: str, user=Depends(get_verified_user)):
+    file = Files.get_file_by_id(id)
 
     if not file:
         raise HTTPException(
@@ -406,7 +388,7 @@ async def delete_file_by_id(
         )
 
     if file.user_id == user.id or user.role == "admin":
-        result = Files.delete_file_by_id(id, db=db)
+        result = Files.delete_file_by_id(id)
         if result:
             try:
                 Storage.delete_file(file.path)

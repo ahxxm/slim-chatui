@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "",
 	"Thought for {{DURATION}}": "",
 	"Thought for {{DURATION}} seconds": "",
+	"Thought shortly": "Namalandong sa makadiyot",
 	"Title": "Titulo",
 	"Title Auto-Generation": "Awtomatikong paghimo sa titulo",
 	"Title cannot be an empty string.": "",

@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "",
 	"Thought for {{DURATION}}": "",
 	"Thought for {{DURATION}} seconds": "",
+	"Thought shortly": "Pensou brevemente",
 	"Title": "Título",
 	"Title Auto-Generation": "Geração Automática de Título",
 	"Title cannot be an empty string.": "Título não pode ser uma string vazia.",

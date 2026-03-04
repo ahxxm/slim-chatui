@@ -129,7 +129,6 @@ async def get_session_user(
     request: Request,
     response: Response,
     user=Depends(get_current_user),
-    db: Session = Depends(get_session),
 ):
 
     auth_header = request.headers.get("Authorization")
@@ -186,13 +185,11 @@ async def get_session_user(
 async def update_profile(
     form_data: UpdateProfileForm,
     session_user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     if session_user:
         user = Users.update_user_by_id(
             session_user.id,
             form_data.model_dump(),
-            db=db,
         )
         if user:
             return user
@@ -215,13 +212,11 @@ class UpdateTimezoneForm(BaseModel):
 async def update_timezone(
     form_data: UpdateTimezoneForm,
     session_user=Depends(get_current_user),
-    db: Session = Depends(get_session),
 ):
     if session_user:
         Users.update_user_by_id(
             session_user.id,
             {"timezone": form_data.timezone},
-            db=db,
         )
         return {"status": True}
     else:
@@ -237,13 +232,11 @@ async def update_timezone(
 async def update_password(
     form_data: UpdatePasswordForm,
     session_user=Depends(get_current_user),
-    db: Session = Depends(get_session),
 ):
     if session_user:
         user = Auths.authenticate_user(
             session_user.email,
             lambda pw: verify_password(form_data.password, pw),
-            db=db,
         )
 
         if user:
@@ -252,7 +245,7 @@ async def update_password(
             except Exception as e:
                 raise HTTPException(400, detail=str(e))
             hashed = get_password_hash(form_data.new_password)
-            return Auths.update_user_password_by_id(user.id, hashed, db=db)
+            return Auths.update_user_password_by_id(user.id, hashed)
         else:
             raise HTTPException(400, detail=ERROR_MESSAGES.INCORRECT_PASSWORD)
     else:
@@ -492,9 +485,7 @@ async def add_user(
 
 
 @router.get("/admin/details")
-async def get_admin_details(
-    request: Request, user=Depends(get_current_user), db: Session = Depends(get_session)
-):
+async def get_admin_details(request: Request, user=Depends(get_current_user)):
     if request.app.state.config.SHOW_ADMIN_DETAILS:
         admin_email = request.app.state.config.ADMIN_EMAIL
         admin_name = None
@@ -502,11 +493,11 @@ async def get_admin_details(
         log.info(f"Admin details - Email: {admin_email}, Name: {admin_name}")
 
         if admin_email:
-            admin = Users.get_user_by_email(admin_email, db=db)
+            admin = Users.get_user_by_email(admin_email)
             if admin:
                 admin_name = admin.name
         else:
-            admin = Users.get_first_user(db=db)
+            admin = Users.get_first_user()
             if admin:
                 admin_email = admin.email
                 admin_name = admin.name
@@ -554,7 +545,6 @@ async def update_admin_config(
     request: Request,
     form_data: AdminConfig,
     user=Depends(get_admin_user),
-    db: Session = Depends(get_session),
 ):
     request.app.state.config.SHOW_ADMIN_DETAILS = form_data.SHOW_ADMIN_DETAILS
     request.app.state.config.ADMIN_EMAIL = form_data.ADMIN_EMAIL
@@ -576,7 +566,7 @@ async def update_admin_config(
     request.app.state.config.PENDING_USER_OVERLAY_CONTENT = (
         form_data.PENDING_USER_OVERLAY_CONTENT
     )
-    request.app.state.config.persist(db)
+    request.app.state.config.persist()
 
     return {
         "SHOW_ADMIN_DETAILS": request.app.state.config.SHOW_ADMIN_DETAILS,

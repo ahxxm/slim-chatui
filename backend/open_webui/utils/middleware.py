@@ -47,7 +47,6 @@ from open_webui.env import (
     GLOBAL_LOG_LEVEL,
     ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION,
     CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE,
-    ENABLE_REALTIME_CHAT_SAVE,
 )
 from open_webui.constants import TASKS
 
@@ -1523,20 +1522,9 @@ async def streaming_chat_response_handler(response, ctx):
                                                 }
                                             ]
 
-                                        if ENABLE_REALTIME_CHAT_SAVE:
-                                            # Save message in the database
-                                            Chats.upsert_message_to_chat_by_id_and_message_id(
-                                                metadata["chat_id"],
-                                                metadata["message_id"],
-                                                {
-                                                    "content": serialize_output(output),
-                                                    "output": output,
-                                                },
-                                            )
-                                        else:
-                                            data = {
-                                                "content": serialize_output(output),
-                                            }
+                                        data = {
+                                            "content": serialize_output(output),
+                                        }
 
                                 if delta:
                                     delta_count += 1
@@ -1610,23 +1598,15 @@ async def streaming_chat_response_handler(response, ctx):
                     "title": title,
                 }
 
-                if not ENABLE_REALTIME_CHAT_SAVE:
-                    # Save message in the database
-                    Chats.upsert_message_to_chat_by_id_and_message_id(
-                        metadata["chat_id"],
-                        metadata["message_id"],
-                        {
-                            "content": serialize_output(output),
-                            "output": output,
-                            **({"usage": usage} if usage else {}),
-                        },
-                    )
-                elif usage:
-                    Chats.upsert_message_to_chat_by_id_and_message_id(
-                        metadata["chat_id"],
-                        metadata["message_id"],
-                        {"usage": usage},
-                    )
+                Chats.upsert_message_to_chat_by_id_and_message_id(
+                    metadata["chat_id"],
+                    metadata["message_id"],
+                    {
+                        "content": serialize_output(output),
+                        "output": output,
+                        **({"usage": usage} if usage else {}),
+                    },
+                )
 
                 await event_emitter(
                     {
@@ -1639,17 +1619,15 @@ async def streaming_chat_response_handler(response, ctx):
             except asyncio.CancelledError:
                 log.warning("Task was cancelled!")
                 await event_emitter({"type": "chat:tasks:cancel"})
-
-                if not ENABLE_REALTIME_CHAT_SAVE:
-                    # Save message in the database
-                    Chats.upsert_message_to_chat_by_id_and_message_id(
-                        metadata["chat_id"],
-                        metadata["message_id"],
-                        {
-                            "content": serialize_output(output),
-                            "output": output,
-                        },
-                    )
+                # Save unfinished message in the database
+                Chats.upsert_message_to_chat_by_id_and_message_id(
+                    metadata["chat_id"],
+                    metadata["message_id"],
+                    {
+                        "content": serialize_output(output),
+                        "output": output,
+                    },
+                )
 
             if response.background is not None:
                 await response.background()

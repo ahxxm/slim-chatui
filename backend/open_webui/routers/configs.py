@@ -1,11 +1,9 @@
 import logging
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
 
 from typing import Optional
 
-from open_webui.internal.db import get_session
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.config import get_config, save_config
 from open_webui.config import BannerModel
@@ -61,12 +59,11 @@ async def set_connections_config(
     request: Request,
     form_data: ConnectionsConfigForm,
     user=Depends(get_admin_user),
-    db: Session = Depends(get_session),
 ):
     request.app.state.config.ENABLE_DIRECT_CONNECTIONS = (
         form_data.ENABLE_DIRECT_CONNECTIONS
     )
-    request.app.state.config.persist(db)
+    request.app.state.config.persist()
 
     return {
         "ENABLE_DIRECT_CONNECTIONS": request.app.state.config.ENABLE_DIRECT_CONNECTIONS,
@@ -100,14 +97,13 @@ async def set_models_config(
     request: Request,
     form_data: ModelsConfigForm,
     user=Depends(get_admin_user),
-    db: Session = Depends(get_session),
 ):
     request.app.state.config.DEFAULT_MODELS = form_data.DEFAULT_MODELS
     request.app.state.config.DEFAULT_PINNED_MODELS = form_data.DEFAULT_PINNED_MODELS
     request.app.state.config.MODEL_ORDER_LIST = form_data.MODEL_ORDER_LIST
     request.app.state.config.DEFAULT_MODEL_METADATA = form_data.DEFAULT_MODEL_METADATA
     request.app.state.config.DEFAULT_MODEL_PARAMS = form_data.DEFAULT_MODEL_PARAMS
-    request.app.state.config.persist(db)
+    request.app.state.config.persist()
     return {
         "DEFAULT_MODELS": request.app.state.config.DEFAULT_MODELS,
         "DEFAULT_PINNED_MODELS": request.app.state.config.DEFAULT_PINNED_MODELS,
@@ -131,11 +127,10 @@ async def set_default_suggestions(
     request: Request,
     form_data: SetDefaultSuggestionsForm,
     user=Depends(get_admin_user),
-    db: Session = Depends(get_session),
 ):
     data = form_data.model_dump()
     request.app.state.config.DEFAULT_PROMPT_SUGGESTIONS = data["suggestions"]
-    request.app.state.config.persist(db)
+    request.app.state.config.persist()
     return request.app.state.config.DEFAULT_PROMPT_SUGGESTIONS
 
 
@@ -153,11 +148,10 @@ async def set_banners(
     request: Request,
     form_data: SetBannersForm,
     user=Depends(get_admin_user),
-    db: Session = Depends(get_session),
 ):
     data = form_data.model_dump()
     request.app.state.config.BANNERS = data["banners"]
-    request.app.state.config.persist(db)
+    request.app.state.config.persist()
     return request.app.state.config.BANNERS
 
 

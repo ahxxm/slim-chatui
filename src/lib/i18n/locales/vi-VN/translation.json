@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Hành động này sẽ xóa tất cả các mô hình bao gồm cả các mô hình tùy chỉnh và không thể hoàn tác.",
 	"Thought for {{DURATION}}": "Suy nghĩ trong {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "Suy nghĩ trong {{DURATION}} giây",
+	"Thought shortly": "Suy nghĩ trong chốc lát",
 	"Title": "Tiêu đề",
 	"Title Auto-Generation": "Tự động Tạo Tiêu đề",
 	"Title cannot be an empty string.": "Tiêu đề không được phép bỏ trống",

@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "การดำเนินการนี้จะลบโมเดลทั้งหมดรวมถึงโมเดลที่กำหนดเอง และไม่สามารถยกเลิกได้",
 	"Thought for {{DURATION}}": "คิดเป็นเวลา {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "ใช้เวลาคิด {{DURATION}} วินาที",
+	"Thought shortly": "คิดสักครู่",
 	"Title": "ชื่อเรื่อง",
 	"Title Auto-Generation": "การสร้างชื่ออัตโนมัติ",
 	"Title cannot be an empty string.": "ชื่อเรื่องต้องไม่เป็นสตริงว่าง",

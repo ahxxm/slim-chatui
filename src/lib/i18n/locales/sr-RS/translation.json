@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Ово ће обрисати све моделе укључујући прилагођене моделе и не може се опозвати.",
 	"Thought for {{DURATION}}": "",
 	"Thought for {{DURATION}} seconds": "",
+	"Thought shortly": "Размишљао накратко",
 	"Title": "Наслов",
 	"Title Auto-Generation": "Самостално стварање наслова",
 	"Title cannot be an empty string.": "Наслов не може бити празан низ.",

@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Aya ad yekkes akk timudmin gar-asent timudmin tudmawanin yerna ur yezmir yiwen ad tent-id-yerr.",
 	"Thought for {{DURATION}}": "Ixemmem {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "Axemmem ɣef {{DURATION}} n tsinin",
+	"Thought shortly": "Ixemmem ciṭ",
 	"Title": "Azwel",
 	"Title Auto-Generation": "Asirew awurman n izwilen",
 	"Title cannot be an empty string.": "Azwel ur yettili ara d azrir ilem.",

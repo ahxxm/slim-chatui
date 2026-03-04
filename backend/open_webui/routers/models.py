@@ -58,7 +58,6 @@ async def get_models(
     direction: Optional[str] = None,
     page: Optional[int] = 1,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
 
     limit = PAGE_ITEM_COUNT
@@ -78,7 +77,7 @@ async def get_models(
     if direction:
         filter["direction"] = direction
 
-    result = Models.search_models(user.id, filter=filter, skip=skip, limit=limit, db=db)
+    result = Models.search_models(user.id, filter=filter, skip=skip, limit=limit)
 
     return ModelListResponse(
         items=result.items,
@@ -93,9 +92,9 @@ async def get_models(
 
 @router.get("/base", response_model=list[ModelResponse])
 async def get_base_models(
-    user=Depends(get_admin_user), db: Session = Depends(get_session)
+    user=Depends(get_admin_user),
 ):
-    return Models.get_base_models(db=db)
+    return Models.get_base_models()
 
 
 ###########################
@@ -105,9 +104,9 @@ async def get_base_models(
 
 @router.get("/tags", response_model=list[str])
 async def get_model_tags(
-    user=Depends(get_verified_user), db: Session = Depends(get_session)
+    user=Depends(get_verified_user),
 ):
-    models = Models.get_models(db=db)
+    models = Models.get_models()
 
     tags_set = set()
     for model in models:
@@ -131,7 +130,6 @@ async def create_new_model(
     request: Request,
     form_data: ModelForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     if user.role != "admin":
         raise HTTPException(
@@ -139,7 +137,7 @@ async def create_new_model(
             detail=ERROR_MESSAGES.UNAUTHORIZED,
         )
 
-    model = Models.get_model_by_id(form_data.id, db=db)
+    model = Models.get_model_by_id(form_data.id)
     if model:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -153,7 +151,7 @@ async def create_new_model(
         )
 
     else:
-        model = Models.insert_new_model(form_data, user.id, db=db)
+        model = Models.insert_new_model(form_data, user.id)
         if model:
             return model
         else:
@@ -172,7 +170,6 @@ async def create_new_model(
 async def export_models(
     request: Request,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     if user.role != "admin":
         raise HTTPException(
@@ -180,7 +177,7 @@ async def export_models(
             detail=ERROR_MESSAGES.UNAUTHORIZED,
         )
 
-    return Models.get_models(db=db)
+    return Models.get_models()
 
 
 ############################
@@ -265,9 +262,8 @@ async def sync_models(
     request: Request,
     form_data: SyncModelsForm,
     user=Depends(get_admin_user),
-    db: Session = Depends(get_session),
 ):
-    return Models.sync_models(user.id, form_data.models, db=db)
+    return Models.sync_models(user.id, form_data.models)
 
 
 ###########################
@@ -281,10 +277,8 @@ class ModelIdForm(BaseModel):
 
 # Note: We're not using the typical url path param here, but instead using a query parameter to allow '/' in the id
 @router.get("/model", response_model=Optional[ModelResponse])
-async def get_model_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    model = Models.get_model_by_id(id, db=db)
+async def get_model_by_id(id: str, user=Depends(get_verified_user)):
+    model = Models.get_model_by_id(id)
     if model:
         return model
     else:
@@ -342,10 +336,8 @@ def get_model_profile_image(id: str, user=Depends(get_verified_user)):
 
 
 @router.post("/model/toggle", response_model=Optional[ModelResponse])
-async def toggle_model_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    model = Models.get_model_by_id(id, db=db)
+async def toggle_model_by_id(id: str, user=Depends(get_verified_user)):
+    model = Models.get_model_by_id(id)
     if not model:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -358,7 +350,7 @@ async def toggle_model_by_id(
             detail=ERROR_MESSAGES.UNAUTHORIZED,
         )
 
-    model = Models.toggle_model_by_id(id, db=db)
+    model = Models.toggle_model_by_id(id)
     if model:
         return model
     else:
@@ -377,9 +369,8 @@ async def toggle_model_by_id(
 async def update_model_by_id(
     form_data: ModelForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
-    model = Models.get_model_by_id(form_data.id, db=db)
+    model = Models.get_model_by_id(form_data.id)
     if not model:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -392,9 +383,7 @@ async def update_model_by_id(
             detail=ERROR_MESSAGES.UNAUTHORIZED,
         )
 
-    model = Models.update_model_by_id(
-        form_data.id, ModelForm(**form_data.model_dump()), db=db
-    )
+    model = Models.update_model_by_id(form_data.id, ModelForm(**form_data.model_dump()))
     return model
 
 
@@ -407,9 +396,8 @@ async def update_model_by_id(
 async def delete_model_by_id(
     form_data: ModelIdForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
-    model = Models.get_model_by_id(form_data.id, db=db)
+    model = Models.get_model_by_id(form_data.id)
     if not model:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -422,13 +410,13 @@ async def delete_model_by_id(
             detail=ERROR_MESSAGES.UNAUTHORIZED,
         )
 
-    result = Models.delete_model_by_id(form_data.id, db=db)
+    result = Models.delete_model_by_id(form_data.id)
     return result
 
 
 @router.delete("/delete/all", response_model=bool)
 async def delete_all_models(
-    user=Depends(get_admin_user), db: Session = Depends(get_session)
+    user=Depends(get_admin_user),
 ):
-    result = Models.delete_all_models(db=db)
+    result = Models.delete_all_models()
     return result

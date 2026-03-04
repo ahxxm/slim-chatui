@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Це видалить усі моделі, включаючи користувацькі моделі, і не може бути скасовано.",
 	"Thought for {{DURATION}}": "Думка для {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "Думав протягом {{DURATION}} секунд.",
+	"Thought shortly": "Думав мить",
 	"Title": "Заголовок",
 	"Title Auto-Generation": "Автогенерація заголовків",
 	"Title cannot be an empty string.": "Заголовок не може бути порожнім рядком.",

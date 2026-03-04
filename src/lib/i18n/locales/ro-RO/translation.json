@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "",
 	"Thought for {{DURATION}}": "",
 	"Thought for {{DURATION}} seconds": "",
+	"Thought shortly": "A gândit scurt",
 	"Title": "Titlu",
 	"Title Auto-Generation": "Generare Automată a Titlului",
 	"Title cannot be an empty string.": "Titlul nu poate fi un șir gol.",

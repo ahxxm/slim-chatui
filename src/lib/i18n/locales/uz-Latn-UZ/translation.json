@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "",
 	"Thought for {{DURATION}}": "",
 	"Thought for {{DURATION}} seconds": "",
+	"Thought shortly": "Qisqa o'yladim",
 	"Title": "",
 	"Title Auto-Generation": "",
 	"Title cannot be an empty string.": "",

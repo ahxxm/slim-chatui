@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "هذا سيحذف جميع النماذج بما في ذلك المخصصة ولا يمكن التراجع عن هذا الإجراء.",
 	"Thought for {{DURATION}}": "فكّر لمدة {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "فكّر لمدة {{DURATION}} ثانية",
+	"Thought shortly": "فكّر لوهلة",
 	"Title": "العنوان",
 	"Title Auto-Generation": "توليد تلقائي للعنوان",
 	"Title cannot be an empty string.": "العنوان مطلوب",

@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "これはカスタムモデルを含むすべてのモデルを削除し、元に戻すことはできません。",
 	"Thought for {{DURATION}}": "{{DURATION}}間の思考",
 	"Thought for {{DURATION}} seconds": "{{DURATION}}秒間の思考",
+	"Thought shortly": "短時間の思考",
 	"Title": "タイトル",
 	"Title Auto-Generation": "タイトル自動生成",
 	"Title cannot be an empty string.": "タイトルは空文字列にできません。",

@@ -208,10 +208,6 @@ if FROM_INIT_PY:
 
 DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{DATA_DIR}/webui.db")
 
-ENABLE_REALTIME_CHAT_SAVE = (
-    os.environ.get("ENABLE_REALTIME_CHAT_SAVE", "False").lower() == "true"
-)
-
 ####################################
 # UVICORN WORKERS
 ####################################

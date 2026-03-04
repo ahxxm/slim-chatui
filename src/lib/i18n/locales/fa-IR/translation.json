@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "این همه مدل\u200cها از جمله مدل\u200cهای سفارشی را حذف خواهد کرد و قابل بازگشت نیست.",
 	"Thought for {{DURATION}}": "فکر کردن برای {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "فکر کردن برای {{DURATION}} ثانیه",
+	"Thought shortly": "فکر کردن لحظه\u200cای",
 	"Title": "عنوان",
 	"Title Auto-Generation": "تولید خودکار عنوان",
 	"Title cannot be an empty string.": "عنوان نمی تواند یک رشته خالی باشد.",

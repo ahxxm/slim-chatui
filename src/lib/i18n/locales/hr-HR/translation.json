@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "",
 	"Thought for {{DURATION}}": "",
 	"Thought for {{DURATION}} seconds": "",
+	"Thought shortly": "Razmišljao nakratko",
 	"Title": "Naslov",
 	"Title Auto-Generation": "Automatsko generiranje naslova",
 	"Title cannot be an empty string.": "Naslov ne može biti prazni niz.",

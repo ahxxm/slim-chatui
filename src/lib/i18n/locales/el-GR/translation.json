@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Αυτό θα διαγράψει όλα τα μοντέλα, συμπεριλαμβανομένων των προσαρμοσμένων μοντέλων και δεν μπορεί να αναιρεθεί.",
 	"Thought for {{DURATION}}": "Σκέφτηκε για {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "Σκέφτηκε για {{DURATION}} δευτερόλεπτα",
+	"Thought shortly": "Σκέφτηκε στιγμιαία",
 	"Title": "Τίτλος",
 	"Title Auto-Generation": "Αυτόματη Γενιά Τίτλων",
 	"Title cannot be an empty string.": "Ο τίτλος δεν μπορεί να είναι κενή συμβολοσειρά.",
