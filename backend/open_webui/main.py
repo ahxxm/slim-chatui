@@ -35,9 +35,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.responses import Response, StreamingResponse
 
-from open_webui.utils import logger
-from open_webui.utils.audit import AuditLevel, AuditLoggingMiddleware
-from open_webui.utils.logger import start_logger
+from open_webui.utils.logger import configure_logging
 from open_webui.socket.main import (
     MODELS,
     app as socket_app,
@@ -114,10 +112,7 @@ from open_webui.config import (
 from open_webui.env import (
     ENV,
     ENABLE_CUSTOM_MODEL_FALLBACK,
-    AUDIT_EXCLUDED_PATHS,
-    AUDIT_LOG_LEVEL,
     GLOBAL_LOG_LEVEL,
-    MAX_BODY_LOG_SIZE,
     SAFE_MODE,
     VERSION,
     DEPLOYMENT_ID,
@@ -210,7 +205,7 @@ async def lifespan(app: FastAPI):
     # This allows sync functions to schedule work on the main loop without blocking health checks
     app.state.main_loop = asyncio.get_running_loop()
     app.state.instance_id = INSTANCE_ID
-    start_logger()
+    configure_logging()
 
     # Create admin account from env vars if specified and no users exist
     if WEBUI_ADMIN_EMAIL and WEBUI_ADMIN_PASSWORD:
@@ -469,19 +464,6 @@ app.include_router(files.router, prefix="/api/v1/files", tags=["files"])
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 
 
-try:
-    audit_level = AuditLevel(AUDIT_LOG_LEVEL)
-except ValueError as e:
-    logger.error(f"Invalid audit level: {AUDIT_LOG_LEVEL}. Error: {e}")
-    audit_level = AuditLevel.NONE
-
-if audit_level != AuditLevel.NONE:
-    app.add_middleware(
-        AuditLoggingMiddleware,
-        audit_level=audit_level,
-        excluded_paths=AUDIT_EXCLUDED_PATHS,
-        max_body_size=MAX_BODY_LOG_SIZE,
-    )
 ##################################
 #
 # Chat Endpoints
