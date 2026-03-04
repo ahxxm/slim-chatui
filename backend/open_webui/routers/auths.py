@@ -334,7 +334,7 @@ def signup_handler(
     *,
     db: Session,
 ) -> UserModel:
-    $ Create a user. Used by signin (no-auth auto-create) and signup.
+    # Create a user. Used by signin (no-auth auto-create) and signup.
     # Safe from concurrent first-signup race: insert's flush() escalates
     # the DEFERRED transaction to RESERVED, blocking other writers until commit.
     first_user = not Users.has_users(db=db)
