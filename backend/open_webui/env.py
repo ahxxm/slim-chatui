@@ -281,7 +281,7 @@ WEBUI_AUTH_SIGNOUT_REDIRECT_URL = os.environ.get(
 WEBUI_SECRET_KEY = os.environ.get(
     "WEBUI_SECRET_KEY",
     os.environ.get(
-        "WEBUI_JWT_SECRET_KEY", "t0p-s3cr3t"
+        "WEBUI_JWT_SECRET_KEY", "t0p-s3cr3t-loooooooonger-than-32"
     ),  # DEPRECATED: remove at next major version
 )
 
