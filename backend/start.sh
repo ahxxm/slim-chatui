@@ -3,16 +3,6 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 cd "$SCRIPT_DIR" || exit
 
-# Add conditional Playwright browser installation
-if [[ "${WEB_LOADER_ENGINE,,}" == "playwright" ]]; then
-    if [[ -z "${PLAYWRIGHT_WS_URL}" ]]; then
-        echo "Installing Playwright browsers..."
-        playwright install chromium
-        playwright install-deps chromium
-    fi
-
-fi
-
 if [ -n "${WEBUI_SECRET_KEY_FILE}" ]; then
     KEY_FILE="${WEBUI_SECRET_KEY_FILE}"
 else
