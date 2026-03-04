@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "",
 	"Thought for {{DURATION}}": "ვიფიქრე {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "ვიფიქრე {{DURATION}} წამი",
+	"Thought shortly": "ვიფიქრე ცოტა ხანს",
 	"Title": "სათაური",
 	"Title Auto-Generation": "სათაურის ავტოგენერაცია",
 	"Title cannot be an empty string.": "სათაურის ველი ცარიელი სტრიქონი ვერ იქნება.",

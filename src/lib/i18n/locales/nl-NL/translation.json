@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Dit zal alle modellen, ook aangepaste modellen, verwijderen en kan niet ongedaan worden gemaakt",
 	"Thought for {{DURATION}}": "Dacht {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "Dacht {{DURATION}} seconden",
+	"Thought shortly": "Dacht even na",
 	"Title": "Titel",
 	"Title Auto-Generation": "Titel Auto-Generatie",
 	"Title cannot be an empty string.": "Titel kan niet leeg zijn.",

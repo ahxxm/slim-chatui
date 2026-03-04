@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Dette sletter alle modeller, inkludert tilpassede modeller, og kan ikke angres.",
 	"Thought for {{DURATION}}": "Tenkte i {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "Tenkte i {{DURATION}} sekunder",
+	"Thought shortly": "Tenkte kort",
 	"Title": "Tittel",
 	"Title Auto-Generation": "Automatisk tittelgenerering",
 	"Title cannot be an empty string.": "Tittel kan ikke være en tom streng.",

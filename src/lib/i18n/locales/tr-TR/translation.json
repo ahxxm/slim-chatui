@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Bu, özel modeller dahil olmak üzere tüm modelleri silecek ve geri alınamaz.",
 	"Thought for {{DURATION}}": "{{DURATION}} saniye düşünüldü",
 	"Thought for {{DURATION}} seconds": "{{DURATION}} saniye düşünüldü",
+	"Thought shortly": "Kısaca düşünüldü",
 	"Title": "Başlık",
 	"Title Auto-Generation": "Otomatik Başlık Oluşturma",
 	"Title cannot be an empty string.": "Başlık boş bir dize olamaz.",

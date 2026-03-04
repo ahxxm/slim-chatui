@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Бу барча моделларни, жумладан, махсус моделларни ҳам ўчириб ташлайди ва уларни ортга қайтариб бўлмайди.",
 	"Thought for {{DURATION}}": "{{DURATION}} учун фикр",
 	"Thought for {{DURATION}} seconds": "{{DURATION}} сония ўйладим",
+	"Thought shortly": "Қисқа ўйладим",
 	"Title": "Сарлавҳа",
 	"Title Auto-Generation": "Сарлавҳани автоматик яратиш",
 	"Title cannot be an empty string.": "Сарлавҳа бўш қатор бўлиши мумкин эмас.",

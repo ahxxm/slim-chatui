@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Questa opzione eliminerà tutti i modelli, compresi i modelli personalizzati e non può essere annullata.",
 	"Thought for {{DURATION}}": "Pensiero per {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "Pensiero per {{DURATION}} secondi",
+	"Thought shortly": "Pensiero breve",
 	"Title": "Titolo",
 	"Title Auto-Generation": "Generazione automatica del titolo",
 	"Title cannot be an empty string.": "Il titolo non può essere una stringa vuota.",

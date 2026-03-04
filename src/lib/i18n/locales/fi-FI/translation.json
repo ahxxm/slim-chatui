@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Tämä poistaa kaikki mallit, mukaan lukien mukautetut mallit, eikä sitä voi peruuttaa.",
 	"Thought for {{DURATION}}": "Ajatteli {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "Ajatteli {{DURATION}} sekuntia",
+	"Thought shortly": "Ajatteli hetken",
 	"Title": "Otsikko",
 	"Title Auto-Generation": "Otsikon automaattinen luonti",
 	"Title cannot be an empty string.": "Otsikko ei voi olla tyhjä merkkijono.",

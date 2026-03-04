@@ -97,6 +97,8 @@
 									DURATION: dayjs.duration(seconds, 'seconds').humanize()
 								})}
 							{/if}
+						{:else if attributes?.done === 'true'}
+							{$i18n.t('Thought shortly')}
 						{:else}
 							{$i18n.t('Thinking...')}
 						{/if}

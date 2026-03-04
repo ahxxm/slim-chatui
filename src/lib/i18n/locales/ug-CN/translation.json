@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "بۇ بارلىق مودېللارنى ئۆچۈرۈدۇ (ئۆزلۈك مودېللارنىمۇ ئۆز ئىچىگە ئالىدۇ) ۋە ئەسلىگە كەلتۈرگىلى بولمايدۇ.",
 	"Thought for {{DURATION}}": "{{DURATION}} مىنۇت ئويلىدى",
 	"Thought for {{DURATION}} seconds": "{{DURATION}} سېكۇنت ئويلىدى",
+	"Thought shortly": "قىسقا ئويلىدى",
 	"Title": "تېما",
 	"Title Auto-Generation": "ئاپتوماتىك تېما ھاسىل قىلىش",
 	"Title cannot be an empty string.": "تېما بوش بولسا بولمايدۇ.",

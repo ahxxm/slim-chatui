@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "이렇게 하면 사용자 지정 모델을 포함한 모든 모델이 삭제되며 실행 취소할 수 없습니다.",
 	"Thought for {{DURATION}}": "{{DURATION}} 동안 생각함",
 	"Thought for {{DURATION}} seconds": "{{DURATION}}초 동안 생각함",
+	"Thought shortly": "잠시 생각함",
 	"Title": "제목",
 	"Title Auto-Generation": "제목 자동 생성",
 	"Title cannot be an empty string.": "제목은 빈 문자열일 수 없습니다.",

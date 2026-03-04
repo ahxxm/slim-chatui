@@ -54,7 +54,6 @@ async def get_users(
     direction: Optional[str] = None,
     page: Optional[int] = 1,
     user=Depends(get_admin_user),
-    db: Session = Depends(get_session),
 ):
     limit = PAGE_ITEM_COUNT
 
@@ -69,15 +68,14 @@ async def get_users(
     if direction:
         filter["direction"] = direction
 
-    return Users.get_users(filter=filter, skip=skip, limit=limit, db=db)
+    return Users.get_users(filter=filter, skip=skip, limit=limit)
 
 
 @router.get("/all", response_model=UserInfoListResponse)
 async def get_all_users(
     user=Depends(get_admin_user),
-    db: Session = Depends(get_session),
 ):
-    return Users.get_users(db=db)
+    return Users.get_users()
 
 
 @router.get("/search", response_model=UserInfoListResponse)
@@ -87,7 +85,6 @@ async def search_users(
     direction: Optional[str] = None,
     page: Optional[int] = 1,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     limit = PAGE_ITEM_COUNT
 
@@ -102,7 +99,7 @@ async def search_users(
     if direction:
         filter["direction"] = direction
 
-    return Users.get_users(filter=filter, skip=skip, limit=limit, db=db)
+    return Users.get_users(filter=filter, skip=skip, limit=limit)
 
 
 ############################
@@ -112,9 +109,9 @@ async def search_users(
 
 @router.get("/user/settings", response_model=Optional[UserSettings])
 async def get_user_settings_by_session_user(
-    user=Depends(get_verified_user), db: Session = Depends(get_session)
+    user=Depends(get_verified_user),
 ):
-    user = Users.get_user_by_id(user.id, db=db)
+    user = Users.get_user_by_id(user.id)
     if user:
         return user.settings
     else:
@@ -134,10 +131,9 @@ async def update_user_settings_by_session_user(
     request: Request,
     form_data: UserSettings,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     updated_user_settings = form_data.model_dump()
-    user = Users.update_user_settings_by_id(user.id, updated_user_settings, db=db)
+    user = Users.update_user_settings_by_id(user.id, updated_user_settings)
     if user:
         return user.settings
     else:
@@ -154,9 +150,9 @@ async def update_user_settings_by_session_user(
 
 @router.get("/user/info", response_model=Optional[dict])
 async def get_user_info_by_session_user(
-    user=Depends(get_verified_user), db: Session = Depends(get_session)
+    user=Depends(get_verified_user),
 ):
-    user = Users.get_user_by_id(user.id, db=db)
+    user = Users.get_user_by_id(user.id)
     if user:
         return user.info
     else:
@@ -173,16 +169,14 @@ async def get_user_info_by_session_user(
 
 @router.post("/user/info/update", response_model=Optional[dict])
 async def update_user_info_by_session_user(
-    form_data: dict, user=Depends(get_verified_user), db: Session = Depends(get_session)
+    form_data: dict, user=Depends(get_verified_user)
 ):
-    user = Users.get_user_by_id(user.id, db=db)
+    user = Users.get_user_by_id(user.id)
     if user:
         if user.info is None:
             user.info = {}
 
-        user = Users.update_user_by_id(
-            user.id, {"info": {**user.info, **form_data}}, db=db
-        )
+        user = Users.update_user_by_id(user.id, {"info": {**user.info, **form_data}})
         if user:
             return user.info
         else:
@@ -203,9 +197,7 @@ async def update_user_info_by_session_user(
 
 
 @router.get("/{user_id}", response_model=UserModelResponse)
-async def get_user_by_id(
-    user_id: str, user=Depends(get_admin_user), db: Session = Depends(get_session)
-):
+async def get_user_by_id(user_id: str, user=Depends(get_admin_user)):
     # Check if user_id is a shared chat
     # If it is, get the user_id from the chat
     if user_id.startswith("shared-"):
@@ -219,7 +211,7 @@ async def get_user_by_id(
                 detail=ERROR_MESSAGES.USER_NOT_FOUND,
             )
 
-    user = Users.get_user_by_id(user_id, db=db)
+    user = Users.get_user_by_id(user_id)
     if user:
         return user
     else:
@@ -230,10 +222,8 @@ async def get_user_by_id(
 
 
 @router.get("/{user_id}/info", response_model=UserInfoResponse)
-async def get_user_info_by_id(
-    user_id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    user = Users.get_user_by_id(user_id, db=db)
+async def get_user_info_by_id(user_id: str, user=Depends(get_verified_user)):
+    user = Users.get_user_by_id(user_id)
     if user:
         return UserInfoResponse(**user.model_dump())
     else:
@@ -371,12 +361,10 @@ async def update_user_by_id(
 
 
 @router.delete("/{user_id}", response_model=bool)
-async def delete_user_by_id(
-    user_id: str, user=Depends(get_admin_user), db: Session = Depends(get_session)
-):
+async def delete_user_by_id(user_id: str, user=Depends(get_admin_user)):
     # Prevent deletion of the primary admin user
     try:
-        first_user = Users.get_first_user(db=db)
+        first_user = Users.get_first_user()
         if first_user and user_id == first_user.id:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
@@ -390,7 +378,7 @@ async def delete_user_by_id(
         )
 
     if user.id != user_id:
-        result = Auths.delete_auth_by_id(user_id, db=db)
+        result = Auths.delete_auth_by_id(user_id)
 
         if result:
             return True

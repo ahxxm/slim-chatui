@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "",
 	"Thought for {{DURATION}}": "",
 	"Thought for {{DURATION}} seconds": "",
+	"Thought shortly": "Berfikir seketika",
 	"Title": "Tajuk",
 	"Title Auto-Generation": "Penjanaan Auto Tajuk",
 	"Title cannot be an empty string.": "Tajuk tidak boleh menjadi rentetan kosong",

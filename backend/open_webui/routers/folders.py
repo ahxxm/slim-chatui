@@ -35,18 +35,17 @@ router = APIRouter()
 async def get_folders(
     request: Request,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
-    folders = Folders.get_folders_by_user_id(user.id, db=db)
+    folders = Folders.get_folders_by_user_id(user.id)
 
     # Verify folder data integrity
     folder_list = []
     for folder in folders:
         if folder.parent_id and not Folders.get_folder_by_id_and_user_id(
-            folder.parent_id, user.id, db=db
+            folder.parent_id, user.id
         ):
             folder = Folders.update_folder_parent_id_by_id_and_user_id(
-                folder.id, user.id, None, db=db
+                folder.id, user.id, None
             )
 
         if folder.data:
@@ -56,7 +55,7 @@ async def get_folders(
 
                     if file.get("type") == "file":
                         if Files.check_access_by_user_id(
-                            file.get("id"), user.id, "read", db=db
+                            file.get("id"), user.id, "read"
                         ):
                             valid_files.append(file)
                     else:
@@ -64,7 +63,7 @@ async def get_folders(
 
                 folder.data["files"] = valid_files
                 Folders.update_folder_by_id_and_user_id(
-                    folder.id, user.id, FolderUpdateForm(data=folder.data), db=db
+                    folder.id, user.id, FolderUpdateForm(data=folder.data)
                 )
 
         folder_list.append(FolderNameIdResponse(**folder.model_dump()))
@@ -81,10 +80,9 @@ async def get_folders(
 def create_folder(
     form_data: FolderForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
     folder = Folders.get_folder_by_parent_id_and_user_id_and_name(
-        None, user.id, form_data.name, db=db
+        None, user.id, form_data.name
     )
 
     if folder:
@@ -94,7 +92,7 @@ def create_folder(
         )
 
     try:
-        folder = Folders.insert_new_folder(user.id, form_data, db=db)
+        folder = Folders.insert_new_folder(user.id, form_data)
         return folder
     except Exception as e:
         log.exception(e)
@@ -111,10 +109,8 @@ def create_folder(
 
 
 @router.get("/{id}", response_model=Optional[FolderModel])
-async def get_folder_by_id(
-    id: str, user=Depends(get_verified_user), db: Session = Depends(get_session)
-):
-    folder = Folders.get_folder_by_id_and_user_id(id, user.id, db=db)
+async def get_folder_by_id(id: str, user=Depends(get_verified_user)):
+    folder = Folders.get_folder_by_id_and_user_id(id, user.id)
     if folder:
         return folder
     else:
@@ -134,15 +130,14 @@ async def update_folder_name_by_id(
     id: str,
     form_data: FolderUpdateForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
-    folder = Folders.get_folder_by_id_and_user_id(id, user.id, db=db)
+    folder = Folders.get_folder_by_id_and_user_id(id, user.id)
     if folder:
 
         if form_data.name is not None:
             # Check if folder with same name exists
             existing_folder = Folders.get_folder_by_parent_id_and_user_id_and_name(
-                folder.parent_id, user.id, form_data.name, db=db
+                folder.parent_id, user.id, form_data.name
             )
             if existing_folder and existing_folder.id != id:
                 raise HTTPException(
@@ -151,9 +146,7 @@ async def update_folder_name_by_id(
                 )
 
         try:
-            folder = Folders.update_folder_by_id_and_user_id(
-                id, user.id, form_data, db=db
-            )
+            folder = Folders.update_folder_by_id_and_user_id(id, user.id, form_data)
             return folder
         except Exception as e:
             log.exception(e)
@@ -183,12 +176,11 @@ async def update_folder_parent_id_by_id(
     id: str,
     form_data: FolderParentIdForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
-    folder = Folders.get_folder_by_id_and_user_id(id, user.id, db=db)
+    folder = Folders.get_folder_by_id_and_user_id(id, user.id)
     if folder:
         existing_folder = Folders.get_folder_by_parent_id_and_user_id_and_name(
-            form_data.parent_id, user.id, folder.name, db=db
+            form_data.parent_id, user.id, folder.name
         )
 
         if existing_folder:
@@ -199,7 +191,7 @@ async def update_folder_parent_id_by_id(
 
         try:
             folder = Folders.update_folder_parent_id_by_id_and_user_id(
-                id, user.id, form_data.parent_id, db=db
+                id, user.id, form_data.parent_id
             )
             return folder
         except Exception as e:
@@ -230,13 +222,12 @@ async def update_folder_is_expanded_by_id(
     id: str,
     form_data: FolderIsExpandedForm,
     user=Depends(get_verified_user),
-    db: Session = Depends(get_session),
 ):
-    folder = Folders.get_folder_by_id_and_user_id(id, user.id, db=db)
+    folder = Folders.get_folder_by_id_and_user_id(id, user.id)
     if folder:
         try:
             folder = Folders.update_folder_is_expanded_by_id_and_user_id(
-                id, user.id, form_data.is_expanded, db=db
+                id, user.id, form_data.is_expanded
             )
             return folder
         except Exception as e:

@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "",
 	"Thought for {{DURATION}}": "",
 	"Thought for {{DURATION}} seconds": "",
+	"Thought shortly": "تھوڑا سوچا",
 	"Title": "عنوان",
 	"Title Auto-Generation": "خودکار عنوان تخلیق",
 	"Title cannot be an empty string.": "عنوان خالی اسٹرنگ نہیں ہو سکتا",

@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "Ez törölni fogja az összes modellt, beleértve az egyéni modelleket is, és nem vonható vissza.",
 	"Thought for {{DURATION}}": "Gondolkodott {{DURATION}} ideig",
 	"Thought for {{DURATION}} seconds": "Gondolkodott {{DURATION}} másodpercig",
+	"Thought shortly": "Gondolkodott egy pillanatra",
 	"Title": "Cím",
 	"Title Auto-Generation": "Cím automatikus generálása",
 	"Title cannot be an empty string.": "A cím nem lehet üres karakterlánc.",

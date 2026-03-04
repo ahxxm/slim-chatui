@@ -616,6 +616,7 @@
 	"This will delete all models including custom models and cannot be undone.": "See kustutab kõik mudelid, sealhulgas kohandatud mudelid, ja seda ei saa tagasi võtta.",
 	"Thought for {{DURATION}}": "Mõtles {{DURATION}}",
 	"Thought for {{DURATION}} seconds": "Mõtles {{DURATION}} sekundit",
+	"Thought shortly": "Mõtles hetke",
 	"Title": "Pealkiri",
 	"Title Auto-Generation": "Pealkirja automaatne genereerimine",
 	"Title cannot be an empty string.": "Pealkiri ei saa olla tühi string.",
