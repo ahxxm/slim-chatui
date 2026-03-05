@@ -7,7 +7,6 @@
 
 	const dispatch = createEventDispatcher();
 
-	import { getChatList } from '$lib/apis/chats';
 	import { updateFolderById } from '$lib/apis/folders';
 
 	import {
@@ -16,8 +15,7 @@
 		models as _models,
 		temporaryChatEnabled,
 		selectedFolder,
-		chats,
-		currentChatPage
+		refreshChatList
 	} from '$lib/stores';
 	import { sanitizeResponseContent, extractCurlyBraceWords } from '$lib/utils';
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
@@ -72,13 +70,10 @@
 				<FolderTitle
 					folder={$selectedFolder}
 					onUpdate={async (folder) => {
-						await chats.set(await getChatList(localStorage.token, $currentChatPage));
-						currentChatPage.set(1);
+						await refreshChatList(localStorage.token);
 					}}
 					onDelete={async () => {
-						await chats.set(await getChatList(localStorage.token, $currentChatPage));
-						currentChatPage.set(1);
-
+						await refreshChatList(localStorage.token);
 						selectedFolder.set(null);
 					}}
 				/>

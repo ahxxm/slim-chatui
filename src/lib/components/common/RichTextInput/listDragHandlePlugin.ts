@@ -1,17 +1,49 @@
 import { Plugin, PluginKey, NodeSelection } from 'prosemirror-state';
+import type { EditorState, Transaction } from 'prosemirror-state';
 import { Decoration, DecorationSet } from 'prosemirror-view';
+import type { EditorView } from 'prosemirror-view';
 import { Fragment } from 'prosemirror-model';
+import type { Node as PMNode, ResolvedPos } from 'prosemirror-model';
 
-export const listPointerDragKey = new PluginKey('listPointerDrag');
+interface ListDragHandleOptions {
+	itemTypeNames?: string[];
+	getEditor?: (() => any) | null;
+	handleTitle?: string;
+	handleInnerHTML?: string;
+	classItemWithHandle?: string;
+	classHandle?: string;
+	classDropBefore?: string;
+	classDropAfter?: string;
+	classDropInto?: string;
+	classDropOutdent?: string;
+	classDraggingGhost?: string;
+	dragThresholdPx?: number;
+	intoThresholdX?: number;
+	outdentThresholdX?: number;
+}
 
-export function listDragHandlePlugin(options = {}) {
+interface DragState {
+	decorations: DecorationSet;
+	dragging: {
+		fromStart: number;
+		startMouse: { x: number; y: number };
+		ghostEl: HTMLElement;
+		active: boolean;
+	} | null;
+	dropTarget: {
+		start: number;
+		end: number;
+		mode: string;
+		toPos: number;
+	} | null;
+}
+
+export const listPointerDragKey = new PluginKey<DragState>('listPointerDrag');
+
+export function listDragHandlePlugin(options: ListDragHandleOptions = {}) {
 	const {
 		itemTypeNames = ['listItem', 'taskItem', 'list_item'],
-
-		// Tiptap editor getter (required for indent/outdent)
 		getEditor = null,
-
-		// UI copy / classes
 		handleTitle = 'Drag to move',
 		handleInnerHTML = '⋮⋮',
 		classItemWithHandle = 'pm-li--with-handle',
@@ -21,15 +53,13 @@ export function listDragHandlePlugin(options = {}) {
 		classDropInto = 'pm-li-drop-into',
 		classDropOutdent = 'pm-li-drop-outdent',
 		classDraggingGhost = 'pm-li-ghost',
-
-		// Behavior
 		dragThresholdPx = 2,
-		intoThresholdX = 28, // X ≥ this → treat as “into” (indent)
-		outdentThresholdX = 10 // X ≤ this → “outdent”
+		intoThresholdX = 28,
+		outdentThresholdX = 10
 	} = options;
 
 	const itemTypesSet = new Set(itemTypeNames);
-	const isListItem = (node) => node && itemTypesSet.has(node.type.name);
+	const isListItem = (node: PMNode | null | undefined) => node && itemTypesSet.has(node.type.name);
 
 	const listTypeNames = new Set([
 		'bulletList',
@@ -39,13 +69,12 @@ export function listDragHandlePlugin(options = {}) {
 		'ordered_list'
 	]);
 
-	const isListNode = (node) => node && listTypeNames.has(node.type.name);
+	const isListNode = (node: PMNode | null | undefined) => node && listTypeNames.has(node.type.name);
 
-	function listTypeToItemTypeName(listNode) {
+	function listTypeToItemTypeName(listNode: PMNode | null | undefined): string | null {
 		const name = listNode?.type?.name;
 		if (!name) return null;
 
-		// Prefer tiptap names first, then ProseMirror snake_case
 		if (name === 'taskList') {
 			return itemTypesSet.has('taskItem') ? 'taskItem' : null;
 		}
@@ -66,8 +95,7 @@ export function listDragHandlePlugin(options = {}) {
 		return null;
 	}
 
-	// Find the nearest enclosing list container at/around a pos
-	function getEnclosingListAt(doc, pos) {
+	function getEnclosingListAt(doc: PMNode, pos: number) {
 		const $pos = doc.resolve(Math.max(1, Math.min(pos, doc.content.size - 1)));
 		for (let d = $pos.depth; d >= 0; d--) {
 			const n = $pos.node(d);
@@ -79,14 +107,12 @@ export function listDragHandlePlugin(options = {}) {
 		return null;
 	}
 
-	function normalizeItemForList(state, itemNode, targetListNodeOrType) {
+	function normalizeItemForList(state: EditorState, itemNode: PMNode, targetListNodeOrType: any) {
 		const schema = state.schema;
 
 		const targetListNode = targetListNodeOrType;
 		const wantedItemTypeName =
-			typeof targetListNode === 'string'
-				? targetListNode // allow passing type name directly
-				: listTypeToItemTypeName(targetListNode);
+			typeof targetListNode === 'string' ? targetListNode : listTypeToItemTypeName(targetListNode);
 
 		if (!wantedItemTypeName) return itemNode;
 		const wantedType = schema.nodes[wantedItemTypeName];
@@ -95,8 +121,7 @@ export function listDragHandlePlugin(options = {}) {
 		const wantedListType = schema.nodes[targetListNode.type.name];
 		if (!wantedListType) return itemNode;
 
-		// Deep‑normalize children recursively
-		const normalizeNode = (node, parentTargetListNode) => {
+		const normalizeNode = (node: PMNode, parentTargetListNode: any): PMNode => {
 			console.log(
 				'Normalizing node',
 				node.type.name,
@@ -104,47 +129,44 @@ export function listDragHandlePlugin(options = {}) {
 				parentTargetListNode?.type?.name
 			);
 			if (isListNode(node)) {
-				// Normalize each list item inside
-				const normalizedItems = [];
+				const normalizedItems: PMNode[] = [];
 				node.content.forEach((li) => {
 					normalizedItems.push(normalizeItemForList(state, li, parentTargetListNode));
 				});
 				return wantedListType.create(node.attrs, Fragment.from(normalizedItems), node.marks);
 			}
 
-			// Not a list node → but may contain lists deeper
 			if (node.content && node.content.size > 0) {
-				const nChildren = [];
+				const nChildren: PMNode[] = [];
 				node.content.forEach((ch) => {
 					nChildren.push(normalizeNode(ch, parentTargetListNode));
 				});
 				return node.type.create(node.attrs, Fragment.from(nChildren), node.marks);
 			}
 
-			// leaf
 			return node;
 		};
 
-		const normalizedContent = [];
+		const normalizedContent: PMNode[] = [];
 		itemNode.content.forEach((child) => {
 			normalizedContent.push(normalizeNode(child, targetListNode));
 		});
 
-		const newAttrs = {};
-		if (wantedType.attrs) {
-			for (const key in wantedType.attrs) {
+		const newAttrs: Record<string, any> = {};
+		const typeAttrs = (wantedType as any).attrs;
+		if (typeAttrs) {
+			for (const key in typeAttrs) {
 				if (Object.prototype.hasOwnProperty.call(itemNode.attrs || {}, key)) {
 					newAttrs[key] = itemNode.attrs[key];
 				} else {
-					const spec = wantedType.attrs[key];
+					const spec = typeAttrs[key];
 					newAttrs[key] = typeof spec?.default !== 'undefined' ? spec.default : null;
 				}
 			}
 		}
 
 		if (wantedItemTypeName !== itemNode.type.name) {
-			// If changing type, ensure no disallowed marks are kept
-			const allowed = wantedType.spec?.marks;
+			const allowed = (wantedType.spec as any)?.marks;
 			const marks = allowed ? itemNode.marks.filter((m) => allowed.includes(m.type.name)) : [];
 
 			console.log(normalizedContent);
@@ -154,7 +176,6 @@ export function listDragHandlePlugin(options = {}) {
 		try {
 			return wantedType.create(newAttrs, Fragment.from(normalizedContent), itemNode.marks);
 		} catch {
-			// Fallback – wrap content if schema requires a block
 			const para = schema.nodes.paragraph;
 			if (para) {
 				const wrapped =
@@ -167,16 +188,17 @@ export function listDragHandlePlugin(options = {}) {
 
 		return wantedType.create(newAttrs, Fragment.from(normalizedContent), itemNode.marks);
 	}
+
 	// ---------- decorations ----------
-	function buildHandleDecos(doc) {
-		const decos = [];
+	function buildHandleDecos(doc: PMNode) {
+		const decos: Decoration[] = [];
 		doc.descendants((node, pos) => {
 			if (!isListItem(node)) return;
 			decos.push(Decoration.node(pos, pos + node.nodeSize, { class: classItemWithHandle }));
 			decos.push(
 				Decoration.widget(
 					pos + 1,
-					(view, getPos) => {
+					(_view, getPos) => {
 						const el = document.createElement('span');
 						el.className = classHandle;
 						el.setAttribute('title', handleTitle);
@@ -184,7 +206,7 @@ export function listDragHandlePlugin(options = {}) {
 						el.setAttribute('aria-label', 'Drag list item');
 						el.contentEditable = 'false';
 						el.innerHTML = handleInnerHTML;
-						el.pmGetPos = getPos;
+						(el as any).pmGetPos = getPos;
 						return el;
 					},
 					{ side: -1, ignoreSelection: true }
@@ -194,7 +216,7 @@ export function listDragHandlePlugin(options = {}) {
 		return DecorationSet.create(doc, decos);
 	}
 
-	function findListItemAround($pos) {
+	function findListItemAround($pos: ResolvedPos) {
 		for (let d = $pos.depth; d > 0; d--) {
 			const node = $pos.node(d);
 			if (isListItem(node)) {
@@ -205,15 +227,16 @@ export function listDragHandlePlugin(options = {}) {
 		return null;
 	}
 
-	function infoFromCoords(view, clientX, clientY) {
+	function infoFromCoords(view: EditorView, clientX: number, clientY: number) {
 		const result = view.posAtCoords({ left: clientX, top: clientY });
 		if (!result) return null;
 		const $pos = view.state.doc.resolve(result.pos);
 		const li = findListItemAround($pos);
 		if (!li) return null;
 
-		const dom = /** @type {Element} */ (view.nodeDOM(li.start));
-		if (!(dom instanceof Element)) return null;
+		const domNode = view.nodeDOM(li.start);
+		if (!(domNode instanceof Element)) return null;
+		const dom = domNode;
 
 		const rect = dom.getBoundingClientRect();
 		const isRTL = getComputedStyle(dom).direction === 'rtl';
@@ -233,17 +256,17 @@ export function listDragHandlePlugin(options = {}) {
 	}
 
 	// ---------- state ----------
-	const init = (state) => ({
+	const init = (state: EditorState): DragState => ({
 		decorations: buildHandleDecos(state.doc),
-		dragging: null, // {fromStart, startMouse:{x,y}, ghostEl, active}
-		dropTarget: null // {start, end, mode, toPos}
+		dragging: null,
+		dropTarget: null
 	});
 
-	const apply = (tr, prev) => {
-		let decorations = tr.docChanged
+	const apply = (tr: Transaction, prev: DragState): DragState => {
+		const decorations = tr.docChanged
 			? buildHandleDecos(tr.doc)
 			: prev.decorations.map(tr.mapping, tr.doc);
-		let next = { ...prev, decorations };
+		let next: DragState = { ...prev, decorations };
 		const meta = tr.getMeta(listPointerDragKey);
 		if (meta) {
 			if (meta.type === 'set-drag') next = { ...next, dragging: meta.dragging };
@@ -253,7 +276,7 @@ export function listDragHandlePlugin(options = {}) {
 		return next;
 	};
 
-	const decorationsProp = (state) => {
+	const decorationsProp = (state: EditorState) => {
 		const ps = listPointerDragKey.getState(state);
 		if (!ps) return null;
 		let deco = ps.decorations;
@@ -273,24 +296,22 @@ export function listDragHandlePlugin(options = {}) {
 	};
 
 	// ---------- helpers ----------
-	const setDrag = (view, dragging) =>
+	const setDrag = (view: EditorView, dragging: DragState['dragging']) =>
 		view.dispatch(view.state.tr.setMeta(listPointerDragKey, { type: 'set-drag', dragging }));
-	const setDrop = (view, drop) =>
+	const setDrop = (view: EditorView, drop: DragState['dropTarget']) =>
 		view.dispatch(view.state.tr.setMeta(listPointerDragKey, { type: 'set-drop', drop }));
-	const clearAll = (view) =>
+	const clearAll = (view: EditorView) =>
 		view.dispatch(view.state.tr.setMeta(listPointerDragKey, { type: 'clear' }));
 
-	function moveItem(view, fromStart, toPos) {
+	function moveItem(view: EditorView, fromStart: number, toPos: number) {
 		const { state, dispatch } = view;
 		const { doc } = state;
 		const orig = doc.nodeAt(fromStart);
 		if (!orig || !isListItem(orig)) return { ok: false };
 
-		// no-op if dropping into own range
 		if (toPos >= fromStart && toPos <= fromStart + orig.nodeSize)
 			return { ok: true, newStart: fromStart };
 
-		// find item depth
 		const $inside = doc.resolve(fromStart + 1);
 		let itemDepth = -1;
 		for (let d = $inside.depth; d > 0; d--) {
@@ -305,7 +326,6 @@ export function listDragHandlePlugin(options = {}) {
 		const parentList = $inside.node(listDepth);
 		const parentListStart = $inside.before(listDepth);
 
-		// delete item (or entire list if only child)
 		const deleteFrom = parentList.childCount === 1 ? parentListStart : fromStart;
 		const deleteTo =
 			parentList.childCount === 1
@@ -314,10 +334,8 @@ export function listDragHandlePlugin(options = {}) {
 
 		let tr = state.tr.delete(deleteFrom, deleteTo);
 
-		// Compute mapped drop point with right bias so "after" stays after
 		const mappedTo = tr.mapping.map(toPos, 1);
 
-		// Detect enclosing list at destination, then normalize the item type
 		const listAtDest = getEnclosingListAt(tr.doc, mappedTo);
 		const nodeToInsert = listAtDest ? normalizeItemForList(state, orig, listAtDest.node) : orig;
 
@@ -325,7 +343,6 @@ export function listDragHandlePlugin(options = {}) {
 			tr = tr.insert(mappedTo, nodeToInsert);
 		} catch (e) {
 			console.log('Direct insert failed, trying to wrap in list', e);
-			// If direct insert fails (e.g., not inside a list), try wrapping in a list
 			const schema = state.schema;
 			const wrapName =
 				parentList.type.name === 'taskList'
@@ -361,12 +378,12 @@ export function listDragHandlePlugin(options = {}) {
 		return { ok: true, newStart: mappedTo };
 	}
 
-	function ensureGhost(view, fromStart) {
+	function ensureGhost(view: EditorView, fromStart: number) {
 		const el = document.createElement('div');
 		el.className = classDraggingGhost;
-		const dom = /** @type {Element} */ (view.nodeDOM(fromStart));
-		const rect = dom instanceof Element ? dom.getBoundingClientRect() : null;
-		if (rect) {
+		const dom = view.nodeDOM(fromStart);
+		if (dom instanceof Element) {
+			const rect = dom.getBoundingClientRect();
 			el.style.position = 'fixed';
 			el.style.left = rect.left + 'px';
 			el.style.top = rect.top + 'px';
@@ -378,20 +395,21 @@ export function listDragHandlePlugin(options = {}) {
 		document.body.appendChild(el);
 		return el;
 	}
-	const updateGhost = (ghost, dx, dy) => {
+
+	const updateGhost = (ghost: HTMLElement, dx: number, dy: number) => {
 		if (ghost) ghost.style.transform = `translate(${Math.round(dx)}px, ${Math.round(dy)}px)`;
 	};
 
 	// ---------- plugin ----------
-	return new Plugin({
+	return new Plugin<DragState>({
 		key: listPointerDragKey,
 		state: { init: (_, state) => init(state), apply },
 		props: {
 			decorations: decorationsProp,
 			handleDOMEvents: {
 				mousedown(view, event) {
-					const t = /** @type {HTMLElement} */ (event.target);
-					const handle = t.closest?.(`.${classHandle}`);
+					const t = event.target as HTMLElement;
+					const handle = t.closest?.(`.${classHandle}`) as any;
 					if (!handle) return false;
 					event.preventDefault();
 
@@ -411,7 +429,7 @@ export function listDragHandlePlugin(options = {}) {
 					const ghostEl = ensureGhost(view, fromStart);
 					setDrag(view, { fromStart, startMouse, ghostEl, active: false });
 
-					const onMove = (e) => {
+					const onMove = (e: MouseEvent) => {
 						const ps = listPointerDragKey.getState(view.state);
 						if (!ps?.dragging) return;
 
@@ -426,10 +444,8 @@ export function listDragHandlePlugin(options = {}) {
 						const info = infoFromCoords(view, e.clientX, e.clientY);
 						if (!info) return setDrop(view, null);
 
-						// for before/after: obvious
-						// for into/outdent: we still insert AFTER target and then run sink/lift
 						const toPos =
-							info.mode === 'before' ? info.start : info.mode === 'after' ? info.end : info.end; // into/outdent insert after target
+							info.mode === 'before' ? info.start : info.mode === 'after' ? info.end : info.end;
 
 						const prev = listPointerDragKey.getState(view.state)?.dropTarget;
 						if (
@@ -449,8 +465,7 @@ export function listDragHandlePlugin(options = {}) {
 						const ps = listPointerDragKey.getState(view.state);
 						if (ps?.dragging?.ghostEl) ps.dragging.ghostEl.remove();
 
-						// Helper: figure out the list item node type name at/around a pos
-						const getListItemTypeNameAt = (doc, pos) => {
+						const getListItemTypeNameAt = (doc: PMNode, pos: number) => {
 							const direct = doc.nodeAt(pos);
 							if (direct && isListItem(direct)) return direct.type.name;
 
@@ -474,7 +489,6 @@ export function listDragHandlePlugin(options = {}) {
 							if (res.ok && typeof res.newStart === 'number' && getEditor) {
 								const editor = getEditor();
 								if (editor?.commands) {
-									// Select the moved node so sink/lift applies to it
 									editor.commands.setNodeSelection(res.newStart);
 
 									const typeName = getListItemTypeNameAt(view.state.doc, res.newStart);
@@ -484,7 +498,7 @@ export function listDragHandlePlugin(options = {}) {
 										if (editor.can().sinkListItem?.(typeName)) chain.sinkListItem(typeName).run();
 										else chain.run();
 									} else {
-										chain.run(); // finalize focus/selection
+										chain.run();
 									}
 								}
 							}

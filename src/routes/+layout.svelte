@@ -19,15 +19,14 @@
 		mobile,
 		socket,
 		chatId,
-		chats,
-		currentChatPage,
 		tags,
 		temporaryChatEnabled,
 		isLastActiveTab,
 		isApp,
 		appInfo,
 		playingNotificationSound,
-		appData
+		appData,
+		refreshChatList
 	} from '$lib/stores';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
@@ -42,7 +41,7 @@
 
 	import { getBackendConfig, getVersion } from '$lib/apis';
 	import { getSessionUser, userSignOut } from '$lib/apis/auths';
-	import { getAllTags, getChatList } from '$lib/apis/chats';
+	import { getAllTags } from '$lib/apis/chats';
 	import { chatCompletion } from '$lib/apis/openai';
 
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL, WEBUI_HOSTNAME } from '$lib/constants';
@@ -234,8 +233,7 @@
 					});
 				}
 			} else if (type === 'chat:title') {
-				currentChatPage.set(1);
-				await chats.set(await getChatList(localStorage.token, $currentChatPage));
+				await refreshChatList(localStorage.token);
 			} else if (type === 'chat:tags') {
 				tags.set(await getAllTags(localStorage.token));
 			}

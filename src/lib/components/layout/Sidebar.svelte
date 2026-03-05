@@ -25,7 +25,8 @@
 		selectedFolder,
 		WEBUI_NAME,
 		sidebarWidth,
-		activeChatIds
+		activeChatIds,
+		refreshChatList
 	} from '$lib/stores';
 	import { onMount, getContext, tick } from 'svelte';
 
@@ -176,32 +177,27 @@
 	};
 
 	const initChatList = async () => {
-		// Reset pagination variables
 		console.log('initChatList');
-		currentChatPage.set(1);
-		allChatsLoaded = false;
 		scrollPaginationEnabled.set(false);
 
 		initFolders();
+
+		let refreshResult: boolean = false;
 		await Promise.all([
-			await (async () => {
+			(async () => {
 				console.log('Init tags');
-				const _tags = await getAllTags(localStorage.token);
-				tags.set(_tags);
+				tags.set(await getAllTags(localStorage.token));
 			})(),
-			await (async () => {
+			(async () => {
 				console.log('Init pinned chats');
-				const _pinnedChats = await getPinnedChatList(localStorage.token);
-				pinnedChats.set(_pinnedChats);
+				pinnedChats.set(await getPinnedChatList(localStorage.token));
 			})(),
-			await (async () => {
-				console.log('Init chat list');
-				const _chats = await getChatList(localStorage.token, $currentChatPage);
-				await chats.set(_chats);
+			(async () => {
+				refreshResult = await refreshChatList(localStorage.token);
 			})()
 		]);
 
-		// Enable pagination
+		allChatsLoaded = refreshResult;
 		scrollPaginationEnabled.set(true);
 	};
 
@@ -216,7 +212,7 @@
 
 		// once the bottom of the list has been reached (no results) there is no need to continue querying
 		allChatsLoaded = newChatList.length === 0;
-		await chats.set([...($chats ? $chats : []), ...newChatList]);
+		await chats.set([...$chats, ...newChatList]);
 
 		chatListLoading = false;
 	};
@@ -1047,7 +1043,7 @@
 
 					<div class=" flex-1 flex flex-col overflow-y-auto scrollbar-hidden">
 						<div class="pt-1.5">
-							{#if $chats}
+							{#if !chatListLoading || $chats.length > 0}
 								{#each $chats as chat, idx (`chat-${chat?.id ?? idx}`)}
 									{#if idx === 0 || (idx > 0 && chat.time_range !== $chats[idx - 1].time_range)}
 										<div

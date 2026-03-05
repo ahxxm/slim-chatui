@@ -56,6 +56,17 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.12.x'
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Install backend dependencies
+        run: uv sync --group dev
+
       - name: Install Dependencies
         run: npm ci --legacy-peer-deps
 
