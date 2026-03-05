@@ -67,10 +67,18 @@ import {
 // Artificial per-request delay so initChatList's multi-fetch chain takes
 // long enough for IntersectionObserver ticks (100ms) to interleave
 const NET = 50;
-const SETTLE = NET * 8;
 const CLICK_GAP = NET * 2;
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+async function waitFor(fn: () => boolean, timeoutMs = 5000) {
+	const deadline = Date.now() + timeoutMs;
+	while (Date.now() < deadline) {
+		if (fn()) return;
+		await delay(50);
+	}
+	throw new Error(`waitFor timed out after ${timeoutMs}ms`);
+}
 
 // ── Store setup ──────────────────────────────────────────────────────────────
 // Minimal store state so the component renders: user logged in, sidebar open.
@@ -132,9 +140,9 @@ describe('Sidebar: shift-delete race', () => {
 		localStorage.setItem('token', token);
 		installFetchProxy(token, NET);
 
-		// Clean slate: delete all chats, then seed 10
+		// Clean slate: delete all chats, then seed 70 (page size is 60, so 2 pages)
 		await fetch('/api/v1/chats/', { method: 'DELETE' });
-		for (let i = 0; i < 10; i++) {
+		for (let i = 0; i < 70; i++) {
 			await fetch('/api/v1/chats/new', {
 				method: 'POST',
 				body: JSON.stringify({ chat: { title: `Chat ${i}`, messages: [] } })
@@ -149,18 +157,24 @@ describe('Sidebar: shift-delete race', () => {
 		vi.restoreAllMocks();
 	});
 
-	it('shift-delete 2 of 10 → should still show 8 chats', async () => {
+	it('shift-delete 2 of 70 → should still show 68 chats across both pages', async () => {
 		const { default: Sidebar } = await import('$lib/components/layout/Sidebar.svelte');
 		const { container } = render(Sidebar, {
 			context: new Map([['i18n', writable({ t: (k: string) => k })]])
 		});
 
-		// Sidebar's showSidebar subscription calls initChatList on mount;
-		// wait for that plus loadMoreChats to fully settle
-		await delay(SETTLE);
+		// Wait for initChatList + loadMoreChats to load all 70 chats
+		await waitFor(() => container.querySelectorAll('a[href^="/c/"]').length === 70);
 
 		const chatLinks = container.querySelectorAll('a[href^="/c/"]');
-		expect(chatLinks.length, `expected 10 chats after mount, got ${chatLinks.length}`).toBe(10);
+		expect(chatLinks.length, `expected 70 chats after mount, got ${chatLinks.length}`).toBe(70);
+
+		// Record all chat IDs and which two we'll delete
+		const chatIdOf = (link: Element) => link.getAttribute('href')!.replace('/c/', '');
+		const allIdsBefore = new Set([...chatLinks].map(chatIdOf));
+		const [first, second] = chatLinks;
+		const deletedIds = new Set([chatIdOf(first), chatIdOf(second)]);
+		const expectedSurvivors = [...allIdsBefore].filter((id) => !deletedIds.has(id));
 
 		// Sidebar syncs shiftKey from window keydown/mousemove events;
 		// ChatItem shows the trash button only when shiftKey && mouseOver
@@ -174,14 +188,23 @@ describe('Sidebar: shift-delete race', () => {
 			await fireEvent.click(trash!);
 		};
 
-		const [first, second] = container.querySelectorAll('a[href^="/c/"]');
 		await clickTrashOn(first);
 		await delay(CLICK_GAP);
 		await clickTrashOn(second);
-		await delay(SETTLE);
+
+		// Wait for both delete + refetch cycles to settle
+		await waitFor(() => {
+			const c = get(chats) as any[] | null;
+			return c !== null && c.length <= 68;
+		});
 
 		const result = get(chats) as any[] | null;
 		expect(result).not.toBeNull();
-		expect(result!.length, `expected 8 chats, got ${result!.length}`).toBe(8);
-	}, 15000);
+		expect(result!.length, `expected 68 chats, got ${result!.length}`).toBe(68);
+
+		const survivingIds = new Set(result!.map((c: any) => c.id));
+		for (const id of expectedSurvivors) {
+			expect(survivingIds.has(id), `chat ${id} should still be in the store`).toBe(true);
+		}
+	}, 30000);
 });
