@@ -616,7 +616,7 @@
 		}
 	});
 
-	import { listDragHandlePlugin } from './RichTextInput/listDragHandlePlugin.js';
+	import { listDragHandlePlugin } from './RichTextInput/listDragHandlePlugin';
 
 	const ListItemDragHandle = Extension.create({
 		name: 'listItemDragHandle',
