@@ -18,7 +18,7 @@
 		"format:backend": "SKIP_FRONTEND_BUILD=1 uv run black . --exclude \".venv/|/venv/\"",
 		"i18n:parse": "i18next --config i18next-parser.config.ts && prettier --write \"src/lib/i18n/**/*.{js,json}\"",
 		"cy:open": "cypress open",
-		"test:frontend": "vitest --passWithNoTests"
+		"test:frontend": "vitest run --passWithNoTests"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-static": "^3.0.2",
