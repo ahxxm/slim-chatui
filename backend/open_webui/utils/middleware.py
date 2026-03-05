@@ -15,12 +15,10 @@ from starlette.responses import StreamingResponse, JSONResponse
 
 from open_webui.models.chats import Chats
 from open_webui.models.folders import Folders
-from open_webui.models.users import Users
 from open_webui.socket.main import get_event_emitter
 from open_webui.routers.tasks import (
     generate_title,
     generate_follow_ups,
-    generate_chat_tags,
 )
 from open_webui.utils.files import (
     convert_markdown_base64_images,
@@ -57,13 +55,13 @@ log = logging.getLogger(__name__)
 def extract_task_text(res: dict) -> str:
     """Extract text content from Chat Completions or Responses API result."""
     # Chat Completions: choices[0].message.content
-    choices = res.get("choices", [])
+    choices = res.get("choices") or []
     if len(choices) == 1:
-        msg = choices[0].get("message", {})
+        msg = choices[0].get("message") or {}
         return msg.get("content") or msg.get("reasoning_content", "")
     # Responses API: output[0].content[0].text
-    for item in res.get("output", []):
-        for block in item.get("content", []):
+    for item in res.get("output") or []:
+        for block in item.get("content") or []:
             if block.get("type") == "output_text":
                 return block.get("text", "")
     return ""
@@ -864,13 +862,10 @@ async def background_tasks_handler(ctx):
 
         message_list = get_message_list(messages_map, metadata["message_id"])
 
-        # Remove details tags and files from the messages.
-        # as get_message_list creates a new list, it does not affect
-        # the original messages outside of this handler
-
+        # Strip details tags, images, and files for task generation prompts
         messages = []
-        for message in message_list:
-            content = message.get("content", "")
+        for msg in message_list:
+            content = msg.get("content", "")
             if isinstance(content, list):
                 for item in content:
                     if item.get("type") == "text":
@@ -887,15 +882,13 @@ async def background_tasks_handler(ctx):
 
             messages.append(
                 {
-                    **message,
-                    "role": message.get(
-                        "role", "assistant"
-                    ),  # Safe fallback for missing role
+                    **msg,
+                    "role": msg.get("role", "assistant"),
                     "content": content,
                 }
             )
     else:
-        # Local temp chat, get the model and message from the form_data
+        # Ephemeral chat — get the model and message from form_data
         message = get_last_user_message_item(form_data.get("messages", []))
         messages = form_data.get("messages", [])
         if message:
@@ -958,24 +951,6 @@ async def background_tasks_handler(ctx):
 
         Chats.update_chat_title_by_id(metadata["chat_id"], title)
         await event_emitter({"type": "chat:title", "data": title})
-
-    if tasks.get(TASKS.TAGS_GENERATION):
-        try:
-            res = await generate_chat_tags(
-                request,
-                {
-                    "model": message["model"],
-                    "messages": messages,
-                    "chat_id": metadata["chat_id"],
-                },
-                user,
-            )
-            tags = parse_task_json(res, "tags", [])
-            if tags:
-                Chats.update_chat_tags_by_id(metadata["chat_id"], tags, user)
-                await event_emitter({"type": "chat:tags", "data": tags})
-        except Exception as e:
-            log.error(f"tags generation failed: {e}")
 
 
 async def non_streaming_chat_response_handler(response, ctx):

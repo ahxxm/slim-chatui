@@ -17,7 +17,6 @@
 		user,
 		settings,
 		models,
-		tags,
 		banners,
 		showSettings,
 		showShortcuts,

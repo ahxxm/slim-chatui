@@ -9,7 +9,6 @@
 		settings,
 		showSettings,
 		chatId,
-		tags,
 		folders as _folders,
 		showSidebar,
 		showSearch,
@@ -34,7 +33,6 @@
 
 	import {
 		getChatList,
-		getAllTags,
 		getPinnedChatList,
 		toggleChatPinnedStatusById,
 		getChatById,
@@ -185,10 +183,6 @@
 		let refreshResult: boolean = false;
 		await Promise.all([
 			(async () => {
-				console.log('Init tags');
-				tags.set(await getAllTags(localStorage.token));
-			})(),
-			(async () => {
 				console.log('Init pinned chats');
 				pinnedChats.set(await getPinnedChatList(localStorage.token));
 			})(),
@@ -255,15 +249,6 @@
 			};
 
 			reader.readAsText(file);
-		}
-	};
-
-	const tagEventHandler = async (type, tagName, chatId) => {
-		console.log(type, tagName, chatId);
-		if (type === 'delete') {
-			initChatList();
-		} else if (type === 'add') {
-			initChatList();
 		}
 	};
 
@@ -1029,10 +1014,6 @@
 												on:change={async () => {
 													initChatList();
 												}}
-												on:tag={(e) => {
-													const { type, name } = e.detail;
-													tagEventHandler(type, name, chat.id);
-												}}
 											/>
 										{/each}
 									</div>
@@ -1089,10 +1070,6 @@
 										}}
 										on:change={async () => {
 											initChatList();
-										}}
-										on:tag={(e) => {
-											const { type, name } = e.detail;
-											tagEventHandler(type, name, chat.id);
 										}}
 									/>
 								{/each}

@@ -1,7 +1,7 @@
 import { APP_NAME } from '$lib/constants';
 import { type Writable, writable, get } from 'svelte/store';
 import type { ModelConfig } from '$lib/apis';
-import type { Banner, ChatListItem, TagItem, FolderItem } from '$lib/types';
+import type { Banner, ChatListItem, FolderItem } from '$lib/types';
 import type { Socket } from 'socket.io-client';
 import { getChatList } from '$lib/apis/chats';
 
@@ -49,7 +49,6 @@ export const chatTitle = writable('');
 
 export const chats: Writable<ChatListItem[]> = writable([]);
 export const pinnedChats: Writable<ChatListItem[]> = writable([]);
-export const tags: Writable<TagItem[]> = writable([]);
 export const folders: Writable<FolderItem[]> = writable([]);
 
 export const selectedFolder: Writable<FolderItem | null> = writable(null);
@@ -121,7 +120,6 @@ type Settings = {
 	responseAutoCopy?: any;
 	richTextInput?: boolean;
 	userLocation?: any;
-	autoTags?: boolean;
 	autoFollowUps?: boolean;
 	splitLargeChunks?: boolean;
 	backgroundImageUrl?: null;

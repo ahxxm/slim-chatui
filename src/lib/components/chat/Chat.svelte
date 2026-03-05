@@ -20,7 +20,6 @@
 		config,
 		type Model,
 		models,
-		tags as allTags,
 		settings,
 		showSidebar,
 		WEBUI_NAME,
@@ -43,10 +42,8 @@
 
 	import {
 		createNewChat,
-		getAllTags,
 		getChatById,
 		getPinnedChatList,
-		getTagsById,
 		updateChatById,
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
@@ -301,9 +298,6 @@
 				} else if (type === 'chat:title') {
 					chatTitle.set(data);
 					await refreshChatList(localStorage.token);
-				} else if (type === 'chat:tags') {
-					chat = await getChatById(localStorage.token, $chatId);
-					allTags.set(await getAllTags(localStorage.token));
 				} else if (type === 'source' || type === 'citation') {
 					if (message?.sources) {
 						message.sources.push(data);
@@ -1320,8 +1314,7 @@
 							messages.at(1)?.role === 'user')) &&
 					(selectedModels[0] === model.id || atSelectedModel !== undefined)
 						? {
-								title_generation: $settings?.title?.auto ?? true,
-								tags_generation: $settings?.autoTags ?? true
+								title_generation: $settings?.title?.auto ?? true
 							}
 						: {}),
 					follow_up_generation: $settings?.autoFollowUps ?? true
@@ -1547,7 +1540,6 @@
 					params: params,
 					history: history,
 					messages: createMessagesList(history, history.currentId),
-					tags: [],
 					timestamp: Date.now()
 				},
 				$selectedFolder?.id

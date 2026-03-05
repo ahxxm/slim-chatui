@@ -9,7 +9,6 @@
 	import {
 		cloneChatById,
 		deleteChatById,
-		getAllTags,
 		getChatById,
 		updateChatById,
 		updateChatFolderIdById
@@ -19,7 +18,6 @@
 		chatTitle as _chatTitle,
 		mobile,
 		showSidebar,
-		tags,
 		selectedFolder,
 		activeChatIds
 	} from '$lib/stores';
@@ -127,7 +125,6 @@
 		});
 
 		if (res) {
-			tags.set(await getAllTags(localStorage.token));
 			if ($chatId === id) {
 				await goto('/');
 
@@ -508,9 +505,6 @@
 					}}
 					on:change={async () => {
 						dispatch('change');
-					}}
-					on:tag={(e) => {
-						dispatch('tag', e.detail);
 					}}
 				>
 					<button

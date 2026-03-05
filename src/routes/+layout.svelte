@@ -19,7 +19,6 @@
 		mobile,
 		socket,
 		chatId,
-		tags,
 		temporaryChatEnabled,
 		isLastActiveTab,
 		isApp,
@@ -41,7 +40,6 @@
 
 	import { getBackendConfig, getVersion } from '$lib/apis';
 	import { getSessionUser, userSignOut } from '$lib/apis/auths';
-	import { getAllTags } from '$lib/apis/chats';
 	import { chatCompletion } from '$lib/apis/openai';
 
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL, WEBUI_HOSTNAME } from '$lib/constants';
@@ -234,8 +232,6 @@
 				}
 			} else if (type === 'chat:title') {
 				await refreshChatList(localStorage.token);
-			} else if (type === 'chat:tags') {
-				tags.set(await getAllTags(localStorage.token));
 			}
 		} else if (data?.session_id === $socket.id) {
 			if (type === 'request:chat:completion') {

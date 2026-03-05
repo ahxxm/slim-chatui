@@ -3,12 +3,10 @@ User story: 10 chats, shift-delete 2 quickly, all chats disappear until refresh.
 
 Each shift-click delete fires this request sequence:
   1. DELETE /chats/{id}
-  2. GET /chats/all/tags
-  3. GET /chats/all/tags    (initChatList)
-  4. GET /chats/pinned      (initChatList)
-  5. GET /chats/?page=1     (initChatList)
+  2. GET /chats/pinned      (initChatList)
+  3. GET /chats/?page=1     (initChatList)
 
-Two rapid clicks = 10 requests, many overlapping.
+Two rapid clicks = 6 requests, many overlapping.
 """
 
 from concurrent.futures import ThreadPoolExecutor
@@ -34,10 +32,8 @@ class TestChatDeleteRace(IntegrationTest):
         delete_resp = self.fast_api_client.delete(
             f"/api/v1/chats/{chat_id}", headers=headers
         )
-        self.fast_api_client.get("/api/v1/chats/all/tags", headers=headers)
 
         # Sidebar.initChatList (fired by dispatch('change'))
-        self.fast_api_client.get("/api/v1/chats/all/tags", headers=headers)
         self.fast_api_client.get("/api/v1/chats/?include_pinned=true", headers=headers)
         list_resp = self.fast_api_client.get("/api/v1/chats/?page=1", headers=headers)
         return delete_resp, list_resp
