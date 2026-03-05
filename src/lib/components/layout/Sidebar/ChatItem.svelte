@@ -499,6 +499,7 @@
 				<Tooltip content={$i18n.t('Delete')}>
 					<button
 						class=" self-center dark:hover:text-white transition"
+						aria-label="Delete chat"
 						on:click={() => {
 							deleteChatHandler(id);
 						}}
