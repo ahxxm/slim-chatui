@@ -44,18 +44,18 @@ export const replaceOutsideCode = (content: string, replacer: (str: string) => s
 		.join('');
 };
 
-export const replaceTokens = (content, char, user) => {
+export const replaceTokens = (content: string, char: string, user: string) => {
 	const tokens = [
 		{ regex: /{{char}}/gi, replacement: char },
 		{ regex: /{{user}}/gi, replacement: user },
 		{
 			regex: /{{VIDEO_FILE_ID_([a-f0-9-]+)}}/gi,
-			replacement: (_, fileId) =>
+			replacement: (_: string, fileId: string) =>
 				`<video src="${WEBUI_BASE_URL}/api/v1/files/${fileId}/content" controls></video>`
 		},
 		{
 			regex: /{{HTML_FILE_ID_([a-f0-9-]+)}}/gi,
-			replacement: (_, fileId) => `<file type="html" id="${fileId}" />`
+			replacement: (_: string, fileId: string) => `<file type="html" id="${fileId}" />`
 		}
 	];
 
@@ -164,11 +164,11 @@ export function unescapeHtml(html: string) {
 	return doc.documentElement.textContent;
 }
 
-export const capitalizeFirstLetter = (string) => {
+export const capitalizeFirstLetter = (string: string) => {
 	return string.charAt(0).toUpperCase() + string.slice(1);
 };
 
-export const splitStream = (splitOn) => {
+export const splitStream = (splitOn: string) => {
 	let buffer = '';
 	return new TransformStream({
 		transform(chunk, controller) {
@@ -183,14 +183,14 @@ export const splitStream = (splitOn) => {
 	});
 };
 
-export const convertMessagesToHistory = (messages) => {
-	const history = {
+export const convertMessagesToHistory = (messages: any[]) => {
+	const history: { messages: Record<string, any>; currentId: string | null } = {
 		messages: {},
 		currentId: null
 	};
 
-	let parentMessageId = null;
-	let messageId = null;
+	let parentMessageId: string | null = null;
+	let messageId: string | null = null;
 
 	for (const message of messages) {
 		messageId = uuidv4();
@@ -216,7 +216,7 @@ export const convertMessagesToHistory = (messages) => {
 	return history;
 };
 
-export const getGravatarURL = (email) => {
+export const getGravatarURL = (email: string) => {
 	// Trim leading and trailing whitespace from
 	// an email address and force all characters
 	// to lower case
@@ -229,7 +229,7 @@ export const getGravatarURL = (email) => {
 	return `https://www.gravatar.com/avatar/${hash}`;
 };
 
-export const compressImage = async (imageUrl, maxWidth, maxHeight) => {
+export const compressImage = async (imageUrl: string, maxWidth: number, maxHeight: number) => {
 	return new Promise((resolve, reject) => {
 		const img = new Image();
 		img.onload = () => {
@@ -280,6 +280,7 @@ export const compressImage = async (imageUrl, maxWidth, maxHeight) => {
 			canvas.height = height;
 
 			const context = canvas.getContext('2d');
+			if (!context) return reject(new Error('Canvas 2d context unavailable'));
 			context.drawImage(img, 0, 0, width, height);
 
 			// Get compressed image URL
@@ -293,7 +294,7 @@ export const compressImage = async (imageUrl, maxWidth, maxHeight) => {
 };
 export const defaultUserImage = () => `${WEBUI_BASE_URL}/user.png`;
 
-export const formatDate = (inputDate) => {
+export const formatDate = (inputDate: string | number | Date) => {
 	const date = dayjs(inputDate);
 
 	if (date.isToday()) {
@@ -305,13 +306,17 @@ export const formatDate = (inputDate) => {
 	}
 };
 
-export const copyToClipboard = async (text, html = null, formatted = false) => {
+export const copyToClipboard = async (
+	text: string,
+	html: string | null = null,
+	formatted = false
+) => {
 	if (formatted) {
 		let styledHtml = '';
 		if (!html) {
 			const options = {
 				throwOnError: false,
-				highlight: function (code, lang) {
+				highlight: function (code: string, lang: string) {
 					const language = hljs.getLanguage(lang) ? lang : 'plaintext';
 					return hljs.highlight(code, { language }).value;
 				}
@@ -437,7 +442,7 @@ export const copyToClipboard = async (text, html = null, formatted = false) => {
 	}
 };
 
-export const compareVersion = (latest, current) => {
+export const compareVersion = (latest: string, current: string) => {
 	return current === '0.0.0'
 		? false
 		: current.localeCompare(latest, undefined, {
@@ -447,7 +452,7 @@ export const compareVersion = (latest, current) => {
 			}) < 0;
 };
 
-export const extractCurlyBraceWords = (text) => {
+export const extractCurlyBraceWords = (text: string) => {
 	const regex = /\{\{([^}]+)\}\}/g;
 	const matches = [];
 	let match;
@@ -463,7 +468,7 @@ export const extractCurlyBraceWords = (text) => {
 	return matches;
 };
 
-export const removeLastWordFromString = (inputString, wordString) => {
+export const removeLastWordFromString = (inputString: string, wordString: string) => {
 	console.log('inputString', inputString);
 	// Split the string by newline characters to handle lines separately
 	const lines = inputString.split('\n');
@@ -496,7 +501,7 @@ export const removeLastWordFromString = (inputString, wordString) => {
 	return resultString;
 };
 
-export const removeFirstHashWord = (inputString) => {
+export const removeFirstHashWord = (inputString: string) => {
 	// Split the string into an array of words
 	const words = inputString.split(' ');
 
@@ -514,7 +519,7 @@ export const removeFirstHashWord = (inputString) => {
 	return resultString;
 };
 
-export const transformFileName = (fileName) => {
+export const transformFileName = (fileName: string) => {
 	// Convert to lowercase
 	const lowerCaseFileName = fileName.toLowerCase();
 
@@ -527,13 +532,16 @@ export const transformFileName = (fileName) => {
 	return finalFileName;
 };
 
-export const calculateSHA256 = async (file) => {
+export const calculateSHA256 = async (file: File) => {
 	// Create a FileReader to read the file asynchronously
 	const reader = new FileReader();
 
 	// Define a promise to handle the file reading
-	const readFile = new Promise((resolve, reject) => {
-		reader.onload = () => resolve(reader.result);
+	const readFile = new Promise<ArrayBuffer>((resolve, reject) => {
+		reader.onload = () => {
+			if (reader.result instanceof ArrayBuffer) resolve(reader.result);
+			else reject(new Error('Expected ArrayBuffer from FileReader'));
+		};
 		reader.onerror = reject;
 	});
 
@@ -561,7 +569,7 @@ export const calculateSHA256 = async (file) => {
 	}
 };
 
-export const getImportOrigin = (_chats) => {
+export const getImportOrigin = (_chats: any[]) => {
 	// Check what external service chat imports are from
 	if ('mapping' in _chats[0]) {
 		return 'openai';
@@ -592,7 +600,7 @@ export const getUserPosition = async (raw = false) => {
 	}
 };
 
-const convertOpenAIMessages = (convo) => {
+const convertOpenAIMessages = (convo: any) => {
 	// Parse OpenAI chat messages and create chat dictionary for creating new chats
 	const mapping = convo['mapping'];
 	const messages = [];
@@ -650,7 +658,7 @@ const convertOpenAIMessages = (convo) => {
 	return chat;
 };
 
-const validateChat = (chat) => {
+const validateChat = (chat: any) => {
 	// Because ChatGPT sometimes has features we can't use like DALL-E or might have corrupted messages, need to validate
 	const messages = chat.messages;
 
@@ -681,7 +689,7 @@ const validateChat = (chat) => {
 	return true;
 };
 
-export const convertOpenAIChats = (_chats) => {
+export const convertOpenAIChats = (_chats: any[]) => {
 	// Create a list of dictionaries with each conversation from import
 	const chats = [];
 	let failed = 0;
@@ -762,7 +770,7 @@ export const removeFormattings = (str: string) => {
 	); // Multiple newlines
 };
 
-export const removeDetails = (content, types) => {
+export const removeDetails = (content: string, types: string[]) => {
 	return replaceOutsideCode(content, (segment) => {
 		for (const type of types) {
 			segment = segment.replace(
@@ -774,13 +782,13 @@ export const removeDetails = (content, types) => {
 	});
 };
 
-export const removeAllDetails = (content) => {
+export const removeAllDetails = (content: string) => {
 	return replaceOutsideCode(content, (segment) => {
 		return segment.replace(/<details[^>]*>.*?<\/details>/gis, '');
 	});
 };
 
-export const processDetails = (content) => {
+export const processDetails = (content: string) => {
 	content = removeDetails(content, ['reasoning', 'web_search']);
 
 	// This regex matches <details> tags with type="tool_calls" and captures their attributes to convert them to a string
@@ -789,7 +797,7 @@ export const processDetails = (content) => {
 	if (matches) {
 		for (const match of matches) {
 			const attributesRegex = /(\w+)="([^"]*)"/g;
-			const attributes = {};
+			const attributes: Record<string, string> = {};
 			let attributeMatch;
 			while ((attributeMatch = attributesRegex.exec(match)) !== null) {
 				attributes[attributeMatch[1]] = attributeMatch[2];
@@ -804,13 +812,13 @@ export const processDetails = (content) => {
 	return content;
 };
 
-export const blobToFile = (blob, fileName) => {
+export const blobToFile = (blob: Blob, fileName: string) => {
 	// Create a new File object from the Blob
 	const file = new File([blob], fileName, { type: blob.type });
 	return file;
 };
 
-export const getPromptVariables = (user_name, user_location, user_email = '') => {
+export const getPromptVariables = (user_name: string, user_location: string, user_email = '') => {
 	return {
 		'{{USER_NAME}}': user_name,
 		'{{USER_EMAIL}}': user_email || 'Unknown',
@@ -883,7 +891,7 @@ export const approximateToHumanReadable = (nanoseconds: number) => {
 	return results.reverse().join(' ');
 };
 
-export const getTimeRange = (timestamp) => {
+export const getTimeRange = (timestamp: number) => {
 	const now = new Date();
 	const date = new Date(timestamp * 1000); // Convert Unix timestamp to milliseconds
 
@@ -919,8 +927,8 @@ export const getTimeRange = (timestamp) => {
  * @param content {string} - The content string with potential frontmatter.
  * @returns {Object} - The extracted frontmatter as a dictionary.
  */
-export const extractFrontmatter = (content) => {
-	const frontmatter = {};
+export const extractFrontmatter = (content: string) => {
+	const frontmatter: Record<string, string> = {};
 	let frontmatterStarted = false;
 	let frontmatterEnded = false;
 	const frontmatterPattern = /^\s*([a-z_]+):\s*(.*)\s*$/i;
@@ -958,11 +966,15 @@ export const extractFrontmatter = (content) => {
 };
 
 // Function to determine the best matching language
-export const bestMatchingLanguage = (supportedLanguages, preferredLanguages, defaultLocale) => {
+export const bestMatchingLanguage = (
+	supportedLanguages: { code: string }[],
+	preferredLanguages: string[],
+	defaultLocale: string
+) => {
 	const languages = supportedLanguages.map((lang) => lang.code);
 
 	const match = preferredLanguages
-		.map((prefLang) => languages.find((lang) => lang.startsWith(prefLang)))
+		.map((prefLang: string) => languages.find((lang: string) => lang.startsWith(prefLang)))
 		.find(Boolean);
 
 	return match || defaultLocale;
@@ -1000,7 +1012,10 @@ export const getWeekday = () => {
 	return weekdays[date.getDay()];
 };
 
-export const createMessagesList = (history, messageId) => {
+export const createMessagesList = (
+	history: { messages: Record<string, any> },
+	messageId: string | null
+): any[] => {
 	if (messageId === null) {
 		return [];
 	}
@@ -1016,7 +1031,7 @@ export const createMessagesList = (history, messageId) => {
 	}
 };
 
-export const formatFileSize = (size) => {
+export const formatFileSize = (size: number | null | undefined) => {
 	if (size == null) return 'Unknown size';
 	if (typeof size !== 'number' || size < 0) return 'Invalid size';
 	if (size === 0) return '0 B';
@@ -1030,7 +1045,7 @@ export const formatFileSize = (size) => {
 	return `${size.toFixed(1)} ${units[unitIndex]}`;
 };
 
-export const getLineCount = (text) => {
+export const getLineCount = (text: string) => {
 	console.log(typeof text);
 	return text ? text.split('\n').length : 0;
 };
@@ -1232,7 +1247,7 @@ export const extractContentFromFile = async (file: File) => {
 	}
 };
 
-export const getAge = (birthDate) => {
+export const getAge = (birthDate: string | number | Date) => {
 	const today = new Date();
 	const bDate = new Date(birthDate);
 	let age = today.getFullYear() - bDate.getFullYear();
@@ -1274,7 +1289,7 @@ export const initMermaid = async () => {
 	return mermaid;
 };
 
-export const renderMermaidDiagram = async (mermaid, code: string) => {
+export const renderMermaidDiagram = async (mermaid: any, code: string) => {
 	const parseResult = await mermaid.parse(code, { suppressErrors: false });
 	if (parseResult) {
 		const { svg } = await mermaid.render(`mermaid-${uuidv4()}`, code);
@@ -1296,10 +1311,10 @@ export const renderVegaVisualization = async (spec: string, i18n?: any) => {
 	return svg;
 };
 
-export const parseFrontmatter = (content) => {
+export const parseFrontmatter = (content: string) => {
 	const match = content.match(/^---\s*\n([\s\S]*?)\n---/);
 	if (match) {
-		const frontmatter = {};
+		const frontmatter: Record<string, string> = {};
 		match[1].split('\n').forEach((line) => {
 			const [key, ...value] = line.split(':');
 			if (key && value) {
@@ -1314,6 +1329,6 @@ export const parseFrontmatter = (content) => {
 	return {};
 };
 
-export const formatSkillName = (name) => {
-	return name.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+export const formatSkillName = (name: string) => {
+	return name.replace(/[-_]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
 };

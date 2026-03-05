@@ -2,8 +2,6 @@
 	import { getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
-	import DOMPurify from 'dompurify';
-
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
 
@@ -17,14 +15,15 @@
 	import FolderModal from '$lib/components/layout/Sidebar/Folders/FolderModal.svelte';
 
 	import Folder from '$lib/components/icons/Folder.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
 	import FolderMenu from '$lib/components/layout/Sidebar/Folders/FolderMenu.svelte';
 	import EllipsisHorizontal from '$lib/components/icons/EllipsisHorizontal.svelte';
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import Emoji from '$lib/components/common/Emoji.svelte';
 	import EmojiPicker from '$lib/components/common/EmojiPicker.svelte';
 
-	export let folder = null;
+	import type { FolderItem } from '$lib/types';
+
+	export let folder: FolderItem | null = null;
 
 	export let onUpdate: Function = (folderId) => {};
 	export let onDelete: Function = (folderId) => {};
@@ -146,11 +145,11 @@
 	>
 		<div class=" text-sm text-gray-700 dark:text-gray-300 flex-1 line-clamp-3 mb-2">
 			<!-- {$i18n.t('This will delete <strong>{{NAME}}</strong> and <strong>all its contents</strong>.', {
-				NAME: folders[folderId].name
+				NAME: folder?.name
 			})} -->
 
 			{$i18n.t(`Are you sure you want to delete "{{NAME}}"?`, {
-				NAME: folders[folderId].name
+				NAME: folder?.name
 			})}
 		</div>
 

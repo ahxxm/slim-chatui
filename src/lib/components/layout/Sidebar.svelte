@@ -217,7 +217,7 @@
 
 		// once the bottom of the list has been reached (no results) there is no need to continue querying
 		allChatsLoaded = newChatList.length === 0;
-		await chats.set([...($chats ? $chats : []), ...newChatList]);
+		await chats.set([...$chats, ...newChatList]);
 
 		chatListLoading = false;
 	};
@@ -1048,7 +1048,7 @@
 
 					<div class=" flex-1 flex flex-col overflow-y-auto scrollbar-hidden">
 						<div class="pt-1.5">
-							{#if $chats}
+							{#if !chatListLoading || $chats.length > 0}
 								{#each $chats as chat, idx (`chat-${chat?.id ?? idx}`)}
 									{#if idx === 0 || (idx > 0 && chat.time_range !== $chats[idx - 1].time_range)}
 										<div

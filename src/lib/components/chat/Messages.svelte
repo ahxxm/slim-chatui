@@ -2,19 +2,17 @@
 	import { v4 as uuidv4 } from 'uuid';
 	import {
 		chats,
-		config,
 		settings,
 		user as _user,
-		mobile,
 		currentChatPage,
 		temporaryChatEnabled
 	} from '$lib/stores';
-	import { tick, getContext, onMount, createEventDispatcher } from 'svelte';
+	import { tick, getContext, createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
 	import { toast } from 'svelte-sonner';
 	import { getChatList, updateChatById } from '$lib/apis/chats';
-	import { copyToClipboard, extractCurlyBraceWords } from '$lib/utils';
+	import type { ChatHistory } from '$lib/types';
 
 	import Message from './Messages/Message.svelte';
 	import Loader from '../common/Loader.svelte';
@@ -29,11 +27,11 @@
 	export let chatId = '';
 	export let user = $_user;
 
-	export let history = {};
-	export let selectedModels;
-	export let atSelectedModel;
+	export let history: ChatHistory = { messages: {}, currentId: null };
+	export let selectedModels: string[] = [];
+	export let atSelectedModel: any = undefined;
 
-	let messages = [];
+	let messages: any[] = [];
 
 	export let setInputText: Function = () => {};
 

@@ -9,9 +9,10 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 
-	import { get, type Unsubscriber, type Writable } from 'svelte/store';
+	import { type Unsubscriber, type Writable } from 'svelte/store';
 	import type { i18n as i18nType } from 'i18next';
 	import { WEBUI_BASE_URL } from '$lib/constants';
+	import type { ChatHistory } from '$lib/types';
 
 	import {
 		chatId,
@@ -23,7 +24,6 @@
 		settings,
 		showSidebar,
 		WEBUI_NAME,
-		banners,
 		user,
 		socket,
 		currentChatPage,
@@ -56,17 +56,12 @@
 	import { chatCompleted, stopTask, getTaskIdsByChatId } from '$lib/apis';
 	import { updateFolderById } from '$lib/apis/folders';
 
-	import Banner from '../common/Banner.svelte';
 	import MessageInput from '$lib/components/chat/MessageInput.svelte';
 	import Messages from '$lib/components/chat/Messages.svelte';
 	import Navbar from '$lib/components/chat/Navbar.svelte';
 	import EventConfirmDialog from '../common/ConfirmDialog.svelte';
 	import Placeholder from './Placeholder.svelte';
-	import NotificationToast from '../NotificationToast.svelte';
 	import Spinner from '../common/Spinner.svelte';
-	import Tooltip from '../common/Tooltip.svelte';
-	import Sidebar from '../icons/Sidebar.svelte';
-	import Image from '../common/Image.svelte';
 
 	export let chatIdProp = '';
 
@@ -74,7 +69,7 @@
 
 	const eventTarget = new EventTarget();
 
-	let messageInput;
+	let messageInput: any;
 
 	let autoScroll = true;
 	let processing = '';
@@ -89,7 +84,7 @@
 	let eventConfirmationInputPlaceholder = '';
 	let eventConfirmationInputValue = '';
 	let eventConfirmationInputType = '';
-	let eventCallback = null;
+	let eventCallback: ((value?: any) => void) | null = null;
 
 	let chatIdUnsubscriber: Unsubscriber | undefined;
 
@@ -97,23 +92,22 @@
 	let atSelectedModel: Model | undefined;
 
 	let generating = false;
-	let generationController = null;
+	let generationController: AbortController | null = null;
 
-	let chat = null;
-	let tags = [];
+	let chat: Record<string, any> | null = null;
 
-	let history = {
+	let history: ChatHistory = {
 		messages: {},
 		currentId: null
 	};
 
-	let taskIds = null;
+	let taskIds: string[] | null = null;
 
 	// Chat Input
 	let prompt = '';
-	let chatFiles = [];
-	let files = [];
-	let params = {};
+	let chatFiles: any[] = [];
+	let files: any[] = [];
+	let params: Record<string, any> = {};
 
 	// Message queue for storing messages while generating
 	let messageQueue: { id: string; prompt: string; files: any[] }[] = [];
@@ -189,7 +183,7 @@
 		}
 	};
 
-	const onSelect = async (e) => {
+	const onSelect = async (e: any) => {
 		const { type, data } = e;
 
 		if (type === 'prompt') {
@@ -215,7 +209,7 @@
 		console.log('saveSessionSelectedModels', selectedModels);
 	};
 
-	const showMessage = async (message, scroll = true) => {
+	const showMessage = async (message: any, scroll = true) => {
 		const _chatId = JSON.parse(JSON.stringify($chatId));
 		let _messageId = JSON.parse(JSON.stringify(message.id));
 
@@ -251,7 +245,7 @@
 		saveChatHandler(_chatId, history);
 	};
 
-	const chatEventHandler = async (event, cb) => {
+	const chatEventHandler = async (event: any, cb: any) => {
 		console.log(event);
 
 		if (event.chat_id === $chatId) {
@@ -432,8 +426,8 @@
 		savedModelIds();
 	}
 
-	let pageSubscribe = null;
-	let selectedFolderSubscribe = null;
+	let pageSubscribe: (() => void) | null = null;
+	let selectedFolderSubscribe: (() => void) | null = null;
 	let activeChatEmitter: ReturnType<typeof setInterval> | null = null;
 
 	onMount(async () => {
@@ -631,15 +625,12 @@
 			temporaryChatEnabled.set(false);
 		}
 
-		chat = await getChatById(localStorage.token, $chatId).catch(async (error) => {
+		chat = await getChatById(localStorage.token, $chatId).catch(async () => {
 			await goto('/');
 			return null;
 		});
 
 		if (chat) {
-			tags = await getTagsById(localStorage.token, $chatId).catch(async (error) => {
-				return [];
-			});
 
 			const chatContent = chat.chat;
 
@@ -670,7 +661,7 @@
 					}
 				}
 
-				const taskRes = await getTaskIdsByChatId(localStorage.token, $chatId).catch((error) => {
+				const taskRes = await getTaskIdsByChatId(localStorage.token, $chatId).catch(() => {
 					return null;
 				});
 
@@ -901,7 +892,7 @@
 	};
 
 	const chatCompletionEventHandler = async (data, message, chatId) => {
-		const { id, done, choices, content, output, sources, selected_model_id, error, usage } = data;
+		const { done, choices, content, output, sources, selected_model_id, error, usage } = data;
 
 		// Store raw OR-aligned output items from backend
 		if (output) {
@@ -1271,7 +1262,7 @@
 		].filter((message) => message);
 
 		messages = messages
-			.map((message, idx, arr) => {
+			.map((message) => {
 				const imageFiles = (message?.files ?? []).filter(
 					(file) => file.type === 'image' || (file?.content_type ?? '').startsWith('image/')
 				);
@@ -1432,10 +1423,6 @@
 	const stopResponse = async () => {
 		if (taskIds) {
 			for (const taskId of taskIds) {
-				const res = await stopTask(localStorage.token, taskId).catch((error) => {
-					toast.error(`${error}`);
-					return null;
-				});
 			}
 
 			taskIds = null;
@@ -1774,7 +1761,7 @@
 							class=" pb-2.5 flex flex-col justify-between w-full flex-auto overflow-auto h-0 max-w-full z-10 scrollbar-hidden"
 							id="messages-container"
 							bind:this={messagesContainerElement}
-							on:scroll={(e) => {
+							on:scroll={() => {
 								autoScroll =
 									messagesContainerElement.scrollHeight - messagesContainerElement.scrollTop <=
 									messagesContainerElement.clientHeight + 5;
