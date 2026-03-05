@@ -690,7 +690,6 @@
 				...(m.usage ? { usage: m.usage } : {}),
 				...(m.sources ? { sources: m.sources } : {})
 			})),
-			model_item: $models.find((m) => m.id === modelId),
 			chat_id: _chatId,
 			session_id: $socket?.id,
 			id: responseMessageId
@@ -1297,8 +1296,6 @@
 						$user?.email
 					)
 				},
-				model_item: $models.find((m) => m.id === model.id),
-
 				session_id: $socket?.id,
 				chat_id: $chatId,
 

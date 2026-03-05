@@ -510,23 +510,15 @@ async def chat_completion(
         await get_all_models(request, user=user)
 
     model_id = form_data.get("model", None)
-    model_item = form_data.pop("model_item", {})
     tasks = form_data.pop("background_tasks", None)
 
     metadata = {}
     try:
-        model_info = None
-        if not model_item.get("direct", False):
-            if model_id not in request.app.state.MODELS:
-                raise Exception("Model not found")
+        if model_id not in request.app.state.MODELS:
+            raise Exception("Model not found")
 
-            model = request.app.state.MODELS[model_id]
-            model_info = Models.get_model_by_id(model_id)
-        else:
-            model = model_item
-
-            request.state.direct = True
-            request.state.model = model
+        model = request.app.state.MODELS[model_id]
+        model_info = Models.get_model_by_id(model_id)
 
         # Model params: global defaults as base, per-model overrides win
         default_model_params = (
@@ -808,16 +800,10 @@ async def chat_completed(
     request: Request, form_data: dict, user=Depends(get_verified_user)
 ):
     try:
-        model_item = form_data.pop("model_item", {})
+        if not request.app.state.MODELS:
+            await get_all_models(request, user=user)
 
-        if model_item.get("direct", False):
-            models = {model_item["id"]: model_item}
-        else:
-            if not request.app.state.MODELS:
-                await get_all_models(request, user=user)
-            models = request.app.state.MODELS
-
-        if form_data.get("model") not in models:
+        if form_data.get("model") not in request.app.state.MODELS:
             raise Exception("Model not found")
 
         return form_data
