@@ -1,17 +1,11 @@
 <script lang="ts">
 	import { v4 as uuidv4 } from 'uuid';
-	import {
-		chats,
-		settings,
-		user as _user,
-		currentChatPage,
-		temporaryChatEnabled
-	} from '$lib/stores';
+	import { settings, user as _user, temporaryChatEnabled, refreshChatList } from '$lib/stores';
 	import { tick, getContext, createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
 	import { toast } from 'svelte-sonner';
-	import { getChatList, updateChatById } from '$lib/apis/chats';
+	import { updateChatById } from '$lib/apis/chats';
 	import type { ChatHistory } from '$lib/types';
 
 	import Message from './Messages/Message.svelte';
@@ -111,8 +105,7 @@
 				messages: messages
 			});
 
-			currentChatPage.set(1);
-			await chats.set(await getChatList(localStorage.token, $currentChatPage));
+			await refreshChatList(localStorage.token);
 		}
 	};
 

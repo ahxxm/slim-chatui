@@ -11,20 +11,14 @@
 		deleteChatById,
 		getAllTags,
 		getChatById,
-		getChatList,
-		getChatListByTagName,
-		getPinnedChatList,
 		updateChatById,
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
 	import {
 		chatId,
 		chatTitle as _chatTitle,
-		chats,
 		mobile,
-		pinnedChats,
 		showSidebar,
-		currentChatPage,
 		tags,
 		selectedFolder,
 		activeChatIds
@@ -104,10 +98,6 @@
 				_chatTitle.set(title);
 			}
 
-			currentChatPage.set(1);
-			await chats.set(await getChatList(localStorage.token, $currentChatPage));
-			await pinnedChats.set(await getPinnedChatList(localStorage.token));
-
 			dispatch('change');
 		}
 	};
@@ -126,10 +116,7 @@
 
 		if (res) {
 			goto(`/c/${res.id}`);
-
-			currentChatPage.set(1);
-			await chats.set(await getChatList(localStorage.token, $currentChatPage));
-			await pinnedChats.set(await getPinnedChatList(localStorage.token));
+			dispatch('change');
 		}
 	};
 
@@ -162,12 +149,7 @@
 			);
 
 			if (res) {
-				currentChatPage.set(1);
-				await chats.set(await getChatList(localStorage.token, $currentChatPage));
-				await pinnedChats.set(await getPinnedChatList(localStorage.token));
-
 				dispatch('change');
-
 				toast.success($i18n.t('Chat moved successfully'));
 			}
 		} else {

@@ -1,8 +1,9 @@
 import { APP_NAME } from '$lib/constants';
-import { type Writable, writable } from 'svelte/store';
+import { type Writable, writable, get } from 'svelte/store';
 import type { ModelConfig } from '$lib/apis';
 import type { Banner, ChatListItem, TagItem, FolderItem } from '$lib/types';
 import type { Socket } from 'socket.io-client';
+import { getChatList } from '$lib/apis/chats';
 
 import emojiShortCodes from '$lib/emoji-shortcodes.json';
 
@@ -68,6 +69,30 @@ export const showShortcuts = writable(false);
 export const temporaryChatEnabled = writable(false);
 export const scrollPaginationEnabled = writable(false);
 export const currentChatPage = writable(1);
+
+const PAGE_SIZE = 60;
+
+/** Refetch pages 1..currentChatPage, stopping early on a short page.
+ *  Deflates currentChatPage to the actual last page with data.
+ *  Returns true if all data was loaded (last fetched page was short). */
+export async function refreshChatList(token: string): Promise<boolean> {
+	const throughPage = get(currentChatPage);
+	const allChats: ChatListItem[] = [];
+	let lastPage = 0;
+	let allLoaded = false;
+	for (let p = 1; p <= throughPage; p++) {
+		const batch = await getChatList(token, p);
+		allChats.push(...batch);
+		lastPage = p;
+		if (batch.length < PAGE_SIZE) {
+			allLoaded = true;
+			break;
+		}
+	}
+	chats.set(allChats);
+	currentChatPage.set(lastPage || 1);
+	return allLoaded;
+}
 
 export const isLastActiveTab = writable(true);
 export const playingNotificationSound = writable(false);

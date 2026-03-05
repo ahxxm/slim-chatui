@@ -25,7 +25,8 @@
 		selectedFolder,
 		WEBUI_NAME,
 		sidebarWidth,
-		activeChatIds
+		activeChatIds,
+		refreshChatList
 	} from '$lib/stores';
 	import { onMount, getContext, tick } from 'svelte';
 
@@ -177,13 +178,12 @@
 
 	const initChatList = async () => {
 		console.log('initChatList');
-		const throughPage = $currentChatPage;
-		allChatsLoaded = false;
 		scrollPaginationEnabled.set(false);
 
 		initFolders();
 
-		const [, , allChatsResult] = await Promise.all([
+		let refreshResult: boolean = false;
+		await Promise.all([
 			(async () => {
 				console.log('Init tags');
 				tags.set(await getAllTags(localStorage.token));
@@ -193,16 +193,11 @@
 				pinnedChats.set(await getPinnedChatList(localStorage.token));
 			})(),
 			(async () => {
-				console.log('Init chat list');
-				const pages = await Promise.all(
-					Array.from({ length: throughPage }, (_, i) => getChatList(localStorage.token, i + 1))
-				);
-				return pages.flat();
+				refreshResult = await refreshChatList(localStorage.token);
 			})()
 		]);
 
-		await chats.set(allChatsResult);
-		currentChatPage.set(throughPage);
+		allChatsLoaded = refreshResult;
 		scrollPaginationEnabled.set(true);
 	};
 

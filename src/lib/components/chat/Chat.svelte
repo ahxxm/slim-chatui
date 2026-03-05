@@ -26,11 +26,11 @@
 		WEBUI_NAME,
 		user,
 		socket,
-		currentChatPage,
 		temporaryChatEnabled,
 		chatTitle,
 		selectedFolder,
-		pinnedChats
+		pinnedChats,
+		refreshChatList
 	} from '$lib/stores';
 
 	import {
@@ -45,7 +45,6 @@
 		createNewChat,
 		getAllTags,
 		getChatById,
-		getChatList,
 		getPinnedChatList,
 		getTagsById,
 		updateChatById,
@@ -301,8 +300,7 @@
 					message.favorite = data.favorite;
 				} else if (type === 'chat:title') {
 					chatTitle.set(data);
-					currentChatPage.set(1);
-					await chats.set(await getChatList(localStorage.token, $currentChatPage));
+					await refreshChatList(localStorage.token);
 				} else if (type === 'chat:tags') {
 					chat = await getChatById(localStorage.token, $chatId);
 					allTags.set(await getAllTags(localStorage.token));
@@ -631,7 +629,6 @@
 		});
 
 		if (chat) {
-
 			const chatContent = chat.chat;
 
 			if (chatContent) {
@@ -738,8 +735,7 @@
 					files: chatFiles
 				});
 
-				currentChatPage.set(1);
-				await chats.set(await getChatList(localStorage.token, $currentChatPage));
+				await refreshChatList(localStorage.token);
 			}
 		}
 
@@ -1194,8 +1190,7 @@
 			activeChatEmitter = null;
 		}
 
-		currentChatPage.set(1);
-		chats.set(await getChatList(localStorage.token, $currentChatPage));
+		await refreshChatList(localStorage.token);
 	};
 
 	const sendMessageSocket = async (model, _messages, _history, responseMessageId, _chatId) => {
@@ -1565,8 +1560,7 @@
 
 			await tick();
 
-			await chats.set(await getChatList(localStorage.token, $currentChatPage));
-			currentChatPage.set(1);
+			await refreshChatList(localStorage.token);
 
 			selectedFolder.set(null);
 		} else {
@@ -1588,8 +1582,7 @@
 					params: params,
 					files: chatFiles
 				});
-				currentChatPage.set(1);
-				await chats.set(await getChatList(localStorage.token, $currentChatPage));
+				await refreshChatList(localStorage.token);
 			}
 		}
 	};
@@ -1631,8 +1624,7 @@
 			);
 
 			if (res) {
-				currentChatPage.set(1);
-				await chats.set(await getChatList(localStorage.token, $currentChatPage));
+				await refreshChatList(localStorage.token);
 				await pinnedChats.set(await getPinnedChatList(localStorage.token));
 
 				toast.success($i18n.t('Chat moved successfully'));
@@ -1743,7 +1735,7 @@
 							if (savedChat) {
 								temporaryChatEnabled.set(false);
 								chatId.set(savedChat.id);
-								chats.set(await getChatList(localStorage.token, $currentChatPage));
+								await refreshChatList(localStorage.token);
 
 								await goto(`/c/${savedChat.id}`);
 								toast.success($i18n.t('Conversation saved successfully'));
