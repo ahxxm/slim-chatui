@@ -51,19 +51,12 @@ async def get_all_models(request, user: UserModel = None):
             custom_model.id not in [model["id"] for model in models]
         ):
             # Custom model based on a base model
-            owned_by = "openai"
-
-            for m in models:
-                if custom_model.base_model_id == m["id"]:
-                    owned_by = m.get("owned_by", "unknown")
-                    break
-
             model = {
                 "id": f"{custom_model.id}",
                 "name": custom_model.name,
                 "object": "model",
                 "created": custom_model.created_at,
-                "owned_by": owned_by,
+                "owned_by": "openai",
                 "preset": True,
             }
 

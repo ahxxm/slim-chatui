@@ -126,7 +126,7 @@ from open_webui.utils.models import (
     get_all_models,
     get_all_base_models,
 )
-from open_webui.utils.chat import (
+from open_webui.routers.openai import (
     generate_chat_completion as chat_completion_handler,
 )
 from open_webui.utils.middleware import (

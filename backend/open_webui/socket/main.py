@@ -294,26 +294,3 @@ def get_event_emitter(request_info, update_db=True):
         return __event_emitter__
     else:
         return None
-
-
-def get_event_call(request_info):
-    async def __event_caller__(event_data):
-        response = await sio.call(
-            "events",
-            {
-                "chat_id": request_info.get("chat_id", None),
-                "message_id": request_info.get("message_id", None),
-                "data": event_data,
-            },
-            to=request_info["session_id"],
-        )
-        return response
-
-    if (
-        "session_id" in request_info
-        and "chat_id" in request_info
-        and "message_id" in request_info
-    ):
-        return __event_caller__
-    else:
-        return None

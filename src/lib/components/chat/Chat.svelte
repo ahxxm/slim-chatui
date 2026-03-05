@@ -678,7 +678,7 @@
 			});
 		}
 	};
-	const chatCompletedHandler = async (_chatId, modelId, responseMessageId, messages) => {
+	const chatCompletedHandler = async (_chatId, modelId, messages) => {
 		const res = await chatCompleted(localStorage.token, {
 			model: modelId,
 			messages: messages.map((m) => ({
@@ -689,10 +689,7 @@
 				timestamp: m.timestamp,
 				...(m.usage ? { usage: m.usage } : {}),
 				...(m.sources ? { sources: m.sources } : {})
-			})),
-			chat_id: _chatId,
-			session_id: $socket?.id,
-			id: responseMessageId
+			}))
 		}).catch((error) => {
 			toast.error(`${error}`);
 			messages.at(-1).error = { content: error };
@@ -957,12 +954,7 @@
 				scrollToBottom();
 			}
 
-			await chatCompletedHandler(
-				chatId,
-				message.model,
-				message.id,
-				createMessagesList(history, message.id)
-			);
+			await chatCompletedHandler(chatId, message.model, createMessagesList(history, message.id));
 		}
 
 		console.log(data);

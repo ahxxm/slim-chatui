@@ -85,31 +85,14 @@
 		updateFuse();
 	}
 
-	$: filteredItems = (
-		searchValue
-			? fuse
-					.search(searchValue)
-					.map((e) => {
-						return e.item;
-					})
-					.filter((item) => {
-						if (selectedTag === '') {
-							return true;
-						}
-
-						return (item.model?.tags ?? [])
-							.map((tag) => tag.name.toLowerCase())
-							.includes(selectedTag.toLowerCase());
-					})
-			: items.filter((item) => {
-					if (selectedTag === '') {
-						return true;
-					}
-					return (item.model?.tags ?? [])
-						.map((tag) => tag.name.toLowerCase())
-						.includes(selectedTag.toLowerCase());
-				})
-	).filter((item) => !(item.model?.info?.meta?.hidden ?? false));
+	$: filteredItems = (searchValue ? fuse.search(searchValue).map((e) => e.item) : items).filter(
+		(item) =>
+			!(item.model?.info?.meta?.hidden ?? false) &&
+			(selectedTag === '' ||
+				(item.model?.tags ?? [])
+					.map((tag) => tag.name.toLowerCase())
+					.includes(selectedTag.toLowerCase()))
+	);
 
 	$: if (selectedTag !== undefined || searchValue !== undefined) {
 		resetView();

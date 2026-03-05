@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from typing import Optional
 import logging
 
-from open_webui.utils.chat import generate_chat_completion
+from open_webui.routers.openai import generate_chat_completion
 from open_webui.utils.task import (
     get_task_model_id,
     title_generation_template,
