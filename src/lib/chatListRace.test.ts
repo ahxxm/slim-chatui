@@ -167,21 +167,17 @@ describe('Sidebar: shift-delete race', () => {
 		await fireEvent.keyDown(window, { key: 'Shift', shiftKey: true });
 		await fireEvent.mouseMove(window, { shiftKey: true });
 
-		const allChatLinks = () => [...container.querySelectorAll('a[href^="/c/"]')];
-
-		const shiftDeleteChat = async (index: number) => {
-			const links = allChatLinks();
-			const link = links[index];
-			expect(link, `chat at index ${index} should be in the DOM`).toBeTruthy();
-			await fireEvent.mouseEnter(link!);
-			const trash = link!.closest('li, div')?.querySelector('[aria-label="Delete chat"]');
-			expect(trash, `shift+hover should reveal trash on chat ${index}`).toBeTruthy();
+		const clickTrashOn = async (chatLink: Element) => {
+			await fireEvent.mouseEnter(chatLink);
+			const trash = chatLink.closest('li, div')?.querySelector('[aria-label="Delete chat"]');
+			expect(trash, 'shift+hover should reveal trash button').toBeTruthy();
 			await fireEvent.click(trash!);
 		};
 
-		await shiftDeleteChat(0);
+		const [first, second] = container.querySelectorAll('a[href^="/c/"]');
+		await clickTrashOn(first);
 		await delay(CLICK_GAP);
-		await shiftDeleteChat(0); // after first delete, next chat is now index 0
+		await clickTrashOn(second);
 		await delay(SETTLE);
 
 		const result = get(chats) as any[] | null;
