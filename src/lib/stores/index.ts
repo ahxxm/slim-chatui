@@ -127,7 +127,6 @@ type Settings = {
 	iframeSandboxAllowForms?: boolean;
 	iframeSandboxAllowSameOrigin?: boolean;
 	scrollOnBranchChange?: boolean;
-	directConnections?: null;
 	chatBubble?: boolean;
 	copyFormatted?: boolean;
 	models?: string[];
@@ -174,7 +173,6 @@ type Config = {
 		auth: boolean;
 		enable_signup: boolean;
 		enable_signup_password_confirmation?: boolean;
-		enable_direct_connections?: boolean;
 		enable_websocket?: boolean;
 		enable_easter_eggs?: boolean;
 	};

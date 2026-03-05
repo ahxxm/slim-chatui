@@ -1,9 +1,7 @@
 import { WEBUI_BASE_URL } from '$lib/constants';
-import { getOpenAIModelsDirect } from './openai';
 
 export const getModels = async (
 	token: string = '',
-	connections: object | null = null,
 	base: boolean = false,
 	refresh: boolean = false
 ) => {
@@ -39,102 +37,6 @@ export const getModels = async (
 	}
 
 	let models = res?.data ?? [];
-
-	if (connections && !base) {
-		let localModels = [];
-
-		if (connections) {
-			const OPENAI_API_BASE_URLS = connections.OPENAI_API_BASE_URLS;
-			const OPENAI_API_KEYS = connections.OPENAI_API_KEYS;
-			const OPENAI_API_CONFIGS = connections.OPENAI_API_CONFIGS;
-
-			const requests = [];
-			for (const idx in OPENAI_API_BASE_URLS) {
-				const url = OPENAI_API_BASE_URLS[idx];
-
-				if (idx.toString() in OPENAI_API_CONFIGS) {
-					const apiConfig = OPENAI_API_CONFIGS[idx.toString()] ?? {};
-
-					const enable = apiConfig?.enable ?? true;
-					const modelIds = apiConfig?.model_ids ?? [];
-
-					if (enable) {
-						if (modelIds.length > 0) {
-							requests.push(
-								Promise.resolve({
-									object: 'list',
-									data: modelIds.map((modelId) => ({
-										id: modelId,
-										name: modelId,
-										owned_by: 'openai',
-										urlIdx: idx
-									}))
-								})
-							);
-						} else {
-							requests.push(
-								getOpenAIModelsDirect(url, OPENAI_API_KEYS[idx]).catch(() => ({
-									object: 'list',
-									data: [],
-									urlIdx: idx
-								}))
-							);
-						}
-					} else {
-						requests.push(
-							Promise.resolve({
-								object: 'list',
-								data: [],
-								urlIdx: idx
-							})
-						);
-					}
-				}
-			}
-
-			const responses = await Promise.all(requests);
-
-			for (const idx in responses) {
-				const response = responses[idx];
-				const apiConfig = OPENAI_API_CONFIGS[idx.toString()] ?? {};
-
-				let models = Array.isArray(response) ? response : (response?.data ?? []);
-				models = models.map((model) => ({ ...model, urlIdx: idx }));
-
-				const prefixId = apiConfig.prefix_id;
-				if (prefixId) {
-					for (const model of models) {
-						model.id = `${prefixId}.${model.id}`;
-					}
-				}
-
-				const tags = apiConfig.tags;
-				if (tags) {
-					for (const model of models) {
-						model.tags = tags;
-					}
-				}
-
-				localModels = localModels.concat(models);
-			}
-		}
-
-		models = models.concat(
-			localModels.map((model) => ({
-				...model,
-				name: model?.name ?? model?.id,
-				direct: true
-			}))
-		);
-
-		// Remove duplicates
-		const modelsMap = {};
-		for (const model of models) {
-			modelsMap[model.id] = model;
-		}
-
-		models = Object.values(modelsMap);
-	}
 
 	return models;
 };

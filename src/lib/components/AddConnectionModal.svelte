@@ -23,8 +23,6 @@
 	export let show = false;
 	export let edit = false;
 
-	export let direct = false;
-
 	export let connection = null;
 
 	let url = '';
@@ -65,18 +63,14 @@
 			}
 		}
 
-		const res = await verifyOpenAIConnection(
-			localStorage.token,
-			{
-				url,
-				key,
-				config: {
-					auth_type,
-					...(_headers ? { headers: _headers } : {})
-				}
-			},
-			direct
-		).catch((error) => {
+		const res = await verifyOpenAIConnection(localStorage.token, {
+			url,
+			key,
+			config: {
+				auth_type,
+				...(_headers ? { headers: _headers } : {})
+			}
+		}).catch((error) => {
 			toast.error(`${error}`);
 		});
 
@@ -205,29 +199,27 @@
 					}}
 				>
 					<div class="px-1">
-						{#if !direct}
-							<div class="flex gap-2">
-								<div class="flex w-full justify-between items-center">
-									<div class=" text-xs text-gray-500">{$i18n.t('Connection Type')}</div>
+						<div class="flex gap-2">
+							<div class="flex w-full justify-between items-center">
+								<div class=" text-xs text-gray-500">{$i18n.t('Connection Type')}</div>
 
-									<div class="">
-										<button
-											on:click={() => {
-												connectionType = connectionType === 'local' ? 'external' : 'local';
-											}}
-											type="button"
-											class=" text-xs text-gray-700 dark:text-gray-300"
-										>
-											{#if connectionType === 'local'}
-												{$i18n.t('Local')}
-											{:else}
-												{$i18n.t('External')}
-											{/if}
-										</button>
-									</div>
+								<div class="">
+									<button
+										on:click={() => {
+											connectionType = connectionType === 'local' ? 'external' : 'local';
+										}}
+										type="button"
+										class=" text-xs text-gray-700 dark:text-gray-300"
+									>
+										{#if connectionType === 'local'}
+											{$i18n.t('Local')}
+										{:else}
+											{$i18n.t('External')}
+										{/if}
+									</button>
 								</div>
 							</div>
-						{/if}
+						</div>
 
 						<div class="flex gap-2 mt-1.5">
 							<div class="flex flex-col w-full">
@@ -343,34 +335,32 @@
 							</div>
 						</div>
 
-						{#if !direct}
-							<div class="flex gap-2 mt-2">
-								<div class="flex flex-col w-full">
-									<label
-										for="headers-input"
-										class={`mb-0.5 text-xs text-gray-500
+						<div class="flex gap-2 mt-2">
+							<div class="flex flex-col w-full">
+								<label
+									for="headers-input"
+									class={`mb-0.5 text-xs text-gray-500
 								${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : ''}`}
-										>{$i18n.t('Headers')}</label
-									>
+									>{$i18n.t('Headers')}</label
+								>
 
-									<div class="flex-1">
-										<Tooltip
-											content={$i18n.t(
-												'Enter additional headers in JSON format (e.g. {"X-Custom-Header": "value"}'
-											)}
-										>
-											<Textarea
-												className="w-full text-sm outline-hidden"
-												bind:value={headers}
-												placeholder={$i18n.t('Enter additional headers in JSON format')}
-												required={false}
-												minSize={30}
-											/>
-										</Tooltip>
-									</div>
+								<div class="flex-1">
+									<Tooltip
+										content={$i18n.t(
+											'Enter additional headers in JSON format (e.g. {"X-Custom-Header": "value"}'
+										)}
+									>
+										<Textarea
+											className="w-full text-sm outline-hidden"
+											bind:value={headers}
+											placeholder={$i18n.t('Enter additional headers in JSON format')}
+											required={false}
+											minSize={30}
+										/>
+									</Tooltip>
 								</div>
 							</div>
-						{/if}
+						</div>
 
 						<div class="flex gap-2 mt-2">
 							<div class="flex flex-col w-full">
@@ -400,44 +390,42 @@
 							</div>
 						</div>
 
-						{#if !direct}
-							<div class="flex flex-row justify-between items-center w-full mt-1">
-								<label
-									for="api-type-toggle"
-									class={`mb-0.5 text-xs text-gray-500
+						<div class="flex flex-row justify-between items-center w-full mt-1">
+							<label
+								for="api-type-toggle"
+								class={`mb-0.5 text-xs text-gray-500
 							${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : ''}`}
-									>{$i18n.t('API Type')}</label
+								>{$i18n.t('API Type')}</label
+							>
+
+							<div>
+								<button
+									on:click={() => {
+										apiType = apiType === 'responses' ? '' : 'responses';
+									}}
+									type="button"
+									id="api-type-toggle"
+									class=" text-xs text-gray-700 dark:text-gray-300"
 								>
-
-								<div>
-									<button
-										on:click={() => {
-											apiType = apiType === 'responses' ? '' : 'responses';
-										}}
-										type="button"
-										id="api-type-toggle"
-										class=" text-xs text-gray-700 dark:text-gray-300"
-									>
-										{#if apiType === 'responses'}
-											<Tooltip
-												className="flex items-center gap-1"
-												content={$i18n.t(
-													'This feature is currently experimental and may not work as expected.'
-												)}
+									{#if apiType === 'responses'}
+										<Tooltip
+											className="flex items-center gap-1"
+											content={$i18n.t(
+												'This feature is currently experimental and may not work as expected.'
+											)}
+										>
+											<span class=" text-gray-400 dark:text-gray-600"
+												>{$i18n.t('Experimental')}</span
 											>
-												<span class=" text-gray-400 dark:text-gray-600"
-													>{$i18n.t('Experimental')}</span
-												>
 
-												{$i18n.t('Responses')}
-											</Tooltip>
-										{:else}
-											{$i18n.t('Chat Completions')}
-										{/if}
-									</button>
-								</div>
+											{$i18n.t('Responses')}
+										</Tooltip>
+									{:else}
+										{$i18n.t('Chat Completions')}
+									{/if}
+								</button>
 							</div>
-						{/if}
+						</div>
 
 						<div class="flex flex-col w-full mt-2">
 							<div class="mb-1 flex justify-between">

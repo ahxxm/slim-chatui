@@ -296,16 +296,6 @@ CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 ####################################
-# DIRECT CONNECTIONS
-####################################
-
-ENABLE_DIRECT_CONNECTIONS = PersistentConfig(
-    "ENABLE_DIRECT_CONNECTIONS",
-    "direct.enable",
-    os.environ.get("ENABLE_DIRECT_CONNECTIONS", "False").lower() == "true",
-)
-
-####################################
 # OPENAI_API
 ####################################
 

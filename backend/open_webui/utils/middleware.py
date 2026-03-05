@@ -1175,9 +1175,7 @@ async def streaming_chat_response_handler(response, ctx):
                             data = json.loads(data)
 
                             if data:
-                                if "event" in data and not getattr(
-                                    request.state, "direct", False
-                                ):
+                                if "event" in data:
                                     await event_emitter(data.get("event", {}))
 
                                 if "selected_model_id" in data:

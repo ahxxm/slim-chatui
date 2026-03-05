@@ -44,10 +44,7 @@ async def _run_task(
     content: str,
     max_completion_tokens: Optional[int] = None,
 ):
-    if getattr(request.state, "direct", False) and hasattr(request.state, "model"):
-        models = {request.state.model["id"]: request.state.model}
-    else:
-        models = request.app.state.MODELS
+    models = request.app.state.MODELS
 
     model_id = form_data["model"]
     if model_id not in models:

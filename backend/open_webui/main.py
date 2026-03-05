@@ -64,8 +64,6 @@ from open_webui.config import (
     OPENAI_API_BASE_URLS,
     OPENAI_API_KEYS,
     OPENAI_API_CONFIGS,
-    # Direct Connections
-    ENABLE_DIRECT_CONNECTIONS,
     # Thread pool size for FastAPI/AnyIO
     THREAD_POOL_SIZE,
     # File
@@ -240,14 +238,6 @@ app.state.config.OPENAI_API_KEYS = OPENAI_API_KEYS
 app.state.config.OPENAI_API_CONFIGS = OPENAI_API_CONFIGS
 
 app.state.OPENAI_MODELS = {}
-
-########################################
-#
-# DIRECT CONNECTIONS
-#
-########################################
-
-app.state.config.ENABLE_DIRECT_CONNECTIONS = ENABLE_DIRECT_CONNECTIONS
 
 ########################################
 #
@@ -598,7 +588,6 @@ async def chat_completion(
             "features": form_data.get("features", {}),
             "variables": form_data.get("variables", {}),
             "model": model,
-            "direct": model_item.get("direct", False),
             "params": {
                 "stream_delta_chunk_size": stream_delta_chunk_size,
             },
@@ -920,13 +909,6 @@ async def get_app_config(request: Request):
             "enable_signup": app.state.config.ENABLE_SIGNUP,
             "enable_websocket": ENABLE_WEBSOCKET_SUPPORT,
             "enable_easter_eggs": ENABLE_EASTER_EGGS,
-            **(
-                {
-                    "enable_direct_connections": app.state.config.ENABLE_DIRECT_CONNECTIONS,
-                }
-                if user is not None
-                else {}
-            ),
         },
         **(
             {
