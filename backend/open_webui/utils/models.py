@@ -52,12 +52,10 @@ async def get_all_models(request, user: UserModel = None):
         ):
             # Custom model based on a base model
             owned_by = "openai"
-            connection_type = None
 
             for m in models:
                 if custom_model.base_model_id == m["id"]:
                     owned_by = m.get("owned_by", "unknown")
-                    connection_type = m.get("connection_type", None)
                     break
 
             model = {
@@ -66,7 +64,6 @@ async def get_all_models(request, user: UserModel = None):
                 "object": "model",
                 "created": custom_model.created_at,
                 "owned_by": owned_by,
-                "connection_type": connection_type,
                 "preset": True,
             }
 

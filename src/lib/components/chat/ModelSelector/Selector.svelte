@@ -46,7 +46,6 @@
 	let searchValue = '';
 
 	let selectedTag = '';
-	let selectedConnectionType = '';
 
 	let selectedModelIdx = 0;
 
@@ -102,40 +101,17 @@
 							.map((tag) => tag.name.toLowerCase())
 							.includes(selectedTag.toLowerCase());
 					})
-					.filter((item) => {
-						if (selectedConnectionType === '') {
-							return true;
-						} else if (selectedConnectionType === 'local') {
-							return item.model?.connection_type === 'local';
-						} else if (selectedConnectionType === 'external') {
-							return item.model?.connection_type === 'external';
-						}
-					})
-			: items
-					.filter((item) => {
-						if (selectedTag === '') {
-							return true;
-						}
-						return (item.model?.tags ?? [])
-							.map((tag) => tag.name.toLowerCase())
-							.includes(selectedTag.toLowerCase());
-					})
-					.filter((item) => {
-						if (selectedConnectionType === '') {
-							return true;
-						} else if (selectedConnectionType === 'local') {
-							return item.model?.connection_type === 'local';
-						} else if (selectedConnectionType === 'external') {
-							return item.model?.connection_type === 'external';
-						}
-					})
+			: items.filter((item) => {
+					if (selectedTag === '') {
+						return true;
+					}
+					return (item.model?.tags ?? [])
+						.map((tag) => tag.name.toLowerCase())
+						.includes(selectedTag.toLowerCase());
+				})
 	).filter((item) => !(item.model?.info?.meta?.hidden ?? false));
 
-	$: if (
-		selectedTag !== undefined ||
-		selectedConnectionType !== undefined ||
-		searchValue !== undefined
-	) {
+	$: if (selectedTag !== undefined || searchValue !== undefined) {
 		resetView();
 	}
 
@@ -213,12 +189,7 @@
 				? 'dark:placeholder-gray-100 placeholder-gray-800'
 				: 'placeholder-gray-400'}"
 			on:mouseenter={async () => {
-				models.set(
-					await getModels(
-						localStorage.token,
-						$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null)
-					)
-				);
+				models.set(await getModels(localStorage.token));
 			}}
 		>
 			{#if selectedModel}
@@ -288,49 +259,17 @@
 							class="flex gap-1 w-fit text-center text-sm rounded-full bg-transparent px-1.5 whitespace-nowrap"
 							bind:this={tagsContainerElement}
 						>
-							{#if items.find((item) => item.model?.connection_type === 'local') || items.find((item) => item.model?.connection_type === 'external') || tags.length > 0}
+							{#if tags.length > 0}
 								<button
-									class="min-w-fit outline-none px-1.5 py-0.5 {selectedTag === '' &&
-									selectedConnectionType === ''
+									class="min-w-fit outline-none px-1.5 py-0.5 {selectedTag === ''
 										? ''
 										: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition capitalize"
-									aria-pressed={selectedTag === '' && selectedConnectionType === ''}
+									aria-pressed={selectedTag === ''}
 									on:click={() => {
-										selectedConnectionType = '';
 										selectedTag = '';
 									}}
 								>
 									{$i18n.t('All')}
-								</button>
-							{/if}
-
-							{#if items.find((item) => item.model?.connection_type === 'local')}
-								<button
-									class="min-w-fit outline-none px-1.5 py-0.5 {selectedConnectionType === 'local'
-										? ''
-										: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition capitalize"
-									aria-pressed={selectedConnectionType === 'local'}
-									on:click={() => {
-										selectedTag = '';
-										selectedConnectionType = 'local';
-									}}
-								>
-									{$i18n.t('Local')}
-								</button>
-							{/if}
-
-							{#if items.find((item) => item.model?.connection_type === 'external')}
-								<button
-									class="min-w-fit outline-none px-1.5 py-0.5 {selectedConnectionType === 'external'
-										? ''
-										: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition capitalize"
-									aria-pressed={selectedConnectionType === 'external'}
-									on:click={() => {
-										selectedTag = '';
-										selectedConnectionType = 'external';
-									}}
-								>
-									{$i18n.t('External')}
 								</button>
 							{/if}
 
@@ -342,7 +281,6 @@
 											: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition capitalize"
 										aria-pressed={selectedTag === tag}
 										on:click={() => {
-											selectedConnectionType = '';
 											selectedTag = tag;
 										}}
 									>

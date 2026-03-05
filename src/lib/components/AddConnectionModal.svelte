@@ -29,7 +29,6 @@
 	let key = '';
 	let auth_type = 'bearer';
 
-	let connectionType = 'external';
 	let prefixId = '';
 	let enable = true;
 	let apiType = ''; // '' = chat completions (default), 'responses' = Responses API
@@ -119,7 +118,6 @@
 				tags: tags,
 				prefix_id: prefixId,
 				model_ids: modelIds,
-				connection_type: connectionType,
 				auth_type,
 				headers: headers ? JSON.parse(headers) : undefined,
 				...(apiType ? { api_type: apiType } : {})
@@ -154,7 +152,6 @@
 			prefixId = connection.config?.prefix_id ?? '';
 			modelIds = connection.config?.model_ids ?? [];
 
-			connectionType = connection.config?.connection_type ?? 'external';
 			apiType = connection.config?.api_type ?? '';
 		}
 	};
@@ -199,28 +196,6 @@
 					}}
 				>
 					<div class="px-1">
-						<div class="flex gap-2">
-							<div class="flex w-full justify-between items-center">
-								<div class=" text-xs text-gray-500">{$i18n.t('Connection Type')}</div>
-
-								<div class="">
-									<button
-										on:click={() => {
-											connectionType = connectionType === 'local' ? 'external' : 'local';
-										}}
-										type="button"
-										class=" text-xs text-gray-700 dark:text-gray-300"
-									>
-										{#if connectionType === 'local'}
-											{$i18n.t('Local')}
-										{:else}
-											{$i18n.t('External')}
-										{/if}
-									</button>
-								</div>
-							</div>
-						</div>
-
 						<div class="flex gap-2 mt-1.5">
 							<div class="flex flex-col w-full">
 								<label
