@@ -176,32 +176,33 @@
 	};
 
 	const initChatList = async () => {
-		// Reset pagination variables
 		console.log('initChatList');
-		currentChatPage.set(1);
+		const throughPage = $currentChatPage;
 		allChatsLoaded = false;
 		scrollPaginationEnabled.set(false);
 
 		initFolders();
-		await Promise.all([
-			await (async () => {
+
+		const [, , allChatsResult] = await Promise.all([
+			(async () => {
 				console.log('Init tags');
-				const _tags = await getAllTags(localStorage.token);
-				tags.set(_tags);
+				tags.set(await getAllTags(localStorage.token));
 			})(),
-			await (async () => {
+			(async () => {
 				console.log('Init pinned chats');
-				const _pinnedChats = await getPinnedChatList(localStorage.token);
-				pinnedChats.set(_pinnedChats);
+				pinnedChats.set(await getPinnedChatList(localStorage.token));
 			})(),
-			await (async () => {
+			(async () => {
 				console.log('Init chat list');
-				const _chats = await getChatList(localStorage.token, 1);
-				await chats.set(_chats);
+				const pages = await Promise.all(
+					Array.from({ length: throughPage }, (_, i) => getChatList(localStorage.token, i + 1))
+				);
+				return pages.flat();
 			})()
 		]);
 
-		// Enable pagination
+		await chats.set(allChatsResult);
+		currentChatPage.set(throughPage);
 		scrollPaginationEnabled.set(true);
 	};
 

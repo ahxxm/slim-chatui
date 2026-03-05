@@ -38,12 +38,8 @@ class TestChatDeleteRace(IntegrationTest):
 
         # Sidebar.initChatList (fired by dispatch('change'))
         self.fast_api_client.get("/api/v1/chats/all/tags", headers=headers)
-        self.fast_api_client.get(
-            "/api/v1/chats/?include_pinned=true", headers=headers
-        )
-        list_resp = self.fast_api_client.get(
-            "/api/v1/chats/?page=1", headers=headers
-        )
+        self.fast_api_client.get("/api/v1/chats/?include_pinned=true", headers=headers)
+        list_resp = self.fast_api_client.get("/api/v1/chats/?page=1", headers=headers)
         return delete_resp, list_resp
 
     def test_rapid_delete_2_of_10(self):

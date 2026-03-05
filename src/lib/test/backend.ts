@@ -34,7 +34,9 @@ export function installFetchProxy(token: string, networkDelay = 0) {
 			}
 
 			const promise = realFetch(url, { ...init, headers });
-			return networkDelay > 0 ? promise.then((res) => delay(networkDelay).then(() => res)) : promise;
+			return networkDelay > 0
+				? promise.then((res) => delay(networkDelay).then(() => res))
+				: promise;
 		})
 	);
 }
