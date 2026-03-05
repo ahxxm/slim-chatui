@@ -196,7 +196,7 @@
 			})(),
 			await (async () => {
 				console.log('Init chat list');
-				const _chats = await getChatList(localStorage.token, $currentChatPage);
+				const _chats = await getChatList(localStorage.token, 1);
 				await chats.set(_chats);
 			})()
 		]);
