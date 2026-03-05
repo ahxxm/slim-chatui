@@ -418,12 +418,6 @@ DEFAULT_PROMPT_SUGGESTIONS = PersistentConfig(
     default_prompt_suggestions,
 )
 
-MODEL_ORDER_LIST = PersistentConfig(
-    "MODEL_ORDER_LIST",
-    "ui.model_order_list",
-    [],
-)
-
 DEFAULT_MODEL_METADATA = PersistentConfig(
     "DEFAULT_MODEL_METADATA",
     "models.default_metadata",

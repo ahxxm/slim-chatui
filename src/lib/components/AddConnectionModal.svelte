@@ -12,7 +12,6 @@
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
-	import Tags from './common/Tags.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import Textarea from './common/Textarea.svelte';
@@ -34,8 +33,6 @@
 	let apiType = ''; // '' = chat completions (default), 'responses' = Responses API
 
 	let headers = '';
-
-	let tags = [];
 
 	let modelId = '';
 	let modelIds = [];
@@ -115,7 +112,6 @@
 			key,
 			config: {
 				enable: enable,
-				tags: tags,
 				prefix_id: prefixId,
 				model_ids: modelIds,
 				auth_type,
@@ -133,7 +129,6 @@
 		key = '';
 		auth_type = 'bearer';
 		prefixId = '';
-		tags = [];
 		modelIds = [];
 	};
 
@@ -148,7 +143,6 @@
 				: '';
 
 			enable = connection.config?.enable ?? true;
-			tags = connection.config?.tags ?? [];
 			prefixId = connection.config?.prefix_id ?? '';
 			modelIds = connection.config?.model_ids ?? [];
 
@@ -440,7 +434,9 @@
 									class={`text-gray-500 text-xs text-center py-2 px-10
 								${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : ''}`}
 								>
-									url: url })}
+									{$i18n.t('Leave empty to include all models from "{{url}}/models" endpoint', {
+									url: url
+								})}
 								</div>
 							{/if}
 						</div>
@@ -468,34 +464,6 @@
 								>
 									<Plus className="size-3.5" strokeWidth="2" />
 								</button>
-							</div>
-						</div>
-					</div>
-
-					<div class="flex gap-2 mt-2">
-						<div class="flex flex-col w-full">
-							<div
-								class={`mb-0.5 text-xs text-gray-500
-								${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : ''}`}
-							>
-								{$i18n.t('Tags')}
-							</div>
-
-							<div class="flex-1 mt-0.5">
-								<Tags
-									bind:tags
-									on:add={(e) => {
-										tags = [
-											...tags,
-											{
-												name: e.detail
-											}
-										];
-									}}
-									on:delete={(e) => {
-										tags = tags.filter((tag) => tag.name !== e.detail);
-									}}
-								/>
 							</div>
 						</div>
 					</div>

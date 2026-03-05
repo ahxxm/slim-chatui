@@ -12,7 +12,6 @@
 	import ModelItemMenu from './ModelItemMenu.svelte';
 	import EllipsisHorizontal from '$lib/components/icons/EllipsisHorizontal.svelte';
 	import { toast } from 'svelte-sonner';
-	import Tag from '$lib/components/icons/Tag.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -76,26 +75,6 @@
 
 			<div class=" shrink-0 flex items-center gap-2">
 				<!-- {JSON.stringify(item.info)} -->
-
-				{#if (item?.model?.tags ?? []).length > 0}
-					{#key item.model.id}
-						<Tooltip elementId="tags-{item.model.id}">
-							<div slot="tooltip" id="tags-{item.model.id}">
-								{#each item.model?.tags.sort((a, b) => a.name.localeCompare(b.name)) as tag}
-									<Tooltip content={tag.name} className="flex-shrink-0">
-										<div class=" text-xs font-medium rounded-sm uppercase text-white">
-											{tag.name}
-										</div>
-									</Tooltip>
-								{/each}
-							</div>
-
-							<div class="translate-y-[1px]">
-								<Tag />
-							</div>
-						</Tooltip>
-					{/key}
-				{/if}
 
 				{#if item.model?.info?.meta?.description}
 					<Tooltip

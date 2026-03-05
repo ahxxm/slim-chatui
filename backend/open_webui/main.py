@@ -83,7 +83,6 @@ from open_webui.config import (
     DEFAULT_PROMPT_SUGGESTIONS,
     DEFAULT_MODELS,
     DEFAULT_PINNED_MODELS,
-    MODEL_ORDER_LIST,
     DEFAULT_MODEL_METADATA,
     DEFAULT_MODEL_PARAMS,
     # Misc
@@ -264,7 +263,6 @@ app.state.config.ADMIN_EMAIL = ADMIN_EMAIL
 
 app.state.config.DEFAULT_MODELS = DEFAULT_MODELS
 app.state.config.DEFAULT_PINNED_MODELS = DEFAULT_PINNED_MODELS
-app.state.config.MODEL_ORDER_LIST = MODEL_ORDER_LIST
 app.state.config.DEFAULT_MODEL_METADATA = DEFAULT_MODEL_METADATA
 app.state.config.DEFAULT_MODEL_PARAMS = DEFAULT_MODEL_PARAMS
 
@@ -460,32 +458,7 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
         if model.get("info", {}).get("meta", {}).get("profile_image_url"):
             model["info"]["meta"].pop("profile_image_url", None)
 
-        try:
-            model_tags = [
-                tag.get("name")
-                for tag in model.get("info", {}).get("meta", {}).get("tags", [])
-            ]
-            tags = [tag.get("name") for tag in model.get("tags", [])]
-
-            tags = list(set(model_tags + tags))
-            model["tags"] = [{"name": tag} for tag in tags]
-        except Exception as e:
-            log.debug(f"Error processing model tags: {e}")
-            model["tags"] = []
-            pass
-
         models.append(model)
-
-    model_order_list = request.app.state.config.MODEL_ORDER_LIST
-    if model_order_list:
-        model_order_dict = {model_id: i for i, model_id in enumerate(model_order_list)}
-        # Sort models by order list priority, with fallback for those not in the list
-        models.sort(
-            key=lambda model: (
-                model_order_dict.get(model.get("id", ""), float("inf")),
-                (model.get("name", "") or ""),
-            )
-        )
 
     log.debug(
         f"/api/models returned filtered models accessible to the user: {json.dumps([model.get('id') for model in models])}"
@@ -726,11 +699,6 @@ async def chat_completion(
         return {"status": True, "task_id": task_id}
     else:
         return await process_chat(request, form_data, user, metadata, model)
-
-
-# Alias for chat_completion (Legacy)
-generate_chat_completions = chat_completion
-generate_chat_completion = chat_completion
 
 
 ##################################
