@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { marked } from 'marked';
+	import { Marked } from 'marked';
 	import DOMPurify from 'dompurify';
 
-	marked.use({
+	const richTextMarked = new Marked({
 		breaks: true,
 		gfm: true,
 		renderer: {
@@ -361,11 +361,8 @@
 
 		if (insertPromptAsRichText) {
 			const htmlContent = DOMPurify.sanitize(
-				marked
-					.parse(text, {
-						breaks: true,
-						gfm: true
-					})
+				richTextMarked
+					.parse(text)
 					.trim()
 			);
 
@@ -481,7 +478,7 @@
 		const { schema, tr } = state;
 
 		// If content is a string, convert it to a ProseMirror node
-		const htmlContent = marked.parse(content);
+		const htmlContent = richTextMarked.parse(content);
 
 		// insert the HTML content at the current selection
 		editor.commands.insertContent(htmlContent);
@@ -686,7 +683,7 @@
 				async function tryParse(value, attempts = 3, interval = 100) {
 					try {
 						// Try parsing the value
-						return marked.parse(value.replaceAll(`\n<br/>`, `<br/>`), {
+						return richTextMarked.parse(value.replaceAll(`\n<br/>`, `<br/>`), {
 							breaks: false
 						});
 					} catch (error) {
@@ -1190,7 +1187,7 @@
 					editor.commands.setContent(
 						preserveBreaks
 							? value
-							: marked.parse(value.replaceAll(`\n<br/>`, `<br/>`), {
+							: richTextMarked.parse(value.replaceAll(`\n<br/>`, `<br/>`), {
 									breaks: false
 								})
 					);
