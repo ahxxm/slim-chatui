@@ -49,7 +49,7 @@
 	let messageEditTextAreaElement = $state();
 	let editScrollContainer = $state();
 
-	let message = $derived($state.snapshot(history.messages[messageId]));
+	let message = $derived(history.messages[messageId]);
 
 	const copyToClipboard = async (text) => {
 		const res = await _copyToClipboard(text);
