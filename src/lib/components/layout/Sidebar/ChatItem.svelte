@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { goto, invalidate, invalidateAll } from '$app/navigation';
-	import { onMount, getContext, createEventDispatcher, tick, onDestroy } from 'svelte';
+	import { onMount, getContext, createEventDispatcher, tick, onDestroy, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
 	const dispatch = createEventDispatcher();
@@ -34,16 +34,23 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { generateTitle } from '$lib/apis';
 
-	export let className = '';
-
-	export let id;
-	export let title;
-	export let createdAt: number | null = null;
-
-	export let selected = false;
-	export let shiftKey = false;
-
-	export let onDragEnd = () => {};
+	let {
+		className = '',
+		id,
+		title,
+		createdAt = null,
+		selected = false,
+		shiftKey = false,
+		onDragEnd = () => {}
+	}: {
+		className?: string;
+		id: string;
+		title: string;
+		createdAt?: number | null;
+		selected?: boolean;
+		shiftKey?: boolean;
+		onDragEnd?: (event: DragEvent) => void;
+	} = $props();
 
 	function formatTimeAgo(timestamp: number): string {
 		const now = Date.now();
@@ -64,13 +71,15 @@
 		return '1m';
 	}
 
-	let chat = null;
+	let chat = $state(null);
 
-	let mouseOver = false;
-	let draggable = false;
-	$: if (mouseOver) {
-		loadChat();
-	}
+	let mouseOver = $state(false);
+	let draggable = $state(false);
+	$effect(() => {
+		if (mouseOver) {
+			untrack(() => loadChat());
+		}
+	});
 
 	const loadChat = async () => {
 		if (!chat) {
@@ -80,9 +89,9 @@
 		}
 	};
 
-	let confirmEdit = false;
+	let confirmEdit = $state(false);
 
-	let chatTitle = title;
+	let chatTitle = $state(title);
 
 	const editChatTitle = async (id, title) => {
 		if (title === '') {
@@ -154,16 +163,16 @@
 		}
 	};
 
-	let itemElement;
+	let itemElement = $state<HTMLElement>();
 
-	let generating = false;
+	let generating = $state(false);
 
 	let ignoreBlur = false;
-	let doubleClicked = false;
+	let doubleClicked = $state(false);
 
-	let dragged = false;
-	let x = 0;
-	let y = 0;
+	let dragged = $state(false);
+	let x = $state(0);
+	let y = $state(0);
 
 	const dragImage = new Image();
 	dragImage.src =
@@ -240,7 +249,7 @@
 		}
 	});
 
-	let showDeleteConfirm = false;
+	let showDeleteConfirm = $state(false);
 
 	const chatTitleInputKeydownHandler = (e) => {
 		if (e.key === 'Enter') {

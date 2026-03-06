@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { folders } from '$lib/stores';
-	import { getContext, createEventDispatcher, tick } from 'svelte';
+	import { untrack, getContext, createEventDispatcher, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import Search from '$lib/components/icons/Search.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
@@ -8,20 +8,20 @@
 	const dispatch = createEventDispatcher();
 	const i18n = getContext('i18n');
 
-	export let placeholder = '';
-	export let value = '';
-	export let showClearButton = false;
+	let {
+		placeholder = '',
+		value = $bindable(''),
+		showClearButton = false,
+		onFocus = () => {},
+		onKeydown = (e) => {}
+	} = $props();
 
-	export let onFocus = () => {};
-	export let onKeydown = (e) => {};
+	let selectedIdx = $state(0);
+	let selectedOption = $state(null);
 
-	let selectedIdx = 0;
-	let selectedOption = null;
+	let lastWord = $derived(value ? value.split(' ').at(-1) : value);
 
-	let lastWord = '';
-	$: lastWord = value ? value.split(' ').at(-1) : value;
-
-	let options = [
+	const options = [
 		{
 			name: 'folder:',
 			description: $i18n.t('search for folders')
@@ -31,19 +31,22 @@
 			description: $i18n.t('search for pinned chats')
 		}
 	];
-	let focused = false;
-	let hovering = false;
+	let focused = $state(false);
+	let hovering = $state(false);
 
-	let filteredOptions = options;
-	$: filteredOptions = options.filter((option) => {
-		return option.name.startsWith(lastWord);
+	let filteredOptions = $derived(
+		options.filter((option) => {
+			return option.name.startsWith(lastWord);
+		})
+	);
+
+	let filteredItems = $state([]);
+
+	$effect(() => {
+		if (lastWord && lastWord !== null) {
+			untrack(() => initItems());
+		}
 	});
-
-	let filteredItems = [];
-
-	$: if (lastWord && lastWord !== null) {
-		initItems();
-	}
 
 	const initItems = async () => {
 		console.log('initItems', lastWord);

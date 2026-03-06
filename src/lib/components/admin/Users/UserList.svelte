@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
 	import { config, user } from '$lib/stores';
-	import { getContext, onDestroy } from 'svelte';
+	import { getContext, onDestroy, untrack } from 'svelte';
 
 	import dayjs from 'dayjs';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
@@ -30,23 +30,23 @@
 
 	const i18n = getContext('i18n');
 
-	let page = 1;
+	let page = $state(1);
 
-	let users = null;
-	let total = null;
+	let users = $state(null);
+	let total = $state(null);
 
-	let query = '';
+	let query = $state('');
 	let searchDebounceTimer: ReturnType<typeof setTimeout>;
-	let orderBy = 'created_at'; // default sort key
-	let direction = 'asc'; // default sort order
+	let orderBy = $state('created_at');
+	let direction = $state('asc');
 
-	let selectedUser = null;
+	let selectedUser = $state(null);
 
-	let showDeleteConfirmDialog = false;
-	let showAddUserModal = false;
+	let showDeleteConfirmDialog = $state(false);
+	let showAddUserModal = $state(false);
 
-	let showUserChatsModal = false;
-	let showEditUserModal = false;
+	let showUserChatsModal = $state(false);
+	let showEditUserModal = $state(false);
 
 	const deleteUserHandler = async (id) => {
 		const res = await deleteUserById(localStorage.token, id).catch((error) => {
@@ -91,17 +91,22 @@
 		}
 	};
 
-	$: if (query !== undefined) {
-		clearTimeout(searchDebounceTimer);
-		searchDebounceTimer = setTimeout(() => {
-			page = 1;
-			getUserList();
-		}, 300);
-	}
+	$effect(() => {
+		query;
+		untrack(() => {
+			clearTimeout(searchDebounceTimer);
+			searchDebounceTimer = setTimeout(() => {
+				page = 1;
+				getUserList();
+			}, 300);
+		});
+	});
 
-	$: if (page !== null && orderBy !== null && direction !== null) {
-		getUserList();
-	}
+	$effect(() => {
+		if (page !== null && orderBy !== null && direction !== null) {
+			untrack(() => getUserList());
+		}
+	});
 
 	onDestroy(() => {
 		clearTimeout(searchDebounceTimer);

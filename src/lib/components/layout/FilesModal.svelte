@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { getContext, onMount, onDestroy } from 'svelte';
+	import { getContext, onMount, onDestroy, untrack } from 'svelte';
 	import type { Writable } from 'svelte/store';
 	import dayjs from 'dayjs';
 
@@ -18,25 +18,25 @@
 
 	const i18n: Writable<any> = getContext('i18n');
 
-	export let show = false;
+	let { show = $bindable(false) } = $props();
 
-	let files: any[] | null = null;
-	let query = '';
-	let orderBy = 'created_at';
-	let direction = 'desc';
+	let files: any[] | null = $state(null);
+	let query = $state('');
+	let orderBy = $state('created_at');
+	let direction = $state('desc');
 
 	let page = 0;
-	let allFilesLoaded = false;
-	let filesLoading = false;
+	let allFilesLoaded = $state(false);
+	let filesLoading = $state(false);
 	let searchDebounceTimer: ReturnType<typeof setTimeout>;
 
-	let selectedFileId: string | null = null;
-	let showDeleteConfirmDialog = false;
+	let selectedFileId: string | null = $state(null);
+	let showDeleteConfirmDialog = $state(false);
 
-	let selectedFile: any = null;
-	let showFileItemModal = false;
+	let selectedFile: any = $state(null);
+	let showFileItemModal = $state(false);
 
-	let shiftKey = false;
+	let shiftKey = $state(false);
 
 	const PAGE_SIZE = 50;
 
@@ -140,13 +140,14 @@
 		showFileItemModal = true;
 	};
 
-	// Debounce query changes
-	$: if (show && query !== undefined) {
-		clearTimeout(searchDebounceTimer);
-		searchDebounceTimer = setTimeout(() => {
-			searchHandler();
-		}, 300);
-	}
+	$effect(() => {
+		if (show && query !== undefined) {
+			clearTimeout(searchDebounceTimer);
+			searchDebounceTimer = setTimeout(() => {
+				untrack(() => searchHandler());
+			}, 300);
+		}
+	});
 
 	onMount(() => {
 		const syncShiftKey = (e: KeyboardEvent | MouseEvent) => {

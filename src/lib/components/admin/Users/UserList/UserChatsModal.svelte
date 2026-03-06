@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 
 	import dayjs from 'dayjs';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
@@ -12,31 +12,30 @@
 
 	const i18n = getContext('i18n');
 
-	export let show = false;
-	export let user;
+	let { show = $bindable(false), user } = $props();
 
-	let chatList = null;
-	let page = 1;
+	let chatList = $state(null);
+	let page = $state(1);
 
-	let query = '';
-	let orderBy = 'updated_at';
-	let direction = 'desc';
+	let query = $state('');
+	let orderBy = $state('updated_at');
+	let direction = $state('desc');
 
-	let filter = {};
-	$: filter = {
+	let allChatsLoaded = $state(false);
+	let chatListLoading = $state(false);
+
+	let searchDebounceTimeout;
+
+	let filter = $derived({
 		...(query ? { query } : {}),
 		...(orderBy ? { order_by: orderBy } : {}),
 		...(direction ? { direction } : {})
-	};
+	});
 
-	$: if (filter !== null) {
-		searchHandler();
-	}
-
-	let allChatsLoaded = false;
-	let chatListLoading = false;
-
-	let searchDebounceTimeout;
+	$effect(() => {
+		filter;
+		untrack(() => searchHandler());
+	});
 
 	const searchHandler = async () => {
 		if (!show) {
@@ -87,15 +86,17 @@
 		chatList = await getChatListByUserId(localStorage.token, user.id, page, filter);
 	};
 
-	$: if (show) {
-		init();
-	} else {
-		chatList = null;
-		page = 1;
+	$effect(() => {
+		if (show) {
+			untrack(() => init());
+		} else {
+			chatList = null;
+			page = 1;
 
-		allChatsLoaded = false;
-		chatListLoading = false;
-	}
+			allChatsLoaded = false;
+			chatListLoading = false;
+		}
+	});
 </script>
 
 <ChatsModal
