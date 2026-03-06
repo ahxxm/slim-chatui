@@ -5,18 +5,16 @@
 
 	const i18n = getContext('i18n');
 
-	export let id = '';
+	let { id = '', sources = [] } = $props();
 
-	export let sources = [];
+	let citations = $state([]);
+	let showPercentage = $state(false);
+	let showRelevance = $state(true);
 
-	let citations = [];
-	let showPercentage = false;
-	let showRelevance = true;
+	let showCitations = $state(false);
+	let showCitationModal = $state(false);
 
-	let showCitations = false;
-	let showCitationModal = false;
-
-	let selectedCitation: any = null;
+	let selectedCitation: any = $state(null);
 
 	export const showSourceModal = (sourceId) => {
 		let index;
@@ -68,7 +66,7 @@
 		return distances.every((d) => d !== undefined && d >= -1 && d <= 1);
 	}
 
-	$: {
+	$effect(() => {
 		citations = sources.reduce((acc, source) => {
 			if (Object.keys(source).length === 0) {
 				return acc;
@@ -78,7 +76,6 @@
 				const metadata = source?.metadata?.[index];
 				const distance = source?.distances?.[index];
 
-				// Within the same citation there could be multiple documents
 				const id = metadata?.source ?? source?.source?.id ?? 'N/A';
 				let _source = source?.source;
 
@@ -111,7 +108,7 @@
 		}, []);
 		showRelevance = calculateShowRelevance(citations);
 		showPercentage = shouldShowPercentage(citations);
-	}
+	});
 
 	const decodeString = (str: string) => {
 		try {

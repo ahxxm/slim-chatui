@@ -1,34 +1,34 @@
 <script lang="ts">
 	import type { Token } from 'marked';
 
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 
 	import { goto } from '$app/navigation';
 	import { models } from '$lib/stores';
 
 	const i18n = getContext('i18n');
 
-	export let token: Token;
+	let { token }: { token: Token } = $props();
 
-	let triggerChar = '';
-	let label = '';
+	let triggerChar = $state('');
+	let label = $state('');
 
-	let idType = null;
-	let id = '';
+	let idType = $state(null);
+	let id = $state('');
 
-	$: if (token) {
-		init();
-	}
+	$effect(() => {
+		token;
+		untrack(() => init());
+	});
 
 	const init = () => {
 		const _id = token?.id;
 		triggerChar = token?.triggerChar ?? '@';
 
-		// split by : and take first part as idType and second part as id
 		const parts = _id?.split(':');
 		if (parts) {
 			idType = parts[0];
-			id = parts.slice(1).join(':'); // in case id contains ':'
+			id = parts.slice(1).join(':');
 		} else {
 			idType = null;
 			id = _id;

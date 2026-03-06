@@ -20,35 +20,36 @@
 
 	const i18n = getContext('i18n');
 
-	// Chats
-	let importFiles;
+	let importFiles = $state();
 
-	let showDeleteConfirmDialog = false;
-	let showFilesModal = false;
+	let showDeleteConfirmDialog = $state(false);
+	let showFilesModal = $state(false);
 
-	let chatImportInputElement: HTMLInputElement;
+	let chatImportInputElement = $state();
 
-	$: if (importFiles) {
-		console.log(importFiles);
+	$effect(() => {
+		if (importFiles) {
+			console.log(importFiles);
 
-		let reader = new FileReader();
-		reader.onload = (event) => {
-			let chats = JSON.parse(event.target.result);
-			console.log(chats);
-			if (getImportOrigin(chats) == 'openai') {
-				try {
-					chats = convertOpenAIChats(chats);
-				} catch (error) {
-					console.log('Unable to import chats:', error);
+			let reader = new FileReader();
+			reader.onload = (event) => {
+				let chats = JSON.parse(event.target.result);
+				console.log(chats);
+				if (getImportOrigin(chats) == 'openai') {
+					try {
+						chats = convertOpenAIChats(chats);
+					} catch (error) {
+						console.log('Unable to import chats:', error);
+					}
 				}
-			}
-			importChatsHandler(chats);
-		};
+				importChatsHandler(chats);
+			};
 
-		if (importFiles.length > 0) {
-			reader.readAsText(importFiles[0]);
+			if (importFiles.length > 0) {
+				reader.readAsText(importFiles[0]);
+			}
 		}
-	}
+	});
 
 	const importChatsHandler = async (_chats) => {
 		const res = await importChats(
@@ -64,7 +65,6 @@
 						updated_at: chat?.updated_at ?? null
 					};
 				} else {
-					// Legacy format
 					return {
 						chat: chat,
 						meta: {},

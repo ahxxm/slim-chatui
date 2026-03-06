@@ -9,7 +9,7 @@
 	dayjs.extend(duration);
 	dayjs.extend(relativeTime);
 
-	import { onMount, tick, getContext, createEventDispatcher } from 'svelte';
+	import { onMount, tick, getContext, createEventDispatcher, untrack } from 'svelte';
 
 	const dispatch = createEventDispatcher();
 
@@ -65,58 +65,55 @@
 
 	const i18n = getContext('i18n');
 
-	export let onChange: Function = () => {};
+	let {
+		onChange = () => {},
+		createMessagePair,
+		stopResponse,
+		autoScroll = $bindable(false),
+		generating = false,
+		atSelectedModel = $bindable(undefined),
+		selectedModels,
+		history,
+		taskIds = null,
+		prompt = $bindable(''),
+		files = $bindable([]),
+		messageQueue = [],
+		onQueueSendNow = (id) => {},
+		onQueueEdit = (id) => {},
+		onQueueDelete = (id) => {},
+		placeholder = ''
+	} = $props();
 
-	export let createMessagePair: Function;
-	export let stopResponse: Function;
+	let activeModelId = $derived(atSelectedModel?.id ?? selectedModels[0]);
 
-	export let autoScroll = false;
-	export let generating = false;
+	let inputContent = $state(null);
 
-	export let atSelectedModel: Model | undefined = undefined;
-	export let selectedModels: [''];
+	let showInputVariablesModal = $state(false);
+	let inputVariablesModalCallback = $state((variableValues) => {});
+	let inputVariables = $state({});
+	let inputVariableValues = $state({});
 
-	$: activeModelId = atSelectedModel?.id ?? selectedModels[0];
-
-	export let history;
-	export let taskIds = null;
-
-	export let prompt = '';
-	export let files = [];
-
-	export let messageQueue: { id: string; prompt: string; files: any[] }[] = [];
-	export let onQueueSendNow: (id: string) => void = () => {};
-	export let onQueueEdit: (id: string) => void = () => {};
-	export let onQueueDelete: (id: string) => void = () => {};
-
-	let inputContent = null;
-
-	let showInputVariablesModal = false;
-	let inputVariablesModalCallback = (variableValues) => {};
-	let inputVariables = {};
-	let inputVariableValues = {};
-
-	$: onChange({
-		prompt,
-		files: files
-			.filter((file) => file.type !== 'image')
-			.map((file) => {
-				return {
-					...file,
-					user: undefined
-				};
-			})
+	$effect(() => {
+		untrack(() => onChange)({
+			prompt,
+			files: files
+				.filter((file) => file.type !== 'image')
+				.map((file) => {
+					return {
+						...file,
+						user: undefined
+					};
+				})
+		});
 	});
 
 	const inputVariableHandler = async (text: string): Promise<string> => {
 		inputVariables = extractInputVariables(text);
 
-		// No variables? return the original text immediately.
 		if (Object.keys(inputVariables).length === 0) {
 			return text;
 		}
 
-		// Show modal and wait for the user's input.
 		showInputVariablesModal = true;
 		return await new Promise<string>((resolve) => {
 			inputVariablesModalCallback = (variableValues) => {
@@ -210,7 +207,6 @@
 			const birthDate = sessionUser?.date_of_birth || '';
 
 			if (birthDate) {
-				// calculate age using date
 				const age = getAge(birthDate);
 				text = text.replaceAll('{{USER_AGE}}', age);
 			}
@@ -335,29 +331,17 @@
 		}
 	};
 
-	let command = '';
-	let suggestions = null;
+	let command = $state('');
+	let suggestions = $state(null);
 
-	let loaded = false;
-	let isComposing = false;
-	// Safari has a bug where compositionend is not triggered correctly #16615
-	// when using the virtual keyboard on iOS.
+	let loaded = $state(false);
+	let isComposing = $state(false);
 	let compositionEndedAt = -2e8;
 	const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 	function inOrNearComposition(event: Event) {
 		if (isComposing) {
 			return true;
 		}
-		// See https://www.stum.de/2016/06/24/handling-ime-events-in-javascript/.
-		// On Japanese input method editors (IMEs), the Enter key is used to confirm character
-		// selection. On Safari, when Enter is pressed, compositionend and keydown events are
-		// emitted. The keydown event triggers newline insertion, which we don't want.
-		// This method returns true if the keydown event should be ignored.
-		// We only ignore it once, as pressing Enter a second time *should* insert a newline.
-		// Furthermore, the keydown event timestamp must be close to the compositionEndedAt timestamp.
-		// This guards against the case where compositionend is triggered without the keyboard
-		// (e.g. character confirmation may be done with the mouse), and keydown is triggered
-		// afterwards- we wouldn't want to ignore the keydown event in this case.
 		if (isSafari && Math.abs(event.timeStamp - compositionEndedAt) < 500) {
 			compositionEndedAt = -2e8;
 			return true;
@@ -365,25 +349,24 @@
 		return false;
 	}
 
-	let chatInputContainerElement;
-	let chatInputElement;
+	let chatInputContainerElement = $state();
+	let chatInputElement = $state();
 
-	let filesInputElement;
-	let commandsElement;
+	let filesInputElement = $state();
+	let commandsElement = $state();
 
-	let inputFiles;
+	let inputFiles = $state();
 
-	let showInputModal = false;
+	let showInputModal = $state(false);
 
-	let dragged = false;
-	let shiftKey = false;
+	let dragged = $state(false);
+	let shiftKey = $state(false);
 
-	let user = null;
-	export let placeholder = '';
+	let user = $state(null);
 
-	$: activeModel = $models.find((m) => m.id === activeModelId);
-	$: visionCapable = activeModel?.info?.meta?.capabilities?.vision ?? true;
-	$: fileUploadCapable = activeModel?.info?.meta?.capabilities?.file_upload ?? true;
+	let activeModel = $derived($models.find((m) => m.id === activeModelId));
+	let visionCapable = $derived(activeModel?.info?.meta?.capabilities?.vision ?? true);
+	let fileUploadCapable = $derived(activeModel?.info?.meta?.capabilities?.file_upload ?? true);
 
 	const scrollToBottom = () => {
 		const element = document.getElementById('messages-container');
@@ -395,38 +378,28 @@
 
 	const screenCaptureHandler = async () => {
 		try {
-			// Request screen media
 			const mediaStream = await navigator.mediaDevices.getDisplayMedia({
 				video: { cursor: 'never' },
 				audio: false
 			});
-			// Once the user selects a screen, temporarily create a video element
 			const video = document.createElement('video');
 			video.srcObject = mediaStream;
-			// Ensure the video loads without affecting user experience or tab switching
 			await video.play();
-			// Set up the canvas to match the video dimensions
 			const canvas = document.createElement('canvas');
 			canvas.width = video.videoWidth;
 			canvas.height = video.videoHeight;
-			// Grab a single frame from the video stream using the canvas
 			const context = canvas.getContext('2d');
 			context.drawImage(video, 0, 0, canvas.width, canvas.height);
-			// Stop all video tracks (stop screen sharing) after capturing the image
 			mediaStream.getTracks().forEach((track) => track.stop());
 
-			// bring back focus to this current tab, so that the user can see the screen capture
 			window.focus();
 
-			// Convert the canvas to a Base64 image URL
 			const imageUrl = canvas.toDataURL('image/png');
 			const blob = await (await fetch(imageUrl)).blob();
 			const file = new File([blob], `screen-capture-${Date.now()}.png`, { type: 'image/png' });
 			inputFilesHandler([file]);
-			// Clean memory: Clear video srcObject
 			video.srcObject = null;
 		} catch (error) {
-			// Handle any errors (e.g., user cancels screen sharing)
 			console.error('Error capturing screen:', error);
 		}
 	};
@@ -488,8 +461,6 @@
 				files = files.filter((item) => item?.itemId !== tempItemId);
 			}
 		} else {
-			// If temporary chat is enabled, we just add the file to the list without uploading it.
-
 			const content = await extractContentFromFile(file).catch((error) => {
 				toast.error(
 					$i18n.t('Failed to extract content from the file: {{error}}', { error: error })
@@ -511,7 +482,7 @@
 				fileItem.status = 'uploaded';
 				fileItem.type = 'text';
 				fileItem.content = content;
-				fileItem.id = uuidv4(); // Temporary ID for the file
+				fileItem.id = uuidv4();
 
 				files = files;
 			}
@@ -536,27 +507,22 @@
 				}
 
 				const compressImageHandler = async (imageUrl, settings = {}, config = {}) => {
-					// Quick shortcut so we don’t do unnecessary work.
 					const settingsCompression = settings?.imageCompression ?? false;
 					const configWidth = config?.file?.image_compression?.width ?? null;
 					const configHeight = config?.file?.image_compression?.height ?? null;
 
-					// If neither settings nor config wants compression, return original URL.
 					if (!settingsCompression && !configWidth && !configHeight) {
 						return imageUrl;
 					}
 
-					// Default to null (no compression unless set)
 					let width = null;
 					let height = null;
 
-					// If user/settings want compression, pick their preferred size.
 					if (settingsCompression) {
 						width = settings?.imageCompressionSize?.width ?? null;
 						height = settings?.imageCompressionSize?.height ?? null;
 					}
 
-					// Apply config limits as an upper bound if any
 					if (configWidth && (width === null || width > configWidth)) {
 						width = configWidth;
 					}
@@ -564,7 +530,6 @@
 						height = configHeight;
 					}
 
-					// Do the compression if required
 					if (width || height) {
 						return await compressImage(imageUrl, width, height);
 					}
@@ -576,7 +541,6 @@
 				reader.onload = async (event) => {
 					let imageUrl = event.target.result;
 
-					// Compress the image if settings or config require it
 					imageUrl = await compressImageHandler(imageUrl, $settings, $config);
 
 					if ($temporaryChatEnabled) {
@@ -605,7 +569,6 @@
 	const onDragOver = (e) => {
 		e.preventDefault();
 
-		// Check if a file is being dragged.
 		if (e.dataTransfer?.types?.includes('Files')) {
 			dragged = true;
 		} else {
@@ -809,7 +772,6 @@
 					<form
 						class="w-full flex flex-col gap-1.5"
 						on:submit|preventDefault={() => {
-							// check if selectedModels support image input
 							dispatch('submit', prompt);
 						}}
 					>
@@ -948,7 +910,6 @@
 												small={true}
 												modal={file?.type === 'file'}
 												on:dismiss={async () => {
-													// Remove from UI state
 													files.splice(fileIdx, 1);
 													files = files;
 												}}
@@ -1024,7 +985,7 @@
 													on:keydown={async (e) => {
 														e = e.detail.event;
 
-														const isCtrlPressed = e.ctrlKey || e.metaKey; // metaKey is for Cmd key on Mac
+														const isCtrlPressed = e.ctrlKey || e.metaKey;
 														const suggestionsContainerElement =
 															document.getElementById('suggestions-container');
 
@@ -1062,10 +1023,6 @@
 																	return;
 																}
 
-																// Uses keyCode '13' for Enter key for chinese/japanese keyboards.
-																//
-																// Depending on the user's settings, it will send the message
-																// either when Enter is pressed or when Ctrl+Enter is pressed.
 																const enterPressed =
 																	($settings?.ctrlEnterToSend ?? false)
 																		? (e.key === 'Enter' || e.keyCode === 13) && isCtrlPressed

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
-	import { getContext, onMount, tick } from 'svelte';
+	import { getContext, onMount, tick, untrack } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { flyAndScale } from '$lib/utils/transitions';
 
@@ -17,22 +17,24 @@
 
 	const i18n = getContext('i18n');
 
-	export let files = [];
+	let {
+		files = $bindable([]),
+		fileUploadEnabled = true,
+		screenCaptureHandler,
+		uploadFilesHandler,
+		inputFilesHandler,
+		onClose,
+		children
+	} = $props();
 
-	export let fileUploadEnabled: boolean = true;
+	let show = $state(false);
+	let tab = $state('');
 
-	export let screenCaptureHandler: Function;
-	export let uploadFilesHandler: Function;
-	export let inputFilesHandler: Function;
-
-	export let onClose: Function;
-
-	let show = false;
-	let tab = '';
-
-	$: if (!fileUploadEnabled && files.length > 0) {
-		files = [];
-	}
+	$effect(() => {
+		if (!fileUploadEnabled && files.length > 0) {
+			files = [];
+		}
+	});
 
 	const detectMobile = () => {
 		const userAgent = navigator.userAgent || navigator.vendor || window.opera;
@@ -82,7 +84,7 @@
 	}}
 >
 	<Tooltip content={$i18n.t('More')}>
-		<slot />
+		{@render children()}
 	</Tooltip>
 
 	<div slot="content">

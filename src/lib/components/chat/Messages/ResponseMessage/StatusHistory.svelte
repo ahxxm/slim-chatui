@@ -1,29 +1,29 @@
 <script>
 	import { getContext } from 'svelte';
+	import { untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import StatusItem from './StatusHistory/StatusItem.svelte';
-	export let statusHistory = [];
-	export let expand = false;
+	let { statusHistory = [], expand = false } = $props();
 
-	let showHistory = true;
+	let showHistory = $state(true);
 
-	$: if (expand) {
-		showHistory = true;
-	} else {
-		showHistory = false;
-	}
+	$effect(() => {
+		if (expand) {
+			showHistory = true;
+		} else {
+			showHistory = false;
+		}
+	});
 
-	let history = [];
-	let status = null;
+	let history = $state([]);
+	let status = $derived(history && history.length > 0 ? history.at(-1) : null);
 
-	$: if (history && history.length > 0) {
-		status = history.at(-1);
-	}
-
-	$: if (JSON.stringify(statusHistory) !== JSON.stringify(history)) {
-		history = statusHistory;
-	}
+	$effect(() => {
+		if (JSON.stringify(statusHistory) !== JSON.stringify(history)) {
+			history = statusHistory;
+		}
+	});
 </script>
 
 {#if history && history.length > 0}

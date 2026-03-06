@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, untrack } from 'svelte';
 	import { onMount, getContext } from 'svelte';
 	import { addUser } from '$lib/apis/auths';
 
@@ -15,27 +15,31 @@
 	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();
 
-	export let show = false;
+	let { show = $bindable(false) } = $props();
 
-	let loading = false;
-	let tab = '';
-	let inputFiles;
+	let loading = $state(false);
+	let tab = $state('');
+	let inputFiles = $state();
 
-	let _user = {
+	let _user = $state({
 		name: '',
 		email: '',
 		password: '',
 		role: 'user'
-	};
+	});
 
-	$: if (show) {
-		_user = {
-			name: '',
-			email: '',
-			password: '',
-			role: 'user'
-		};
-	}
+	$effect(() => {
+		if (show) {
+			untrack(() => {
+				_user = {
+					name: '',
+					email: '',
+					password: '',
+					role: 'user'
+				};
+			});
+		}
+	});
 
 	const submitHandler = async () => {
 		const stopLoading = () => {

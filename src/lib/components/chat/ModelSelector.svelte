@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { models, settings } from '$lib/stores';
 	import { getContext } from 'svelte';
+	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Selector from './ModelSelector/Selector.svelte';
 
 	import { updateUserSettings } from '$lib/apis/users';
 	const i18n = getContext('i18n');
 
-	export let selectedModels = [''];
+	let { selectedModels = $bindable(['']) } = $props();
 
 	const saveDefaultModel = async () => {
 		if (!selectedModels[0]) {
@@ -33,11 +34,13 @@
 		await updateUserSettings(localStorage.token, { ui: $settings });
 	};
 
-	$: if (selectedModels[0] && $models.length > 0) {
-		if (!$models.find((m) => m.id === selectedModels[0])) {
-			selectedModels = [''];
+	$effect(() => {
+		if (selectedModels[0] && $models.length > 0) {
+			if (!$models.find((m) => m.id === selectedModels[0])) {
+				selectedModels = [''];
+			}
 		}
-	}
+	});
 </script>
 
 <div class="flex flex-col w-full items-start">

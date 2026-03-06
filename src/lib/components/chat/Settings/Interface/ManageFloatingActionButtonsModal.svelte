@@ -11,18 +11,17 @@
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 
-	export let show = false;
-	export let onSave = () => {};
-
-	export let floatingActionButtons = null;
+	let { show = $bindable(false), onSave = () => {}, floatingActionButtons = null } = $props();
 
 	const submitHandler = async () => {
 		onSave(floatingActionButtons);
 		show = false;
 	};
 
-	$: if (show) {
-	}
+	$effect(() => {
+		if (show) {
+		}
+	});
 
 	onMount(() => {});
 </script>

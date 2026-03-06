@@ -75,53 +75,49 @@
 		};
 	}
 
-	export let chatId = '';
-	export let history;
-	export let messageId;
+	let {
+		chatId = '',
+		history,
+		messageId,
+		siblings,
+		setInputText = () => {},
+		gotoMessage = () => {},
+		showPreviousMessage,
+		showNextMessage,
+		updateChat,
+		editMessage,
+		deleteMessage,
+		submitMessage,
+		continueResponse,
+		regenerateResponse,
+		addMessages,
+		isLastMessage = true,
+		readOnly = false,
+		editCodeBlock = true,
+		topPadding = false
+	} = $props();
 
-	let message: MessageType = JSON.parse(JSON.stringify(history.messages[messageId]));
-	$: if (history.messages) {
-		if (JSON.stringify(message) !== JSON.stringify(history.messages[messageId])) {
-			message = JSON.parse(JSON.stringify(history.messages[messageId]));
+	let message: MessageType = $state(JSON.parse(JSON.stringify(history.messages[messageId])));
+	$effect(() => {
+		if (history.messages) {
+			if (JSON.stringify(message) !== JSON.stringify(history.messages[messageId])) {
+				message = JSON.parse(JSON.stringify(history.messages[messageId]));
+			}
 		}
-	}
+	});
 
-	export let siblings;
+	let citationsElement = $state();
+	let contentContainerElement = $state();
+	let buttonsContainerElement = $state();
+	let showDeleteConfirm = $state(false);
 
-	export let setInputText: Function = () => {};
-	export let gotoMessage: Function = () => {};
-	export let showPreviousMessage: Function;
-	export let showNextMessage: Function;
+	let model = $derived($models.find((m) => m.id === message.model) ?? null);
 
-	export let updateChat: Function;
-	export let editMessage: Function;
-	export let deleteMessage: Function;
+	let edit = $state(false);
+	let editedContent = $state('');
+	let editTextAreaElement = $state();
 
-	export let submitMessage: Function;
-	export let continueResponse: Function;
-	export let regenerateResponse: Function;
-
-	export let addMessages: Function;
-
-	export let isLastMessage = true;
-	export let readOnly = false;
-	export let editCodeBlock = true;
-	export let topPadding = false;
-
-	let citationsElement: HTMLDivElement;
-
-	let contentContainerElement: HTMLDivElement;
-	let buttonsContainerElement: HTMLDivElement;
-	let showDeleteConfirm = false;
-
-	let model = null;
-	$: model = $models.find((m) => m.id === message.model);
-
-	let edit = false;
-	let editedContent = '';
-	let editTextAreaElement: HTMLTextAreaElement;
-
-	let messageIndexEdit = false;
+	let messageIndexEdit = $state(false);
 
 	const copyToClipboard = async (text) => {
 		text = removeAllDetails(text);
@@ -135,7 +131,6 @@
 	let preprocessedDetailsCache = [];
 
 	function preprocessForEditing(content: string): string {
-		// Replace <details>...</details> with unique ID placeholder
 		const detailsBlocks = [];
 		let i = 0;
 
@@ -144,9 +139,7 @@
 			return `<details id="__DETAIL_${i++}__"/>`;
 		});
 
-		// Store original blocks in the editedContent or globally (see merging later)
 		preprocessedDetailsCache = detailsBlocks;
-
 		return content;
 	}
 
@@ -155,13 +148,11 @@
 			/<details id="__DETAIL_(\d+)__"\/>/g,
 			(_, index) => preprocessedDetailsCache[parseInt(index)] || ''
 		);
-
 		return restoredContent;
 	}
 
 	const editMessageHandler = async () => {
 		edit = true;
-
 		editedContent = preprocessForEditing(message.content);
 
 		await tick();
@@ -181,18 +172,15 @@
 
 		edit = false;
 		editedContent = '';
-
 		await tick();
 	};
 
 	const saveAsCopyHandler = async () => {
 		const messageContent = postprocessAfterEditing(editedContent ? editedContent : '');
-
 		editMessage(message.id, { content: messageContent });
 
 		edit = false;
 		editedContent = '';
-
 		await tick();
 	};
 
@@ -209,13 +197,10 @@
 	const buttonsWheelHandler = (event: WheelEvent) => {
 		if (buttonsContainerElement) {
 			if (buttonsContainerElement.scrollWidth <= buttonsContainerElement.clientWidth) {
-				// If the container is not scrollable, horizontal scroll
 				return;
 			} else {
 				event.preventDefault();
-
 				if (event.deltaY !== 0) {
-					// Adjust horizontal scroll position based on vertical scroll
 					buttonsContainerElement.scrollLeft += event.deltaY;
 				}
 			}
@@ -225,12 +210,10 @@
 	const contentCopyHandler = (e) => {
 		if (contentContainerElement) {
 			e.preventDefault();
-			// Get the selected HTML
 			const selection = window.getSelection();
 			const range = selection.getRangeAt(0);
 			const tempDiv = document.createElement('div');
 
-			// Remove background, color, and font styles
 			tempDiv.appendChild(range.cloneContents());
 
 			tempDiv.querySelectorAll('table').forEach((table) => {
@@ -244,7 +227,6 @@
 				th.style.padding = '4px 8px';
 			});
 
-			// Put cleaned HTML + plain text into clipboard
 			e.clipboardData.setData('text/html', tempDiv.innerHTML);
 			e.clipboardData.setData('text/plain', selection.toString());
 		}
@@ -383,20 +365,16 @@
 									on:input={(e) => {
 										const messagesContainer = document.getElementById('messages-container');
 										const savedScrollTop = messagesContainer?.scrollTop;
-
 										e.target.style.height = '';
 										e.target.style.height = `${e.target.scrollHeight}px`;
-
 										if (messagesContainer) messagesContainer.scrollTop = savedScrollTop;
 									}}
 									on:keydown={(e) => {
 										if (e.key === 'Escape') {
 											document.getElementById('close-edit-message-button')?.click();
 										}
-
 										const isCmdOrCtrlPressed = e.metaKey || e.ctrlKey;
 										const isEnterPressed = e.key === 'Enter';
-
 										if (isCmdOrCtrlPressed && isEnterPressed) {
 											document.getElementById('confirm-edit-message-button')?.click();
 										}
@@ -449,8 +427,6 @@
 							{#if message.content === '' && !message.error && ((model?.info?.meta?.capabilities?.status_updates ?? true) ? (message?.statusHistory ?? [...(message?.status ? [message?.status] : [])]).length === 0 || (message?.statusHistory?.at(-1)?.hidden ?? false) : true)}
 								<Skeleton />
 							{:else if message.content && message.error !== true}
-								<!-- always show message contents even if there's an error -->
-								<!-- unless message.error === true which is legacy error handling, where the error message is stored in message.content -->
 								<ContentRenderer
 									id={`${chatId}-${message.id}`}
 									messageId={message.id}
@@ -472,7 +448,6 @@
 									}}
 									onSourceClick={async (id) => {
 										console.log(id);
-
 										if (citationsElement) {
 											citationsElement?.showSourceModal(id);
 										}
@@ -484,7 +459,6 @@
 										history.messages[message.id].content = history.messages[
 											message.id
 										].content.replace(raw, raw.replace(oldContent, newContent));
-
 										updateChat();
 									}}
 								/>
@@ -569,7 +543,6 @@
 											class="text-sm tracking-widest font-semibold self-center dark:text-gray-100 min-w-fit"
 											on:dblclick={async () => {
 												messageIndexEdit = true;
-
 												await tick();
 												const input = document.getElementById(`message-index-input-${message.id}`);
 												if (input) {
@@ -861,10 +834,8 @@
 								followUps={message?.followUps}
 								onClick={(prompt) => {
 									if ($settings?.insertFollowUpPrompt ?? false) {
-										// Insert the follow-up prompt into the input box
 										setInputText(prompt);
 									} else {
-										// Submit the follow-up prompt directly
 										submitMessage(message?.id, prompt);
 									}
 								}}
@@ -879,11 +850,11 @@
 
 <style>
 	.buttons::-webkit-scrollbar {
-		display: none; /* for Chrome, Safari and Opera */
+		display: none;
 	}
 
 	.buttons {
-		-ms-overflow-style: none; /* IE and Edge */
-		scrollbar-width: none; /* Firefox */
+		-ms-overflow-style: none;
+		scrollbar-width: none;
 	}
 </style>

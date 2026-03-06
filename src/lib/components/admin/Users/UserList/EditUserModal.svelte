@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import dayjs from 'dayjs';
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, untrack } from 'svelte';
 	import { onMount, getContext } from 'svelte';
 
 	import { updateUserById } from '$lib/apis/users';
@@ -16,13 +16,13 @@
 	const dispatch = createEventDispatcher();
 	dayjs.extend(localizedFormat);
 
-	export let show = false;
-	export let selectedUser;
-	export let sessionUser;
+	let { show = $bindable(false), selectedUser, sessionUser } = $props();
 
-	$: if (show) {
-		init();
-	}
+	$effect(() => {
+		if (show) {
+			untrack(() => init());
+		}
+	});
 
 	const init = () => {
 		if (selectedUser) {
@@ -31,13 +31,13 @@
 		}
 	};
 
-	let _user = {
+	let _user = $state({
 		profile_image_url: '',
 		role: 'pending',
 		name: '',
 		email: '',
 		password: ''
-	};
+	});
 
 	const submitHandler = async () => {
 		const res = await updateUserById(localStorage.token, selectedUser.id, _user).catch((error) => {

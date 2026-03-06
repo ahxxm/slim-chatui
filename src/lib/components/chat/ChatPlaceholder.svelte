@@ -14,14 +14,11 @@
 
 	const i18n = getContext('i18n');
 
-	export let modelIds = [];
-	export let atSelectedModel;
+	let { modelIds = [], atSelectedModel, onSelect = (e) => {} } = $props();
 
-	export let onSelect = (e) => {};
+	let mounted = $state(false);
 
-	let mounted = false;
-
-	$: model = $_models.find((m) => m.id === modelIds[0]);
+	let model = $derived($_models.find((m) => m.id === modelIds[0]));
 
 	onMount(() => {
 		mounted = true;
