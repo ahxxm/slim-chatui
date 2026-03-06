@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext, onMount, tick } from 'svelte';
+	import { getContext, onMount, tick, untrack } from 'svelte';
 
 	import { formatFileSize, getLineCount } from '$lib/utils';
 	import { WEBUI_API_BASE_URL } from '$lib/constants';
@@ -12,73 +12,73 @@
 	const i18n = getContext('i18n');
 
 	const CONTENT_PREVIEW_LIMIT = 10000;
-	let expandedContent = false;
+	let expandedContent = $state(false);
 
 	import Modal from './Modal.svelte';
 	import XMark from '../icons/XMark.svelte';
 	import Spinner from './Spinner.svelte';
 
-	export let item;
-	export let show = false;
+	let { item = $bindable(), show = $bindable(false) } = $props();
 
-	let loading = false;
+	let loading = $state(false);
 
-	let isPDF = false;
-	let isAudio = false;
-	let isImage = false;
+	let selectedTab = $state('');
 
-	let selectedTab = '';
-
-	$: isPDF =
+	let isPDF = $derived(
 		item?.meta?.content_type === 'application/pdf' ||
-		(item?.name && item?.name.toLowerCase().endsWith('.pdf'));
+			(item?.name && item?.name.toLowerCase().endsWith('.pdf'))
+	);
 
-	$: isMarkdown =
+	let isMarkdown = $derived(
 		item?.meta?.content_type === 'text/markdown' ||
-		(item?.name && item?.name.toLowerCase().endsWith('.md'));
+			(item?.name && item?.name.toLowerCase().endsWith('.md'))
+	);
 
-	$: isCode =
+	let isCode = $derived(
 		item?.name &&
-		(item.name.toLowerCase().endsWith('.py') ||
-			item.name.toLowerCase().endsWith('.js') ||
-			item.name.toLowerCase().endsWith('.ts') ||
-			item.name.toLowerCase().endsWith('.java') ||
-			item.name.toLowerCase().endsWith('.html') ||
-			item.name.toLowerCase().endsWith('.css') ||
-			item.name.toLowerCase().endsWith('.json') ||
-			item.name.toLowerCase().endsWith('.cpp') ||
-			item.name.toLowerCase().endsWith('.c') ||
-			item.name.toLowerCase().endsWith('.h') ||
-			item.name.toLowerCase().endsWith('.sh') ||
-			item.name.toLowerCase().endsWith('.bash') ||
-			item.name.toLowerCase().endsWith('.yaml') ||
-			item.name.toLowerCase().endsWith('.yml') ||
-			item.name.toLowerCase().endsWith('.xml') ||
-			item.name.toLowerCase().endsWith('.sql') ||
-			item.name.toLowerCase().endsWith('.go') ||
-			item.name.toLowerCase().endsWith('.rs') ||
-			item.name.toLowerCase().endsWith('.php') ||
-			item.name.toLowerCase().endsWith('.rb'));
+			(item.name.toLowerCase().endsWith('.py') ||
+				item.name.toLowerCase().endsWith('.js') ||
+				item.name.toLowerCase().endsWith('.ts') ||
+				item.name.toLowerCase().endsWith('.java') ||
+				item.name.toLowerCase().endsWith('.html') ||
+				item.name.toLowerCase().endsWith('.css') ||
+				item.name.toLowerCase().endsWith('.json') ||
+				item.name.toLowerCase().endsWith('.cpp') ||
+				item.name.toLowerCase().endsWith('.c') ||
+				item.name.toLowerCase().endsWith('.h') ||
+				item.name.toLowerCase().endsWith('.sh') ||
+				item.name.toLowerCase().endsWith('.bash') ||
+				item.name.toLowerCase().endsWith('.yaml') ||
+				item.name.toLowerCase().endsWith('.yml') ||
+				item.name.toLowerCase().endsWith('.xml') ||
+				item.name.toLowerCase().endsWith('.sql') ||
+				item.name.toLowerCase().endsWith('.go') ||
+				item.name.toLowerCase().endsWith('.rs') ||
+				item.name.toLowerCase().endsWith('.php') ||
+				item.name.toLowerCase().endsWith('.rb'))
+	);
 
-	$: isAudio =
+	let isAudio = $derived(
 		(item?.meta?.content_type ?? '').startsWith('audio/') ||
-		(item?.name && item?.name.toLowerCase().endsWith('.mp3')) ||
-		(item?.name && item?.name.toLowerCase().endsWith('.wav')) ||
-		(item?.name && item?.name.toLowerCase().endsWith('.ogg')) ||
-		(item?.name && item?.name.toLowerCase().endsWith('.m4a')) ||
-		(item?.name && item?.name.toLowerCase().endsWith('.webm'));
+			(item?.name && item?.name.toLowerCase().endsWith('.mp3')) ||
+			(item?.name && item?.name.toLowerCase().endsWith('.wav')) ||
+			(item?.name && item?.name.toLowerCase().endsWith('.ogg')) ||
+			(item?.name && item?.name.toLowerCase().endsWith('.m4a')) ||
+			(item?.name && item?.name.toLowerCase().endsWith('.webm'))
+	);
 
-	$: isImage =
+	let isImage = $derived(
 		(item?.meta?.content_type ?? '').startsWith('image/') ||
-		(item?.name &&
-			(item.name.toLowerCase().endsWith('.png') ||
-				item.name.toLowerCase().endsWith('.jpg') ||
-				item.name.toLowerCase().endsWith('.jpeg') ||
-				item.name.toLowerCase().endsWith('.gif') ||
-				item.name.toLowerCase().endsWith('.webp') ||
-				item.name.toLowerCase().endsWith('.svg') ||
-				item.name.toLowerCase().endsWith('.bmp') ||
-				item.name.toLowerCase().endsWith('.ico')));
+			(item?.name &&
+				(item.name.toLowerCase().endsWith('.png') ||
+					item.name.toLowerCase().endsWith('.jpg') ||
+					item.name.toLowerCase().endsWith('.jpeg') ||
+					item.name.toLowerCase().endsWith('.gif') ||
+					item.name.toLowerCase().endsWith('.webp') ||
+					item.name.toLowerCase().endsWith('.svg') ||
+					item.name.toLowerCase().endsWith('.bmp') ||
+					item.name.toLowerCase().endsWith('.ico')))
+	);
 
 	const loadContent = async () => {
 		selectedTab = '';
@@ -101,9 +101,11 @@
 		await tick();
 	};
 
-	$: if (show) {
-		loadContent();
-	}
+	$effect(() => {
+		if (show) {
+			untrack(() => loadContent());
+		}
+	});
 
 	onMount(() => {
 		console.log(item);

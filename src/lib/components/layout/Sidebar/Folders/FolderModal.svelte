@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext, createEventDispatcher, onMount, tick } from 'svelte';
+	import { getContext, createEventDispatcher, tick, untrack } from 'svelte';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
@@ -14,23 +14,29 @@
 	import { getFolderById } from '$lib/apis/folders';
 	const i18n = getContext('i18n');
 
-	export let show = false;
-	export let onSubmit: Function = (e) => {};
+	let {
+		show = $bindable(false),
+		onSubmit = (e) => {},
+		folderId = null,
+		edit = false
+	}: {
+		show?: boolean;
+		onSubmit?: Function;
+		folderId?: string | null;
+		edit?: boolean;
+	} = $props();
 
-	export let folderId = null;
-	export let edit = false;
-
-	let folder = null;
-	let name = '';
-	let meta = {
+	let folder = $state(null);
+	let name = $state('');
+	let meta = $state({
 		background_image_url: null
-	};
-	let data = {
+	});
+	let data = $state({
 		system_prompt: '',
 		files: []
-	};
+	});
 
-	let loading = false;
+	let loading = $state(false);
 
 	const submitHandler = async () => {
 		loading = true;
@@ -79,20 +85,24 @@
 		}
 	};
 
-	$: if (show) {
-		init();
-	}
+	$effect(() => {
+		if (show) {
+			untrack(() => init());
+		}
+	});
 
-	$: if (!show && !edit) {
-		name = '';
-		meta = {
-			background_image_url: null
-		};
-		data = {
-			system_prompt: '',
-			files: []
-		};
-	}
+	$effect(() => {
+		if (!show && !edit) {
+			name = '';
+			meta = {
+				background_image_url: null
+			};
+			data = {
+				system_prompt: '',
+				files: []
+			};
+		}
+	});
 </script>
 
 <Modal size="md" bind:show>

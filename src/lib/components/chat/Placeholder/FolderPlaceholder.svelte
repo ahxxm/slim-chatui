@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext, onMount } from 'svelte';
+	import { untrack } from 'svelte';
 	import type { Writable } from 'svelte/store';
 
 	const i18n: Writable<any> = getContext('i18n');
@@ -10,13 +11,13 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { getChatListByFolderId } from '$lib/apis/chats';
 
-	export let folder: any = null;
+	let { folder = null } = $props();
 
-	let page = 1;
+	let page = $state(1);
 
-	let chats: any[] | null = null;
-	let chatListLoading = false;
-	let allChatsLoaded = false;
+	let chats: any[] | null = $state(null);
+	let chatListLoading = $state(false);
+	let allChatsLoaded = $state(false);
 
 	const loadChats = async () => {
 		chatListLoading = true;
@@ -32,7 +33,6 @@
 			}
 		);
 
-		// once the bottom of the list has been reached (no results) there is no need to continue querying
 		allChatsLoaded = newChatList.length === 0;
 		chats = [...(chats || []), ...(newChatList || [])];
 
@@ -58,9 +58,11 @@
 		}
 	};
 
-	$: if (folder) {
-		setChatList();
-	}
+	$effect(() => {
+		if (folder) {
+			untrack(() => setChatList());
+		}
+	});
 </script>
 
 <div>

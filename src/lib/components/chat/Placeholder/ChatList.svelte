@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext, onMount } from 'svelte';
+	import { untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import dayjs from 'dayjs';
@@ -12,14 +13,14 @@
 
 	dayjs.extend(localizedFormat);
 
-	export let chats = [];
+	let {
+		chats = [],
+		chatListLoading = false,
+		allChatsLoaded = false,
+		loadHandler = null
+	} = $props();
 
-	export let chatListLoading = false;
-	export let allChatsLoaded = false;
-
-	export let loadHandler: Function = null;
-
-	let chatList = null;
+	let chatList = $state(null);
 
 	const init = async () => {
 		if (chats.length === 0) {
@@ -51,12 +52,14 @@
 		init();
 	};
 
-	let orderBy = 'updated_at';
-	let direction = 'desc'; // 'asc' or 'desc'
+	let orderBy = $state('updated_at');
+	let direction = $state('desc');
 
-	$: if (chats) {
-		init();
-	}
+	$effect(() => {
+		if (chats) {
+			untrack(() => init());
+		}
+	});
 </script>
 
 {#if chatList}

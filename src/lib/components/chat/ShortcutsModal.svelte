@@ -15,16 +15,15 @@
 
 	const i18n = getContext('i18n');
 
-	export let show = false;
+	let { show = $bindable(false) } = $props();
 
-	let categorizedShortcuts: CategorizedShortcuts = {};
-	let isMac = false;
+	let isMac = $state(false);
 
 	onMount(() => {
 		isMac = /Mac/i.test(navigator.userAgent);
 	});
 
-	$: {
+	let categorizedShortcuts = $derived.by(() => {
 		const allShortcuts = Object.values(shortcuts).filter((shortcut) => {
 			if (!shortcut.setting) {
 				return true;
@@ -32,7 +31,7 @@
 			return $settings[shortcut.setting.id] === shortcut.setting.value;
 		});
 
-		categorizedShortcuts = allShortcuts.reduce((acc, shortcut) => {
+		return allShortcuts.reduce((acc, shortcut) => {
 			const category = shortcut.category;
 			if (!acc[category]) {
 				acc[category] = [];
@@ -40,7 +39,7 @@
 			acc[category].push(shortcut);
 			return acc;
 		}, {});
-	}
+	});
 </script>
 
 <Modal bind:show>

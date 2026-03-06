@@ -5,18 +5,56 @@
 
 	const i18n = getContext('i18n');
 
-	export let id = '';
+	let { id = '', sources = [] } = $props();
 
-	export let sources = [];
+	let citations = $derived.by(() => {
+		return sources.reduce((acc, source) => {
+			if (Object.keys(source).length === 0) {
+				return acc;
+			}
 
-	let citations = [];
-	let showPercentage = false;
-	let showRelevance = true;
+			source?.document?.forEach((document, index) => {
+				const metadata = source?.metadata?.[index];
+				const distance = source?.distances?.[index];
 
-	let showCitations = false;
-	let showCitationModal = false;
+				const id = metadata?.source ?? source?.source?.id ?? 'N/A';
+				let _source = source?.source;
 
-	let selectedCitation: any = null;
+				if (metadata?.name) {
+					_source = { ..._source, name: metadata.name };
+				}
+
+				if (id.startsWith('http://') || id.startsWith('https://')) {
+					_source = { ..._source, name: id, url: id };
+				}
+
+				const existingSource = acc.find((item) => item.id === id);
+
+				if (existingSource) {
+					existingSource.document.push(document);
+					existingSource.metadata.push(metadata);
+					if (distance !== undefined) existingSource.distances.push(distance);
+				} else {
+					acc.push({
+						id: id,
+						source: _source,
+						document: [document],
+						metadata: metadata ? [metadata] : [],
+						distances: distance !== undefined ? [distance] : []
+					});
+				}
+			});
+
+			return acc;
+		}, []);
+	});
+	let showPercentage = $derived(shouldShowPercentage(citations));
+	let showRelevance = $derived(calculateShowRelevance(citations));
+
+	let showCitations = $state(false);
+	let showCitationModal = $state(false);
+
+	let selectedCitation: any = $state(null);
 
 	export const showSourceModal = (sourceId) => {
 		let index;
@@ -66,51 +104,6 @@
 	function shouldShowPercentage(sources: any[]) {
 		const distances = sources.flatMap((citation) => citation.distances ?? []);
 		return distances.every((d) => d !== undefined && d >= -1 && d <= 1);
-	}
-
-	$: {
-		citations = sources.reduce((acc, source) => {
-			if (Object.keys(source).length === 0) {
-				return acc;
-			}
-
-			source?.document?.forEach((document, index) => {
-				const metadata = source?.metadata?.[index];
-				const distance = source?.distances?.[index];
-
-				// Within the same citation there could be multiple documents
-				const id = metadata?.source ?? source?.source?.id ?? 'N/A';
-				let _source = source?.source;
-
-				if (metadata?.name) {
-					_source = { ..._source, name: metadata.name };
-				}
-
-				if (id.startsWith('http://') || id.startsWith('https://')) {
-					_source = { ..._source, name: id, url: id };
-				}
-
-				const existingSource = acc.find((item) => item.id === id);
-
-				if (existingSource) {
-					existingSource.document.push(document);
-					existingSource.metadata.push(metadata);
-					if (distance !== undefined) existingSource.distances.push(distance);
-				} else {
-					acc.push({
-						id: id,
-						source: _source,
-						document: [document],
-						metadata: metadata ? [metadata] : [],
-						distances: distance !== undefined ? [distance] : []
-					});
-				}
-			});
-
-			return acc;
-		}, []);
-		showRelevance = calculateShowRelevance(citations);
-		showPercentage = shouldShowPercentage(citations);
 	}
 
 	const decodeString = (str: string) => {

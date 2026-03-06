@@ -40,63 +40,65 @@
 	import AdminViewSelector from './Models/AdminViewSelector.svelte';
 	import Pagination from '$lib/components/common/Pagination.svelte';
 
-	let shiftKey = false;
+	let shiftKey = $state(false);
 
-	let modelsImportInProgress = false;
-	let importFiles;
+	let modelsImportInProgress = $state(false);
+	let importFiles = $state();
 	let modelsImportInputElement: HTMLInputElement;
 
-	let models = null;
+	let models = $state(null);
 
 	let workspaceModels = null;
 	let baseModels = null;
 
-	let filteredModels = [];
-	let selectedModelId = null;
+	let filteredModels = $state([]);
+	let selectedModelId = $state(null);
 
-	let showConfigModal = false;
+	let showConfigModal = $state(false);
 
-	let viewOption = ''; // '' = All, 'enabled', 'disabled', 'visible', 'hidden'
+	let viewOption = $state('');
 
 	const perPage = 30;
-	let currentPage = 1;
+	let currentPage = $state(1);
 
-	$: if (models) {
-		filteredModels = models
-			.filter((m) => searchValue === '' || m.name.toLowerCase().includes(searchValue.toLowerCase()))
-			.filter((m) => {
-				if (viewOption === 'enabled') return m?.is_active ?? true;
-				if (viewOption === 'disabled') return !(m?.is_active ?? true);
-				if (viewOption === 'visible') return !(m?.meta?.hidden ?? false);
-				if (viewOption === 'hidden') return m?.meta?.hidden === true;
-				return true; // All
-			})
-			.sort((a, b) => {
-				return (a?.name ?? a?.id ?? '').localeCompare(b?.name ?? b?.id ?? '');
-			});
-	}
+	$effect(() => {
+		if (models) {
+			filteredModels = models
+				.filter(
+					(m) => searchValue === '' || m.name.toLowerCase().includes(searchValue.toLowerCase())
+				)
+				.filter((m) => {
+					if (viewOption === 'enabled') return m?.is_active ?? true;
+					if (viewOption === 'disabled') return !(m?.is_active ?? true);
+					if (viewOption === 'visible') return !(m?.meta?.hidden ?? false);
+					if (viewOption === 'hidden') return m?.meta?.hidden === true;
+					return true;
+				})
+				.sort((a, b) => {
+					return (a?.name ?? a?.id ?? '').localeCompare(b?.name ?? b?.id ?? '');
+				});
+		}
+	});
 
-	let searchValue = '';
+	let searchValue = $state('');
 
-	$: if (searchValue || viewOption !== undefined) {
-		currentPage = 1;
-	}
+	$effect(() => {
+		if (searchValue || viewOption !== undefined) {
+			currentPage = 1;
+		}
+	});
 
 	const enableAllHandler = async () => {
 		const modelsToEnable = filteredModels.filter((m) => !(m.is_active ?? true));
-		// Optimistic UI update
 		modelsToEnable.forEach((m) => (m.is_active = true));
 		models = models;
-		// Sync with server
 		await Promise.all(modelsToEnable.map((model) => toggleModelById(localStorage.token, model.id)));
 	};
 
 	const disableAllHandler = async () => {
 		const modelsToDisable = filteredModels.filter((m) => m.is_active ?? true);
-		// Optimistic UI update
 		modelsToDisable.forEach((m) => (m.is_active = false));
 		models = models;
-		// Sync with server
 		await Promise.all(
 			modelsToDisable.map((model) => toggleModelById(localStorage.token, model.id))
 		);
@@ -183,7 +185,6 @@
 			await toggleModelById(localStorage.token, model.id);
 		}
 
-		// await init();
 		_models.set(await getModels(localStorage.token));
 	};
 

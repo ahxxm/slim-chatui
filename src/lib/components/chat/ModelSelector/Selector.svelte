@@ -4,6 +4,7 @@
 
 	import { flyAndScale } from '$lib/utils/transitions';
 	import { getContext, tick } from 'svelte';
+	import { untrack } from 'svelte';
 
 	import { user, models, mobile, settings } from '$lib/stores';
 	import { getModels } from '$lib/apis';
@@ -14,33 +15,25 @@
 
 	const i18n = getContext('i18n');
 
-	export let id = '';
-	export let value = '';
-	export let placeholder = $i18n.t('Select a model');
-	export let searchEnabled = true;
-	export let searchPlaceholder = $i18n.t('Search a model');
+	let {
+		id = '',
+		value = $bindable(''),
+		placeholder = $i18n.t('Select a model'),
+		searchEnabled = true,
+		searchPlaceholder = $i18n.t('Search a model'),
+		items = [],
+		className = 'w-[32rem]',
+		triggerClassName = 'text-lg',
+		pinModelHandler = (modelId) => {}
+	} = $props();
 
-	export let items: {
-		label: string;
-		value: string;
-		model: Model;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		[key: string]: any;
-	}[] = [];
+	let show = $state(false);
 
-	export let className = 'w-[32rem]';
-	export let triggerClassName = 'text-lg';
+	let selectedModel = $derived(items.find((item) => item.value === value) ?? '');
 
-	export let pinModelHandler: (modelId: string) => void = () => {};
+	let searchValue = $state('');
 
-	let show = false;
-
-	let selectedModel = '';
-	$: selectedModel = items.find((item) => item.value === value) ?? '';
-
-	let searchValue = '';
-
-	let selectedModelIdx = 0;
+	let selectedModelIdx = $state(0);
 
 	const fuse = new Fuse(
 		items.map((item) => ({
@@ -66,17 +59,23 @@
 		}
 	};
 
-	$: if (items) {
-		updateFuse();
-	}
+	$effect(() => {
+		if (items) {
+			untrack(() => updateFuse());
+		}
+	});
 
-	$: filteredItems = (searchValue ? fuse.search(searchValue).map((e) => e.item) : items).filter(
-		(item) => !(item.model?.info?.meta?.hidden ?? false)
+	let filteredItems = $derived(
+		(searchValue ? fuse.search(searchValue).map((e) => e.item) : items).filter(
+			(item) => !(item.model?.info?.meta?.hidden ?? false)
+		)
 	);
 
-	$: if (searchValue !== undefined) {
-		resetView();
-	}
+	$effect(() => {
+		if (searchValue !== undefined) {
+			untrack(() => resetView());
+		}
+	});
 
 	const resetView = async () => {
 		await tick();
@@ -106,13 +105,12 @@
 	const ITEM_HEIGHT = 42;
 	const OVERSCAN = 10;
 
-	let listScrollTop = 0;
-	let listContainer;
+	let listScrollTop = $state(0);
+	let listContainer = $state();
 
-	$: visibleStart = Math.max(0, Math.floor(listScrollTop / ITEM_HEIGHT) - OVERSCAN);
-	$: visibleEnd = Math.min(
-		filteredItems.length,
-		Math.ceil((listScrollTop + 256) / ITEM_HEIGHT) + OVERSCAN
+	let visibleStart = $derived(Math.max(0, Math.floor(listScrollTop / ITEM_HEIGHT) - OVERSCAN));
+	let visibleEnd = $derived(
+		Math.min(filteredItems.length, Math.ceil((listScrollTop + 256) / ITEM_HEIGHT) + OVERSCAN)
 	);
 </script>
 

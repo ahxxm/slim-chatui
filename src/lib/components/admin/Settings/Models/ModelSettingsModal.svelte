@@ -1,7 +1,7 @@
 <script>
 	import { toast } from 'svelte-sonner';
 
-	import { createEventDispatcher, getContext, onMount } from 'svelte';
+	import { createEventDispatcher, getContext, onMount, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();
 
@@ -25,31 +25,33 @@
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
 
-	export let show = false;
-	export let initHandler = () => {};
+	let { show = $bindable(false), initHandler = () => {} } = $props();
 
-	let config = null;
+	let config = $state(null);
 
-	let selectedModelId = '';
-	let defaultModelIds = [];
+	let selectedModelId = $state('');
+	let defaultModelIds = $state([]);
 
-	let selectedPinnedModelId = '';
-	let defaultPinnedModelIds = [];
+	let selectedPinnedModelId = $state('');
+	let defaultPinnedModelIds = $state([]);
 
-	let loading = false;
-	let showResetModal = false;
-	let showDefaultCapabilities = false;
-	let showDefaultParams = false;
-	let showDefaultPromptSuggestions = false;
+	let loading = $state(false);
+	let showResetModal = $state(false);
+	let showDefaultCapabilities = $state(false);
+	let showDefaultParams = $state(false);
+	let showDefaultPromptSuggestions = $state(false);
 
-	let defaultCapabilities = {};
-	let defaultParams = {};
+	let defaultCapabilities = $state({});
+	let defaultParams = $state({});
 
-	let promptSuggestions = [];
+	let promptSuggestions = $state([]);
 
-	$: if (show) {
-		init();
-	}
+	$effect(() => {
+		if (show) {
+			untrack(() => init());
+		}
+	});
+
 	const init = async () => {
 		config = await getModelsConfig(localStorage.token);
 

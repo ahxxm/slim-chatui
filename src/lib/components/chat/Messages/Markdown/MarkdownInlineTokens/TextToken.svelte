@@ -1,11 +1,9 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 
-	export let token;
-	export let done = true;
+	let { token, done = true } = $props();
 
-	let texts = [];
-	$: texts = (token?.raw ?? '').split(' ');
+	let texts = $derived((token?.raw ?? '').split(' '));
 </script>
 
 {#if done}

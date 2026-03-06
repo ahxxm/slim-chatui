@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { getContext, onMount } from 'svelte';
+	import { getContext, onMount, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import { settings } from '$lib/stores';
@@ -16,28 +16,34 @@
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import Textarea from './common/Textarea.svelte';
 
-	export let onSubmit: Function = () => {};
-	export let onDelete: Function = () => {};
+	let {
+		onSubmit = () => {},
+		onDelete = () => {},
+		show = $bindable(false),
+		edit = false,
+		connection = null
+	}: {
+		onSubmit?: Function;
+		onDelete?: Function;
+		show?: boolean;
+		edit?: boolean;
+		connection?: any;
+	} = $props();
 
-	export let show = false;
-	export let edit = false;
+	let url = $state('');
+	let key = $state('');
+	let auth_type = $state('bearer');
 
-	export let connection = null;
+	let prefixId = $state('');
+	let enable = $state(true);
+	let apiType = $state(''); // '' = chat completions (default), 'responses' = Responses API
 
-	let url = '';
-	let key = '';
-	let auth_type = 'bearer';
+	let headers = $state('');
 
-	let prefixId = '';
-	let enable = true;
-	let apiType = ''; // '' = chat completions (default), 'responses' = Responses API
+	let modelId = $state('');
+	let modelIds = $state([]);
 
-	let headers = '';
-
-	let modelId = '';
-	let modelIds = [];
-
-	let loading = false;
+	let loading = $state(false);
 
 	const verifyOpenAIHandler = async () => {
 		// remove trailing slash from url
@@ -150,9 +156,11 @@
 		}
 	};
 
-	$: if (show) {
-		init();
-	}
+	$effect(() => {
+		if (show) {
+			untrack(() => init());
+		}
+	});
 
 	onMount(() => {
 		init();

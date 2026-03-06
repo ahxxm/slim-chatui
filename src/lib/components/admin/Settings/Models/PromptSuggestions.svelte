@@ -1,14 +1,14 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	import { saveAs } from 'file-saver';
 	import { toast } from 'svelte-sonner';
 	import Plus from '$lib/components/icons/Plus.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	const i18n = getContext('i18n');
 
-	export let promptSuggestions = [];
+	let { promptSuggestions = $bindable([]) } = $props();
 
-	let _promptSuggestions = [];
+	let _promptSuggestions = $state([]);
 
 	const setPromptSuggestions = () => {
 		_promptSuggestions = promptSuggestions.map((s) => {
@@ -21,9 +21,11 @@
 		});
 	};
 
-	$: if (promptSuggestions) {
-		setPromptSuggestions();
-	}
+	$effect(() => {
+		if (promptSuggestions) {
+			untrack(() => setPromptSuggestions());
+		}
+	});
 </script>
 
 <div class=" space-y-3">
@@ -70,7 +72,7 @@
 
 					reader.readAsText(files[0]);
 
-					e.target.value = ''; // Reset the input value
+					e.target.value = '';
 				}}
 			/>
 

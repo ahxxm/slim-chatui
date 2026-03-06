@@ -1,17 +1,24 @@
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { showSidebar } from '$lib/stores';
 	import AddFilesPlaceholder from '$lib/components/AddFilesPlaceholder.svelte';
 
-	export let show = false;
-	let overlayElement = null;
+	let { show = false } = $props();
+	let overlayElement = $state(null);
 
-	$: if (show && overlayElement) {
-		document.body.appendChild(overlayElement);
-		document.body.style.overflow = 'hidden';
-	} else if (overlayElement) {
-		document.body.removeChild(overlayElement);
-		document.body.style.overflow = 'unset';
-	}
+	$effect(() => {
+		if (show && overlayElement) {
+			untrack(() => {
+				document.body.appendChild(overlayElement);
+				document.body.style.overflow = 'hidden';
+			});
+		} else if (overlayElement) {
+			untrack(() => {
+				document.body.removeChild(overlayElement);
+				document.body.style.overflow = 'unset';
+			});
+		}
+	});
 </script>
 
 {#if show}

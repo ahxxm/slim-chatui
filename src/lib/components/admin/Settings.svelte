@@ -1,5 +1,5 @@
 <script>
-	import { getContext, tick, onMount } from 'svelte';
+	import { getContext, tick, onMount, untrack } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
@@ -18,21 +18,21 @@
 
 	const i18n = getContext('i18n');
 
-	let selectedTab = 'general';
+	let selectedTab = $state('general');
 
-	// Get current tab from URL pathname, default to 'general'
-	$: {
+	$effect(() => {
 		const pathParts = $page.url.pathname.split('/');
 		const tabFromPath = pathParts[pathParts.length - 1];
 		selectedTab = ['general', 'connections', 'models', 'interface', 'db'].includes(tabFromPath)
 			? tabFromPath
 			: 'general';
-	}
+	});
 
-	$: if (selectedTab) {
-		// scroll to selectedTab
-		scrollToTab(selectedTab);
-	}
+	$effect(() => {
+		if (selectedTab) {
+			untrack(() => scrollToTab(selectedTab));
+		}
+	});
 
 	const scrollToTab = (tabId) => {
 		const tabElement = document.getElementById(tabId);
@@ -41,9 +41,9 @@
 		}
 	};
 
-	let search = '';
+	let search = $state('');
 	let searchDebounceTimeout;
-	let filteredSettings = [];
+	let filteredSettings = $state([]);
 
 	const allSettings = [
 		{
@@ -137,14 +137,12 @@
 		if (containerElement) {
 			containerElement.addEventListener('wheel', function (event) {
 				if (event.deltaY !== 0) {
-					// Adjust horizontal scroll position based on vertical scroll
 					containerElement.scrollLeft += event.deltaY;
 				}
 			});
 		}
 
 		setFilteredSettings();
-		// Scroll to the selected tab on mount
 		scrollToTab(selectedTab);
 	});
 </script>

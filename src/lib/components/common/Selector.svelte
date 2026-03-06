@@ -10,24 +10,27 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let value = '';
-	export let placeholder = $i18n.t('Select a model');
-	export let searchEnabled = true;
-	export let searchPlaceholder = $i18n.t('Search a model');
+	let {
+		value = $bindable(''),
+		placeholder = $i18n.t('Select a model'),
+		searchEnabled = true,
+		searchPlaceholder = $i18n.t('Search a model'),
+		items = [
+			{ value: 'mango', label: 'Mango' },
+			{ value: 'watermelon', label: 'Watermelon' },
+			{ value: 'apple', label: 'Apple' },
+			{ value: 'pineapple', label: 'Pineapple' },
+			{ value: 'orange', label: 'Orange' }
+		]
+	} = $props();
 
-	export let items = [
-		{ value: 'mango', label: 'Mango' },
-		{ value: 'watermelon', label: 'Watermelon' },
-		{ value: 'apple', label: 'Apple' },
-		{ value: 'pineapple', label: 'Pineapple' },
-		{ value: 'orange', label: 'Orange' }
-	];
+	let searchValue = $state('');
 
-	let searchValue = '';
-
-	$: filteredItems = searchValue
-		? items.filter((item) => item.value.toLowerCase().includes(searchValue.toLowerCase()))
-		: items;
+	let filteredItems = $derived(
+		searchValue
+			? items.filter((item) => item.value.toLowerCase().includes(searchValue.toLowerCase()))
+			: items
+	);
 </script>
 
 <Select.Root

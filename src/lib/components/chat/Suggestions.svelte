@@ -7,61 +7,30 @@
 
 	const i18n = getContext('i18n');
 
-	export let suggestionPrompts = [];
-	export let className = '';
-	export let inputValue = '';
-	export let onSelect = (e) => {};
+	let { suggestionPrompts = [], className = '', inputValue = '', onSelect = (e) => {} } = $props();
 
-	let sortedPrompts = [];
+	let sortedPrompts = $state([]);
 
 	const fuseOptions = {
 		keys: ['content', 'title'],
 		threshold: 0.5
 	};
 
-	let fuse;
-	let filteredPrompts = [];
+	let fuse = $derived(new Fuse(sortedPrompts, fuseOptions));
 
-	// Initialize Fuse
-	$: fuse = new Fuse(sortedPrompts, fuseOptions);
-
-	// Update the filteredPrompts if inputValue changes
-	// Only increase version if something wirklich geändert hat
-	$: getFilteredPrompts(inputValue);
-
-	// Helper function to check if arrays are the same
-	// (based on unique IDs oder content)
-	function arraysEqual(a, b) {
-		if (a.length !== b.length) return false;
-		for (let i = 0; i < a.length; i++) {
-			if ((a[i].id ?? a[i].content) !== (b[i].id ?? b[i].content)) {
-				return false;
-			}
+	let filteredPrompts = $derived.by(() => {
+		if (inputValue.length > 500) return [];
+		if (inputValue.trim() && fuse) {
+			return fuse.search(inputValue.trim()).map((result) => result.item);
 		}
-		return true;
-	}
+		return sortedPrompts;
+	});
 
-	const getFilteredPrompts = (inputValue) => {
-		if (inputValue.length > 500) {
-			filteredPrompts = [];
-		} else {
-			const newFilteredPrompts =
-				inputValue.trim() && fuse
-					? fuse.search(inputValue.trim()).map((result) => result.item)
-					: sortedPrompts;
-
-			// Compare with the oldFilteredPrompts
-			// If there's a difference, update array + version
-			if (!arraysEqual(filteredPrompts, newFilteredPrompts)) {
-				filteredPrompts = newFilteredPrompts;
-			}
+	$effect(() => {
+		if (suggestionPrompts) {
+			sortedPrompts = [...(suggestionPrompts ?? [])].sort(() => Math.random() - 0.5);
 		}
-	};
-
-	$: if (suggestionPrompts) {
-		sortedPrompts = [...(suggestionPrompts ?? [])].sort(() => Math.random() - 0.5);
-		getFilteredPrompts(inputValue);
-	}
+	});
 </script>
 
 <div class="mb-1 flex gap-1 text-xs font-medium items-center text-gray-600 dark:text-gray-400">
@@ -69,14 +38,12 @@
 		<Bolt />
 		{$i18n.t('Suggested')}
 	{:else}
-		<!-- Keine Vorschläge -->
-
 		<div
 			class="flex w-full {$settings?.landingPageMode === 'chat'
 				? ' -mt-1'
 				: 'text-center items-center justify-center'}  self-start text-gray-600 dark:text-gray-400"
 		>
-			{$WEBUI_NAME} ‧ v{WEBUI_VERSION}
+			{$WEBUI_NAME} &#8231; v{WEBUI_VERSION}
 		</div>
 	{/if}
 </div>
@@ -122,7 +89,6 @@
 </div>
 
 <style>
-	/* Waterfall animation for the suggestions */
 	@keyframes fadeInUp {
 		0% {
 			opacity: 0;

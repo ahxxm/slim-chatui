@@ -12,24 +12,20 @@
 	import footnoteExtension from '$lib/utils/marked/footnote-extension';
 	import citationExtension from '$lib/utils/marked/citation-extension';
 
-	export let id = '';
-	export let content;
-	export let done = true;
-	export let model = null;
-	export let save = false;
-
-	export let paragraphTag = 'p';
-	export let editCodeBlock = true;
-	export let topPadding = false;
-
-	export let sourceIds = [];
-
-	export let onSave = () => {};
-
-	export let onSourceClick = () => {};
-	export let onTaskClick = () => {};
-
-	let tokens = [];
+	let {
+		id = '',
+		content,
+		done = true,
+		model = null,
+		save = false,
+		paragraphTag = 'p',
+		editCodeBlock = true,
+		topPadding = false,
+		sourceIds = [],
+		onSave = () => {},
+		onSourceClick = () => {},
+		onTaskClick = () => {}
+	} = $props();
 
 	const options = {
 		throwOnError: false,
@@ -49,13 +45,11 @@
 		]
 	});
 
-	$: (async () => {
-		if (content) {
-			tokens = marked.lexer(
-				replaceTokens(processResponseContent(content), model?.name, $user?.name)
-			);
-		}
-	})();
+	let tokens = $derived(
+		content
+			? marked.lexer(replaceTokens(processResponseContent(content), model?.name, $user?.name))
+			: []
+	);
 </script>
 
 {#key id}

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Fuse from 'fuse.js';
 
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 
 	import { models } from '$lib/stores';
 	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
@@ -9,11 +9,9 @@
 
 	const i18n = getContext('i18n');
 
-	export let query = '';
-	export let onSelect = (e) => {};
+	let { query = '', onSelect = (e) => {}, filteredItems = $bindable([]) } = $props();
 
-	let selectedIdx = 0;
-	export let filteredItems = [];
+	let selectedIdx = $state(0);
 
 	let fuse = new Fuse(
 		$models
@@ -33,15 +31,19 @@
 		}
 	);
 
-	$: filteredItems = query
-		? fuse.search(query).map((e) => {
-				return e.item;
-			})
-		: $models.filter((model) => !model?.info?.meta?.hidden);
+	$effect(() => {
+		filteredItems = query
+			? fuse.search(query).map((e) => {
+					return e.item;
+				})
+			: $models.filter((model) => !model?.info?.meta?.hidden);
+	});
 
-	$: if (query) {
-		selectedIdx = 0;
-	}
+	$effect(() => {
+		if (query) {
+			selectedIdx = 0;
+		}
+	});
 
 	export const selectUp = () => {
 		selectedIdx = Math.max(0, selectedIdx - 1);

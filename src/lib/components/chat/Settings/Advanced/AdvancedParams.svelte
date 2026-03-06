@@ -5,11 +5,6 @@
 
 	const i18n = getContext('i18n');
 
-	export let onChange: (params: any) => void = () => {};
-
-	export let admin = false;
-	export let custom = false;
-
 	const defaultParams = {
 		stream_delta_chunk_size: null,
 		seed: null,
@@ -21,10 +16,18 @@
 		top_p: null
 	};
 
-	export let params = defaultParams;
-	$: if (params) {
-		onChange(params);
-	}
+	let {
+		onChange = (params: any) => {},
+		admin = false,
+		custom = false,
+		params = $bindable(defaultParams)
+	} = $props();
+
+	$effect(() => {
+		if (params) {
+			onChange(params);
+		}
+	});
 </script>
 
 <div class=" space-y-1 text-xs pb-safe-bottom">

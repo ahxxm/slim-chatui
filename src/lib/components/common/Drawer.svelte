@@ -1,14 +1,11 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { flyAndScale } from '$lib/utils/transitions';
 	import { fade, fly, slide } from 'svelte/transition';
 
-	export let show = false;
-	export let className = '';
-	export let onClose = () => {};
+	let { show = $bindable(false), className = '', onClose = () => {} } = $props();
 
-	let modalElement = null;
-	let mounted = false;
+	let modalElement = $state(null);
 
 	const handleKeyDown = (event: KeyboardEvent) => {
 		if (event.key === 'Escape' && isTopModal()) {
@@ -22,23 +19,21 @@
 		return modals.length && modals[modals.length - 1] === modalElement;
 	};
 
-	onMount(() => {
-		mounted = true;
-	});
+	$effect(() => {
+		if (show && modalElement) {
+			document.body.appendChild(modalElement);
+			window.addEventListener('keydown', handleKeyDown);
+			document.body.style.overflow = 'hidden';
+		} else if (modalElement) {
+			onClose();
+			window.removeEventListener('keydown', handleKeyDown);
 
-	$: if (show && modalElement) {
-		document.body.appendChild(modalElement);
-		window.addEventListener('keydown', handleKeyDown);
-		document.body.style.overflow = 'hidden';
-	} else if (modalElement) {
-		onClose();
-		window.removeEventListener('keydown', handleKeyDown);
-
-		if (document.body.contains(modalElement)) {
-			document.body.removeChild(modalElement);
-			document.body.style.overflow = 'unset';
+			if (document.body.contains(modalElement)) {
+				document.body.removeChild(modalElement);
+				document.body.style.overflow = 'unset';
+			}
 		}
-	}
+	});
 
 	onDestroy(() => {
 		show = false;

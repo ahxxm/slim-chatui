@@ -15,29 +15,6 @@
 	import Skeleton from '../Messages/Skeleton.svelte';
 	import { chatId, socket } from '$lib/stores';
 
-	export let id = '';
-	export let messageId = '';
-
-	export let model = null;
-	export let messages = [];
-	export let actions = [];
-	export let onAdd = (e) => {};
-
-	let floatingInput = false;
-	let selectedAction = null;
-
-	let selectedText = '';
-	let floatingInputValue = '';
-
-	let content = '';
-	let responseContent = null;
-	let responseDone = false;
-	let controller = null;
-
-	$: if (actions.length === 0) {
-		actions = DEFAULT_ACTIONS;
-	}
-
 	const DEFAULT_ACTIONS = [
 		{
 			id: 'ask',
@@ -53,6 +30,28 @@
 			prompt: `{{SELECTED_CONTENT}}\n\n\n${$i18n.t('Explain')}`
 		}
 	];
+
+	let {
+		id = '',
+		messageId = '',
+		model = null,
+		messages = [],
+		actions: actionsProp = [],
+		onAdd = (e) => {}
+	} = $props();
+
+	let actions = $derived(actionsProp.length > 0 ? actionsProp : DEFAULT_ACTIONS);
+
+	let floatingInput = $state(false);
+	let selectedAction = $state(null);
+
+	let selectedText = $state('');
+	let floatingInputValue = $state('');
+
+	let content = $state('');
+	let responseContent = $state(null);
+	let responseDone = $state(false);
+	let controller = $state(null);
 
 	const autoScroll = async () => {
 		const responseContainer = document.getElementById('response-container');

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
 	import { flyAndScale } from '$lib/utils/transitions';
-	import { getContext, createEventDispatcher } from 'svelte';
+	import { getContext, createEventDispatcher, untrack } from 'svelte';
 
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
@@ -27,19 +27,26 @@
 
 	const i18n = getContext('i18n');
 
-	export let moveChatHandler: Function;
+	let {
+		moveChatHandler,
+		cloneChatHandler,
+		renameHandler,
+		deleteHandler,
+		onClose,
+		chatId = ''
+	}: {
+		moveChatHandler: Function;
+		cloneChatHandler: Function;
+		renameHandler: Function;
+		deleteHandler: Function;
+		onClose: Function;
+		chatId?: string;
+	} = $props();
 
-	export let cloneChatHandler: Function;
-	export let renameHandler: Function;
-	export let deleteHandler: Function;
-	export let onClose: Function;
+	let show = $state(false);
+	let pinned = $state(false);
 
-	export let chatId = '';
-
-	let show = false;
-	let pinned = false;
-
-	let chat = null;
+	let chat = $state(null);
 
 	const pinHandler = async () => {
 		await toggleChatPinnedStatusById(localStorage.token, chatId);
@@ -85,9 +92,11 @@
 		}
 	};
 
-	$: if (show) {
-		checkPinned();
-	}
+	$effect(() => {
+		if (show) {
+			untrack(() => checkPinned());
+		}
+	});
 </script>
 
 <Dropdown

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext, onMount, tick } from 'svelte';
+	import { getContext, onMount, tick, untrack } from 'svelte';
 	import { models, config } from '$lib/stores';
 
 	import { toast } from 'svelte-sonner';
@@ -11,13 +11,10 @@
 
 	const i18n = getContext('i18n');
 
-	export let show = false;
-	export let variables = {};
+	let { show = $bindable(false), variables = {}, onSave = (e) => {} } = $props();
 
-	export let onSave = (e) => {};
-
-	let loading = false;
-	let variableValues = {};
+	let loading = $state(false);
+	let variableValues = $state({});
 
 	const submitHandler = async () => {
 		onSave(variableValues);
@@ -45,9 +42,11 @@
 		}
 	};
 
-	$: if (show) {
-		init();
-	}
+	$effect(() => {
+		if (show) {
+			untrack(() => init());
+		}
+	});
 </script>
 
 <Modal bind:show size="md">
@@ -145,7 +144,6 @@
 																value={variableValues[variable]}
 																id="input-variable-{idx}"
 																on:input={(e) => {
-																	// Convert the color value to uppercase immediately
 																	variableValues[variable] = e.target.value.toUpperCase();
 																}}
 																{...variableAttributes}

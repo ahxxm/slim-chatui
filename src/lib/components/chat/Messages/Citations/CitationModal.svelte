@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext, onMount, tick } from 'svelte';
+	import { getContext, onMount, tick, untrack } from 'svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Markdown from '$lib/components/chat/Messages/Markdown.svelte';
@@ -14,12 +14,14 @@
 	const CONTENT_PREVIEW_LIMIT = 10000;
 	let expandedDocs: Set<number> = new Set();
 
-	export let show = false;
-	export let citation;
-	export let showPercentage = false;
-	export let showRelevance = true;
+	let {
+		show = $bindable(false),
+		citation,
+		showPercentage = false,
+		showRelevance = true
+	} = $props();
 
-	let mergedDocuments = [];
+	let mergedDocuments = $state([]);
 
 	function calculatePercentage(distance: number) {
 		if (typeof distance !== 'number') return null;
@@ -38,22 +40,26 @@
 		return 'bg-red-200 dark:bg-red-800 text-red-800 dark:text-red-200';
 	}
 
-	$: if (citation) {
-		expandedDocs = new Set();
-		mergedDocuments = citation.document?.map((c, i) => {
-			return {
-				source: citation.source,
-				document: c,
-				metadata: citation.metadata?.[i],
-				distance: citation.distances?.[i]
-			};
-		});
-		if (mergedDocuments.every((doc) => doc.distance !== undefined)) {
-			mergedDocuments = mergedDocuments.sort(
-				(a, b) => (b.distance ?? Infinity) - (a.distance ?? Infinity)
-			);
+	$effect(() => {
+		if (citation) {
+			untrack(() => {
+				expandedDocs = new Set();
+				mergedDocuments = citation.document?.map((c, i) => {
+					return {
+						source: citation.source,
+						document: c,
+						metadata: citation.metadata?.[i],
+						distance: citation.distances?.[i]
+					};
+				});
+				if (mergedDocuments.every((doc) => doc.distance !== undefined)) {
+					mergedDocuments = mergedDocuments.sort(
+						(a, b) => (b.distance ?? Infinity) - (a.distance ?? Infinity)
+					);
+				}
+			});
 		}
-	}
+	});
 
 	const decodeString = (str: string) => {
 		try {
@@ -76,7 +82,6 @@
 
 		if (!baseUrl || !content) return baseUrl;
 
-		// Extract first and last words for text fragment, filtering out URLs and emojis
 		const words = content
 			.trim()
 			.replace(/\s+/g, ' ')

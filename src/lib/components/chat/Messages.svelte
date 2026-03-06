@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { v4 as uuidv4 } from 'uuid';
 	import { settings, user as _user, temporaryChatEnabled, refreshChatList } from '$lib/stores';
-	import { tick, getContext, createEventDispatcher } from 'svelte';
+	import { tick, getContext, createEventDispatcher, untrack } from 'svelte';
 	const dispatch = createEventDispatcher();
 
 	import { toast } from 'svelte-sonner';
@@ -16,41 +16,51 @@
 
 	const i18n = getContext('i18n');
 
-	export let className = 'h-full flex pt-8';
+	let {
+		className = 'h-full flex pt-8',
+		chatId = '',
+		user = $_user,
+		history = $bindable({ messages: {}, currentId: null }),
+		selectedModels = [],
+		atSelectedModel = undefined,
+		setInputText = () => {},
+		sendMessage,
+		continueResponse,
+		regenerateResponse,
+		showMessage = () => {},
+		submitMessage = () => {},
+		addMessages = () => {},
+		readOnly = false,
+		editCodeBlock = true,
+		topPadding = false,
+		bottomPadding = false,
+		autoScroll = $bindable(undefined),
+		onSelect = (e) => {},
+		messagesCount = $bindable(20)
+	} = $props();
 
-	export let chatId = '';
-	export let user = $_user;
+	let messages: any[] = $derived.by(() => {
+		if (!history.currentId) return [];
 
-	export let history: ChatHistory = { messages: {}, currentId: null };
-	export let selectedModels: string[] = [];
-	export let atSelectedModel: any = undefined;
+		let _messages = [];
+		let message = history.messages[history.currentId];
+		const visitedMessageIds = new Set();
 
-	let messages: any[] = [];
+		while (message && (messagesCount !== null ? _messages.length <= messagesCount : true)) {
+			if (visitedMessageIds.has(message.id)) {
+				console.warn('Circular dependency detected in message history', message.id);
+				break;
+			}
+			visitedMessageIds.add(message.id);
+			_messages.unshift({ ...message });
+			message = message.parentId !== null ? history.messages[message.parentId] : null;
+		}
 
-	export let setInputText: Function = () => {};
-
-	export let sendMessage: Function;
-	export let continueResponse: Function;
-	export let regenerateResponse: Function;
-
-	export let showMessage: Function = () => {};
-	export let submitMessage: Function = () => {};
-	export let addMessages: Function = () => {};
-
-	export let readOnly = false;
-	export let editCodeBlock = true;
-
-	export let topPadding = false;
-	export let bottomPadding = false;
-	export let autoScroll;
-
-	export let onSelect = (e) => {};
-
-	export let messagesCount: number | null = 20;
-	let messagesLoading = false;
+		return _messages;
+	});
+	let messagesLoading = $state(false);
 
 	const loadMoreMessages = async () => {
-		// scroll slightly down to disable continuous loading
 		const element = document.getElementById('messages-container');
 		element.scrollTop = element.scrollTop + 100;
 
@@ -62,34 +72,11 @@
 		messagesLoading = false;
 	};
 
-	$: if (history.currentId) {
-		let _messages = [];
-
-		let message = history.messages[history.currentId];
-		const visitedMessageIds = new Set();
-
-		while (message && (messagesCount !== null ? _messages.length <= messagesCount : true)) {
-			if (visitedMessageIds.has(message.id)) {
-				console.warn('Circular dependency detected in message history', message.id);
-				break;
-			}
-			visitedMessageIds.add(message.id);
-
-			_messages.unshift({ ...message });
-			message = message.parentId !== null ? history.messages[message.parentId] : null;
+	$effect(() => {
+		if (autoScroll && bottomPadding) {
+			tick().then(() => untrack(() => scrollToBottom()));
 		}
-
-		messages = _messages;
-	} else {
-		messages = [];
-	}
-
-	$: if (autoScroll && bottomPadding) {
-		(async () => {
-			await tick();
-			scrollToBottom();
-		})();
-	}
+	});
 
 	const scrollToBottom = () => {
 		const element = document.getElementById('messages-container');
@@ -110,7 +97,6 @@
 	};
 
 	const gotoMessage = async (message, idx) => {
-		// Determine the correct sibling list (either parent's children or root messages)
 		let siblings;
 		if (message.parentId !== null) {
 			siblings = history.messages[message.parentId].childrenIds;
@@ -120,14 +106,11 @@
 				.map((msg) => msg.id);
 		}
 
-		// Clamp index to a valid range
 		idx = Math.max(0, Math.min(idx, siblings.length - 1));
 
 		let messageId = siblings[idx];
 
-		// If we're navigating to a different message
 		if (message.id !== messageId) {
-			// Drill down to the deepest child of that branch
 			let messageChildrenIds = history.messages[messageId].childrenIds;
 			while (messageChildrenIds.length !== 0) {
 				messageId = messageChildrenIds.at(-1);
@@ -139,7 +122,6 @@
 
 		await tick();
 
-		// Optional auto-scroll
 		if ($settings?.scrollOnBranchChange ?? true) {
 			const element = document.getElementById('messages-container');
 			autoScroll = element.scrollHeight - element.scrollTop <= element.clientHeight + 50;
@@ -255,7 +237,6 @@
 		}
 		if (history.messages[messageId].role === 'user') {
 			if (submit) {
-				// New user message
 				let userPrompt = content;
 				let userMessageId = uuidv4();
 
@@ -267,7 +248,7 @@
 					content: userPrompt,
 					...(files && { files: files }),
 					models: selectedModels,
-					timestamp: Math.floor(Date.now() / 1000) // Unix epoch
+					timestamp: Math.floor(Date.now() / 1000)
 				};
 
 				let messageParentId = history.messages[messageId].parentId;
@@ -285,14 +266,12 @@
 				await tick();
 				await sendMessage(history, userMessageId);
 			} else {
-				// Edit user message
 				history.messages[messageId].content = content;
 				history.messages[messageId].files = files;
 				await updateChat();
 			}
 		} else {
 			if (submit) {
-				// New response message
 				const responseMessageId = uuidv4();
 				const message = history.messages[messageId];
 				const parentId = message.parentId;
@@ -304,13 +283,12 @@
 					childrenIds: [],
 					files: undefined,
 					content: content,
-					timestamp: Math.floor(Date.now() / 1000) // Unix epoch
+					timestamp: Math.floor(Date.now() / 1000)
 				};
 
 				history.messages[responseMessageId] = responseMessage;
 				history.currentId = responseMessageId;
 
-				// Append messageId to childrenIds of parent message
 				if (parentId !== null) {
 					history.messages[parentId].childrenIds = [
 						...history.messages[parentId].childrenIds,
@@ -320,7 +298,6 @@
 
 				await updateChat();
 			} else {
-				// Edit response message
 				history.messages[messageId].originalContent = history.messages[messageId].content;
 				history.messages[messageId].content = content;
 				await updateChat();
@@ -333,12 +310,10 @@
 		const parentMessageId = messageToDelete.parentId;
 		const childMessageIds = messageToDelete.childrenIds ?? [];
 
-		// Collect all grandchildren
 		const grandchildrenIds = childMessageIds.flatMap(
 			(childId) => history.messages[childId]?.childrenIds ?? []
 		);
 
-		// Update parent's children
 		if (parentMessageId && history.messages[parentMessageId]) {
 			history.messages[parentMessageId].childrenIds = [
 				...history.messages[parentMessageId].childrenIds.filter((id) => id !== messageId),
@@ -346,14 +321,12 @@
 			];
 		}
 
-		// Update grandchildren's parent
 		grandchildrenIds.forEach((grandchildId) => {
 			if (history.messages[grandchildId]) {
 				history.messages[grandchildId].parentId = parentMessageId;
 			}
 		});
 
-		// Delete the message and its children
 		[messageId, ...childMessageIds].forEach((id) => {
 			delete history.messages[id];
 		});

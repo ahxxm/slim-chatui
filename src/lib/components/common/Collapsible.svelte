@@ -2,7 +2,7 @@
 	import { decode } from 'html-entities';
 	import { v4 as uuidv4 } from 'uuid';
 
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import dayjs from '$lib/dayjs';
@@ -26,8 +26,10 @@
 		}
 	}
 
-	// Assuming $i18n.languages is an array of language codes
-	$: loadLocale($i18n.languages);
+	$effect(() => {
+		const languages = $i18n.languages;
+		untrack(() => loadLocale(languages));
+	});
 
 	import { slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
@@ -36,25 +38,23 @@
 	import ChevronDown from '../icons/ChevronDown.svelte';
 	import Spinner from './Spinner.svelte';
 
-	export let open = false;
+	let {
+		open = $bindable(false),
+		className = '',
+		buttonClassName = 'w-fit text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition',
+		id = '',
+		title = null,
+		attributes = null,
+		chevron = false,
+		grow = false,
+		disabled = false,
+		hide = false,
+		onChange = () => {}
+	} = $props();
 
-	export let className = '';
-	export let buttonClassName =
-		'w-fit text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition';
-
-	export let id = '';
-	export let title = null;
-	export let attributes = null;
-
-	export let chevron = false;
-	export let grow = false;
-
-	export let disabled = false;
-	export let hide = false;
-
-	export let onChange: Function = () => {};
-
-	$: onChange(open);
+	$effect(() => {
+		onChange(open);
+	});
 
 	const collapsibleId = uuidv4();
 </script>

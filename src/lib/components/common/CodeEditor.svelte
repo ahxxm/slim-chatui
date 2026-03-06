@@ -11,22 +11,27 @@
 
 	import { oneDark } from '@codemirror/theme-one-dark';
 
-	import { onMount, createEventDispatcher, getContext, tick } from 'svelte';
+	import { onMount, createEventDispatcher, getContext, tick, untrack } from 'svelte';
 
 	const dispatch = createEventDispatcher();
 	const i18n = getContext('i18n');
 
-	export let boilerplate = '';
-	export let value = '';
-
-	export let onSave = () => {};
-	export let onChange = () => {};
+	let {
+		boilerplate = '',
+		value = $bindable(''),
+		onSave = () => {},
+		onChange = () => {},
+		id = '',
+		lang = ''
+	} = $props();
 
 	let _value = '';
 
-	$: if (value) {
-		updateValue();
-	}
+	$effect(() => {
+		if (value) {
+			untrack(() => updateValue());
+		}
+	});
 
 	const updateValue = () => {
 		if (_value !== value) {
@@ -65,9 +70,6 @@
 			}
 		];
 	}
-
-	export let id = '';
-	export let lang = '';
 
 	let codeEditor;
 
@@ -124,9 +126,11 @@
 		editorLanguage.of([])
 	];
 
-	$: if (lang) {
-		setLanguage();
-	}
+	$effect(() => {
+		if (lang) {
+			untrack(() => setLanguage());
+		}
+	});
 
 	const setLanguage = async () => {
 		const language = await getLang();

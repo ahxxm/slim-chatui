@@ -1,6 +1,6 @@
 <script lang="ts">
 	import hljs from 'highlight.js';
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 
 	import {
 		copyToClipboard,
@@ -18,37 +18,34 @@
 
 	const i18n = getContext('i18n');
 
-	export let id = '';
-	export let edit = true;
+	let {
+		id = '',
+		edit = true,
+		onSave = (e) => {},
+		save = false,
+		collapsed = false,
+		token,
+		lang = '',
+		code = '',
+		className = '',
+		editorClassName = '',
+		stickyButtonsClassName = 'top-0'
+	} = $props();
 
-	export let onSave = (e) => {};
+	let _code = $state('');
+	$effect(() => {
+		if (code) {
+			_code = code;
+		}
+	});
 
-	export let save = false;
-	export let collapsed = false;
+	let tokenFingerprint = $derived(token ? JSON.stringify(token) : null);
 
-	export let token;
-	export let lang = '';
-	export let code = '';
-	export let className = '';
-	export let editorClassName = '';
-	export let stickyButtonsClassName = 'top-0';
+	let renderHTML = $state(null);
+	let renderError = $state(null);
 
-	let _code = '';
-	$: if (code) {
-		updateCode();
-	}
-
-	const updateCode = () => {
-		_code = code;
-	};
-
-	let _token = null;
-
-	let renderHTML = null;
-	let renderError = null;
-
-	let copied = false;
-	let saved = false;
+	let copied = $state(false);
+	let saved = $state(false);
 
 	const collapseCodeBlock = () => {
 		collapsed = !collapsed;
@@ -107,15 +104,11 @@
 		}
 	};
 
-	$: if (token) {
-		if (JSON.stringify(token) !== JSON.stringify(_token)) {
-			_token = token;
+	$effect(() => {
+		if (tokenFingerprint) {
+			untrack(() => render());
 		}
-	}
-
-	$: if (_token) {
-		render();
-	}
+	});
 </script>
 
 <div>
@@ -128,7 +121,7 @@
 				<SvgPanZoom
 					className=" rounded-2xl max-h-fit overflow-hidden"
 					svg={renderHTML}
-					content={_token.text}
+					content={token.text}
 				/>
 			{:else}
 				<div class="p-3">

@@ -2,15 +2,18 @@
 	import { createEventDispatcher } from 'svelte';
 	const dispatch = createEventDispatcher();
 
-	export let state = 'unchecked';
-	export let indeterminate = false;
-	export let disabled = false;
+	let {
+		state = 'unchecked',
+		indeterminate = false,
+		disabled = false,
+		disabledClassName = 'opacity-50 cursor-not-allowed'
+	} = $props();
 
-	export let disabledClassName = 'opacity-50 cursor-not-allowed';
+	let _state = $state('unchecked');
 
-	let _state = 'unchecked';
-
-	$: _state = state;
+	$effect(() => {
+		_state = state;
+	});
 </script>
 
 <button

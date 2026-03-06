@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext, onMount, tick } from 'svelte';
+	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import { config, models, settings, user } from '$lib/stores';
 	import { updateUserSettings } from '$lib/apis/users';
@@ -23,13 +24,15 @@
 
 	const i18n = getContext('i18n');
 
-	export let show = false;
+	let { show = $bindable(false) } = $props();
 
-	$: if (show) {
-		addScrollListener();
-	} else {
-		removeScrollListener();
-	}
+	$effect(() => {
+		if (show) {
+			untrack(() => addScrollListener());
+		} else {
+			untrack(() => removeScrollListener());
+		}
+	});
 
 	interface SettingsTab {
 		id: string;
@@ -294,10 +297,10 @@
 		}
 	];
 
-	let availableSettings = [];
-	let filteredSettings = [];
+	let availableSettings = $state([]);
+	let filteredSettings = $state([]);
 
-	let search = '';
+	let search = $state('');
 	let searchDebounceTimeout;
 
 	const getAvailableSettings = () => {
@@ -341,14 +344,13 @@
 		return await _getModels(localStorage.token);
 	};
 
-	let selectedTab = 'general';
+	let selectedTab = $state('general');
 
-	// Function to handle sideways scrolling
 	const scrollHandler = (event) => {
 		const settingsTabsContainer = document.getElementById('settings-tabs-container');
 		if (settingsTabsContainer) {
-			event.preventDefault(); // Prevent default vertical scrolling
-			settingsTabsContainer.scrollLeft += event.deltaY; // Scroll sideways
+			event.preventDefault();
+			settingsTabsContainer.scrollLeft += event.deltaY;
 		}
 	};
 
@@ -604,22 +606,21 @@
 <style>
 	input::-webkit-outer-spin-button,
 	input::-webkit-inner-spin-button {
-		/* display: none; <- Crashes Chrome on hover */
 		-webkit-appearance: none;
-		margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+		margin: 0;
 	}
 
 	.tabs::-webkit-scrollbar {
-		display: none; /* for Chrome, Safari and Opera */
+		display: none;
 	}
 
 	.tabs {
-		-ms-overflow-style: none; /* IE and Edge */
-		scrollbar-width: none; /* Firefox */
+		-ms-overflow-style: none;
+		scrollbar-width: none;
 	}
 
 	input[type='number'] {
 		appearance: textfield;
-		-moz-appearance: textfield; /* Firefox */
+		-moz-appearance: textfield;
 	}
 </style>

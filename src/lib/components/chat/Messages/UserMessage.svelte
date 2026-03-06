@@ -21,43 +21,35 @@
 	const i18n = getContext('i18n');
 	dayjs.extend(localizedFormat);
 
-	export let user;
+	let {
+		user,
+		chatId,
+		history,
+		messageId,
+		siblings,
+		gotoMessage,
+		showPreviousMessage,
+		showNextMessage,
+		editMessage,
+		deleteMessage,
+		isFirstMessage,
+		readOnly,
+		editCodeBlock = true,
+		topPadding = false
+	} = $props();
 
-	export let chatId;
-	export let history;
-	export let messageId;
+	let showDeleteConfirm = $state(false);
 
-	export let siblings;
+	let messageIndexEdit = $state(false);
 
-	export let gotoMessage: Function;
-	export let showPreviousMessage: Function;
-	export let showNextMessage: Function;
+	let edit = $state(false);
+	let editedContent = $state('');
+	let editedFiles = $state([]);
 
-	export let editMessage: Function;
-	export let deleteMessage: Function;
+	let messageEditTextAreaElement = $state();
+	let editScrollContainer = $state();
 
-	export let isFirstMessage: boolean;
-	export let readOnly: boolean;
-	export let editCodeBlock = true;
-	export let topPadding = false;
-
-	let showDeleteConfirm = false;
-
-	let messageIndexEdit = false;
-
-	let edit = false;
-	let editedContent = '';
-	let editedFiles = [];
-
-	let messageEditTextAreaElement: HTMLTextAreaElement;
-	let editScrollContainer: HTMLDivElement;
-
-	let message = JSON.parse(JSON.stringify(history.messages[messageId]));
-	$: if (history.messages) {
-		if (JSON.stringify(message) !== JSON.stringify(history.messages[messageId])) {
-			message = JSON.parse(JSON.stringify(history.messages[messageId]));
-		}
-	}
+	let message = $derived($state.snapshot(history.messages[messageId]));
 
 	const copyToClipboard = async (text) => {
 		const res = await _copyToClipboard(text);
@@ -108,9 +100,7 @@
 		deleteMessage(message.id);
 	};
 
-	onMount(() => {
-		// console.log('UserMessage mounted');
-	});
+	onMount(() => {});
 </script>
 
 <DeleteConfirmDialog
@@ -155,11 +145,10 @@
 								? 'dark:text-gray-900 text-gray-100'
 								: 'invisible group-hover:visible transition'}"
 						>
+							<!-- $i18n.t('Today at {{LOCALIZED_TIME}}') -->
+							<!-- $i18n.t('Yesterday at {{LOCALIZED_TIME}}') -->
+							<!-- $i18n.t('{{LOCALIZED_DATE}} at {{LOCALIZED_TIME}}') -->
 							<Tooltip content={dayjs(message.timestamp * 1000).format('LLLL')}>
-								<!-- $i18n.t('Today at {{LOCALIZED_TIME}}') -->
-								<!-- $i18n.t('Yesterday at {{LOCALIZED_TIME}}') -->
-								<!-- $i18n.t('{{LOCALIZED_DATE}} at {{LOCALIZED_TIME}}') -->
-
 								<span class="line-clamp-1"
 									>{$i18n.t(formatDate(message.timestamp * 1000), {
 										LOCALIZED_TIME: dayjs(message.timestamp * 1000).format('LT'),
@@ -249,7 +238,6 @@
 												type="button"
 												on:click={() => {
 													editedFiles.splice(fileIdx, 1);
-
 													editedFiles = editedFiles;
 												}}
 											>
@@ -277,7 +265,6 @@
 										edit={true}
 										on:dismiss={async () => {
 											editedFiles.splice(fileIdx, 1);
-
 											editedFiles = editedFiles;
 										}}
 										on:click={() => {

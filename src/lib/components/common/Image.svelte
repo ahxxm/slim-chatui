@@ -6,22 +6,21 @@
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import { getContext } from 'svelte';
 
-	export let src = '';
-	export let alt = '';
-
-	export let className = ` w-full ${($settings?.highContrastMode ?? false) ? '' : 'outline-hidden focus:outline-hidden'}`;
-
-	export let imageClassName = 'rounded-lg';
-
-	export let dismissible = false;
-	export let onDismiss = () => {};
+	let {
+		src = '',
+		alt = '',
+		className = ` w-full ${($settings?.highContrastMode ?? false) ? '' : 'outline-hidden focus:outline-hidden'}`,
+		imageClassName = 'rounded-lg',
+		dismissible = false,
+		onDismiss = () => {},
+		...restProps
+	} = $props();
 
 	const i18n = getContext('i18n');
 
-	let _src = '';
-	$: _src = src.startsWith('/') ? `${WEBUI_BASE_URL}${src}` : src;
+	let _src = $derived(src.startsWith('/') ? `${WEBUI_BASE_URL}${src}` : src);
 
-	let showImagePreview = false;
+	let showImagePreview = $state(false);
 </script>
 
 <ImagePreview bind:show={showImagePreview} src={_src} {alt} />
