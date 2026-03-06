@@ -174,8 +174,11 @@
 		}
 	};
 
+	let chatListController: AbortController | null = null;
 	const initChatList = async () => {
-		console.log('initChatList');
+		chatListController?.abort();
+		const controller = new AbortController();
+		chatListController = controller;
 		scrollPaginationEnabled.set(false);
 
 		initFolders();
@@ -183,28 +186,27 @@
 		let refreshResult: boolean = false;
 		await Promise.all([
 			(async () => {
-				console.log('Init pinned chats');
 				pinnedChats.set(await getPinnedChatList(localStorage.token));
 			})(),
 			(async () => {
-				refreshResult = await refreshChatList(localStorage.token);
+				refreshResult = await refreshChatList(localStorage.token, controller.signal);
 			})()
 		]);
 
+		if (controller.signal.aborted) return;
 		allChatsLoaded = refreshResult;
 		scrollPaginationEnabled.set(true);
 	};
 
 	const loadMoreChats = async () => {
+		if (chatListController?.signal.aborted) return;
 		chatListLoading = true;
 
-		currentChatPage.set($currentChatPage + 1);
+		const nextPage = $currentChatPage + 1;
+		currentChatPage.set(nextPage);
 
-		let newChatList = [];
+		const newChatList = await getChatList(localStorage.token, nextPage);
 
-		newChatList = await getChatList(localStorage.token, $currentChatPage);
-
-		// once the bottom of the list has been reached (no results) there is no need to continue querying
 		allChatsLoaded = newChatList.length === 0;
 		await chats.set([...$chats, ...newChatList]);
 

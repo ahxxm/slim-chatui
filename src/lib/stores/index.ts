@@ -74,13 +74,14 @@ const PAGE_SIZE = 60;
 /** Refetch pages 1..currentChatPage, stopping early on a short page.
  *  Deflates currentChatPage to the actual last page with data.
  *  Returns true if all data was loaded (last fetched page was short). */
-export async function refreshChatList(token: string): Promise<boolean> {
+export async function refreshChatList(token: string, signal?: AbortSignal): Promise<boolean> {
 	const throughPage = get(currentChatPage);
 	const allChats: ChatListItem[] = [];
 	let lastPage = 0;
 	let allLoaded = false;
 	for (let p = 1; p <= throughPage; p++) {
 		const batch = await getChatList(token, p);
+		if (signal?.aborted) return false;
 		allChats.push(...batch);
 		lastPage = p;
 		if (batch.length < PAGE_SIZE) {
