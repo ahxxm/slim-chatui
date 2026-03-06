@@ -36,45 +36,6 @@
 	import StatusHistory from './ResponseMessage/StatusHistory.svelte';
 	import FullHeightIframe from '$lib/components/common/FullHeightIframe.svelte';
 
-	interface MessageType {
-		id: string;
-		model: string;
-		content: string;
-		files?: { type: string; url: string }[];
-		timestamp: number;
-		role: string;
-		statusHistory?: {
-			done: boolean;
-			action: string;
-			description: string;
-			urls?: string[];
-			query?: string;
-		}[];
-		status?: {
-			done: boolean;
-			action: string;
-			description: string;
-			urls?: string[];
-			query?: string;
-		};
-		done: boolean;
-		error?: boolean | { content: string };
-		sources?: string[];
-		info?: {
-			openai?: boolean;
-			prompt_tokens?: number;
-			completion_tokens?: number;
-			total_tokens?: number;
-			eval_count?: number;
-			eval_duration?: number;
-			prompt_eval_count?: number;
-			prompt_eval_duration?: number;
-			total_duration?: number;
-			load_duration?: number;
-			usage?: unknown;
-		};
-	}
-
 	let {
 		chatId = '',
 		history,
@@ -97,14 +58,16 @@
 		topPadding = false
 	} = $props();
 
-	let message: MessageType = $derived($state.snapshot(history.messages[messageId]));
+	let message = $derived(history.messages[messageId]);
+	let messageContent: string = $derived(history.messages[messageId]?.content ?? '');
+	let messageDone: boolean = $derived(history.messages[messageId]?.done ?? false);
 
 	let citationsElement = $state();
 	let contentContainerElement = $state();
 	let buttonsContainerElement = $state();
 	let showDeleteConfirm = $state(false);
 
-	let model = $derived($models.find((m) => m.id === message.model) ?? null);
+	let model = $derived($models.find((m) => m.id === message?.model) ?? null);
 
 	let edit = $state(false);
 	let editedContent = $state('');
@@ -417,23 +380,23 @@
 							class="w-full flex flex-col relative {edit ? 'hidden' : ''}"
 							id="response-content-container"
 						>
-							{#if message.content === '' && !message.error && ((model?.info?.meta?.capabilities?.status_updates ?? true) ? (message?.statusHistory ?? [...(message?.status ? [message?.status] : [])]).length === 0 || (message?.statusHistory?.at(-1)?.hidden ?? false) : true)}
+							{#if messageContent === '' && !message.error && ((model?.info?.meta?.capabilities?.status_updates ?? true) ? (message?.statusHistory ?? [...(message?.status ? [message?.status] : [])]).length === 0 || (message?.statusHistory?.at(-1)?.hidden ?? false) : true)}
 								<Skeleton />
-							{:else if message.content && message.error !== true}
+							{:else if messageContent && message.error !== true}
 								<ContentRenderer
 									id={`${chatId}-${message.id}`}
 									messageId={message.id}
 									{history}
-									content={message.content}
+									content={messageContent}
 									sources={message.sources}
-									floatingButtons={message?.done &&
+									floatingButtons={messageDone &&
 										!readOnly &&
 										($settings?.showFloatingActionButtons ?? true)}
 									save={!readOnly}
 									{editCodeBlock}
 									{topPadding}
 									done={($settings?.chatFadeStreamingText ?? true)
-										? (message?.done ?? false)
+										? messageDone
 										: true}
 									{model}
 									onTaskClick={async (e) => {
@@ -477,7 +440,7 @@
 						bind:this={buttonsContainerElement}
 						class="flex justify-start overflow-x-auto buttons text-gray-600 dark:text-gray-500 mt-0.5"
 					>
-						{#if message.done || siblings.length > 1}
+						{#if messageDone || siblings.length > 1}
 							{#if siblings.length > 1}
 								<div class="flex self-center min-w-fit" dir="ltr">
 									<button
@@ -574,7 +537,7 @@
 								</div>
 							{/if}
 
-							{#if message.done}
+							{#if messageDone}
 								{#if !readOnly}
 									<Tooltip content={$i18n.t('Edit')} placement="bottom">
 										<button
@@ -821,7 +784,7 @@
 						{/if}
 					</div>
 
-					{#if (isLastMessage || ($settings?.keepFollowUpPrompts ?? false)) && message.done && !readOnly && (message?.followUps ?? []).length > 0}
+					{#if (isLastMessage || ($settings?.keepFollowUpPrompts ?? false)) && messageDone && !readOnly && (message?.followUps ?? []).length > 0}
 						<div class="mt-2.5" in:fade={{ duration: 100 }}>
 							<FollowUps
 								followUps={message?.followUps}
