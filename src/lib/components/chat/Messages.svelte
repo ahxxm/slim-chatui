@@ -39,7 +39,25 @@
 		messagesCount = $bindable(20)
 	} = $props();
 
-	let messages: any[] = $state([]);
+	let messages: any[] = $derived.by(() => {
+		if (!history.currentId) return [];
+
+		let _messages = [];
+		let message = history.messages[history.currentId];
+		const visitedMessageIds = new Set();
+
+		while (message && (messagesCount !== null ? _messages.length <= messagesCount : true)) {
+			if (visitedMessageIds.has(message.id)) {
+				console.warn('Circular dependency detected in message history', message.id);
+				break;
+			}
+			visitedMessageIds.add(message.id);
+			_messages.unshift({ ...message });
+			message = message.parentId !== null ? history.messages[message.parentId] : null;
+		}
+
+		return _messages;
+	});
 	let messagesLoading = $state(false);
 
 	const loadMoreMessages = async () => {
@@ -53,30 +71,6 @@
 
 		messagesLoading = false;
 	};
-
-	$effect(() => {
-		if (history.currentId) {
-			let _messages = [];
-
-			let message = history.messages[history.currentId];
-			const visitedMessageIds = new Set();
-
-			while (message && (messagesCount !== null ? _messages.length <= messagesCount : true)) {
-				if (visitedMessageIds.has(message.id)) {
-					console.warn('Circular dependency detected in message history', message.id);
-					break;
-				}
-				visitedMessageIds.add(message.id);
-
-				_messages.unshift({ ...message });
-				message = message.parentId !== null ? history.messages[message.parentId] : null;
-			}
-
-			messages = _messages;
-		} else {
-			messages = [];
-		}
-	});
 
 	$effect(() => {
 		if (autoScroll && bottomPadding) {

@@ -17,14 +17,13 @@
 
 	let { show = $bindable(false) } = $props();
 
-	let categorizedShortcuts = $state({});
 	let isMac = $state(false);
 
 	onMount(() => {
 		isMac = /Mac/i.test(navigator.userAgent);
 	});
 
-	let _categorizedShortcuts = $derived.by(() => {
+	let categorizedShortcuts = $derived.by(() => {
 		const allShortcuts = Object.values(shortcuts).filter((shortcut) => {
 			if (!shortcut.setting) {
 				return true;
@@ -40,10 +39,6 @@
 			acc[category].push(shortcut);
 			return acc;
 		}, {});
-	});
-
-	$effect(() => {
-		categorizedShortcuts = _categorizedShortcuts;
 	});
 </script>
 
