@@ -905,7 +905,7 @@ async def background_tasks_handler(ctx):
 
     if tasks.get(TASKS.FOLLOW_UP_GENERATION):
         try:
-            log.info(
+            log.debug(
                 "[follow-up] calling generate_follow_ups for model=%s", message["model"]
             )
             res = await generate_follow_ups(
@@ -1495,7 +1495,7 @@ async def streaming_chat_response_handler(response, ctx):
                                     e,
                                 )
                                 continue
-                    log.info(
+                    log.debug(
                         "[stream] loop ended, content length=%d, output items=%d",
                         len(content),
                         len(output),
@@ -1539,7 +1539,7 @@ async def streaming_chat_response_handler(response, ctx):
                         await response.background()
 
                 await stream_body_handler(response, form_data)
-                log.info(
+                log.debug(
                     "[stream] post-handler: content length=%d, output=%s, serialized=%s",
                     len(content),
                     output,

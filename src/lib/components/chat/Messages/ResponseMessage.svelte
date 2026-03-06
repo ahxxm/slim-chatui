@@ -395,9 +395,7 @@
 									save={!readOnly}
 									{editCodeBlock}
 									{topPadding}
-									done={($settings?.chatFadeStreamingText ?? true)
-										? messageDone
-										: true}
+									done={($settings?.chatFadeStreamingText ?? true) ? messageDone : true}
 									{model}
 									onTaskClick={async (e) => {
 										console.log(e);

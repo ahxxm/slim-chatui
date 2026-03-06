@@ -360,11 +360,7 @@
 		let tr = state.tr;
 
 		if (insertPromptAsRichText) {
-			const htmlContent = DOMPurify.sanitize(
-				richTextMarked
-					.parse(text)
-					.trim()
-			);
+			const htmlContent = DOMPurify.sanitize(richTextMarked.parse(text).trim());
 
 			// Create a temporary div to parse HTML
 			const tempDiv = document.createElement('div');
