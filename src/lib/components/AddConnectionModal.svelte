@@ -435,8 +435,8 @@
 								${($settings?.highContrastMode ?? false) ? 'text-gray-800 dark:text-gray-100' : ''}`}
 								>
 									{$i18n.t('Leave empty to include all models from "{{url}}/models" endpoint', {
-									url: url
-								})}
+										url: url
+									})}
 								</div>
 							{/if}
 						</div>

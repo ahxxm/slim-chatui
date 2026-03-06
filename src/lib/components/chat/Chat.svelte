@@ -88,7 +88,6 @@
 	let atSelectedModel: Model | undefined;
 
 	let generating = false;
-	let chatCreating = false;
 	let generationController: AbortController | null = null;
 
 	let chat: Record<string, any> | null = null;
@@ -420,10 +419,6 @@
 		savedModelIds();
 	}
 
-	let pageSubscribe: (() => void) | null = null;
-	$: if ($page.url.pathname === '/' && !$chatId && !chatCreating) {
-		initNewChat();
-	}
 	let selectedFolderSubscribe: (() => void) | null = null;
 	let activeChatEmitter: ReturnType<typeof setInterval> | null = null;
 
@@ -434,6 +429,20 @@
 		window.addEventListener('message', onMessageHandler);
 		$socket?.on('events', chatEventHandler);
 
+		if (!chatIdProp) {
+			initNewChat();
+		}
+
+		let pageSubscribeFirst = true;
+		const pageUnsubscribe = page.subscribe(() => {
+			if (pageSubscribeFirst) {
+				pageSubscribeFirst = false;
+				return;
+			}
+			if (window.location.pathname === '/') {
+				initNewChat();
+			}
+		});
 
 		const storageChatInput = sessionStorage.getItem(
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
@@ -482,7 +491,7 @@
 				clearTimeout(saveDraftTimeout);
 				saveDraftTimeout = null;
 			}
-			pageSubscribe?.();
+			pageUnsubscribe();
 			selectedFolderSubscribe();
 			chatIdUnsubscriber?.();
 			window.removeEventListener('message', onMessageHandler);
@@ -584,7 +593,10 @@
 		await chatId.set('');
 		await chatTitle.set('');
 
-		console.log('[initNewChat] resetting history', new Error().stack.split('\n').slice(1,4).join(' <- '));
+		console.log(
+			'[initNewChat] resetting history',
+			new Error().stack.split('\n').slice(1, 4).join(' <- ')
+		);
 		history = {
 			messages: {},
 			currentId: null
@@ -1126,28 +1138,44 @@
 			timestamp: Math.floor(Date.now() / 1000)
 		};
 
-		history.messages[responseMessageId] = responseMessage;
-		history.currentId = responseMessageId;
-		console.log('[sendMessage] responseMessage added to history', responseMessageId);
-
-		if (parentId !== null && history.messages[parentId]) {
-			history.messages[parentId].childrenIds = [
-				...history.messages[parentId].childrenIds,
-				responseMessageId
-			];
-		}
-		history = history;
+		history = {
+			...history,
+			currentId: responseMessageId,
+			messages: {
+				...history.messages,
+				[responseMessageId]: responseMessage,
+				...(parentId !== null && history.messages[parentId]
+					? {
+							[parentId]: {
+								...history.messages[parentId],
+								childrenIds: [...history.messages[parentId].childrenIds, responseMessageId]
+							}
+						}
+					: {})
+			}
+		};
 
 		if (newChat && _history.messages[_history.currentId].parentId === null) {
-			console.log('[sendMessage] before initChatHandler, history keys:', Object.keys(history.messages));
+			console.log(
+				'[sendMessage] before initChatHandler, history keys:',
+				Object.keys(history.messages)
+			);
 			_chatId = await initChatHandler(_history);
-			console.log('[sendMessage]', instanceId, 'after initChatHandler, history keys:', Object.keys(history.messages));
+			console.log(
+				'[sendMessage]',
+				instanceId,
+				'after initChatHandler, history keys:',
+				Object.keys(history.messages)
+			);
 		}
 
 		await tick();
 
 		_history = JSON.parse(JSON.stringify(history));
-		console.log('[sendMessage] after tick+copy, _history has responseMessageId:', !!_history.messages[responseMessageId]);
+		console.log(
+			'[sendMessage] after tick+copy, _history has responseMessageId:',
+			!!_history.messages[responseMessageId]
+		);
 		await saveChatHandler(_chatId, _history);
 
 		const hasImages = createMessagesList(_history, parentId).some((message) =>
@@ -1522,7 +1550,6 @@
 	};
 
 	const initChatHandler = async (history) => {
-		chatCreating = true;
 		let _chatId = $chatId;
 
 		if (!$temporaryChatEnabled) {
@@ -1556,7 +1583,6 @@
 			await chatId.set(_chatId);
 		}
 		await tick();
-		chatCreating = false;
 
 		return _chatId;
 	};
