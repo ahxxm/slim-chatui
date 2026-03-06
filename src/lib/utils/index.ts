@@ -13,7 +13,6 @@ dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 dayjs.extend(localizedFormat);
 
-import hljs from 'highlight.js';
 
 //////////////////////////
 // Helper functions
@@ -311,9 +310,13 @@ export const copyToClipboard = async (
 	if (formatted) {
 		let styledHtml = '';
 		if (!html) {
-			const { Marked } = await import('marked');
-			const { default: markedKatexExtension } = await import('$lib/utils/marked/katex-extension');
-			const { default: markedExtension } = await import('$lib/utils/marked/extension');
+			const [{ Marked }, { default: markedKatexExtension }, { default: markedExtension }, { default: hljs }] =
+				await Promise.all([
+					import('marked'),
+					import('$lib/utils/marked/katex-extension'),
+					import('$lib/utils/marked/extension'),
+					import('highlight.js')
+				]);
 
 			const clipboardMarked = new Marked();
 			clipboardMarked.use(markedKatexExtension({ throwOnError: false }));
