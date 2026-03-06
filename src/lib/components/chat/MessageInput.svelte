@@ -452,13 +452,17 @@
 						toast.warning(uploadedFile.error);
 					}
 
-					fileItem.status = 'uploaded';
-					fileItem.file = uploadedFile;
-					fileItem.id = uploadedFile.id;
-					fileItem.content_type = uploadedFile.meta?.content_type || uploadedFile.content_type;
-					fileItem.url = `${uploadedFile.id}`;
-
-					files = files;
+					const idx = files.findIndex((item) => item?.itemId === tempItemId);
+					if (idx !== -1) {
+						files[idx] = {
+							...files[idx],
+							status: 'uploaded',
+							file: uploadedFile,
+							id: uploadedFile.id,
+							content_type: uploadedFile.meta?.content_type || uploadedFile.content_type,
+							url: `${uploadedFile.id}`
+						};
+					}
 				} else {
 					files = files.filter((item) => item?.itemId !== tempItemId);
 				}
@@ -485,12 +489,16 @@
 					content: content
 				});
 
-				fileItem.status = 'uploaded';
-				fileItem.type = 'text';
-				fileItem.content = content;
-				fileItem.id = uuidv4();
-
-				files = files;
+				const idx = files.findIndex((item) => item?.itemId === tempItemId);
+				if (idx !== -1) {
+					files[idx] = {
+						...files[idx],
+						status: 'uploaded',
+						type: 'text',
+						content: content,
+						id: uuidv4()
+					};
+				}
 			}
 		}
 	};
@@ -886,8 +894,7 @@
 														type="button"
 														aria-label={$i18n.t('Remove file')}
 														on:click={() => {
-															files.splice(fileIdx, 1);
-															files = files;
+															files = files.filter((_, i) => i !== fileIdx);
 														}}
 													>
 														<svg
@@ -916,8 +923,7 @@
 												small={true}
 												modal={file?.type === 'file'}
 												on:dismiss={async () => {
-													files.splice(fileIdx, 1);
-													files = files;
+													files = files.filter((_, i) => i !== fileIdx);
 												}}
 												on:click={() => {
 													console.log(file);

@@ -92,8 +92,7 @@
 				class="pr-3"
 				type="button"
 				on:click={() => {
-					banners.splice(bannerIdx, 1);
-					banners = banners;
+					banners = banners.filter((_, i) => i !== bannerIdx);
 				}}
 			>
 				<XMark className={'size-4'} />

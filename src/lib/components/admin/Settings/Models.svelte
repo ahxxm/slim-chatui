@@ -90,15 +90,17 @@
 
 	const enableAllHandler = async () => {
 		const modelsToEnable = filteredModels.filter((m) => !(m.is_active ?? true));
-		modelsToEnable.forEach((m) => (m.is_active = true));
-		models = models;
+		models = models.map((m) =>
+			modelsToEnable.some((e) => e.id === m.id) ? { ...m, is_active: true } : m
+		);
 		await Promise.all(modelsToEnable.map((model) => toggleModelById(localStorage.token, model.id)));
 	};
 
 	const disableAllHandler = async () => {
 		const modelsToDisable = filteredModels.filter((m) => m.is_active ?? true);
-		modelsToDisable.forEach((m) => (m.is_active = false));
-		models = models;
+		models = models.map((m) =>
+			modelsToDisable.some((d) => d.id === m.id) ? { ...m, is_active: false } : m
+		);
 		await Promise.all(
 			modelsToDisable.map((model) => toggleModelById(localStorage.token, model.id))
 		);

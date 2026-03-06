@@ -53,14 +53,20 @@ log = logging.getLogger(__name__)
 
 
 def extract_task_text(res: dict) -> str:
-    """Extract text content from Chat Completions or Responses API result."""
-    # Chat Completions: choices[0].message.content
+    """Extract text (skip reasoning) from Completions and Responses.
+    LiteLLM proxies may convert extended thinking (e.g. Claude) into
+    reasoning_content (Chat Completions) or reasoning output items (Responses API).
+    We skip those and return only the actual text output.
+    """
+    # Chat Completions: choices[0].message.content (not reasoning_content)
     choices = res.get("choices") or []
     if len(choices) == 1:
         msg = choices[0].get("message") or {}
-        return msg.get("content") or msg.get("reasoning_content", "")
-    # Responses API: output[0].content[0].text
+        return msg.get("content", "")
+    # Responses API: first non-reasoning output_text
     for item in res.get("output") or []:
+        if item.get("type") == "reasoning":
+            continue
         for block in item.get("content") or []:
             if block.get("type") == "output_text":
                 return block.get("text", "")
@@ -899,6 +905,9 @@ async def background_tasks_handler(ctx):
 
     if tasks.get(TASKS.FOLLOW_UP_GENERATION):
         try:
+            log.info(
+                "[follow-up] calling generate_follow_ups for model=%s", message["model"]
+            )
             res = await generate_follow_ups(
                 request,
                 {
@@ -909,7 +918,9 @@ async def background_tasks_handler(ctx):
                 },
                 user,
             )
+            log.debug("[follow-up] res type=%s, res=%s", type(res).__name__, res)
             follow_ups = parse_task_json(res, "follow_ups", [])
+            log.debug("[follow-up] parsed follow_ups=%s", follow_ups)
             if follow_ups:
                 await event_emitter(
                     {
@@ -924,7 +935,7 @@ async def background_tasks_handler(ctx):
                         {"followUps": follow_ups},
                     )
         except Exception as e:
-            log.error(f"follow-up generation failed: {e}")
+            log.error(f"follow-up generation failed: {e}", exc_info=True)
 
     if is_ephemeral_chat:
         return
@@ -1166,6 +1177,7 @@ async def streaming_chat_response_handler(response, ctx):
 
                         # "data:" is the prefix for each event
                         if not data.startswith("data:"):
+                            log.debug("[stream] non-data line: %s", data[:200])
                             continue
 
                         # Remove the prefix
@@ -1173,6 +1185,25 @@ async def streaming_chat_response_handler(response, ctx):
 
                         try:
                             data = json.loads(data)
+                            chunk_type = (
+                                data.get("type", "")
+                                if isinstance(data, dict)
+                                else type(data).__name__
+                            )
+                            chunk_extra = ""
+                            if chunk_type == "response.output_text.delta":
+                                chunk_extra = f" text={data.get('text', '')[:80]!r}"
+                            elif chunk_type == "response.output_text.done":
+                                chunk_extra = (
+                                    f" text={data.get('text', '<MISSING>')[:80]!r}"
+                                )
+                            elif chunk_type in (
+                                "response.output_item.added",
+                                "response.output_item.done",
+                            ):
+                                item = data.get("item", {})
+                                chunk_extra = f" item.type={item.get('type')} item.role={item.get('role')}"
+                            log.debug("[stream] %s%s", chunk_type, chunk_extra)
 
                             if data:
                                 if "event" in data:
@@ -1450,10 +1481,19 @@ async def streaming_chat_response_handler(response, ctx):
                         except Exception as e:
                             done = "data: [DONE]" in line
                             if done:
-                                pass
+                                log.debug("[stream] got [DONE] sentinel")
                             else:
-                                log.debug(f"Error: {e}")
+                                log.info(
+                                    "[stream] parse error on line: %s — %s",
+                                    line[:200],
+                                    e,
+                                )
                                 continue
+                    log.info(
+                        "[stream] loop ended, content length=%d, output items=%d",
+                        len(content),
+                        len(output),
+                    )
                     await flush_pending_delta_data()
 
                     if output:
@@ -1493,6 +1533,12 @@ async def streaming_chat_response_handler(response, ctx):
                         await response.background()
 
                 await stream_body_handler(response, form_data)
+                log.info(
+                    "[stream] post-handler: content length=%d, output=%s, serialized=%s",
+                    len(content),
+                    output,
+                    serialize_output(output)[:200],
+                )
 
                 # Mark all in-progress items as completed
                 for item in output:

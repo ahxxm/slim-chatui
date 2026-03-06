@@ -85,7 +85,6 @@
 
 	const updateChat = async () => {
 		if (!$temporaryChatEnabled) {
-			history = history;
 			await tick();
 			await updateChatById(localStorage.token, chatId, {
 				history: history,
