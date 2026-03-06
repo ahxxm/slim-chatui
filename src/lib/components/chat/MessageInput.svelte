@@ -368,6 +368,12 @@
 	let visionCapable = $derived(activeModel?.info?.meta?.capabilities?.vision ?? true);
 	let fileUploadCapable = $derived(activeModel?.info?.meta?.capabilities?.file_upload ?? true);
 
+	$effect(() => {
+		if (!fileUploadCapable && files.length > 0) {
+			files = [];
+		}
+	});
+
 	const scrollToBottom = () => {
 		const element = document.getElementById('messages-container');
 		element.scrollTo({

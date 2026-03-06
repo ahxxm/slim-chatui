@@ -97,14 +97,7 @@
 		topPadding = false
 	} = $props();
 
-	let message: MessageType = $state(JSON.parse(JSON.stringify(history.messages[messageId])));
-	$effect(() => {
-		if (history.messages) {
-			if (JSON.stringify(message) !== JSON.stringify(history.messages[messageId])) {
-				message = JSON.parse(JSON.stringify(history.messages[messageId]));
-			}
-		}
-	});
+	let message: MessageType = $derived($state.snapshot(history.messages[messageId]));
 
 	let citationsElement = $state();
 	let contentContainerElement = $state();

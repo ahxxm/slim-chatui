@@ -436,6 +436,16 @@
 		}
 	});
 
+	$effect(() => {
+		if (
+			$models.length > 0 &&
+			selectedModels[0] &&
+			!$models.find((m) => m.id === selectedModels[0])
+		) {
+			selectedModels = [''];
+		}
+	});
+
 	let activeChatEmitter: ReturnType<typeof setInterval> | null = null;
 
 	const instanceId = Math.random().toString(36).slice(2, 6);

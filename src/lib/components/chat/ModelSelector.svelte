@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { models, settings } from '$lib/stores';
 	import { getContext } from 'svelte';
-	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Selector from './ModelSelector/Selector.svelte';
 
@@ -33,14 +32,6 @@
 		settings.set({ ...$settings, pinnedModels: pinnedModels });
 		await updateUserSettings(localStorage.token, { ui: $settings });
 	};
-
-	$effect(() => {
-		if (selectedModels[0] && $models.length > 0) {
-			if (!$models.find((m) => m.id === selectedModels[0])) {
-				selectedModels = [''];
-			}
-		}
-	});
 </script>
 
 <div class="flex flex-col w-full items-start">

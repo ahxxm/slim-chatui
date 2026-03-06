@@ -1,6 +1,5 @@
 <script>
 	import { getContext } from 'svelte';
-	import { untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import StatusItem from './StatusHistory/StatusItem.svelte';
@@ -16,17 +15,10 @@
 		}
 	});
 
-	let history = $state([]);
-	let status = $derived(history && history.length > 0 ? history.at(-1) : null);
-
-	$effect(() => {
-		if (JSON.stringify(statusHistory) !== JSON.stringify(history)) {
-			history = statusHistory;
-		}
-	});
+	let status = $derived(statusHistory && statusHistory.length > 0 ? statusHistory.at(-1) : null);
 </script>
 
-{#if history && history.length > 0}
+{#if statusHistory && statusHistory.length > 0}
 	{#if status?.hidden !== true}
 		<div class="text-sm flex flex-col w-full">
 			<button
@@ -44,9 +36,9 @@
 
 			{#if showHistory}
 				<div class="flex flex-row">
-					{#if history.length > 1}
+					{#if statusHistory.length > 1}
 						<div class="w-full">
-							{#each history as status, idx}
+							{#each statusHistory as status, idx}
 								<div class="flex items-stretch gap-2 mb-1">
 									<div class=" ">
 										<div class="pt-3 px-1 mb-1.5">
@@ -56,7 +48,7 @@
 												></span>
 											</span>
 										</div>
-										{#if idx !== history.length - 1}
+										{#if idx !== statusHistory.length - 1}
 											<div
 												class="w-[0.5px] ml-[6.5px] h-[calc(100%-14px)] bg-gray-300 dark:bg-gray-700"
 											/>

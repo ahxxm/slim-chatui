@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
-	import { getContext, onMount, tick, untrack } from 'svelte';
+	import { getContext, onMount, tick } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { flyAndScale } from '$lib/utils/transitions';
 
@@ -29,12 +29,6 @@
 
 	let show = $state(false);
 	let tab = $state('');
-
-	$effect(() => {
-		if (!fileUploadEnabled && files.length > 0) {
-			files = [];
-		}
-	});
 
 	const detectMobile = () => {
 		const userAgent = navigator.userAgent || navigator.vendor || window.opera;

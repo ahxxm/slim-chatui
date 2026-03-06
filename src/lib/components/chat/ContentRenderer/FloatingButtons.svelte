@@ -4,7 +4,7 @@
 	import DOMPurify from 'dompurify';
 	import { marked } from 'marked';
 
-	import { getContext, tick, onDestroy, untrack } from 'svelte';
+	import { getContext, tick, onDestroy } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import { chatCompletion } from '$lib/apis/openai';
@@ -14,32 +14,6 @@
 	import Markdown from '../Messages/Markdown.svelte';
 	import Skeleton from '../Messages/Skeleton.svelte';
 	import { chatId, socket } from '$lib/stores';
-
-	let {
-		id = '',
-		messageId = '',
-		model = null,
-		messages = [],
-		actions = $bindable([]),
-		onAdd = (e) => {}
-	} = $props();
-
-	let floatingInput = $state(false);
-	let selectedAction = $state(null);
-
-	let selectedText = $state('');
-	let floatingInputValue = $state('');
-
-	let content = $state('');
-	let responseContent = $state(null);
-	let responseDone = $state(false);
-	let controller = $state(null);
-
-	$effect(() => {
-		if (actions.length === 0) {
-			actions = DEFAULT_ACTIONS;
-		}
-	});
 
 	const DEFAULT_ACTIONS = [
 		{
@@ -56,6 +30,28 @@
 			prompt: `{{SELECTED_CONTENT}}\n\n\n${$i18n.t('Explain')}`
 		}
 	];
+
+	let {
+		id = '',
+		messageId = '',
+		model = null,
+		messages = [],
+		actions: actionsProp = [],
+		onAdd = (e) => {}
+	} = $props();
+
+	let actions = $derived(actionsProp.length > 0 ? actionsProp : DEFAULT_ACTIONS);
+
+	let floatingInput = $state(false);
+	let selectedAction = $state(null);
+
+	let selectedText = $state('');
+	let floatingInputValue = $state('');
+
+	let content = $state('');
+	let responseContent = $state(null);
+	let responseDone = $state(false);
+	let controller = $state(null);
 
 	const autoScroll = async () => {
 		const responseContainer = document.getElementById('response-container');

@@ -106,7 +106,6 @@
 		return distances.every((d) => d !== undefined && d >= -1 && d <= 1);
 	}
 
-
 	const decodeString = (str: string) => {
 		try {
 			return decodeURIComponent(str);

@@ -49,14 +49,7 @@
 	let messageEditTextAreaElement = $state();
 	let editScrollContainer = $state();
 
-	let message = $state(JSON.parse(JSON.stringify(history.messages[messageId])));
-	$effect(() => {
-		if (history.messages) {
-			if (JSON.stringify(message) !== JSON.stringify(history.messages[messageId])) {
-				message = JSON.parse(JSON.stringify(history.messages[messageId]));
-			}
-		}
-	});
+	let message = $derived($state.snapshot(history.messages[messageId]));
 
 	const copyToClipboard = async (text) => {
 		const res = await _copyToClipboard(text);

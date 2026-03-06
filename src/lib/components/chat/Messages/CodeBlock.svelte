@@ -35,15 +35,11 @@
 	let _code = $state('');
 	$effect(() => {
 		if (code) {
-			untrack(() => updateCode());
+			_code = code;
 		}
 	});
 
-	const updateCode = () => {
-		_code = code;
-	};
-
-	let _token = $state(null);
+	let tokenFingerprint = $derived(token ? JSON.stringify(token) : null);
 
 	let renderHTML = $state(null);
 	let renderError = $state(null);
@@ -109,15 +105,7 @@
 	};
 
 	$effect(() => {
-		if (token) {
-			if (JSON.stringify(token) !== JSON.stringify(_token)) {
-				_token = token;
-			}
-		}
-	});
-
-	$effect(() => {
-		if (_token) {
+		if (tokenFingerprint) {
 			untrack(() => render());
 		}
 	});
@@ -133,7 +121,7 @@
 				<SvgPanZoom
 					className=" rounded-2xl max-h-fit overflow-hidden"
 					svg={renderHTML}
-					content={_token.text}
+					content={token.text}
 				/>
 			{:else}
 				<div class="p-3">
