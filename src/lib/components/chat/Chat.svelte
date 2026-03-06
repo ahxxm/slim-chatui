@@ -313,15 +313,16 @@
 				} else if (type === 'notification') {
 					const toastType = data?.type ?? 'info';
 					const toastContent = data?.content ?? '';
+					const toastOpts = { id: `stream-${event.message_id}-${toastType}` };
 
 					if (toastType === 'success') {
-						toast.success(toastContent);
+						toast.success(toastContent, toastOpts);
 					} else if (toastType === 'error') {
-						toast.error(toastContent);
+						toast.error(toastContent, toastOpts);
 					} else if (toastType === 'warning') {
-						toast.warning(toastContent);
+						toast.warning(toastContent, toastOpts);
 					} else {
-						toast.info(toastContent);
+						toast.info(toastContent, toastOpts);
 					}
 				} else if (type === 'confirmation') {
 					eventCallback = cb;
@@ -1447,6 +1448,7 @@
 	const stopResponse = async () => {
 		if (taskIds) {
 			for (const taskId of taskIds) {
+				await stopTask(localStorage.token, taskId);
 			}
 
 			taskIds = null;

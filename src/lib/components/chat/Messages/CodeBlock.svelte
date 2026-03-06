@@ -1,6 +1,20 @@
+<script lang="ts" context="module">
+	import type HljsType from 'highlight.js';
+
+	let hljsPromise: Promise<typeof HljsType> | null = null;
+	function getHljs(): Promise<typeof HljsType> {
+		if (!hljsPromise) {
+			hljsPromise = Promise.all([
+				import('highlight.js'),
+				import('highlight.js/styles/github-dark.min.css')
+			]).then(([m]) => m.default);
+		}
+		return hljsPromise;
+	}
+</script>
+
 <script lang="ts">
-	import hljs from 'highlight.js';
-	import { getContext, untrack } from 'svelte';
+	import { onMount, getContext, untrack } from 'svelte';
 
 	import {
 		copyToClipboard,
@@ -9,9 +23,6 @@
 		renderVegaVisualization
 	} from '$lib/utils';
 
-	import 'highlight.js/styles/github-dark.min.css';
-
-	import CodeEditor from '$lib/components/common/CodeEditor.svelte';
 	import SvgPanZoom from '$lib/components/common/SVGPanZoom.svelte';
 
 	import ChevronUpDown from '$lib/components/icons/ChevronUpDown.svelte';
@@ -37,6 +48,11 @@
 		if (code) {
 			_code = code;
 		}
+	});
+
+	let hljs: typeof HljsType | null = $state(null);
+	onMount(async () => {
+		hljs = await getHljs();
 	});
 
 	let tokenFingerprint = $derived(token ? JSON.stringify(token) : null);
@@ -184,24 +200,27 @@
 
 				{#if !collapsed}
 					{#if edit}
-						<CodeEditor
-							value={code}
-							{id}
-							{lang}
-							onSave={() => {
-								saveCode();
-							}}
-							onChange={(value) => {
-								_code = value;
-							}}
-						/>
+						{#await import('$lib/components/common/CodeEditor.svelte') then { default: CodeEditor }}
+							<CodeEditor
+								value={code}
+								{id}
+								{lang}
+								onSave={() => {
+									saveCode();
+								}}
+								onChange={(value) => {
+									_code = value;
+								}}
+							/>
+						{/await}
 					{:else}
 						<pre
 							class=" hljs p-4 px-5 overflow-x-auto"
 							style="border-top-left-radius: 0px; border-top-right-radius: 0px;"><code
 								class="language-{lang} rounded-t-none whitespace-pre text-sm"
-								>{@html hljs.highlightAuto(code, hljs.getLanguage(lang)?.aliases).value ||
-									code}</code
+								>{@html hljs
+									? hljs.highlightAuto(code, hljs.getLanguage(lang)?.aliases).value || code
+									: code}</code
 							></pre>
 					{/if}
 				{:else}

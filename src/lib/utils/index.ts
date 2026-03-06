@@ -13,11 +13,6 @@ dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 dayjs.extend(localizedFormat);
 
-import { marked } from 'marked';
-import markedExtension from '$lib/utils/marked/extension';
-import markedKatexExtension from '$lib/utils/marked/katex-extension';
-import hljs from 'highlight.js';
-
 //////////////////////////
 // Helper functions
 //////////////////////////
@@ -314,18 +309,31 @@ export const copyToClipboard = async (
 	if (formatted) {
 		let styledHtml = '';
 		if (!html) {
-			const options = {
-				throwOnError: false,
-				highlight: function (code: string, lang: string) {
-					const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-					return hljs.highlight(code, { language }).value;
-				}
-			};
-			marked.use(markedKatexExtension(options));
-			marked.use(markedExtension(options));
-			// DEVELOPER NOTE: Go to `$lib/components/chat/Messages/Markdown.svelte` to add extra markdown extensions for rendering.
+			const [
+				{ Marked },
+				{ default: markedKatexExtension },
+				{ default: markedExtension },
+				{ default: hljs }
+			] = await Promise.all([
+				import('marked'),
+				import('$lib/utils/marked/katex-extension'),
+				import('$lib/utils/marked/extension'),
+				import('highlight.js')
+			]);
 
-			const htmlContent = marked.parse(text);
+			const clipboardMarked = new Marked();
+			clipboardMarked.use(markedKatexExtension({ throwOnError: false }));
+			clipboardMarked.use(markedExtension({ throwOnError: false }));
+			clipboardMarked.use({
+				renderer: {
+					code({ text, lang }) {
+						const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+						return `<pre><code class="hljs language-${language}">${hljs.highlight(text, { language }).value}</code></pre>`;
+					}
+				}
+			});
+
+			const htmlContent = clipboardMarked.parse(text);
 
 			// Add basic styling to make the content look better when pasted
 			styledHtml = `
