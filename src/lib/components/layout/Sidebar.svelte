@@ -3,6 +3,8 @@
 	import { v4 as uuidv4 } from 'uuid';
 
 	import { goto } from '$app/navigation';
+	import { browser } from '$app/environment';
+	import { get } from 'svelte/store';
 	import {
 		user,
 		chats,
@@ -27,7 +29,7 @@
 		activeChatIds,
 		refreshChatList
 	} from '$lib/stores';
-	import { onMount, getContext, tick } from 'svelte';
+	import { onMount, getContext, tick, untrack } from 'svelte';
 
 	const i18n = getContext('i18n');
 
@@ -61,31 +63,25 @@
 
 	const BREAKPOINT = 768;
 
-	let scrollTop = 0;
+	let scrollTop = $state(0);
 
-	let navElement;
-	let shiftKey = false;
+	let navElement = $state<HTMLElement | undefined>();
+	let shiftKey = $state(false);
 
-	let selectedChatId = null;
-	// Pagination variables
-	let chatListLoading = false;
-	let allChatsLoaded = false;
+	let selectedChatId = $state<string | null>(null);
+	let chatListLoading = $state(false);
+	let allChatsLoaded = $state(false);
 
-	let showCreateFolderModal = false;
+	let showCreateFolderModal = $state(false);
 
-	let pinnedModels = [];
+	let pinnedModels: string[] = [];
+	let showPinnedModels = $state(false);
+	let showFolders = $state(false);
 
-	let showPinnedModels = false;
-	let showFolders = false;
+	let folders = $state<Record<string, any>>({});
+	let folderRegistry = $state<Record<string, any>>({});
 
-	let folders = {};
-	let folderRegistry = {};
-
-	let newFolderId = null;
-
-	$: if ($selectedFolder) {
-		initFolders();
-	}
+	let newFolderId: string | null = null;
 
 	const initFolders = async () => {
 		const folderList = await getFolders(localStorage.token).catch((error) => {
@@ -97,7 +93,6 @@
 
 		// First pass: Initialize all folder entries
 		for (const folder of folderList) {
-			// Ensure folder is added to folders with its data
 			folders[folder.id] = { ...(folders[folder.id] || {}), ...folder };
 
 			if (newFolderId && folder.id === newFolderId) {
@@ -109,17 +104,14 @@
 		// Second pass: Tie child folders to their parents
 		for (const folder of folderList) {
 			if (folder.parent_id) {
-				// Ensure the parent folder is initialized if it doesn't exist
 				if (!folders[folder.parent_id]) {
-					folders[folder.parent_id] = {}; // Create a placeholder if not already present
+					folders[folder.parent_id] = {};
 				}
 
-				// Initialize childrenIds array if it doesn't exist and add the current folder id
 				folders[folder.parent_id].childrenIds = folders[folder.parent_id].childrenIds
 					? [...folders[folder.parent_id].childrenIds, folder.id]
 					: [folder.id];
 
-				// Sort the children by updated_at field
 				folders[folder.parent_id].childrenIds.sort((a, b) => {
 					return folders[b].updated_at - folders[a].updated_at;
 				});
@@ -136,7 +128,6 @@
 
 		const rootFolders = Object.values(folders).filter((folder) => folder.parent_id === null);
 		if (rootFolders.find((folder) => folder.name.toLowerCase() === name.toLowerCase())) {
-			// If a folder with the same name already exists, append a number to the name
 			let i = 1;
 			while (
 				rootFolders.find((folder) => folder.name.toLowerCase() === `${name} ${i}`.toLowerCase())
@@ -147,7 +138,6 @@
 			name = `${name} ${i}`;
 		}
 
-		// Add a dummy folder to the list to show the user that the folder is being created
 		const tempId = uuidv4();
 		folders = {
 			...folders,
@@ -168,15 +158,19 @@
 		});
 
 		if (res) {
-			// newFolderId = res.id;
 			await initFolders();
 			showFolders = true;
 		}
 	};
 
 	let chatListController: AbortController | null = null;
-	const initChatList = async () => {
+
+	const abortChatList = () => {
 		chatListController?.abort();
+	};
+
+	const initChatList = async () => {
+		abortChatList();
 		const controller = new AbortController();
 		chatListController = controller;
 		scrollPaginationEnabled.set(false);
@@ -259,7 +253,6 @@
 	const onDragOver = (e) => {
 		e.preventDefault();
 
-		// Check if a file is being draggedOver.
 		if (e.dataTransfer?.types?.includes('Files')) {
 			draggedOver = true;
 		} else {
@@ -273,19 +266,18 @@
 
 	const onDrop = async (e) => {
 		e.preventDefault();
-		console.log(e); // Log the drop event
+		console.log(e);
 
-		// Perform file drop check and handle it accordingly
 		if (e.dataTransfer?.files) {
 			const inputFiles = Array.from(e.dataTransfer?.files);
 
 			if (inputFiles && inputFiles.length > 0) {
-				console.log(inputFiles); // Log the dropped files
-				inputFilesHandler(inputFiles); // Handle the dropped files
+				console.log(inputFiles);
+				inputFilesHandler(inputFiles);
 			}
 		}
 
-		draggedOver = false; // Reset draggedOver status after drop
+		draggedOver = false;
 	};
 
 	let touchstart;
@@ -330,7 +322,7 @@
 	const MIN_WIDTH = 220;
 	const MAX_WIDTH = 480;
 
-	let isResizing = false;
+	let isResizing = $state(false);
 
 	let startWidth = 0;
 	let startClientX = 0;
@@ -361,9 +353,6 @@
 		document.documentElement.style.setProperty('--sidebar-width', `${newSidebarWidth}px`);
 	};
 
-	let unsubscribers = [];
-
-	// Handler for chat:active events (defined outside onMount for proper cleanup)
 	const chatActiveEventHandler = (event: {
 		chat_id: string;
 		message_id: string;
@@ -383,81 +372,96 @@
 		}
 	};
 
-	onMount(() => {
-		let isDestroyed = false;
-
+	// Restore persisted state before effects run (script body executes before $effect)
+	if (browser) {
 		try {
 			const width = Number(localStorage.getItem('sidebarWidth'));
 			if (!Number.isNaN(width) && width >= MIN_WIDTH && width <= MAX_WIDTH) {
 				sidebarWidth.set(width);
 			}
 		} catch {}
+		showSidebar.set(!get(mobile) ? localStorage.sidebar === 'true' : false);
+	}
 
+	// ── Effects ──────────────────────────────────────────────────────────
+
+	// Sync sidebar width to CSS custom property
+	$effect(() => {
 		document.documentElement.style.setProperty('--sidebar-width', `${$sidebarWidth}px`);
+	});
 
-		const sidebarWidthUnsub = sidebarWidth.subscribe((w) => {
-			document.documentElement.style.setProperty('--sidebar-width', `${w}px`);
-		});
+	// Close sidebar when switching to mobile
+	$effect(() => {
+		const isMobile = $mobile;
+		if (isMobile && untrack(() => $showSidebar)) {
+			showSidebar.set(false);
+		}
+		if (!isMobile && untrack(() => $showSidebar)) {
+			const nav = document.getElementsByTagName('nav')[0];
+			if (nav) nav.style['-webkit-app-region'] = 'drag';
+		}
+	});
+
+	// Sidebar open/close → localStorage, nav region, chat list init
+	$effect(() => {
+		const show = $showSidebar;
+		localStorage.sidebar = show;
+
+		const nav = document.getElementsByTagName('nav')[0];
+		if (nav) {
+			const isMobile = untrack(() => $mobile);
+			if (isMobile) {
+				nav.style['-webkit-app-region'] = show ? 'no-drag' : 'drag';
+			} else {
+				nav.style['-webkit-app-region'] = 'drag';
+			}
+		}
+
+		if (!show) return;
 
 		(async () => {
-			await showSidebar.set(!$mobile ? localStorage.sidebar === 'true' : false);
-			if (isDestroyed) return;
+			await initChatList();
+			if (chatListController?.signal.aborted) return;
+
+			const allChatIds = [...get(chats).map((c) => c.id), ...get(pinnedChats).map((c) => c.id)];
+			if (allChatIds.length > 0) {
+				try {
+					const res = await checkActiveChats(localStorage.token, allChatIds);
+					activeChatIds.set(new Set(res.active_chat_ids || []));
+				} catch (e) {
+					console.debug('Failed to check active chats:', e);
+				}
+			}
 		})();
 
-		unsubscribers = [
-			mobile.subscribe((value) => {
-				if ($showSidebar && value) {
-					showSidebar.set(false);
-				}
+		return () => abortChatList();
+	});
 
-				if ($showSidebar && !value) {
-					const navElement = document.getElementsByTagName('nav')[0];
-					if (navElement) {
-						navElement.style['-webkit-app-region'] = 'drag';
-					}
-				}
-			}),
-			showSidebar.subscribe(async (value) => {
-				localStorage.sidebar = value;
+	// Sync pinned models from settings
+	$effect(() => {
+		const pm = $settings?.pinnedModels ?? [];
+		pinnedModels = pm;
+		showPinnedModels = pm.length > 0;
+	});
 
-				// nav element is not available on the first render
-				const navElement = document.getElementsByTagName('nav')[0];
+	// Folder refresh on selectedFolder change
+	$effect(() => {
+		if ($selectedFolder) {
+			initFolders();
+		}
+	});
 
-				if (navElement) {
-					if ($mobile) {
-						if (!value) {
-							navElement.style['-webkit-app-region'] = 'drag';
-						} else {
-							navElement.style['-webkit-app-region'] = 'no-drag';
-						}
-					} else {
-						navElement.style['-webkit-app-region'] = 'drag';
-					}
-				}
+	// Socket events
+	$effect(() => {
+		const s = $socket;
+		if (!s) return;
+		s.on('events', chatActiveEventHandler);
+		return () => s.off('events', chatActiveEventHandler);
+	});
 
-				if (value) {
-					await initChatList();
+	// ── Lifecycle ────────────────────────────────────────────────────────
 
-					// Check which chats have active tasks
-					const allChatIds = [...$chats.map((c) => c.id), ...$pinnedChats.map((c) => c.id)];
-					if (allChatIds.length > 0) {
-						try {
-							const res = await checkActiveChats(localStorage.token, allChatIds);
-							activeChatIds.set(new Set(res.active_chat_ids || []));
-						} catch (e) {
-							console.debug('Failed to check active chats:', e);
-						}
-					}
-				}
-			}),
-			settings.subscribe((value) => {
-				if (pinnedModels != value?.pinnedModels ?? []) {
-					pinnedModels = value?.pinnedModels ?? [];
-					showPinnedModels = pinnedModels.length > 0;
-				}
-			})
-		];
-
+	onMount(() => {
 		window.addEventListener('keydown', syncShiftKey);
 		window.addEventListener('keyup', syncShiftKey);
 		window.addEventListener('mousemove', syncShiftKey, { passive: true });
@@ -474,18 +478,7 @@
 		dropZone?.addEventListener('drop', onDrop);
 		dropZone?.addEventListener('dragleave', onDragLeave);
 
-		$socket?.off('events', chatActiveEventHandler);
-		$socket?.on('events', chatActiveEventHandler);
-
 		return () => {
-			isDestroyed = true;
-
-			sidebarWidthUnsub();
-
-			if (unsubscribers && unsubscribers.length > 0) {
-				unsubscribers.forEach((unsub) => unsub?.());
-			}
-
 			window.removeEventListener('keydown', syncShiftKey);
 			window.removeEventListener('keyup', syncShiftKey);
 			window.removeEventListener('mousemove', syncShiftKey);
@@ -499,8 +492,6 @@
 			dropZone?.removeEventListener('dragover', onDragOver);
 			dropZone?.removeEventListener('drop', onDrop);
 			dropZone?.removeEventListener('dragleave', onDragLeave);
-
-			$socket?.off('events', chatActiveEventHandler);
 		};
 	});
 
