@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy, onMount, getContext } from 'svelte';
+	import { onDestroy, getContext } from 'svelte';
 	import panzoom, { type PanZoom } from 'panzoom';
 
 	import fileSaver from 'file-saver';
@@ -10,8 +10,6 @@
 	let { show = $bindable(false), src = '', alt = '' } = $props();
 
 	const i18n = getContext('i18n');
-
-	let mounted = false;
 
 	let previewElement = $state(null);
 
@@ -44,10 +42,6 @@
 			show = false;
 		}
 	};
-
-	onMount(() => {
-		mounted = true;
-	});
 
 	$effect(() => {
 		if (show && previewElement) {

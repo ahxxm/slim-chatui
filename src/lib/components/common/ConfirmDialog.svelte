@@ -1,7 +1,7 @@
 <script lang="ts">
 	import DOMPurify from 'dompurify';
 
-	import { onMount, getContext, createEventDispatcher, onDestroy, tick, untrack } from 'svelte';
+	import { getContext, createEventDispatcher, onDestroy, tick, untrack } from 'svelte';
 	import * as FocusTrap from 'focus-trap';
 
 	const i18n = getContext('i18n');
@@ -32,7 +32,6 @@
 	});
 
 	let modalElement = $state(null);
-	let mounted = false;
 
 	let focusTrap: FocusTrap.FocusTrap | null = null;
 
@@ -61,27 +60,21 @@
 		dispatch('confirm', inputValue);
 	};
 
-	onMount(() => {
-		mounted = true;
-	});
-
 	$effect(() => {
-		if (mounted) {
-			if (show && modalElement) {
-				document.body.appendChild(modalElement);
-				focusTrap = FocusTrap.createFocusTrap(modalElement);
-				focusTrap.activate();
+		if (show && modalElement) {
+			document.body.appendChild(modalElement);
+			focusTrap = FocusTrap.createFocusTrap(modalElement);
+			focusTrap.activate();
 
-				window.addEventListener('keydown', handleKeyDown);
-				document.body.style.overflow = 'hidden';
-			} else if (modalElement) {
-				focusTrap.deactivate();
+			window.addEventListener('keydown', handleKeyDown);
+			document.body.style.overflow = 'hidden';
+		} else if (modalElement) {
+			focusTrap.deactivate();
 
-				window.removeEventListener('keydown', handleKeyDown);
-				document.body.removeChild(modalElement);
+			window.removeEventListener('keydown', handleKeyDown);
+			document.body.removeChild(modalElement);
 
-				document.body.style.overflow = 'unset';
-			}
+			document.body.style.overflow = 'unset';
 		}
 	});
 

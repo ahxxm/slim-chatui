@@ -53,7 +53,7 @@
 	} = $props();
 
 	$effect(() => {
-		untrack(() => onChange)(open);
+		onChange(open);
 	});
 
 	const collapsibleId = uuidv4();
