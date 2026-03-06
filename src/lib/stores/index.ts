@@ -1,7 +1,7 @@
 import { APP_NAME } from '$lib/constants';
 import { type Writable, writable, get } from 'svelte/store';
 import type { ModelConfig } from '$lib/apis';
-import type { Banner, ChatListItem, TagItem, FolderItem } from '$lib/types';
+import type { Banner, ChatListItem, FolderItem } from '$lib/types';
 import type { Socket } from 'socket.io-client';
 import { getChatList } from '$lib/apis/chats';
 
@@ -49,7 +49,6 @@ export const chatTitle = writable('');
 
 export const chats: Writable<ChatListItem[]> = writable([]);
 export const pinnedChats: Writable<ChatListItem[]> = writable([]);
-export const tags: Writable<TagItem[]> = writable([]);
 export const folders: Writable<FolderItem[]> = writable([]);
 
 export const selectedFolder: Writable<FolderItem | null> = writable(null);
@@ -75,13 +74,14 @@ const PAGE_SIZE = 60;
 /** Refetch pages 1..currentChatPage, stopping early on a short page.
  *  Deflates currentChatPage to the actual last page with data.
  *  Returns true if all data was loaded (last fetched page was short). */
-export async function refreshChatList(token: string): Promise<boolean> {
+export async function refreshChatList(token: string, signal?: AbortSignal): Promise<boolean> {
 	const throughPage = get(currentChatPage);
 	const allChats: ChatListItem[] = [];
 	let lastPage = 0;
 	let allLoaded = false;
 	for (let p = 1; p <= throughPage; p++) {
 		const batch = await getChatList(token, p);
+		if (signal?.aborted) return false;
 		allChats.push(...batch);
 		lastPage = p;
 		if (batch.length < PAGE_SIZE) {
@@ -121,7 +121,6 @@ type Settings = {
 	responseAutoCopy?: any;
 	richTextInput?: boolean;
 	userLocation?: any;
-	autoTags?: boolean;
 	autoFollowUps?: boolean;
 	splitLargeChunks?: boolean;
 	backgroundImageUrl?: null;
@@ -129,7 +128,6 @@ type Settings = {
 	iframeSandboxAllowForms?: boolean;
 	iframeSandboxAllowSameOrigin?: boolean;
 	scrollOnBranchChange?: boolean;
-	directConnections?: null;
 	chatBubble?: boolean;
 	copyFormatted?: boolean;
 	models?: string[];
@@ -176,7 +174,6 @@ type Config = {
 		auth: boolean;
 		enable_signup: boolean;
 		enable_signup_password_confirmation?: boolean;
-		enable_direct_connections?: boolean;
 		enable_websocket?: boolean;
 		enable_easter_eggs?: boolean;
 	};

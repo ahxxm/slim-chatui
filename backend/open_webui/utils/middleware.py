@@ -15,12 +15,10 @@ from starlette.responses import StreamingResponse, JSONResponse
 
 from open_webui.models.chats import Chats
 from open_webui.models.folders import Folders
-from open_webui.models.users import Users
 from open_webui.socket.main import get_event_emitter
 from open_webui.routers.tasks import (
     generate_title,
     generate_follow_ups,
-    generate_chat_tags,
 )
 from open_webui.utils.files import (
     convert_markdown_base64_images,
@@ -52,6 +50,32 @@ from open_webui.constants import TASKS
 
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
+
+
+def extract_task_text(res: dict) -> str:
+    """Extract text content from Chat Completions or Responses API result."""
+    # Chat Completions: choices[0].message.content
+    choices = res.get("choices") or []
+    if len(choices) == 1:
+        msg = choices[0].get("message") or {}
+        return msg.get("content") or msg.get("reasoning_content", "")
+    # Responses API: output[0].content[0].text
+    for item in res.get("output") or []:
+        for block in item.get("content") or []:
+            if block.get("type") == "output_text":
+                return block.get("text", "")
+    return ""
+
+
+def parse_task_json(res, key, default):
+    """Extract task text from LLM response, parse JSON, return value for key."""
+    if not isinstance(res, dict):
+        return default
+    text = extract_task_text(res)
+    text = text[text.find("{") : text.rfind("}") + 1]
+    if not text:
+        return default
+    return json.loads(text).get(key, default)
 
 
 def output_id(prefix: str) -> str:
@@ -830,20 +854,18 @@ async def background_tasks_handler(ctx):
 
     message = None
     messages = []
+    is_ephemeral_chat = metadata.get("chat_id", "").startswith("local:")
 
-    if "chat_id" in metadata and not metadata["chat_id"].startswith("local:"):
+    if "chat_id" in metadata and not is_ephemeral_chat:
         messages_map = Chats.get_messages_map_by_chat_id(metadata["chat_id"])
         message = messages_map.get(metadata["message_id"]) if messages_map else None
 
         message_list = get_message_list(messages_map, metadata["message_id"])
 
-        # Remove details tags and files from the messages.
-        # as get_message_list creates a new list, it does not affect
-        # the original messages outside of this handler
-
+        # Strip details tags, images, and files for task generation prompts
         messages = []
-        for message in message_list:
-            content = message.get("content", "")
+        for msg in message_list:
+            content = msg.get("content", "")
             if isinstance(content, list):
                 for item in content:
                     if item.get("type") == "text":
@@ -860,186 +882,75 @@ async def background_tasks_handler(ctx):
 
             messages.append(
                 {
-                    **message,
-                    "role": message.get(
-                        "role", "assistant"
-                    ),  # Safe fallback for missing role
+                    **msg,
+                    "role": msg.get("role", "assistant"),
                     "content": content,
                 }
             )
     else:
-        # Local temp chat, get the model and message from the form_data
+        # Ephemeral chat — get the model and message from form_data
         message = get_last_user_message_item(form_data.get("messages", []))
         messages = form_data.get("messages", [])
         if message:
             message["model"] = form_data.get("model")
 
-    if message and "model" in message:
-        if tasks and messages:
-            if (
-                TASKS.FOLLOW_UP_GENERATION in tasks
-                and tasks[TASKS.FOLLOW_UP_GENERATION]
-            ):
-                res = await generate_follow_ups(
-                    request,
+    if not (message and "model" in message and tasks and messages):
+        return
+
+    if tasks.get(TASKS.FOLLOW_UP_GENERATION):
+        try:
+            res = await generate_follow_ups(
+                request,
+                {
+                    "model": message["model"],
+                    "messages": messages,
+                    "message_id": metadata["message_id"],
+                    "chat_id": metadata["chat_id"],
+                },
+                user,
+            )
+            follow_ups = parse_task_json(res, "follow_ups", [])
+            if follow_ups:
+                await event_emitter(
                     {
-                        "model": message["model"],
-                        "messages": messages,
-                        "message_id": metadata["message_id"],
-                        "chat_id": metadata["chat_id"],
-                    },
-                    user,
+                        "type": "chat:message:follow_ups",
+                        "data": {"follow_ups": follow_ups},
+                    }
                 )
-
-                if res and isinstance(res, dict):
-                    if len(res.get("choices", [])) == 1:
-                        response_message = res.get("choices", [])[0].get("message", {})
-
-                        follow_ups_string = response_message.get(
-                            "content"
-                        ) or response_message.get("reasoning_content", "")
-                    else:
-                        follow_ups_string = ""
-
-                    follow_ups_string = follow_ups_string[
-                        follow_ups_string.find("{") : follow_ups_string.rfind("}") + 1
-                    ]
-
-                    try:
-                        follow_ups = json.loads(follow_ups_string).get("follow_ups", [])
-                        await event_emitter(
-                            {
-                                "type": "chat:message:follow_ups",
-                                "data": {
-                                    "follow_ups": follow_ups,
-                                },
-                            }
-                        )
-
-                        if not metadata.get("chat_id", "").startswith("local:"):
-                            Chats.upsert_message_to_chat_by_id_and_message_id(
-                                metadata["chat_id"],
-                                metadata["message_id"],
-                                {
-                                    "followUps": follow_ups,
-                                },
-                            )
-
-                    except Exception as e:
-                        pass
-
-            if not metadata.get("chat_id", "").startswith(
-                "local:"
-            ):  # Only update titles and tags for non-temp chats
-                if TASKS.TITLE_GENERATION in tasks:
-                    user_message = get_last_user_message(messages)
-                    if user_message and len(user_message) > 100:
-                        user_message = user_message[:100] + "..."
-
-                    title = None
-                    if tasks[TASKS.TITLE_GENERATION]:
-                        res = await generate_title(
-                            request,
-                            {
-                                "model": message["model"],
-                                "messages": messages,
-                                "chat_id": metadata["chat_id"],
-                            },
-                            user,
-                        )
-
-                        if res and isinstance(res, dict):
-                            if len(res.get("choices", [])) == 1:
-                                response_message = res.get("choices", [])[0].get(
-                                    "message", {}
-                                )
-
-                                title_string = (
-                                    response_message.get("content")
-                                    or response_message.get(
-                                        "reasoning_content",
-                                    )
-                                    or message.get("content", user_message)
-                                )
-                            else:
-                                title_string = ""
-
-                            title_string = title_string[
-                                title_string.find("{") : title_string.rfind("}") + 1
-                            ]
-
-                            try:
-                                title = json.loads(title_string).get(
-                                    "title", user_message
-                                )
-                            except Exception as e:
-                                title = ""
-
-                            if not title:
-                                title = messages[0].get("content", user_message)
-
-                            Chats.update_chat_title_by_id(metadata["chat_id"], title)
-
-                            await event_emitter(
-                                {
-                                    "type": "chat:title",
-                                    "data": title,
-                                }
-                            )
-
-                    if title == None and len(messages) == 2:
-                        title = messages[0].get("content", user_message)
-
-                        Chats.update_chat_title_by_id(metadata["chat_id"], title)
-
-                        await event_emitter(
-                            {
-                                "type": "chat:title",
-                                "data": message.get("content", user_message),
-                            }
-                        )
-
-                if TASKS.TAGS_GENERATION in tasks and tasks[TASKS.TAGS_GENERATION]:
-                    res = await generate_chat_tags(
-                        request,
-                        {
-                            "model": message["model"],
-                            "messages": messages,
-                            "chat_id": metadata["chat_id"],
-                        },
-                        user,
+                if not is_ephemeral_chat:
+                    Chats.upsert_message_to_chat_by_id_and_message_id(
+                        metadata["chat_id"],
+                        metadata["message_id"],
+                        {"followUps": follow_ups},
                     )
+        except Exception as e:
+            log.error(f"follow-up generation failed: {e}")
 
-                    if res and isinstance(res, dict):
-                        if len(res.get("choices", [])) == 1:
-                            response_message = res.get("choices", [])[0].get(
-                                "message", {}
-                            )
+    if is_ephemeral_chat:
+        return
 
-                            tags_string = response_message.get(
-                                "content"
-                            ) or response_message.get("reasoning_content", "")
-                        else:
-                            tags_string = ""
+    if tasks.get(TASKS.TITLE_GENERATION):
+        try:
+            res = await generate_title(
+                request,
+                {
+                    "model": message["model"],
+                    "messages": messages,
+                    "chat_id": metadata["chat_id"],
+                },
+                user,
+            )
+            title = parse_task_json(res, "title", "")
+        except Exception as e:
+            log.error(f"title generation failed: {e}")
+            title = ""
 
-                        tags_string = tags_string[
-                            tags_string.find("{") : tags_string.rfind("}") + 1
-                        ]
+        if not title:
+            user_message = get_last_user_message(messages) or ""
+            title = user_message[:100] or "New Chat"
 
-                        try:
-                            tags = json.loads(tags_string).get("tags", [])
-                            Chats.update_chat_tags_by_id(
-                                metadata["chat_id"], tags, user
-                            )
-
-                            await event_emitter(
-                                {
-                                    "type": "chat:tags",
-                                    "data": tags,
-                                }
-                            )
-                        except Exception as e:
-                            pass
+        Chats.update_chat_title_by_id(metadata["chat_id"], title)
+        await event_emitter({"type": "chat:title", "data": title})
 
 
 async def non_streaming_chat_response_handler(response, ctx):
@@ -1264,9 +1175,7 @@ async def streaming_chat_response_handler(response, ctx):
                             data = json.loads(data)
 
                             if data:
-                                if "event" in data and not getattr(
-                                    request.state, "direct", False
-                                ):
+                                if "event" in data:
                                     await event_emitter(data.get("event", {}))
 
                                 if "selected_model_id" in data:

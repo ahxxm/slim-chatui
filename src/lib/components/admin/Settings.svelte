@@ -99,8 +99,7 @@
 				'banners',
 				'tasks',
 				'prompt suggestions',
-				'title generation',
-				'tags'
+				'title generation'
 			]
 		},
 		{

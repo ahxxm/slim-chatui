@@ -97,29 +97,6 @@ async def get_base_models(
     return Models.get_base_models()
 
 
-###########################
-# GetModelTags
-###########################
-
-
-@router.get("/tags", response_model=list[str])
-async def get_model_tags(
-    user=Depends(get_verified_user),
-):
-    models = Models.get_models()
-
-    tags_set = set()
-    for model in models:
-        if model.meta:
-            meta = model.meta.model_dump()
-            for tag in meta.get("tags", []):
-                tags_set.add((tag.get("name")))
-
-    tags = [tag for tag in tags_set]
-    tags.sort()
-    return tags
-
-
 ############################
 # CreateNewModel
 ############################

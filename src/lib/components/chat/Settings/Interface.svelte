@@ -26,7 +26,6 @@
 	// Addons
 	let titleAutoGenerate = true;
 	let autoFollowUps = true;
-	let autoTags = true;
 
 	let responseAutoCopy = false;
 	let widescreenMode = false;
@@ -175,7 +174,6 @@
 
 	onMount(async () => {
 		titleAutoGenerate = $settings?.title?.auto ?? true;
-		autoTags = $settings?.autoTags ?? true;
 		autoFollowUps = $settings?.autoFollowUps ?? true;
 
 		highContrastMode = $settings?.highContrastMode ?? false;
@@ -728,25 +726,6 @@
 							bind:state={autoFollowUps}
 							on:change={() => {
 								saveSettings({ autoFollowUps });
-							}}
-						/>
-					</div>
-				</div>
-			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="chat-tags-label" class=" self-center text-xs">
-						{$i18n.t('Chat Tags Auto-Generation')}
-					</div>
-
-					<div class="flex items-center gap-2 p-1">
-						<Switch
-							ariaLabelledbyId="chat-tags-label"
-							tooltip={true}
-							bind:state={autoTags}
-							on:change={() => {
-								saveSettings({ autoTags });
 							}}
 						/>
 					</div>

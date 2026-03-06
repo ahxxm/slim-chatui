@@ -17,14 +17,6 @@ export type ChatListItem = {
 	time_range?: string;
 };
 
-// Mirrors backend TagModel
-export type TagItem = {
-	id: string;
-	name: string;
-	user_id: string;
-	meta?: Record<string, unknown> | null;
-};
-
 // Chat blob internals (stored in chat.chat JSON column)
 // Messages are open-ended (streaming adds arbitrary fields), so values are `any`.
 export type ChatHistory = {
