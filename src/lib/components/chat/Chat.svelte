@@ -9,7 +9,7 @@
 	import { goto, replaceState } from '$app/navigation';
 	import { page } from '$app/stores';
 
-	import { type Unsubscriber, type Writable } from 'svelte/store';
+	import { type Writable } from 'svelte/store';
 	import type { i18n as i18nType } from 'i18next';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import type { ChatHistory } from '$lib/types';
@@ -68,7 +68,6 @@
 	let messageInput = $state<any>(null);
 
 	let autoScroll = $state(true);
-	let processing = '';
 	let messagesContainerElement = $state<HTMLDivElement | undefined>();
 
 	let navbarElement = $state<any>(null);
@@ -81,8 +80,6 @@
 	let eventConfirmationInputValue = $state('');
 	let eventConfirmationInputType = $state('');
 	let eventCallback = $state<((value?: any) => void) | null>(null);
-
-	let chatIdUnsubscriber: Unsubscriber | undefined;
 
 	let selectedModels = $state(['']);
 	let atSelectedModel = $state<Model | undefined>();
@@ -215,8 +212,8 @@
 	};
 
 	const showMessage = async (message: any, scroll = true) => {
-		const _chatId = JSON.parse(JSON.stringify($chatId));
-		let _messageId = JSON.parse(JSON.stringify(message.id));
+		const _chatId = $chatId;
+		let _messageId = message.id;
 
 		let messageChildrenIds = [];
 		if (_messageId === null) {
@@ -500,7 +497,6 @@
 				saveDraftTimeout = null;
 			}
 			pageUnsubscribe();
-			chatIdUnsubscriber?.();
 			window.removeEventListener('message', onMessageHandler);
 			$socket?.off('events', chatEventHandler);
 		};
@@ -1016,7 +1012,7 @@
 		if (taskIds !== null && taskIds.length > 0) {
 			if ($settings?.enableMessageQueue ?? true) {
 				// Queue the message
-				const _files = JSON.parse(JSON.stringify(files));
+				const _files = $state.snapshot(files);
 				messageQueue = [
 					...messageQueue,
 					{
@@ -1051,7 +1047,7 @@
 		prompt = '';
 
 		const messages = createMessagesList(history, history.currentId);
-		const _files = JSON.parse(JSON.stringify(files));
+		const _files = $state.snapshot(files);
 
 		chatFiles.push(
 			..._files.filter(
@@ -1117,8 +1113,8 @@
 			scrollToBottom();
 		}
 
-		let _chatId = JSON.parse(JSON.stringify($chatId));
-		_history = JSON.parse(JSON.stringify(_history));
+		let _chatId = $chatId;
+		_history = $state.snapshot(_history);
 
 		const resolvedModelId = modelId
 			? modelId
@@ -1178,7 +1174,7 @@
 
 		await tick();
 
-		_history = JSON.parse(JSON.stringify(history));
+		_history = $state.snapshot(history);
 		console.log(
 			'[sendMessage] after tick+copy, _history has responseMessageId:',
 			!!_history.messages[responseMessageId]
@@ -1233,7 +1229,7 @@
 			return fileExists;
 		});
 
-		let files = JSON.parse(JSON.stringify(chatFiles));
+		let files = structuredClone(chatFiles);
 		files.push(
 			...(userMessage?.files ?? []).filter(
 				(item) =>
@@ -1533,7 +1529,7 @@
 
 	const continueResponse = async () => {
 		console.log('continueResponse');
-		const _chatId = JSON.parse(JSON.stringify($chatId));
+		const _chatId = $chatId;
 
 		if (history.currentId && history.messages[history.currentId].done == true) {
 			const responseMessage = history.messages[history.currentId];

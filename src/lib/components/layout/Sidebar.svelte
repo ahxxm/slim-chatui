@@ -74,14 +74,11 @@
 
 	let showCreateFolderModal = $state(false);
 
-	let pinnedModels: string[] = [];
-	let showPinnedModels = $state(false);
+	let showPinnedModels = $derived(($settings?.pinnedModels ?? []).length > 0);
 	let showFolders = $state(false);
 
 	let folders = $state<Record<string, any>>({});
 	let folderRegistry = $state<Record<string, any>>({});
-
-	let newFolderId: string | null = null;
 
 	const initFolders = async () => {
 		const folderList = await getFolders(localStorage.token).catch((error) => {
@@ -94,11 +91,6 @@
 		// First pass: Initialize all folder entries
 		for (const folder of folderList) {
 			folders[folder.id] = { ...(folders[folder.id] || {}), ...folder };
-
-			if (newFolderId && folder.id === newFolderId) {
-				folders[folder.id].new = true;
-				newFolderId = null;
-			}
 		}
 
 		// Second pass: Tie child folders to their parents
@@ -248,36 +240,22 @@
 		}
 	};
 
-	let draggedOver = false;
-
 	const onDragOver = (e) => {
 		e.preventDefault();
-
-		if (e.dataTransfer?.types?.includes('Files')) {
-			draggedOver = true;
-		} else {
-			draggedOver = false;
-		}
 	};
 
-	const onDragLeave = () => {
-		draggedOver = false;
-	};
+	const onDragLeave = () => {};
 
 	const onDrop = async (e) => {
 		e.preventDefault();
-		console.log(e);
 
 		if (e.dataTransfer?.files) {
 			const inputFiles = Array.from(e.dataTransfer?.files);
 
 			if (inputFiles && inputFiles.length > 0) {
-				console.log(inputFiles);
 				inputFilesHandler(inputFiles);
 			}
 		}
-
-		draggedOver = false;
 	};
 
 	let touchstart;
@@ -311,8 +289,6 @@
 			shiftKey = e.shiftKey;
 		}
 	};
-
-	const onFocus = () => {};
 
 	const onBlur = () => {
 		shiftKey = false;
@@ -437,13 +413,6 @@
 		return () => abortChatList();
 	});
 
-	// Sync pinned models from settings
-	$effect(() => {
-		const pm = $settings?.pinnedModels ?? [];
-		pinnedModels = pm;
-		showPinnedModels = pm.length > 0;
-	});
-
 	// Folder refresh on selectedFolder change
 	$effect(() => {
 		if ($selectedFolder) {
@@ -469,7 +438,6 @@
 		window.addEventListener('touchstart', onTouchStart);
 		window.addEventListener('touchend', onTouchEnd);
 
-		window.addEventListener('focus', onFocus);
 		window.addEventListener('blur', onBlur);
 
 		const dropZone = document.getElementById('sidebar');
@@ -486,7 +454,6 @@
 			window.removeEventListener('touchstart', onTouchStart);
 			window.removeEventListener('touchend', onTouchEnd);
 
-			window.removeEventListener('focus', onFocus);
 			window.removeEventListener('blur', onBlur);
 
 			dropZone?.removeEventListener('dragover', onDragOver);
