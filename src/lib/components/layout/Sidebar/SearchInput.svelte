@@ -1,6 +1,5 @@
 <script lang="ts">
-	import { getAllTags } from '$lib/apis/chats';
-	import { folders, tags } from '$lib/stores';
+	import { folders } from '$lib/stores';
 	import { getContext, createEventDispatcher, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import Search from '$lib/components/icons/Search.svelte';
@@ -24,10 +23,6 @@
 
 	let options = [
 		{
-			name: 'tag:',
-			description: $i18n.t('search for tags')
-		},
-		{
 			name: 'folder:',
 			description: $i18n.t('search for folders')
 		},
@@ -37,8 +32,6 @@
 		}
 	];
 	let focused = false;
-	let loading = false;
-
 	let hovering = false;
 
 	let filteredOptions = options;
@@ -54,39 +47,9 @@
 
 	const initItems = async () => {
 		console.log('initItems', lastWord);
-		loading = true;
 		await tick();
 
-		if (lastWord.startsWith('tag:')) {
-			filteredItems = [
-				...$tags,
-				{
-					id: 'none',
-					name: $i18n.t('Untagged')
-				}
-			]
-				.filter((tag) => {
-					const tagName = lastWord.slice(4);
-					if (tagName) {
-						const tagId = tagName.replaceAll(' ', '_').toLowerCase();
-
-						if (tag.id !== tagId) {
-							return tag.id.startsWith(tagId);
-						} else {
-							return false;
-						}
-					} else {
-						return true;
-					}
-				})
-				.map((tag) => {
-					return {
-						id: tag.id,
-						name: tag.name,
-						type: 'tag'
-					};
-				});
-		} else if (lastWord.startsWith('folder:')) {
+		if (lastWord.startsWith('folder:')) {
 			filteredItems = [...$folders]
 				.filter((folder) => {
 					const folderName = lastWord.slice(7);
@@ -133,15 +96,6 @@
 		} else {
 			filteredItems = [];
 		}
-
-		loading = false;
-	};
-
-	const initTags = async () => {
-		loading = true;
-
-		await tags.set(await getAllTags(localStorage.token));
-		loading = false;
 	};
 
 	const clearSearchInput = () => {
@@ -172,7 +126,6 @@
 					hovering = false;
 
 					focused = true;
-					initTags();
 				}
 			}}
 			on:blur={() => {
@@ -221,7 +174,6 @@
 						hovering = false;
 
 						focused = true;
-						initTags();
 					}
 
 					selectedIdx = 0;

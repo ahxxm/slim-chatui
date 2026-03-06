@@ -6,7 +6,6 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 from open_webui.internal.db import Base, JSONField, get_db, get_db_context
-from open_webui.models.tags import TagModel, Tag, Tags
 from open_webui.models.folders import Folders
 from open_webui.models.chat_messages import ChatMessage, ChatMessages
 from open_webui.utils.misc import sanitize_data_for_db, sanitize_text_for_db
@@ -333,33 +332,6 @@ class ChatTable:
         chat["title"] = title
 
         return self.update_chat_by_id(id, chat)
-
-    def update_chat_tags_by_id(
-        self, id: str, tags: list[str], user
-    ) -> Optional[ChatModel]:
-        with get_db_context() as db:
-            chat = db.get(Chat, id)
-            if chat is None:
-                return None
-
-            old_tags = chat.meta.get("tags", [])
-            new_tags = [t for t in tags if t.replace(" ", "_").lower() != "none"]
-            new_tag_ids = [t.replace(" ", "_").lower() for t in new_tags]
-
-            # Single meta update
-            chat.meta = {**chat.meta, "tags": new_tag_ids}
-            db.flush()
-            db.refresh(chat)
-
-            # Batch-create any missing tag rows
-            Tags.ensure_tags_exist(new_tags, user.id, db=db)
-
-            # Clean up orphaned old tags in one query
-            removed = set(old_tags) - set(new_tag_ids)
-            if removed:
-                self.delete_orphan_tags_for_user(list(removed), user.id, db=db)
-
-            return ChatModel.model_validate(chat)
 
     def get_chat_title_by_id(self, id: str) -> Optional[str]:
         with get_db_context() as db:
@@ -730,13 +702,6 @@ class ChatTable:
 
         search_text_words = search_text.split(" ")
 
-        # search_text might contain 'tag:tag_name' format so we need to extract the tag_name, split the search_text and remove the tags
-        tag_ids = [
-            word.replace("tag:", "").replace(" ", "_").lower()
-            for word in search_text_words
-            if word.startswith("tag:")
-        ]
-
         # Extract folder names - handle spaces and case insensitivity
         folders = Folders.search_folders_by_names(
             user_id,
@@ -757,11 +722,7 @@ class ChatTable:
         search_text_words = [
             word
             for word in search_text_words
-            if (
-                not word.startswith("tag:")
-                and not word.startswith("folder:")
-                and not word.startswith("pinned:")
-            )
+            if (not word.startswith("folder:") and not word.startswith("pinned:"))
         ]
 
         search_text = " ".join(search_text_words)
@@ -789,29 +750,6 @@ class ChatTable:
                     title_key=f"%{search_text}%", content_key=search_text
                 )
             )
-
-            if "none" in tag_ids:
-                query = query.filter(text("""
-                        NOT EXISTS (
-                            SELECT 1
-                            FROM json_each(Chat.meta, '$.tags') AS tag
-                        )
-                        """))
-            elif tag_ids:
-                query = query.filter(
-                    and_(
-                        *[
-                            text(f"""
-                                EXISTS (
-                                    SELECT 1
-                                    FROM json_each(Chat.meta, '$.tags') AS tag
-                                    WHERE tag.value = :tag_id_{tag_idx}
-                                )
-                                """).params(**{f"tag_id_{tag_idx}": tag_id})
-                            for tag_idx, tag_id in enumerate(tag_ids)
-                        ]
-                    )
-                )
 
             # Perform pagination at the SQL level
             all_chats = query.offset(skip).limit(limit).all()
@@ -872,94 +810,6 @@ class ChatTable:
         except Exception:
             return None
 
-    def get_chat_tags_by_id_and_user_id(
-        self, id: str, user_id: str, db: Optional[Session] = None
-    ) -> list[TagModel]:
-        with get_db_context(db) as db:
-            chat = db.get(Chat, id)
-            tag_ids = chat.meta.get("tags", [])
-            return Tags.get_tags_by_ids_and_user_id(tag_ids, user_id, db=db)
-
-    def get_chat_list_by_user_id_and_tag_name(
-        self,
-        user_id: str,
-        tag_name: str,
-        skip: int = 0,
-        limit: int = 50,
-        db: Optional[Session] = None,
-    ) -> list[ChatModel]:
-        with get_db_context(db) as db:
-            query = db.query(Chat).filter_by(user_id=user_id)
-            tag_id = tag_name.replace(" ", "_").lower()
-
-            query = query.filter(
-                text(
-                    "EXISTS (SELECT 1 FROM json_each(Chat.meta, '$.tags') WHERE json_each.value = :tag_id)"
-                )
-            ).params(tag_id=tag_id)
-
-            all_chats = query.all()
-            log.debug(f"all_chats: {all_chats}")
-            return [ChatModel.model_validate(chat) for chat in all_chats]
-
-    def add_chat_tag_by_id_and_user_id_and_tag_name(
-        self, id: str, user_id: str, tag_name: str, db: Optional[Session] = None
-    ) -> Optional[ChatModel]:
-        tag_id = tag_name.replace(" ", "_").lower()
-        Tags.ensure_tags_exist([tag_name], user_id, db=db)
-        try:
-            with get_db_context(db) as db:
-                chat = db.get(Chat, id)
-                if tag_id not in chat.meta.get("tags", []):
-                    chat.meta = {
-                        **chat.meta,
-                        "tags": list(set(chat.meta.get("tags", []) + [tag_id])),
-                    }
-                db.flush()
-                db.refresh(chat)
-                return ChatModel.model_validate(chat)
-        except Exception:
-            return None
-
-    def count_chats_by_tag_name_and_user_id(
-        self, tag_name: str, user_id: str, db: Optional[Session] = None
-    ) -> int:
-        with get_db_context(db) as db:
-            query = db.query(Chat).filter_by(user_id=user_id)
-            tag_id = tag_name.replace(" ", "_").lower()
-
-            query = query.filter(
-                text(
-                    "EXISTS (SELECT 1 FROM json_each(Chat.meta, '$.tags') WHERE json_each.value = :tag_id)"
-                )
-            ).params(tag_id=tag_id)
-
-            return query.count()
-
-    def delete_orphan_tags_for_user(
-        self,
-        tag_ids: list[str],
-        user_id: str,
-        threshold: int = 0,
-        db: Optional[Session] = None,
-    ) -> None:
-        """Delete tag rows from *tag_ids* that appear in at most *threshold*
-        chats for *user_id*.  One query to find orphans, one to delete them.
-
-        Use threshold=0 after a tag is already removed from a chat's meta.
-        Use threshold=1 when the chat itself is about to be deleted (the
-        referencing chat still exists at query time).
-        """
-        if not tag_ids:
-            return
-        with get_db_context(db) as db:
-            orphans = []
-            for tag_id in tag_ids:
-                count = self.count_chats_by_tag_name_and_user_id(tag_id, user_id, db=db)
-                if count <= threshold:
-                    orphans.append(tag_id)
-            Tags.delete_tags_by_ids_and_user_id(orphans, user_id, db=db)
-
     def count_chats_by_folder_id_and_user_id(
         self, folder_id: str, user_id: str, db: Optional[Session] = None
     ) -> int:
@@ -971,41 +821,6 @@ class ChatTable:
 
             log.info(f"Count of chats for folder '{folder_id}': {count}")
             return count
-
-    def delete_tag_by_id_and_user_id_and_tag_name(
-        self, id: str, user_id: str, tag_name: str, db: Optional[Session] = None
-    ) -> bool:
-        try:
-            with get_db_context(db) as db:
-                chat = db.get(Chat, id)
-                tags = chat.meta.get("tags", [])
-                tag_id = tag_name.replace(" ", "_").lower()
-
-                tags = [tag for tag in tags if tag != tag_id]
-                chat.meta = {
-                    **chat.meta,
-                    "tags": list(set(tags)),
-                }
-                db.flush()
-                return True
-        except Exception:
-            return False
-
-    def delete_all_tags_by_id_and_user_id(
-        self, id: str, user_id: str, db: Optional[Session] = None
-    ) -> bool:
-        try:
-            with get_db_context(db) as db:
-                chat = db.get(Chat, id)
-                chat.meta = {
-                    **chat.meta,
-                    "tags": [],
-                }
-                db.flush()
-
-                return True
-        except Exception:
-            return False
 
     def delete_chat_by_id(self, id: str, db: Optional[Session] = None) -> bool:
         try:

@@ -19,9 +19,7 @@
 		ENABLE_TITLE_GENERATION: true,
 		TITLE_GENERATION_PROMPT_TEMPLATE: '',
 		ENABLE_FOLLOW_UP_GENERATION: true,
-		FOLLOW_UP_GENERATION_PROMPT_TEMPLATE: '',
-		TAGS_GENERATION_PROMPT_TEMPLATE: '',
-		ENABLE_TAGS_GENERATION: true
+		FOLLOW_UP_GENERATION_PROMPT_TEMPLATE: ''
 	};
 
 	const updateInterfaceHandler = async () => {
@@ -179,32 +177,6 @@
 						>
 							<Textarea
 								bind:value={taskConfig.FOLLOW_UP_GENERATION_PROMPT_TEMPLATE}
-								placeholder={$i18n.t(
-									'Leave empty to use the default prompt, or enter a custom prompt'
-								)}
-							/>
-						</Tooltip>
-					</div>
-				{/if}
-
-				<div class="mb-2.5 flex w-full items-center justify-between">
-					<div class=" self-center text-xs font-medium">
-						{$i18n.t('Tags Generation')}
-					</div>
-
-					<Switch bind:state={taskConfig.ENABLE_TAGS_GENERATION} />
-				</div>
-
-				{#if taskConfig.ENABLE_TAGS_GENERATION}
-					<div class="mb-2.5">
-						<div class=" mb-1 text-xs font-medium">{$i18n.t('Tags Generation Prompt')}</div>
-
-						<Tooltip
-							content={$i18n.t('Leave empty to use the default prompt, or enter a custom prompt')}
-							placement="top-start"
-						>
-							<Textarea
-								bind:value={taskConfig.TAGS_GENERATION_PROMPT_TEMPLATE}
 								placeholder={$i18n.t(
 									'Leave empty to use the default prompt, or enter a custom prompt'
 								)}

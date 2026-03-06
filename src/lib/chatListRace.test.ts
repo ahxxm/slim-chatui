@@ -9,7 +9,7 @@
  * How it happens:
  *   1. Each delete triggers initChatList(), which refetches the full chat list.
  *   2. initChatList sets currentChatPage=1 up front, but reads $currentChatPage
- *      much later (after two sequential awaits for tags and pinned chats).
+ *      much later (after a sequential await for pinned chats).
  *   3. When the first initChatList completes, it sets scrollPaginationEnabled=true.
  *      The infinite-scroll Loader sees this, fires loadMoreChats(), which bumps
  *      currentChatPage to 2.
@@ -57,7 +57,6 @@ import { render, fireEvent, cleanup } from '@testing-library/svelte';
 import {
 	chats,
 	pinnedChats,
-	tags,
 	currentChatPage,
 	scrollPaginationEnabled,
 	showSidebar,
@@ -94,7 +93,6 @@ function seedStores() {
 	} as any);
 	showSidebar.set(true);
 	pinnedChats.set([]);
-	tags.set([]);
 	currentChatPage.set(1);
 	scrollPaginationEnabled.set(true);
 }

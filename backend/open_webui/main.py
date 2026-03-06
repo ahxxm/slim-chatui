@@ -64,8 +64,6 @@ from open_webui.config import (
     OPENAI_API_BASE_URLS,
     OPENAI_API_KEYS,
     OPENAI_API_CONFIGS,
-    # Direct Connections
-    ENABLE_DIRECT_CONNECTIONS,
     # Thread pool size for FastAPI/AnyIO
     THREAD_POOL_SIZE,
     # File
@@ -85,7 +83,6 @@ from open_webui.config import (
     DEFAULT_PROMPT_SUGGESTIONS,
     DEFAULT_MODELS,
     DEFAULT_PINNED_MODELS,
-    MODEL_ORDER_LIST,
     DEFAULT_MODEL_METADATA,
     DEFAULT_MODEL_PARAMS,
     # Misc
@@ -97,12 +94,10 @@ from open_webui.config import (
     WEBUI_URL,
     # Tasks
     TASK_MODEL,
-    ENABLE_TAGS_GENERATION,
     ENABLE_TITLE_GENERATION,
     ENABLE_FOLLOW_UP_GENERATION,
     TITLE_GENERATION_PROMPT_TEMPLATE,
     FOLLOW_UP_GENERATION_PROMPT_TEMPLATE,
-    TAGS_GENERATION_PROMPT_TEMPLATE,
     AppConfig,
 )
 from open_webui.env import (
@@ -130,7 +125,7 @@ from open_webui.utils.models import (
     get_all_models,
     get_all_base_models,
 )
-from open_webui.utils.chat import (
+from open_webui.routers.openai import (
     generate_chat_completion as chat_completion_handler,
 )
 from open_webui.utils.middleware import (
@@ -245,14 +240,6 @@ app.state.OPENAI_MODELS = {}
 
 ########################################
 #
-# DIRECT CONNECTIONS
-#
-########################################
-
-app.state.config.ENABLE_DIRECT_CONNECTIONS = ENABLE_DIRECT_CONNECTIONS
-
-########################################
-#
 # MODELS
 #
 ########################################
@@ -276,7 +263,6 @@ app.state.config.ADMIN_EMAIL = ADMIN_EMAIL
 
 app.state.config.DEFAULT_MODELS = DEFAULT_MODELS
 app.state.config.DEFAULT_PINNED_MODELS = DEFAULT_PINNED_MODELS
-app.state.config.MODEL_ORDER_LIST = MODEL_ORDER_LIST
 app.state.config.DEFAULT_MODEL_METADATA = DEFAULT_MODEL_METADATA
 app.state.config.DEFAULT_MODEL_PARAMS = DEFAULT_MODEL_PARAMS
 
@@ -311,13 +297,11 @@ app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT = FILE_IMAGE_COMPRESSION_HEIGHT
 app.state.config.TASK_MODEL = TASK_MODEL
 
 
-app.state.config.ENABLE_TAGS_GENERATION = ENABLE_TAGS_GENERATION
 app.state.config.ENABLE_TITLE_GENERATION = ENABLE_TITLE_GENERATION
 app.state.config.ENABLE_FOLLOW_UP_GENERATION = ENABLE_FOLLOW_UP_GENERATION
 
 
 app.state.config.TITLE_GENERATION_PROMPT_TEMPLATE = TITLE_GENERATION_PROMPT_TEMPLATE
-app.state.config.TAGS_GENERATION_PROMPT_TEMPLATE = TAGS_GENERATION_PROMPT_TEMPLATE
 app.state.config.FOLLOW_UP_GENERATION_PROMPT_TEMPLATE = (
     FOLLOW_UP_GENERATION_PROMPT_TEMPLATE
 )
@@ -474,32 +458,7 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
         if model.get("info", {}).get("meta", {}).get("profile_image_url"):
             model["info"]["meta"].pop("profile_image_url", None)
 
-        try:
-            model_tags = [
-                tag.get("name")
-                for tag in model.get("info", {}).get("meta", {}).get("tags", [])
-            ]
-            tags = [tag.get("name") for tag in model.get("tags", [])]
-
-            tags = list(set(model_tags + tags))
-            model["tags"] = [{"name": tag} for tag in tags]
-        except Exception as e:
-            log.debug(f"Error processing model tags: {e}")
-            model["tags"] = []
-            pass
-
         models.append(model)
-
-    model_order_list = request.app.state.config.MODEL_ORDER_LIST
-    if model_order_list:
-        model_order_dict = {model_id: i for i, model_id in enumerate(model_order_list)}
-        # Sort models by order list priority, with fallback for those not in the list
-        models.sort(
-            key=lambda model: (
-                model_order_dict.get(model.get("id", ""), float("inf")),
-                (model.get("name", "") or ""),
-            )
-        )
 
     log.debug(
         f"/api/models returned filtered models accessible to the user: {json.dumps([model.get('id') for model in models])}"
@@ -524,23 +483,15 @@ async def chat_completion(
         await get_all_models(request, user=user)
 
     model_id = form_data.get("model", None)
-    model_item = form_data.pop("model_item", {})
     tasks = form_data.pop("background_tasks", None)
 
     metadata = {}
     try:
-        model_info = None
-        if not model_item.get("direct", False):
-            if model_id not in request.app.state.MODELS:
-                raise Exception("Model not found")
+        if model_id not in request.app.state.MODELS:
+            raise Exception("Model not found")
 
-            model = request.app.state.MODELS[model_id]
-            model_info = Models.get_model_by_id(model_id)
-        else:
-            model = model_item
-
-            request.state.direct = True
-            request.state.model = model
+        model = request.app.state.MODELS[model_id]
+        model_info = Models.get_model_by_id(model_id)
 
         # Model params: global defaults as base, per-model overrides win
         default_model_params = (
@@ -602,7 +553,6 @@ async def chat_completion(
             "features": form_data.get("features", {}),
             "variables": form_data.get("variables", {}),
             "model": model,
-            "direct": model_item.get("direct", False),
             "params": {
                 "stream_delta_chunk_size": stream_delta_chunk_size,
             },
@@ -751,11 +701,6 @@ async def chat_completion(
         return await process_chat(request, form_data, user, metadata, model)
 
 
-# Alias for chat_completion (Legacy)
-generate_chat_completions = chat_completion
-generate_chat_completion = chat_completion
-
-
 ##################################
 #
 # Anthropic Messages API Compatible Endpoint
@@ -823,16 +768,10 @@ async def chat_completed(
     request: Request, form_data: dict, user=Depends(get_verified_user)
 ):
     try:
-        model_item = form_data.pop("model_item", {})
+        if not request.app.state.MODELS:
+            await get_all_models(request, user=user)
 
-        if model_item.get("direct", False):
-            models = {model_item["id"]: model_item}
-        else:
-            if not request.app.state.MODELS:
-                await get_all_models(request, user=user)
-            models = request.app.state.MODELS
-
-        if form_data.get("model") not in models:
+        if form_data.get("model") not in request.app.state.MODELS:
             raise Exception("Model not found")
 
         return form_data
@@ -924,13 +863,6 @@ async def get_app_config(request: Request):
             "enable_signup": app.state.config.ENABLE_SIGNUP,
             "enable_websocket": ENABLE_WEBSOCKET_SUPPORT,
             "enable_easter_eggs": ENABLE_EASTER_EGGS,
-            **(
-                {
-                    "enable_direct_connections": app.state.config.ENABLE_DIRECT_CONNECTIONS,
-                }
-                if user is not None
-                else {}
-            ),
         },
         **(
             {

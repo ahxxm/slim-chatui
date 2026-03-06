@@ -6,7 +6,7 @@
 	import { fade } from 'svelte/transition';
 	const i18n: Writable<i18nType> = getContext('i18n');
 
-	import { goto } from '$app/navigation';
+	import { goto, replaceState } from '$app/navigation';
 	import { page } from '$app/stores';
 
 	import { type Unsubscriber, type Writable } from 'svelte/store';
@@ -20,7 +20,6 @@
 		config,
 		type Model,
 		models,
-		tags as allTags,
 		settings,
 		showSidebar,
 		WEBUI_NAME,
@@ -43,10 +42,8 @@
 
 	import {
 		createNewChat,
-		getAllTags,
 		getChatById,
 		getPinnedChatList,
-		getTagsById,
 		updateChatById,
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
@@ -116,6 +113,7 @@
 	}
 
 	const navigateHandler = async () => {
+		console.log('[navigateHandler] chatIdProp:', chatIdProp);
 		loading = true;
 
 		// Save current queue to sessionStorage before navigating away
@@ -301,9 +299,6 @@
 				} else if (type === 'chat:title') {
 					chatTitle.set(data);
 					await refreshChatList(localStorage.token);
-				} else if (type === 'chat:tags') {
-					chat = await getChatById(localStorage.token, $chatId);
-					allTags.set(await getAllTags(localStorage.token));
 				} else if (type === 'source' || type === 'citation') {
 					if (message?.sources) {
 						message.sources.push(data);
@@ -424,18 +419,27 @@
 		savedModelIds();
 	}
 
-	let pageSubscribe: (() => void) | null = null;
 	let selectedFolderSubscribe: (() => void) | null = null;
 	let activeChatEmitter: ReturnType<typeof setInterval> | null = null;
 
-	onMount(async () => {
+	const instanceId = Math.random().toString(36).slice(2, 6);
+	onMount(() => {
+		console.log('[Chat mount]', instanceId, 'chatIdProp:', chatIdProp);
 		loading = true;
 		window.addEventListener('message', onMessageHandler);
 		$socket?.on('events', chatEventHandler);
 
-		pageSubscribe = page.subscribe(async (p) => {
-			if (p.url.pathname === '/') {
-				await tick();
+		if (!chatIdProp) {
+			initNewChat();
+		}
+
+		let pageSubscribeFirst = true;
+		const pageUnsubscribe = page.subscribe(() => {
+			if (pageSubscribeFirst) {
+				pageSubscribeFirst = false;
+				return;
+			}
+			if (window.location.pathname === '/') {
 				initNewChat();
 			}
 		});
@@ -446,7 +450,6 @@
 
 		if (!chatIdProp) {
 			loading = false;
-			await tick();
 		}
 
 		if (storageChatInput) {
@@ -488,7 +491,7 @@
 				clearTimeout(saveDraftTimeout);
 				saveDraftTimeout = null;
 			}
-			pageSubscribe();
+			pageUnsubscribe();
 			selectedFolderSubscribe();
 			chatIdUnsubscriber?.();
 			window.removeEventListener('message', onMessageHandler);
@@ -582,7 +585,7 @@
 		}
 
 		if ($page.url.pathname.includes('/c/')) {
-			window.history.replaceState(history.state, '', `/`);
+			replaceState('/', history.state);
 		}
 
 		autoScroll = true;
@@ -590,6 +593,10 @@
 		await chatId.set('');
 		await chatTitle.set('');
 
+		console.log(
+			'[initNewChat] resetting history',
+			new Error().stack.split('\n').slice(1, 4).join(' <- ')
+		);
 		history = {
 			messages: {},
 			currentId: null
@@ -617,6 +624,7 @@
 	};
 
 	const loadChat = async () => {
+		console.log('[loadChat] chatIdProp:', chatIdProp);
 		chatId.set(chatIdProp);
 
 		if ($temporaryChatEnabled) {
@@ -684,7 +692,7 @@
 			});
 		}
 	};
-	const chatCompletedHandler = async (_chatId, modelId, responseMessageId, messages) => {
+	const chatCompletedHandler = async (_chatId, modelId, messages) => {
 		const res = await chatCompleted(localStorage.token, {
 			model: modelId,
 			messages: messages.map((m) => ({
@@ -695,11 +703,7 @@
 				timestamp: m.timestamp,
 				...(m.usage ? { usage: m.usage } : {}),
 				...(m.sources ? { sources: m.sources } : {})
-			})),
-			model_item: $models.find((m) => m.id === modelId),
-			chat_id: _chatId,
-			session_id: $socket?.id,
-			id: responseMessageId
+			}))
 		}).catch((error) => {
 			toast.error(`${error}`);
 			messages.at(-1).error = { content: error };
@@ -964,12 +968,7 @@
 				scrollToBottom();
 			}
 
-			await chatCompletedHandler(
-				chatId,
-				message.model,
-				message.id,
-				createMessagesList(history, message.id)
-			);
+			await chatCompletedHandler(chatId, message.model, createMessagesList(history, message.id));
 		}
 
 		console.log(data);
@@ -1139,24 +1138,44 @@
 			timestamp: Math.floor(Date.now() / 1000)
 		};
 
-		history.messages[responseMessageId] = responseMessage;
-		history.currentId = responseMessageId;
-
-		if (parentId !== null && history.messages[parentId]) {
-			history.messages[parentId].childrenIds = [
-				...history.messages[parentId].childrenIds,
-				responseMessageId
-			];
-		}
-		history = history;
+		history = {
+			...history,
+			currentId: responseMessageId,
+			messages: {
+				...history.messages,
+				[responseMessageId]: responseMessage,
+				...(parentId !== null && history.messages[parentId]
+					? {
+							[parentId]: {
+								...history.messages[parentId],
+								childrenIds: [...history.messages[parentId].childrenIds, responseMessageId]
+							}
+						}
+					: {})
+			}
+		};
 
 		if (newChat && _history.messages[_history.currentId].parentId === null) {
+			console.log(
+				'[sendMessage] before initChatHandler, history keys:',
+				Object.keys(history.messages)
+			);
 			_chatId = await initChatHandler(_history);
+			console.log(
+				'[sendMessage]',
+				instanceId,
+				'after initChatHandler, history keys:',
+				Object.keys(history.messages)
+			);
 		}
 
 		await tick();
 
 		_history = JSON.parse(JSON.stringify(history));
+		console.log(
+			'[sendMessage] after tick+copy, _history has responseMessageId:',
+			!!_history.messages[responseMessageId]
+		);
 		await saveChatHandler(_chatId, _history);
 
 		const hasImages = createMessagesList(_history, parentId).some((message) =>
@@ -1303,8 +1322,6 @@
 						$user?.email
 					)
 				},
-				model_item: $models.find((m) => m.id === model.id),
-
 				session_id: $socket?.id,
 				chat_id: $chatId,
 
@@ -1320,8 +1337,7 @@
 							messages.at(1)?.role === 'user')) &&
 					(selectedModels[0] === model.id || atSelectedModel !== undefined)
 						? {
-								title_generation: $settings?.title?.auto ?? true,
-								tags_generation: $settings?.autoTags ?? true
+								title_generation: $settings?.title?.auto ?? true
 							}
 						: {}),
 					follow_up_generation: $settings?.autoFollowUps ?? true
@@ -1547,16 +1563,15 @@
 					params: params,
 					history: history,
 					messages: createMessagesList(history, history.currentId),
-					tags: [],
 					timestamp: Date.now()
 				},
 				$selectedFolder?.id
 			);
 
 			_chatId = chat.id;
+			console.log('[initChatHandler] chat created, setting chatId to', _chatId);
+			replaceState(`/c/${_chatId}`, {});
 			await chatId.set(_chatId);
-
-			window.history.replaceState(history.state, '', `/c/${_chatId}`);
 
 			await tick();
 

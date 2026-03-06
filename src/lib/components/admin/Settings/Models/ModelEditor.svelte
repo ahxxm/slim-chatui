@@ -394,7 +394,7 @@
 											<option value={null} class=" text-gray-900"
 												>{$i18n.t('Select a base model')}</option
 											>
-											{#each $models.filter((m) => (model ? m.id !== model.id : true) && !m?.preset && !(m?.direct ?? false)) as model}
+											{#each $models.filter((m) => (model ? m.id !== model.id : true) && !m?.preset) as model}
 												<option value={model.id} class=" text-gray-900">{model.name}</option>
 											{/each}
 										</select>

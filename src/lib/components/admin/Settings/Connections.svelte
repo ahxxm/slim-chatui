@@ -6,9 +6,7 @@
 
 	import { getOpenAIConfig, updateOpenAIConfig, getOpenAIModels } from '$lib/apis/openai';
 	import { getModels as _getModels, getBackendConfig } from '$lib/apis';
-	import { getConnectionsConfig, setConnectionsConfig } from '$lib/apis/configs';
-
-	import { config, models, settings, user } from '$lib/stores';
+	import { models, user } from '$lib/stores';
 
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
@@ -21,12 +19,7 @@
 	const i18n = getContext('i18n');
 
 	const getModels = async () => {
-		const models = await _getModels(
-			localStorage.token,
-			$config?.features?.enable_direct_connections && ($settings?.directConnections ?? null),
-			false,
-			true
-		);
+		const models = await _getModels(localStorage.token, false, true);
 		return models;
 	};
 
@@ -34,7 +27,7 @@
 	let OPENAI_API_BASE_URLS = [''];
 	let OPENAI_API_CONFIGS = {};
 
-	let connectionsConfig = null;
+	let loaded = false;
 
 	let showAddOpenAIConnectionModal = false;
 
@@ -72,18 +65,6 @@
 		}
 	};
 
-	const updateConnectionsHandler = async () => {
-		const res = await setConnectionsConfig(localStorage.token, connectionsConfig).catch((error) => {
-			toast.error(`${error}`);
-		});
-
-		if (res) {
-			toast.success($i18n.t('Connections settings updated'));
-			await models.set(await getModels());
-			await config.set(await getBackendConfig());
-		}
-	};
-
 	const addOpenAIConnectionHandler = async (connection) => {
 		OPENAI_API_BASE_URLS = [...OPENAI_API_BASE_URLS, connection.url];
 		OPENAI_API_KEYS = [...OPENAI_API_KEYS, connection.key];
@@ -96,14 +77,7 @@
 		if ($user?.role === 'admin') {
 			let openaiConfig = {};
 
-			await Promise.all([
-				(async () => {
-					openaiConfig = await getOpenAIConfig(localStorage.token);
-				})(),
-				(async () => {
-					connectionsConfig = await getConnectionsConfig(localStorage.token);
-				})()
-			]);
+			openaiConfig = await getOpenAIConfig(localStorage.token);
 
 			OPENAI_API_BASE_URLS = openaiConfig.OPENAI_API_BASE_URLS;
 			OPENAI_API_KEYS = openaiConfig.OPENAI_API_KEYS;
@@ -124,6 +98,8 @@
 				}
 				await getOpenAIModels(localStorage.token, idx);
 			});
+
+			loaded = true;
 		}
 	});
 
@@ -143,7 +119,7 @@
 
 <form class="flex flex-col h-full justify-between text-sm" on:submit|preventDefault={submitHandler}>
 	<div class=" overflow-y-scroll scrollbar-hidden h-full">
-		{#if connectionsConfig !== null}
+		{#if loaded}
 			<div class="mb-3.5">
 				<div class=" mt-0.5 mb-2.5 text-base font-medium">{$i18n.t('General')}</div>
 
@@ -192,29 +168,6 @@
 								/>
 							{/each}
 						</div>
-					</div>
-				</div>
-
-				<div class="my-2">
-					<div class="flex justify-between items-center text-sm">
-						<div class="  font-medium">{$i18n.t('Direct Connections')}</div>
-
-						<div class="flex items-center">
-							<div class="">
-								<Switch
-									bind:state={connectionsConfig.ENABLE_DIRECT_CONNECTIONS}
-									on:change={async () => {
-										updateConnectionsHandler();
-									}}
-								/>
-							</div>
-						</div>
-					</div>
-
-					<div class="mt-1 text-xs text-gray-400 dark:text-gray-500">
-						{$i18n.t(
-							'Direct Connections allow users to connect to their own OpenAI compatible API endpoints.'
-						)}
 					</div>
 				</div>
 			</div>

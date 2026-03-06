@@ -13,7 +13,7 @@
 	import LightBulb from '$lib/components/icons/LightBulb.svelte';
 	import Markdown from '../Messages/Markdown.svelte';
 	import Skeleton from '../Messages/Skeleton.svelte';
-	import { chatId, models, socket } from '$lib/stores';
+	import { chatId, socket } from '$lib/stores';
 
 	export let id = '';
 	export let messageId = '';
@@ -100,7 +100,6 @@
 		let res;
 		[res, controller] = await chatCompletion(localStorage.token, {
 			model: model,
-			model_item: $models.find((m) => m.id === model),
 			session_id: $socket?.id,
 			chat_id: $chatId,
 			messages: [

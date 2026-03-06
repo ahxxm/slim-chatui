@@ -296,16 +296,6 @@ CACHE_DIR.mkdir(parents=True, exist_ok=True)
 
 
 ####################################
-# DIRECT CONNECTIONS
-####################################
-
-ENABLE_DIRECT_CONNECTIONS = PersistentConfig(
-    "ENABLE_DIRECT_CONNECTIONS",
-    "direct.enable",
-    os.environ.get("ENABLE_DIRECT_CONNECTIONS", "False").lower() == "true",
-)
-
-####################################
 # OPENAI_API
 ####################################
 
@@ -426,12 +416,6 @@ DEFAULT_PROMPT_SUGGESTIONS = PersistentConfig(
     "DEFAULT_PROMPT_SUGGESTIONS",
     "ui.prompt_suggestions",
     default_prompt_suggestions,
-)
-
-MODEL_ORDER_LIST = PersistentConfig(
-    "MODEL_ORDER_LIST",
-    "ui.model_order_list",
-    [],
 )
 
 DEFAULT_MODEL_METADATA = PersistentConfig(
@@ -588,30 +572,6 @@ JSON format: { "title": "your concise title here" }
 {{MESSAGES:END:2}}
 </chat_history>"""
 
-TAGS_GENERATION_PROMPT_TEMPLATE = PersistentConfig(
-    "TAGS_GENERATION_PROMPT_TEMPLATE",
-    "task.tags.prompt_template",
-    os.environ.get("TAGS_GENERATION_PROMPT_TEMPLATE", ""),
-)
-
-DEFAULT_TAGS_GENERATION_PROMPT_TEMPLATE = """### Task:
-Generate 1-3 broad tags categorizing the main themes of the chat history, along with 1-3 more specific subtopic tags.
-
-### Guidelines:
-- Start with high-level domains (e.g. Science, Technology, Philosophy, Arts, Politics, Business, Health, Sports, Entertainment, Education)
-- Consider including relevant subfields/subdomains if they are strongly represented throughout the conversation
-- If content is too short (less than 3 messages) or too diverse, use only ["General"]
-- Use the chat's primary language; default to English if multilingual
-- Prioritize accuracy over specificity
-
-### Output:
-JSON format: { "tags": ["tag1", "tag2", "tag3"] }
-
-### Chat History:
-<chat_history>
-{{MESSAGES:END:6}}
-</chat_history>"""
-
 FOLLOW_UP_GENERATION_PROMPT_TEMPLATE = PersistentConfig(
     "FOLLOW_UP_GENERATION_PROMPT_TEMPLATE",
     "task.follow_up.prompt_template",
@@ -638,12 +598,6 @@ ENABLE_FOLLOW_UP_GENERATION = PersistentConfig(
     "ENABLE_FOLLOW_UP_GENERATION",
     "task.follow_up.enable",
     os.environ.get("ENABLE_FOLLOW_UP_GENERATION", "True").lower() == "true",
-)
-
-ENABLE_TAGS_GENERATION = PersistentConfig(
-    "ENABLE_TAGS_GENERATION",
-    "task.tags.enable",
-    os.environ.get("ENABLE_TAGS_GENERATION", "True").lower() == "true",
 )
 
 ENABLE_TITLE_GENERATION = PersistentConfig(

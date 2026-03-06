@@ -13,7 +13,6 @@
 	import { getChatById } from '$lib/apis/chats';
 
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
-	import Tags from '$lib/components/chat/Tags.svelte';
 	import Clipboard from '$lib/components/icons/Clipboard.svelte';
 	import Folder from '$lib/components/icons/Folder.svelte';
 	import Download from '$lib/components/icons/Download.svelte';
@@ -21,8 +20,6 @@
 	const i18n = getContext('i18n');
 
 	export let moveChatHandler: Function;
-
-	// export let tagHandler: Function;
 
 	export let chat;
 	export let onClose: Function = () => {};
@@ -199,12 +196,6 @@
 						</DropdownMenu.SubContent>
 					</DropdownMenu.Sub>
 				{/if}
-
-				<hr class="border-gray-50/30 dark:border-gray-800/30 my-1" />
-
-				<div class="flex p-1">
-					<Tags chatId={chat.id} />
-				</div>
 			{/if}
 		</DropdownMenu.Content>
 	</div>
