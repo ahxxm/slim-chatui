@@ -7,32 +7,31 @@
 
 	import XMark from '$lib/components/icons/XMark.svelte';
 
-	export let show = false;
-	export let src = '';
-	export let alt = '';
+	let { show = $bindable(false), src = '', alt = '' } = $props();
 
 	const i18n = getContext('i18n');
 
 	let mounted = false;
 
-	let previewElement = null;
+	let previewElement = $state(null);
 
 	let instance: PanZoom;
 
 	let sceneParentElement: HTMLElement;
-	let sceneElement: HTMLElement;
+	let sceneElement: HTMLElement = $state();
 
-	$: if (sceneElement) {
-		if (instance) {
-			instance.dispose();
+	$effect(() => {
+		if (sceneElement) {
+			if (instance) {
+				instance.dispose();
+			}
+			instance = panzoom(sceneElement, {
+				bounds: true,
+				boundsPadding: 0.1,
+				zoomSpeed: 0.065
+			});
 		}
-		instance = panzoom(sceneElement, {
-			bounds: true,
-			boundsPadding: 0.1,
-
-			zoomSpeed: 0.065
-		});
-	}
+	});
 	const resetPanZoomViewport = () => {
 		instance.moveTo(0, 0);
 		instance.zoomAbs(0, 0, 1);
@@ -50,15 +49,17 @@
 		mounted = true;
 	});
 
-	$: if (show && previewElement) {
-		document.body.appendChild(previewElement);
-		window.addEventListener('keydown', handleKeyDown);
-		document.body.style.overflow = 'hidden';
-	} else if (previewElement) {
-		window.removeEventListener('keydown', handleKeyDown);
-		document.body.removeChild(previewElement);
-		document.body.style.overflow = 'unset';
-	}
+	$effect(() => {
+		if (show && previewElement) {
+			document.body.appendChild(previewElement);
+			window.addEventListener('keydown', handleKeyDown);
+			document.body.style.overflow = 'hidden';
+		} else if (previewElement) {
+			window.removeEventListener('keydown', handleKeyDown);
+			document.body.removeChild(previewElement);
+			document.body.style.overflow = 'unset';
+		}
+	});
 
 	onDestroy(() => {
 		if (instance) {

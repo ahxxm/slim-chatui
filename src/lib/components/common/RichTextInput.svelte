@@ -105,7 +105,7 @@
 		}
 	});
 
-	import { onMount, onDestroy, tick, getContext } from 'svelte';
+	import { onMount, onDestroy, tick, getContext, untrack } from 'svelte';
 	import { createEventDispatcher } from 'svelte';
 
 	const i18n = getContext('i18n');
@@ -142,9 +142,67 @@
 	import { createLowlight } from 'lowlight';
 	import hljs from 'highlight.js';
 
-	export let oncompositionstart = (e) => {};
-	export let oncompositionend = (e) => {};
-	export let onChange = (e) => {};
+	let {
+		oncompositionstart = (e) => {},
+		oncompositionend = (e) => {},
+		onChange = (e) => {},
+		editor = $bindable(null),
+		files = $bindable([]),
+		className = 'input-prose min-h-fit h-full',
+		placeholder = $i18n.t('Type here...'),
+		richText = true,
+		dragHandle = false,
+		link = false,
+		image = false,
+		fileHandler = false,
+		suggestions = null,
+		onFileDrop: onFileDropProp = undefined,
+		onFilePaste: onFilePasteProp = undefined,
+		onSelectionUpdate = (e) => {},
+		id = '',
+		value = $bindable(''),
+		html = $bindable(''),
+		json = false,
+		raw = false,
+		editable = true,
+		showFormattingToolbar = true,
+		preserveBreaks = false,
+		messageInput = false,
+		shiftEnter = false,
+		largeTextAsFile = false,
+		insertPromptAsRichText = false,
+		floatingMenuPlacement = 'bottom-start'
+	}: {
+		oncompositionstart?: (e: any) => void;
+		oncompositionend?: (e: any) => void;
+		onChange?: (e: any) => void;
+		editor?: any;
+		files?: any[];
+		className?: string;
+		placeholder?: string;
+		richText?: boolean;
+		dragHandle?: boolean;
+		link?: boolean;
+		image?: boolean;
+		fileHandler?: boolean;
+		suggestions?: any;
+		onFileDrop?: (currentEditor: any, files: any[], pos: number) => void;
+		onFilePaste?: (currentEditor: any, files: any[], htmlContent: string) => void;
+		onSelectionUpdate?: (e: any) => void;
+		id?: string;
+		value?: string;
+		html?: string;
+		json?: boolean;
+		raw?: boolean;
+		editable?: boolean;
+		showFormattingToolbar?: boolean;
+		preserveBreaks?: boolean;
+		messageInput?: boolean;
+		shiftEnter?: boolean;
+		largeTextAsFile?: boolean;
+		insertPromptAsRichText?: boolean;
+		floatingMenuPlacement?: string;
+	} = $props();
 
 	// create a lowlight instance with all languages loaded
 	const lowlight = createLowlight(
@@ -157,17 +215,13 @@
 		)
 	);
 
-	export let editor: Editor | null = null;
+	let _placeholder = $state(placeholder);
 
-	export let files = [];
-
-	export let className = 'input-prose min-h-fit h-full';
-	export let placeholder = $i18n.t('Type here...');
-	let _placeholder = placeholder;
-
-	$: if (placeholder !== _placeholder) {
-		setPlaceholder();
-	}
+	$effect(() => {
+		if (placeholder !== _placeholder) {
+			untrack(() => setPlaceholder());
+		}
+	});
 
 	const setPlaceholder = () => {
 		_placeholder = placeholder;
@@ -176,14 +230,7 @@
 		}
 	};
 
-	export let richText = true;
-	export let dragHandle = false;
-	export let link = false;
-	export let image = false;
-	export let fileHandler = false;
-	export let suggestions = null;
-
-	export let onFileDrop = (currentEditor, files, pos) => {
+	const defaultOnFileDrop = (currentEditor, files, pos) => {
 		files.forEach((file) => {
 			const fileReader = new FileReader();
 
@@ -203,7 +250,7 @@
 		});
 	};
 
-	export let onFilePaste = (currentEditor, files, htmlContent) => {
+	const defaultOnFilePaste = (currentEditor, files, htmlContent) => {
 		files.forEach((file) => {
 			if (htmlContent) {
 				// if there is htmlContent, stop manual insertion & let other extensions handle insertion via inputRule
@@ -230,47 +277,35 @@
 		});
 	};
 
-	export let onSelectionUpdate = (e) => {};
+	const onFileDrop = onFileDropProp ?? defaultOnFileDrop;
+	const onFilePaste = onFilePasteProp ?? defaultOnFilePaste;
 
-	export let id = '';
-	export let value = '';
-	export let html = '';
+	let content = $state(null);
+	let htmlValue = $state('');
+	let jsonValue = $state('');
+	let mdValue = $state('');
 
-	export let json = false;
-	export let raw = false;
-	export let editable = true;
-
-	export let showFormattingToolbar = true;
-
-	export let preserveBreaks = false;
-	export let messageInput = false;
-	export let shiftEnter = false;
-	export let largeTextAsFile = false;
-	export let insertPromptAsRichText = false;
-	export let floatingMenuPlacement = 'bottom-start';
-
-	let content = null;
-	let htmlValue = '';
-	let jsonValue = '';
-	let mdValue = '';
-
-	let floatingMenuElement: Element | null = null;
-	let bubbleMenuElement: Element | null = null;
-	let element: Element | null = null;
+	let floatingMenuElement: Element | null = $state(null);
+	let bubbleMenuElement: Element | null = $state(null);
+	let element: Element | null = $state(null);
 
 	const options = {
 		throwOnError: false
 	};
 
-	$: if (editor) {
-		editor.setOptions({
-			editable: editable
-		});
-	}
+	$effect(() => {
+		if (editor) {
+			editor.setOptions({
+				editable: editable
+			});
+		}
+	});
 
-	$: if (value === null && html !== null && editor) {
-		editor.commands.setContent(html);
-	}
+	$effect(() => {
+		if (value === null && html !== null && editor) {
+			untrack(() => editor.commands.setContent(html));
+		}
+	});
 
 	export const getWordAtDocPos = () => {
 		if (!editor) return '';
@@ -913,11 +948,11 @@
 						if (messageInput) {
 							// Check if the current selection is inside a structured block (like codeBlock or list)
 							const { state } = view;
-							const { $head } = state.selection;
+							const head = state.selection.$head;
 
 							// Recursive function to check ancestors for specific node types
 							function isInside(nodeTypes: string[]): boolean {
-								let currentNode = $head;
+								let currentNode = head;
 								while (currentNode) {
 									if (nodeTypes.includes(currentNode.parent.type.name)) {
 										return true;
@@ -951,9 +986,9 @@
 								const isCtrlPressed = event.ctrlKey || event.metaKey; // metaKey is for Cmd key on Mac
 
 								const { state } = view;
-								const { $from } = state.selection;
-								const lineStart = $from.before($from.depth);
-								const lineEnd = $from.after($from.depth);
+								const fromPos = state.selection.$from;
+								const lineStart = fromPos.before(fromPos.depth);
+								const lineEnd = fromPos.after(fromPos.depth);
 								const lineText = state.doc.textBetween(lineStart, lineEnd, '\n', '\0').trim();
 								if (event.shiftKey && !isCtrlPressed) {
 									if (lineText.startsWith('```')) {
@@ -1112,9 +1147,11 @@
 		}
 	});
 
-	$: if (value !== null && editor) {
-		onValueChange();
-	}
+	$effect(() => {
+		if (value !== null && editor) {
+			untrack(() => onValueChange());
+		}
+	});
 
 	const onValueChange = () => {
 		if (!editor) return;

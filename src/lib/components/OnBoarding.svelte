@@ -1,5 +1,5 @@
 <script>
-	import { getContext, onMount } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import { WEBUI_BASE_URL } from '$lib/constants';
@@ -8,8 +8,7 @@
 	import SlideShow from './common/SlideShow.svelte';
 	import ArrowRightCircle from './icons/ArrowRightCircle.svelte';
 
-	export let show = true;
-	export let getStartedHandler = () => {};
+	let { show = true, getStartedHandler = () => {} } = $props();
 
 	function setLogoImage() {
 		const logo = document.getElementById('logo');
@@ -33,9 +32,11 @@
 		}
 	}
 
-	$: if (show) {
-		setLogoImage();
-	}
+	$effect(() => {
+		if (show) {
+			untrack(() => setLogoImage());
+		}
+	});
 </script>
 
 {#if show}

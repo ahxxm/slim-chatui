@@ -18,22 +18,37 @@
 	import FullHeightIframe from './FullHeightIframe.svelte';
 	import { settings } from '$lib/stores';
 
-	export let id: string = '';
-	export let attributes: {
-		type?: string;
+	let {
+		id = '',
+		attributes = {} as {
+			type?: string;
+			id?: string;
+			name?: string;
+			arguments?: string;
+			result?: string;
+			files?: string;
+			embeds?: string;
+			done?: string;
+		},
+		open = $bindable(false),
+		className = '',
+		buttonClassName = 'w-fit text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition'
+	}: {
 		id?: string;
-		name?: string;
-		arguments?: string;
-		result?: string;
-		files?: string;
-		embeds?: string;
-		done?: string;
-	} = {};
-
-	export let open = false;
-	export let className = '';
-	export let buttonClassName =
-		'w-fit text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition';
+		attributes?: {
+			type?: string;
+			id?: string;
+			name?: string;
+			arguments?: string;
+			result?: string;
+			files?: string;
+			embeds?: string;
+			done?: string;
+		};
+		open?: boolean;
+		className?: string;
+		buttonClassName?: string;
+	} = $props();
 
 	const componentId = id || uuidv4();
 
@@ -70,15 +85,15 @@
 		}
 	}
 
-	$: args = decode(attributes?.arguments ?? '');
-	$: result = decode(attributes?.result ?? '');
-	$: files = parseJSONString(decode(attributes?.files ?? ''));
-	$: embeds = parseJSONString(decode(attributes?.embeds ?? ''));
-	$: isDone = attributes?.done === 'true';
-	$: isExecuting = attributes?.done && attributes?.done !== 'true';
+	let args = $derived(decode(attributes?.arguments ?? ''));
+	let result = $derived(decode(attributes?.result ?? ''));
+	let files = $derived(parseJSONString(decode(attributes?.files ?? '')));
+	let embeds = $derived(parseJSONString(decode(attributes?.embeds ?? '')));
+	let isDone = $derived(attributes?.done === 'true');
+	let isExecuting = $derived(attributes?.done && attributes?.done !== 'true');
 
-	$: parsedArgs = parseArguments(args);
-	$: parsedResult = parseJSONString(result);
+	let parsedArgs = $derived(parseArguments(args));
+	let parsedResult = $derived(parseJSONString(result));
 </script>
 
 <div {id} class={className}>

@@ -3,11 +3,9 @@
 	import { flyAndScale } from '$lib/utils/transitions';
 	import { fade, fly, slide } from 'svelte/transition';
 
-	export let show = false;
-	export let className = '';
-	export let onClose = () => {};
+	let { show = $bindable(false), className = '', onClose = () => {} } = $props();
 
-	let modalElement = null;
+	let modalElement = $state(null);
 	let mounted = false;
 
 	const handleKeyDown = (event: KeyboardEvent) => {
@@ -26,19 +24,21 @@
 		mounted = true;
 	});
 
-	$: if (show && modalElement) {
-		document.body.appendChild(modalElement);
-		window.addEventListener('keydown', handleKeyDown);
-		document.body.style.overflow = 'hidden';
-	} else if (modalElement) {
-		onClose();
-		window.removeEventListener('keydown', handleKeyDown);
+	$effect(() => {
+		if (show && modalElement) {
+			document.body.appendChild(modalElement);
+			window.addEventListener('keydown', handleKeyDown);
+			document.body.style.overflow = 'hidden';
+		} else if (modalElement) {
+			onClose();
+			window.removeEventListener('keydown', handleKeyDown);
 
-		if (document.body.contains(modalElement)) {
-			document.body.removeChild(modalElement);
-			document.body.style.overflow = 'unset';
+			if (document.body.contains(modalElement)) {
+				document.body.removeChild(modalElement);
+				document.body.style.overflow = 'unset';
+			}
 		}
-	}
+	});
 
 	onDestroy(() => {
 		show = false;

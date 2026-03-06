@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { getContext, onDestroy, onMount, tick } from 'svelte';
+	import { getContext, onDestroy, onMount, tick, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import Modal from '$lib/components/common/Modal.svelte';
@@ -20,8 +20,8 @@
 	dayjs.extend(calendar);
 	dayjs.extend(localizedFormat);
 
-	export let show = false;
-	export let onClose = () => {};
+	let { show = $bindable(false), onClose = () => {} }: { show?: boolean; onClose?: () => void } =
+		$props();
 
 	let actions = [
 		{
@@ -35,26 +35,28 @@
 		}
 	];
 
-	let query = '';
-	let page = 1;
+	let query = $state('');
+	let page = $state(1);
 
-	let chatList = null;
+	let chatList = $state(null);
 
-	let chatListLoading = false;
-	let allChatsLoaded = false;
+	let chatListLoading = $state(false);
+	let allChatsLoaded = $state(false);
 
 	let searchDebounceTimeout;
 
-	let selectedIdx = null;
-	let selectedChat = null;
+	let selectedIdx = $state(null);
+	let selectedChat = $state(null);
 
-	let selectedModels = [''];
-	let history = null;
-	let messages = null;
+	let selectedModels = $state(['']);
+	let history = $state(null);
+	let messages = $state(null);
 
-	$: if (!chatListLoading && chatList) {
-		loadChatPreview(selectedIdx);
-	}
+	$effect(() => {
+		if (!chatListLoading && chatList) {
+			untrack(() => loadChatPreview(selectedIdx));
+		}
+	});
 
 	const loadChatPreview = async (selectedIdx) => {
 		if (!chatList || chatList.length === 0 || selectedIdx === null) {
@@ -168,9 +170,11 @@
 		chatListLoading = false;
 	};
 
-	$: if (show) {
-		searchHandler();
-	}
+	$effect(() => {
+		if (show) {
+			untrack(() => searchHandler());
+		}
+	});
 
 	const onKeyDown = (e) => {
 		const searchOptions = document.getElementById('search-options-container');
