@@ -145,6 +145,9 @@
 								? 'dark:text-gray-900 text-gray-100'
 								: 'invisible group-hover:visible transition'}"
 						>
+							<!-- $i18n.t('Today at {{LOCALIZED_TIME}}') -->
+							<!-- $i18n.t('Yesterday at {{LOCALIZED_TIME}}') -->
+							<!-- $i18n.t('{{LOCALIZED_DATE}} at {{LOCALIZED_TIME}}') -->
 							<Tooltip content={dayjs(message.timestamp * 1000).format('LLLL')}>
 								<span class="line-clamp-1"
 									>{$i18n.t(formatDate(message.timestamp * 1000), {
