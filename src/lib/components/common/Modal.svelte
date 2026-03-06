@@ -1,16 +1,17 @@
 <script lang="ts">
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { fade } from 'svelte/transition';
 
 	import { flyAndScale } from '$lib/utils/transitions';
 	import * as FocusTrap from 'focus-trap';
-	export let show = true;
-	export let size = 'md';
-	export let containerClassName = 'p-3';
-	export let className = 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-4xl';
+	let {
+		show = $bindable(true),
+		size = 'md',
+		containerClassName = 'p-3',
+		className = 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-4xl'
+	} = $props();
 
-	let modalElement = null;
-	let mounted = false;
+	let modalElement = $state(null);
 	// Create focus trap to trap user tabs inside modal
 	// https://www.w3.org/WAI/WCAG21/Understanding/focus-order.html
 	// https://www.w3.org/WAI/WCAG21/Understanding/keyboard.html
@@ -51,29 +52,27 @@
 		return modals.length && modals[modals.length - 1] === modalElement;
 	};
 
-	onMount(() => {
-		mounted = true;
+	$effect(() => {
+		if (show && modalElement) {
+			document.body.appendChild(modalElement);
+			focusTrap = FocusTrap.createFocusTrap(modalElement, {
+				allowOutsideClick: (e) => {
+					return (
+						e.target.closest('[data-sonner-toast]') !== null ||
+						e.target.closest('.modal-content') === null
+					);
+				}
+			});
+			focusTrap.activate();
+			window.addEventListener('keydown', handleKeyDown);
+			document.body.style.overflow = 'hidden';
+		} else if (modalElement) {
+			focusTrap.deactivate();
+			window.removeEventListener('keydown', handleKeyDown);
+			document.body.removeChild(modalElement);
+			document.body.style.overflow = 'unset';
+		}
 	});
-
-	$: if (show && modalElement) {
-		document.body.appendChild(modalElement);
-		focusTrap = FocusTrap.createFocusTrap(modalElement, {
-			allowOutsideClick: (e) => {
-				return (
-					e.target.closest('[data-sonner-toast]') !== null ||
-					e.target.closest('.modal-content') === null
-				);
-			}
-		});
-		focusTrap.activate();
-		window.addEventListener('keydown', handleKeyDown);
-		document.body.style.overflow = 'hidden';
-	} else if (modalElement) {
-		focusTrap.deactivate();
-		window.removeEventListener('keydown', handleKeyDown);
-		document.body.removeChild(modalElement);
-		document.body.style.overflow = 'unset';
-	}
 
 	onDestroy(() => {
 		show = false;

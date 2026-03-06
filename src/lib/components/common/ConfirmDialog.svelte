@@ -1,7 +1,7 @@
 <script lang="ts">
 	import DOMPurify from 'dompurify';
 
-	import { onMount, getContext, createEventDispatcher, onDestroy, tick } from 'svelte';
+	import { getContext, createEventDispatcher, onDestroy, tick, untrack } from 'svelte';
 	import * as FocusTrap from 'focus-trap';
 
 	const i18n = getContext('i18n');
@@ -12,27 +12,26 @@
 	import { marked } from 'marked';
 	import SensitiveInput from './SensitiveInput.svelte';
 
-	export let title = '';
-	export let message = '';
+	let {
+		title = '',
+		message = '',
+		cancelLabel = $i18n.t('Cancel'),
+		confirmLabel = $i18n.t('Confirm'),
+		onConfirm = () => {},
+		input = false,
+		inputPlaceholder = '',
+		inputValue = $bindable(''),
+		inputType = '',
+		show = $bindable(false)
+	} = $props();
 
-	export let cancelLabel = $i18n.t('Cancel');
-	export let confirmLabel = $i18n.t('Confirm');
+	$effect(() => {
+		if (show) {
+			untrack(() => init());
+		}
+	});
 
-	export let onConfirm = () => {};
-
-	export let input = false;
-	export let inputPlaceholder = '';
-	export let inputValue = '';
-	export let inputType = '';
-
-	export let show = false;
-
-	$: if (show) {
-		init();
-	}
-
-	let modalElement = null;
-	let mounted = false;
+	let modalElement = $state(null);
 
 	let focusTrap: FocusTrap.FocusTrap | null = null;
 
@@ -61,11 +60,7 @@
 		dispatch('confirm', inputValue);
 	};
 
-	onMount(() => {
-		mounted = true;
-	});
-
-	$: if (mounted) {
+	$effect(() => {
 		if (show && modalElement) {
 			document.body.appendChild(modalElement);
 			focusTrap = FocusTrap.createFocusTrap(modalElement);
@@ -81,7 +76,7 @@
 
 			document.body.style.overflow = 'unset';
 		}
-	}
+	});
 
 	onDestroy(() => {
 		show = false;

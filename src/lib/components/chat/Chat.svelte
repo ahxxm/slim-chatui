@@ -2,14 +2,14 @@
 	import { v4 as uuidv4 } from 'uuid';
 	import { toast } from 'svelte-sonner';
 
-	import { getContext, onMount, tick } from 'svelte';
+	import { getContext, onMount, tick, untrack } from 'svelte';
 	import { fade } from 'svelte/transition';
 	const i18n: Writable<i18nType> = getContext('i18n');
 
 	import { goto, replaceState } from '$app/navigation';
 	import { page } from '$app/stores';
 
-	import { type Unsubscriber, type Writable } from 'svelte/store';
+	import { type Writable } from 'svelte/store';
 	import type { i18n as i18nType } from 'i18next';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import type { ChatHistory } from '$lib/types';
@@ -59,60 +59,60 @@
 	import Placeholder from './Placeholder.svelte';
 	import Spinner from '../common/Spinner.svelte';
 
-	export let chatIdProp = '';
+	let { chatIdProp = '' } = $props();
 
-	let loading = true;
+	let loading = $state(true);
 
 	const eventTarget = new EventTarget();
 
-	let messageInput: any;
+	let messageInput = $state<any>(null);
 
-	let autoScroll = true;
-	let processing = '';
-	let messagesContainerElement: HTMLDivElement;
+	let autoScroll = $state(true);
+	let messagesContainerElement = $state<HTMLDivElement | undefined>();
 
-	let navbarElement;
+	let navbarElement = $state<any>(null);
 
-	let showEventConfirmation = false;
-	let eventConfirmationTitle = '';
-	let eventConfirmationMessage = '';
-	let eventConfirmationInput = false;
-	let eventConfirmationInputPlaceholder = '';
-	let eventConfirmationInputValue = '';
-	let eventConfirmationInputType = '';
-	let eventCallback: ((value?: any) => void) | null = null;
+	let showEventConfirmation = $state(false);
+	let eventConfirmationTitle = $state('');
+	let eventConfirmationMessage = $state('');
+	let eventConfirmationInput = $state(false);
+	let eventConfirmationInputPlaceholder = $state('');
+	let eventConfirmationInputValue = $state('');
+	let eventConfirmationInputType = $state('');
+	let eventCallback = $state<((value?: any) => void) | null>(null);
 
-	let chatIdUnsubscriber: Unsubscriber | undefined;
+	let selectedModels = $state(['']);
+	let atSelectedModel = $state<Model | undefined>();
 
-	let selectedModels = [''];
-	let atSelectedModel: Model | undefined;
-
-	let generating = false;
+	let generating = $state(false);
 	let generationController: AbortController | null = null;
 
 	let chat: Record<string, any> | null = null;
 
-	let history: ChatHistory = {
+	let history = $state<ChatHistory>({
 		messages: {},
 		currentId: null
-	};
+	});
 
-	let taskIds: string[] | null = null;
+	let taskIds = $state<string[] | null>(null);
 
 	// Chat Input
-	let prompt = '';
+	let prompt = $state('');
 	let chatFiles: any[] = [];
-	let files: any[] = [];
-	let params: Record<string, any> = {};
+	let files = $state<any[]>([]);
+	let params = $state<Record<string, any>>({});
 
 	// Message queue for storing messages while generating
-	let messageQueue: { id: string; prompt: string; files: any[] }[] = [];
+	let messageQueue = $state<{ id: string; prompt: string; files: any[] }[]>([]);
 
-	$: if (chatIdProp) {
-		navigateHandler();
-	}
+	$effect(() => {
+		if (!chatIdProp) return;
+		const controller = new AbortController();
+		untrack(() => navigateHandler(controller.signal));
+		return () => controller.abort();
+	});
 
-	const navigateHandler = async () => {
+	const navigateHandler = async (signal?: AbortSignal) => {
 		console.log('[navigateHandler] chatIdProp:', chatIdProp);
 		loading = true;
 
@@ -132,11 +132,14 @@
 		);
 
 		if (chatIdProp && (await loadChat())) {
+			if (signal?.aborted) return;
 			await tick();
+			if (signal?.aborted) return;
 			loading = false;
 			window.setTimeout(() => scrollToBottom(), 0);
 
 			await tick();
+			if (signal?.aborted) return;
 
 			// Restore queue from sessionStorage
 			const storedQueueData = sessionStorage.getItem(`chat-queue-${chatIdProp}`);
@@ -194,9 +197,11 @@
 		}
 	};
 
-	$: if (selectedModels && chatIdProp !== '') {
-		saveSessionSelectedModels();
-	}
+	$effect(() => {
+		if (selectedModels && chatIdProp !== '') {
+			untrack(() => saveSessionSelectedModels());
+		}
+	});
 
 	const saveSessionSelectedModels = () => {
 		if (!selectedModels[0] || sessionStorage.selectedModels === JSON.stringify(selectedModels)) {
@@ -207,8 +212,8 @@
 	};
 
 	const showMessage = async (message: any, scroll = true) => {
-		const _chatId = JSON.parse(JSON.stringify($chatId));
-		let _messageId = JSON.parse(JSON.stringify(message.id));
+		const _chatId = $chatId;
+		let _messageId = message.id;
 
 		let messageChildrenIds = [];
 		if (_messageId === null) {
@@ -415,11 +420,32 @@
 		}
 	};
 
-	$: if (selectedModels !== null) {
-		savedModelIds();
-	}
+	$effect(() => {
+		if (selectedModels !== null) {
+			untrack(() => savedModelIds());
+		}
+	});
 
-	let selectedFolderSubscribe: (() => void) | null = null;
+	$effect(() => {
+		const folder = $selectedFolder;
+		if (
+			folder?.data?.model_ids &&
+			JSON.stringify(untrack(() => selectedModels)) !== JSON.stringify(folder.data.model_ids)
+		) {
+			selectedModels = folder.data.model_ids;
+		}
+	});
+
+	$effect(() => {
+		if (
+			$models.length > 0 &&
+			selectedModels[0] &&
+			!$models.find((m) => m.id === selectedModels[0])
+		) {
+			selectedModels = [''];
+		}
+	});
+
 	let activeChatEmitter: ReturnType<typeof setInterval> | null = null;
 
 	const instanceId = Math.random().toString(36).slice(2, 6);
@@ -468,17 +494,6 @@
 			} catch (e) {}
 		}
 
-		selectedFolderSubscribe = selectedFolder.subscribe(async (folder) => {
-			if (
-				folder?.data?.model_ids &&
-				JSON.stringify(selectedModels) !== JSON.stringify(folder.data.model_ids)
-			) {
-				selectedModels = folder.data.model_ids;
-
-				console.log('Set selectedModels from folder data:', selectedModels);
-			}
-		});
-
 		const chatInput = document.getElementById('chat-input');
 		chatInput?.focus();
 
@@ -492,8 +507,6 @@
 				saveDraftTimeout = null;
 			}
 			pageUnsubscribe();
-			selectedFolderSubscribe();
-			chatIdUnsubscriber?.();
 			window.removeEventListener('message', onMessageHandler);
 			$socket?.off('events', chatEventHandler);
 		};
@@ -1009,7 +1022,7 @@
 		if (taskIds !== null && taskIds.length > 0) {
 			if ($settings?.enableMessageQueue ?? true) {
 				// Queue the message
-				const _files = JSON.parse(JSON.stringify(files));
+				const _files = $state.snapshot(files);
 				messageQueue = [
 					...messageQueue,
 					{
@@ -1044,7 +1057,7 @@
 		prompt = '';
 
 		const messages = createMessagesList(history, history.currentId);
-		const _files = JSON.parse(JSON.stringify(files));
+		const _files = $state.snapshot(files);
 
 		chatFiles.push(
 			..._files.filter(
@@ -1110,8 +1123,8 @@
 			scrollToBottom();
 		}
 
-		let _chatId = JSON.parse(JSON.stringify($chatId));
-		_history = JSON.parse(JSON.stringify(_history));
+		let _chatId = $chatId;
+		_history = $state.snapshot(_history);
 
 		const resolvedModelId = modelId
 			? modelId
@@ -1171,7 +1184,7 @@
 
 		await tick();
 
-		_history = JSON.parse(JSON.stringify(history));
+		_history = $state.snapshot(history);
 		console.log(
 			'[sendMessage] after tick+copy, _history has responseMessageId:',
 			!!_history.messages[responseMessageId]
@@ -1226,7 +1239,7 @@
 			return fileExists;
 		});
 
-		let files = JSON.parse(JSON.stringify(chatFiles));
+		let files = structuredClone(chatFiles);
 		files.push(
 			...(userMessage?.files ?? []).filter(
 				(item) =>
@@ -1526,7 +1539,7 @@
 
 	const continueResponse = async () => {
 		console.log('continueResponse');
-		const _chatId = JSON.parse(JSON.stringify($chatId));
+		const _chatId = $chatId;
 
 		if (history.currentId && history.messages[history.currentId].done == true) {
 			const responseMessage = history.messages[history.currentId];

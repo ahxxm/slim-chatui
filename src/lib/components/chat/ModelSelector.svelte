@@ -7,7 +7,7 @@
 	import { updateUserSettings } from '$lib/apis/users';
 	const i18n = getContext('i18n');
 
-	export let selectedModels = [''];
+	let { selectedModels = $bindable(['']) } = $props();
 
 	const saveDefaultModel = async () => {
 		if (!selectedModels[0]) {
@@ -32,12 +32,6 @@
 		settings.set({ ...$settings, pinnedModels: pinnedModels });
 		await updateUserSettings(localStorage.token, { ui: $settings });
 	};
-
-	$: if (selectedModels[0] && $models.length > 0) {
-		if (!$models.find((m) => m.id === selectedModels[0])) {
-			selectedModels = [''];
-		}
-	}
 </script>
 
 <div class="flex flex-col w-full items-start">

@@ -1,5 +1,5 @@
 <script>
-	import { getContext, createEventDispatcher, onMount, tick } from 'svelte';
+	import { getContext, createEventDispatcher, onMount, tick, untrack } from 'svelte';
 
 	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();
@@ -43,33 +43,30 @@
 	import Emoji from '$lib/components/common/Emoji.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
-	export let folderRegistry = {};
-	export let open = false;
+	let {
+		folderRegistry = $bindable({}),
+		open = $bindable(false),
+		folders,
+		folderId,
+		shiftKey = false,
+		className = '',
+		deleteFolderContents = $bindable(true),
+		parentDragged = false,
+		onDelete = (e) => {},
+		onItemMove = (e) => {}
+	} = $props();
 
-	export let folders;
-	export let folderId;
-	export let shiftKey = false;
+	let folderElement = $state();
 
-	export let className = '';
+	let showFolderModal = $state(false);
+	let edit = $state(false);
 
-	export let deleteFolderContents = true;
-
-	export let parentDragged = false;
-
-	export let onDelete = (e) => {};
-	export let onItemMove = (e) => {};
-
-	let folderElement;
-
-	let showFolderModal = false;
-	let edit = false;
-
-	let draggedOver = false;
-	let dragged = false;
+	let draggedOver = $state(false);
+	let dragged = $state(false);
 
 	let clickTimer = null;
 
-	let name = '';
+	let name = $state('');
 
 	const onDragOver = (e) => {
 		e.preventDefault();
@@ -214,8 +211,8 @@
 	dragImage.src =
 		'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
 
-	let x;
-	let y;
+	let x = $state();
+	let y = $state();
 
 	const onDragStart = (event) => {
 		event.stopPropagation();
@@ -285,7 +282,7 @@
 		};
 	});
 
-	let showDeleteConfirm = false;
+	let showDeleteConfirm = $state(false);
 
 	const deleteHandler = async () => {
 		const res = await deleteFolderById(localStorage.token, folderId, deleteFolderContents).catch(
@@ -364,7 +361,7 @@
 		}, 500);
 	};
 
-	let chats = null;
+	let chats = $state(null);
 	export const setFolderItems = async () => {
 		await tick();
 		if (open) {
@@ -377,9 +374,11 @@
 		}
 	};
 
-	$: if (open) {
-		setFolderItems();
-	}
+	$effect(() => {
+		if (open) {
+			untrack(() => setFolderItems());
+		}
+	});
 
 	const renameHandler = async () => {
 		console.log('Edit');

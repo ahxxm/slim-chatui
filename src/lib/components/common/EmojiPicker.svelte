@@ -14,21 +14,14 @@
 
 	const i18n = getContext('i18n');
 
-	export let onClose = () => {};
-	export let onSubmit = (name) => {};
-	export let side = 'top';
-	export let align = 'start';
+	let { onClose = () => {}, onSubmit = (name) => {}, side = 'top', align = 'start' } = $props();
 
-	let show = false;
-	let emojis = emojiShortCodes;
-	let search = '';
-	let flattenedEmojis = [];
-	let emojiRows = [];
+	let show = $state(false);
+	let search = $state('');
 
-	// Reactive statement to filter the emojis based on search query
-	$: {
+	let emojis = $derived.by(() => {
 		if (search) {
-			emojis = Object.keys(emojiShortCodes).reduce((acc, key) => {
+			return Object.keys(emojiShortCodes).reduce((acc, key) => {
 				if (key.includes(search.toLowerCase())) {
 					acc[key] = emojiShortCodes[key];
 				} else {
@@ -48,12 +41,12 @@
 				return acc;
 			}, {});
 		} else {
-			emojis = emojiShortCodes;
+			return emojiShortCodes;
 		}
-	}
-	// Flatten emoji groups and group them into rows of 8 for virtual scrolling
-	$: {
-		flattenedEmojis = [];
+	});
+
+	let emojiRows = $derived.by(() => {
+		let flattenedEmojis = [];
 		Object.keys(emojiGroups).forEach((group) => {
 			const groupEmojis = emojiGroups[group].filter((emoji) => emojis[emoji]);
 			if (groupEmojis.length > 0) {
@@ -70,28 +63,28 @@
 				);
 			}
 		});
-		// Group emojis into rows of 8
-		emojiRows = [];
+		let rows = [];
 		let currentRow = [];
 		flattenedEmojis.forEach((item) => {
 			if (item.type === 'emoji') {
 				currentRow.push(item);
 				if (currentRow.length === 8) {
-					emojiRows.push(currentRow);
+					rows.push(currentRow);
 					currentRow = [];
 				}
 			} else if (item.type === 'group') {
 				if (currentRow.length > 0) {
-					emojiRows.push(currentRow); // Push the remaining row
+					rows.push(currentRow);
 					currentRow = [];
 				}
-				emojiRows.push([item]); // Add the group label as a separate row
+				rows.push([item]);
 			}
 		});
 		if (currentRow.length > 0) {
-			emojiRows.push(currentRow); // Push the final row
+			rows.push(currentRow);
 		}
-	}
+		return rows;
+	});
 	const ROW_HEIGHT = 48; // Approximate height for a row with multiple emojis
 	// Handle emoji selection
 	function selectEmoji(emoji) {

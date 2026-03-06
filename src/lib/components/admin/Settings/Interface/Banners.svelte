@@ -5,20 +5,19 @@
 	import EllipsisVertical from '$lib/components/icons/EllipsisVertical.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import Sortable from 'sortablejs';
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
-	export let banners = [];
+	let { banners = $bindable([]) } = $props();
 
 	let sortable = null;
-	let bannerListElement = null;
+	let bannerListElement = $state(null);
 
 	const positionChangeHandler = () => {
 		const bannerIdOrder = Array.from(bannerListElement.children).map((child) =>
 			child.id.replace('banner-item-', '')
 		);
 
-		// Sort the banners array based on the new order
 		banners = bannerIdOrder.map((id) => {
 			const index = banners.findIndex((banner) => banner.id === id);
 			return banners[index];
@@ -32,9 +31,11 @@
 		error: 'bg-red-500/20 text-red-700 dark:text-red-200'
 	};
 
-	$: if (banners) {
-		init();
-	}
+	$effect(() => {
+		if (banners) {
+			untrack(() => init());
+		}
+	});
 
 	const init = () => {
 		if (sortable) {

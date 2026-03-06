@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 
-	import { onMount, getContext, tick } from 'svelte';
+	import { onMount, getContext, tick, untrack } from 'svelte';
 	import { models, user } from '$lib/stores';
 	import { WEBUI_BASE_URL, DEFAULT_CAPABILITIES } from '$lib/constants';
 
@@ -14,45 +14,37 @@
 
 	const i18n = getContext('i18n');
 
-	export let onSubmit: Function;
-	export let onBack: null | Function = null;
+	let { onSubmit, onBack = null, model = null, edit = false, preset = true } = $props();
 
-	export let model = null;
-	export let edit = false;
+	let loading = $state(false);
+	let success = $state(false);
 
-	export let preset = true;
+	let filesInputElement = $state();
+	let inputFiles = $state();
 
-	let loading = false;
-	let success = false;
+	let showAdvanced = $state(false);
+	let showPreview = $state(false);
 
-	let filesInputElement;
-	let inputFiles;
+	let loaded = $state(false);
 
-	let showAdvanced = false;
-	let showPreview = false;
+	let id = $state('');
+	let name = $state('');
 
-	let loaded = false;
+	let enableDescription = $state(true);
 
-	// ///////////
-	// model
-	// ///////////
-
-	let id = '';
-	let name = '';
-
-	let enableDescription = true;
-
-	$: if (!edit) {
-		if (name) {
-			id = name
-				.replace(/\s+/g, '-')
-				.replace(/[^a-zA-Z0-9-]/g, '')
-				.toLowerCase();
+	$effect(() => {
+		if (!edit) {
+			if (name) {
+				id = name
+					.replace(/\s+/g, '-')
+					.replace(/[^a-zA-Z0-9-]/g, '')
+					.toLowerCase();
+			}
 		}
-	}
+	});
 
-	let system = '';
-	let info = {
+	let system = $state('');
+	let info = $state({
 		id: '',
 		base_model_id: null,
 		name: '',
@@ -65,13 +57,13 @@
 		params: {
 			system: ''
 		}
-	};
+	});
 
-	let params = {
+	let params = $state({
 		system: ''
-	};
+	});
 
-	let capabilities = { ...DEFAULT_CAPABILITIES };
+	let capabilities = $state({ ...DEFAULT_CAPABILITIES });
 
 	const submitHandler = async () => {
 		loading = true;
@@ -210,7 +202,6 @@
 				reader.onload = (event) => {
 					let originalImageUrl = `${event.target?.result}`;
 
-					// For animated formats (gif, webp), skip resizing to preserve animation
 					const fileType = (inputFiles[0] as any)?.['type'];
 					if (fileType === 'image/gif' || fileType === 'image/webp') {
 						info.meta.profile_image_url = originalImageUrl;
@@ -226,10 +217,8 @@
 						const canvas = document.createElement('canvas');
 						const ctx = canvas.getContext('2d');
 
-						// Calculate the aspect ratio of the image
 						const aspectRatio = img.width / img.height;
 
-						// Calculate the new width and height to fit within 100x100
 						let newWidth, newHeight;
 						if (aspectRatio > 1) {
 							newWidth = 250 * aspectRatio;
@@ -239,21 +228,16 @@
 							newHeight = 250 / aspectRatio;
 						}
 
-						// Set the canvas size
 						canvas.width = 250;
 						canvas.height = 250;
 
-						// Calculate the position to center the image
 						const offsetX = (250 - newWidth) / 2;
 						const offsetY = (250 - newHeight) / 2;
 
-						// Draw the image on the canvas
 						ctx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
 
-						// Get the base64 representation of the compressed image
 						const compressedSrc = canvas.toDataURL('image/webp', 0.8);
 
-						// Display the compressed image
 						info.meta.profile_image_url = compressedSrc;
 
 						inputFiles = null;

@@ -18,23 +18,22 @@
 	import Reset from '../icons/Reset.svelte';
 	import Download from '../icons/Download.svelte';
 
-	export let className = '';
-	export let svg = '';
-	export let content = '';
+	let { className = '', svg = '', content = '' } = $props();
 
 	let instance: PanZoom;
 
-	let sceneParentElement: HTMLElement;
-	let sceneElement: HTMLElement;
+	let sceneParentElement: HTMLElement = $state();
+	let sceneElement: HTMLElement = $state();
 
-	$: if (sceneElement) {
-		instance = panzoom(sceneElement, {
-			bounds: true,
-			boundsPadding: 0.1,
-
-			zoomSpeed: 0.065
-		});
-	}
+	$effect(() => {
+		if (sceneElement) {
+			instance = panzoom(sceneElement, {
+				bounds: true,
+				boundsPadding: 0.1,
+				zoomSpeed: 0.065
+			});
+		}
+	});
 	const resetPanZoomViewport = () => {
 		instance.moveTo(0, 0);
 		instance.zoomAbs(0, 0, 1);

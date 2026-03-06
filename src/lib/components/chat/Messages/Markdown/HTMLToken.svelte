@@ -5,15 +5,14 @@
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { settings } from '$lib/stores';
 
-	export let token: Token;
+	let { token }: { token: Token } = $props();
 
-	let html: string | null = null;
-
-	$: if (token.type === 'html' && token?.text) {
-		html = DOMPurify.sanitize(token.text);
-	} else {
-		html = null;
-	}
+	let html = $derived.by(() => {
+		if (token.type === 'html' && token?.text) {
+			return DOMPurify.sanitize(token.text);
+		}
+		return null;
+	});
 </script>
 
 {#if token.type === 'html'}

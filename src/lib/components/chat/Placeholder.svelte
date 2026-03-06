@@ -29,24 +29,21 @@
 
 	const i18n = getContext('i18n');
 
-	export let createMessagePair: Function;
-	export let stopResponse: Function;
+	let {
+		createMessagePair,
+		stopResponse,
+		autoScroll = false,
+		atSelectedModel = undefined,
+		selectedModels,
+		history,
+		prompt = '',
+		files = [],
+		messageInput = null,
+		onSelect = (e) => {},
+		onChange = (e) => {}
+	} = $props();
 
-	export let autoScroll = false;
-
-	export let atSelectedModel: Model | undefined;
-	export let selectedModels: [''];
-
-	export let history;
-
-	export let prompt = '';
-	export let files = [];
-	export let messageInput = null;
-
-	export let onSelect = (e) => {};
-	export let onChange = (e) => {};
-
-	$: model = $_models.find((m) => m.id === selectedModels[0]);
+	let model = $derived($_models.find((m) => m.id === selectedModels[0]));
 </script>
 
 <div class="m-auto w-full max-w-6xl px-2 @2xl:px-20 translate-y-6 py-24 text-center">

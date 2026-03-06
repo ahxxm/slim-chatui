@@ -4,36 +4,29 @@
 </script>
 
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { onMount, tick, untrack } from 'svelte';
 
-	// Props
-	export let src: string | null = null; // URL or raw HTML (auto-detected)
-	export let title = 'Embedded Content';
-	export let initialHeight: number | null = null; // initial height in px, null = auto
+	let {
+		src = null,
+		title = 'Embedded Content',
+		initialHeight = null,
+		iframeClassName = 'w-full rounded-2xl',
+		args = null,
+		allowScripts = true,
+		allowForms = false,
+		allowSameOrigin = false,
+		allowPopups = false,
+		allowDownloads = true,
+		referrerPolicy = 'strict-origin-when-cross-origin',
+		allowFullscreen = true,
+		payload = null
+	} = $props();
 
-	export let iframeClassName = 'w-full rounded-2xl';
+	let iframe: HTMLIFrameElement | null = $state(null);
+	let iframeSrc: string | null = $state(null);
+	let iframeDoc: string | null = $state(null);
 
-	export let args = null;
-
-	export let allowScripts = true;
-	export let allowForms = false;
-
-	export let allowSameOrigin = false; // set to true only when you trust the content
-	export let allowPopups = false;
-	export let allowDownloads = true;
-
-	export let referrerPolicy: HTMLIFrameElement['referrerPolicy'] =
-		'strict-origin-when-cross-origin';
-	export let allowFullscreen = true;
-
-	export let payload = null; // payload to send into the iframe on request
-
-	let iframe: HTMLIFrameElement | null = null;
-	let iframeSrc: string | null = null;
-	let iframeDoc: string | null = null;
-
-	// Derived: build sandbox attribute from flags
-	$: sandbox =
+	let sandbox = $derived(
 		[
 			allowScripts && 'allow-scripts',
 			allowForms && 'allow-forms',
@@ -42,13 +35,16 @@
 			allowDownloads && 'allow-downloads'
 		]
 			.filter(Boolean)
-			.join(' ') || undefined;
+			.join(' ') || undefined
+	);
 
-	// Detect URL vs raw HTML and prep src/srcdoc
-	$: isUrl = typeof src === 'string' && /^(https?:)?\/\//i.test(src);
-	$: if (src) {
-		setIframeSrc();
-	}
+	let isUrl = $derived(typeof src === 'string' && /^(https?:)?\/\//i.test(src));
+
+	$effect(() => {
+		if (src) {
+			untrack(() => setIframeSrc());
+		}
+	});
 
 	const setIframeSrc = async () => {
 		await tick();

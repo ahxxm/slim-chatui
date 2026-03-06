@@ -5,23 +5,22 @@
 
 	import tippy from 'tippy.js';
 
-	export let elementId = '';
+	let {
+		elementId = '',
+		as = 'div',
+		className = 'flex',
+		placement = 'top',
+		content = `I'm a tooltip!`,
+		touch = true,
+		theme = '',
+		offset = [0, 4],
+		allowHTML = true,
+		tippyOptions = {},
+		interactive = false,
+		onClick = () => {}
+	} = $props();
 
-	export let as = 'div';
-	export let className = 'flex';
-
-	export let placement = 'top';
-	export let content = `I'm a tooltip!`;
-	export let touch = true;
-	export let theme = '';
-	export let offset = [0, 4];
-	export let allowHTML = true;
-	export let tippyOptions = {};
-	export let interactive = false;
-
-	export let onClick = () => {};
-
-	let tooltipElement;
+	let tooltipElement = $state();
 	let tooltipInstance;
 
 	const destroyInstance = () => {
@@ -31,39 +30,41 @@
 		}
 	};
 
-	$: if (tooltipElement && (content || elementId)) {
-		let tooltipContent = null;
+	$effect(() => {
+		if (tooltipElement && (content || elementId)) {
+			let tooltipContent = null;
 
-		if (elementId) {
-			tooltipContent = document.getElementById(`${elementId}`);
-		} else {
-			tooltipContent = DOMPurify.sanitize(content);
-		}
+			if (elementId) {
+				tooltipContent = document.getElementById(`${elementId}`);
+			} else {
+				tooltipContent = DOMPurify.sanitize(content);
+			}
 
-		if (tooltipInstance && tooltipInstance.reference !== tooltipElement) {
+			if (tooltipInstance && tooltipInstance.reference !== tooltipElement) {
+				destroyInstance();
+			}
+
+			if (tooltipInstance) {
+				tooltipInstance.setContent(tooltipContent);
+			} else {
+				if (content) {
+					tooltipInstance = tippy(tooltipElement, {
+						content: tooltipContent,
+						placement: placement,
+						allowHTML: allowHTML,
+						touch: touch,
+						...(theme !== '' ? { theme } : { theme: 'dark' }),
+						arrow: false,
+						offset: offset,
+						...(interactive ? { interactive: true } : {}),
+						...tippyOptions
+					});
+				}
+			}
+		} else if (tooltipInstance && content === '') {
 			destroyInstance();
 		}
-
-		if (tooltipInstance) {
-			tooltipInstance.setContent(tooltipContent);
-		} else {
-			if (content) {
-				tooltipInstance = tippy(tooltipElement, {
-					content: tooltipContent,
-					placement: placement,
-					allowHTML: allowHTML,
-					touch: touch,
-					...(theme !== '' ? { theme } : { theme: 'dark' }),
-					arrow: false,
-					offset: offset,
-					...(interactive ? { interactive: true } : {}),
-					...tippyOptions
-				});
-			}
-		}
-	} else if (tooltipInstance && content === '') {
-		destroyInstance();
-	}
+	});
 
 	onDestroy(() => {
 		destroyInstance();
