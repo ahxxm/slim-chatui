@@ -1235,19 +1235,25 @@ async def streaming_chat_response_handler(response, ctx):
                                         "content": serialize_output(output),
                                     }
 
-                                    # print(data)
-                                    # print(processed_data)
-
                                     # Merge any metadata (usage, done, etc.)
                                     if response_metadata:
                                         processed_data.update(response_metadata)
-
-                                    await event_emitter(
-                                        {
-                                            "type": "chat:completion",
-                                            "data": processed_data,
-                                        }
-                                    )
+                                        # Flush immediately for completion/usage events
+                                        await flush_pending_delta_data(0)
+                                        await event_emitter(
+                                            {
+                                                "type": "chat:completion",
+                                                "data": processed_data,
+                                            }
+                                        )
+                                    else:
+                                        # Batch content deltas like chat completions
+                                        delta_count += 1
+                                        last_delta_data = processed_data
+                                        if delta_count >= delta_chunk_size:
+                                            await flush_pending_delta_data(
+                                                delta_chunk_size
+                                            )
                                     continue
                                 else:
                                     choices = data.get("choices", [])
