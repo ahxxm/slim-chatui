@@ -4,7 +4,6 @@ from sqlalchemy.orm import Session
 
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import FileResponse
 
 from open_webui.models.auths import Auths
 
@@ -21,7 +20,6 @@ from open_webui.models.users import (
 )
 
 from open_webui.constants import ERROR_MESSAGES
-from open_webui.env import STATIC_DIR
 from open_webui.internal.db import get_session
 
 
@@ -176,23 +174,6 @@ async def get_user_info_by_id(user_id: str, user=Depends(get_verified_user)):
     user = Users.get_user_by_id(user_id)
     if user:
         return UserInfoResponse(**user.model_dump())
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.USER_NOT_FOUND,
-        )
-
-
-############################
-# GetUserProfileImageById
-############################
-
-
-@router.get("/{user_id}/profile/image")
-def get_user_profile_image_by_id(user_id: str, user=Depends(get_verified_user)):
-    user = Users.get_user_by_id(user_id)
-    if user:
-        return FileResponse(f"{STATIC_DIR}/user.png")
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

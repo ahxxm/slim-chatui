@@ -50,10 +50,6 @@ class SigninForm(BaseModel):
     password: str
 
 
-class ProfileImageUrlForm(BaseModel):
-    profile_image_url: str
-
-
 class UpdatePasswordForm(BaseModel):
     password: str
     new_password: str

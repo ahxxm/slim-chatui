@@ -1,14 +1,14 @@
 import time
 from typing import Optional
 
-from sqlalchemy.orm import Session, defer
+from sqlalchemy.orm import Session
 from open_webui.internal.db import Base, get_db_context
 
 
 from open_webui.models.chats import Chats
 
 
-from pydantic import BaseModel, ConfigDict, model_validator
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import BigInteger, JSON, Column, String, Text
 from sqlalchemy import or_, func
 
@@ -48,18 +48,11 @@ class UserModel(BaseModel):
 
     name: str
 
-    profile_image_url: Optional[str] = None
-
     settings: Optional[UserSettings] = None
     updated_at: int  # timestamp in epoch
     created_at: int  # timestamp in epoch
 
     model_config = ConfigDict(from_attributes=True)
-
-    @model_validator(mode="after")
-    def set_profile_image_url(self):
-        self.profile_image_url = "/user.png"
-        return self
 
 
 ####################
@@ -104,7 +97,6 @@ class UserResponse(UserNameResponse):
 
 class UserProfileImageResponse(UserNameResponse):
     email: str
-    profile_image_url: str
 
 
 class UserUpdateForm(BaseModel):
@@ -130,7 +122,6 @@ class UsersTable:
                 email=email,
                 name=name,
                 role=role,
-                profile_image_url="/user.png",
                 created_at=int(time.time()),
                 updated_at=int(time.time()),
                 username=username,
@@ -173,7 +164,7 @@ class UsersTable:
         db: Optional[Session] = None,
     ) -> dict:
         with get_db_context(db) as db:
-            query = db.query(User).options(defer(User.profile_image_url))
+            query = db.query(User)
 
             if filter:
                 query_key = filter.get("query")
@@ -251,12 +242,7 @@ class UsersTable:
         self, user_ids: list[str], db: Optional[Session] = None
     ) -> list[UserModel]:
         with get_db_context(db) as db:
-            users = (
-                db.query(User)
-                .options(defer(User.profile_image_url))
-                .filter(User.id.in_(user_ids))
-                .all()
-            )
+            users = db.query(User).filter(User.id.in_(user_ids)).all()
             return [UserModel.model_validate(user) for user in users]
 
     def get_num_users(self, db: Optional[Session] = None) -> Optional[int]:

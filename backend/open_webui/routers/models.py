@@ -19,11 +19,7 @@ from fastapi import (
     Request,
     status,
 )
-from fastapi.responses import FileResponse
-
-
 from open_webui.utils.auth import get_admin_user, get_verified_user
-from open_webui.config import STATIC_DIR
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
 
@@ -260,16 +256,6 @@ async def get_model_by_id(id: str, user=Depends(get_verified_user)):
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
-
-
-###########################
-# GetModelById
-###########################
-
-
-@router.get("/model/profile/image")
-def get_model_profile_image(id: str, user=Depends(get_verified_user)):
-    return FileResponse(f"{STATIC_DIR}/favicon.png")
 
 
 ############################

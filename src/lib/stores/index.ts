@@ -203,5 +203,4 @@ export type SessionUser = {
 	email: string;
 	name: string;
 	role: string;
-	profile_image_url: string;
 };
