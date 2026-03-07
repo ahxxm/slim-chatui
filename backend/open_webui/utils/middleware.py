@@ -109,13 +109,19 @@ def serialize_output(output: list) -> str:
         elif item_type == "web_search_call":
             status = item.get("status", "in_progress")
             action = item.get("action", {})
-            query = action.get("query", "").strip().replace('"', "'")
+            action_type = action.get("type", "")
+
+            def _esc(s: str) -> str:
+                return s.strip().replace('"', "'")
+
+            query = _esc(action.get("query", ""))
+            url = _esc(action.get("url", ""))
+            pattern = _esc(action.get("pattern", ""))
             if content and not content.endswith("\n"):
                 content += "\n"
-            if status == "completed":
-                content = f'{content}<details type="web_search" done="true" query="{query}">\n<summary>Searched the web</summary>\n</details>\n'
-            else:
-                content = f'{content}<details type="web_search" done="false" query="{query}">\n<summary>Searching the web…</summary>\n</details>\n'
+            done = "true" if status == "completed" else "false"
+            attrs = f'type="web_search" done="{done}" action="{action_type}" query="{query}" url="{url}" pattern="{pattern}"'
+            content = f"{content}<details {attrs}>\n<summary>Searched the web</summary>\n</details>\n"
 
         elif item_type == "reasoning":
             # Check for 'summary' (new structure) or 'content' (legacy/fallback)
@@ -1227,6 +1233,16 @@ async def streaming_chat_response_handler(response, ctx):
                                     output, response_metadata = (
                                         handle_responses_streaming_event(data, output)
                                     )
+
+                                    if (
+                                        data.get("type") == "response.output_item.done"
+                                        and data.get("item", {}).get("type")
+                                        == "web_search_call"
+                                    ):
+                                        log.info(
+                                            "[stream] web_search_call done: %s",
+                                            data.get("item"),
+                                        )
 
                                     processed_data = {
                                         "output": output,

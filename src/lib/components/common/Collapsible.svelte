@@ -104,7 +104,13 @@
 						{/if}
 					{:else if attributes?.type === 'web_search'}
 						{#if attributes?.done === 'true'}
-							{$i18n.t('Searched')} "{attributes?.query || ''}"
+							{#if attributes?.action === 'open_page'}
+								{$i18n.t('Opened')} "{attributes?.url || ''}"
+							{:else if attributes?.action === 'find_in_page'}
+								{$i18n.t('Looked for')} "{attributes?.pattern || ''}" on {attributes?.url || ''}
+							{:else}
+								{$i18n.t('Searched')} "{attributes?.query || ''}"
+							{/if}
 						{:else}
 							{$i18n.t('Searching...')}
 						{/if}
