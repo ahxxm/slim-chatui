@@ -96,6 +96,50 @@
 
 	let taskIds = $state<string[] | null>(null);
 
+	// Typewriter throttle: batch streaming tokens, emit to DOM N times per second.
+	// At 10 emits/sec (100ms): DeepSeek R1 (~24 t/s) batches ~2 tokens/emit,
+	// Opus 4.6 (~43 t/s) ~4, GPT-5.4 (~78 t/s) ~8, Gemini 3.1 Pro (~100 t/s) ~10.
+	// All land as unified/natural word-chunks like typewriter output.
+	// Technically, streamingBuffers holds plain (non-proxy) message objects
+	// so mutations don't trigger Svelte reactivity until we explicitly flush.
+	const TYPEWRITER_EMITS_PER_SEC = 23;
+	const EMIT_INTERVAL_MS = Math.round(1000 / TYPEWRITER_EMITS_PER_SEC);
+	const streamingBuffers: Map<string, any> = new Map();
+	let renderTimer: ReturnType<typeof setTimeout> | null = null;
+
+	const getStreamingMessage = (messageId: string): any => {
+		let buf = streamingBuffers.get(messageId);
+		if (!buf) {
+			buf = $state.snapshot(history.messages[messageId]);
+			streamingBuffers.set(messageId, buf);
+		}
+		return buf;
+	};
+
+	const flushPendingRender = () => {
+		renderTimer = null;
+		for (const [id, message] of streamingBuffers) {
+			history.messages[id] = message;
+		}
+		if (autoScroll) scrollToBottom();
+	};
+
+	const scheduleRender = () => {
+		if (!renderTimer) {
+			renderTimer = setTimeout(flushPendingRender, EMIT_INTERVAL_MS);
+		}
+	};
+
+	const flushRenderNow = (id: string) => {
+		if (renderTimer) {
+			clearTimeout(renderTimer);
+			renderTimer = null;
+		}
+		const buf = streamingBuffers.get(id);
+		if (buf) history.messages[id] = buf;
+		streamingBuffers.delete(id);
+	};
+
 	// Chat Input
 	let prompt = $state('');
 	let chatFiles: any[] = [];
@@ -252,20 +296,22 @@
 
 		if (event.chat_id === $chatId) {
 			await tick();
-			let message = history.messages[event.message_id];
+			const messageExists = !!history.messages[event.message_id];
 
-			if (message) {
+			if (messageExists) {
 				const type = event?.data?.type ?? null;
 				const data = event?.data?.data ?? null;
 
 				if (type === 'status') {
+					let message = history.messages[event.message_id];
 					if (message?.statusHistory) {
 						message.statusHistory.push(data);
 					} else {
 						message.statusHistory = [data];
 					}
 				} else if (type === 'chat:completion') {
-					chatCompletionEventHandler(data, message, event.chat_id);
+					chatCompletionEventHandler(data, getStreamingMessage(event.message_id), event.chat_id);
+					return;
 				} else if (type === 'chat:tasks:cancel') {
 					taskIds = null;
 					const responseMessage = history.messages[history.currentId];
@@ -274,13 +320,17 @@
 						history.messages[messageId].done = true;
 					}
 				} else if (type === 'chat:message:delta' || type === 'message') {
-					message.content += data.content;
+					const msg = getStreamingMessage(event.message_id);
+					msg.content += data.content;
+					scheduleRender();
+					return;
 				} else if (type === 'chat:message' || type === 'replace') {
+					let message = history.messages[event.message_id];
 					message.content = data.content;
 				} else if (type === 'chat:message:files' || type === 'files') {
-					message.files = data.files;
+					history.messages[event.message_id].files = data.files;
 				} else if (type === 'chat:message:embeds' || type === 'embeds') {
-					message.embeds = data.embeds;
+					history.messages[event.message_id].embeds = data.embeds;
 
 					// Auto-scroll to the embed once it's rendered in the DOM
 					await tick();
@@ -291,38 +341,40 @@
 						}
 					}, 100);
 				} else if (type === 'chat:message:error') {
-					message.error = data.error;
+					history.messages[event.message_id].error = data.error;
 				} else if (type === 'chat:message:follow_ups') {
-					message.followUps = data.follow_ups;
+					history.messages[event.message_id].followUps = data.follow_ups;
 
 					if (autoScroll) {
 						scrollToBottom('smooth');
 					}
 				} else if (type === 'chat:message:favorite') {
-					// Update message favorite status
-					message.favorite = data.favorite;
+					history.messages[event.message_id].favorite = data.favorite;
 				} else if (type === 'chat:title') {
 					chatTitle.set(data);
 					await refreshChatList(localStorage.token);
 				} else if (type === 'source' || type === 'citation') {
-					if (message?.sources) {
-						message.sources.push(data);
+					const msg = history.messages[event.message_id];
+					if (msg?.sources) {
+						msg.sources.push(data);
 					} else {
-						message.sources = [data];
+						msg.sources = [data];
 					}
 				} else if (type === 'notification') {
-					const toastType = data?.type ?? 'info';
-					const toastContent = data?.content ?? '';
-					const toastOpts = { id: `stream-${event.message_id}-${toastType}` };
+					if ($settings?.notificationEnabled ?? false) {
+						const toastType = data?.type ?? 'info';
+						const toastContent = data?.content ?? '';
+						const toastOpts = { id: `stream-${event.message_id}-${toastType}` };
 
-					if (toastType === 'success') {
-						toast.success(toastContent, toastOpts);
-					} else if (toastType === 'error') {
-						toast.error(toastContent, toastOpts);
-					} else if (toastType === 'warning') {
-						toast.warning(toastContent, toastOpts);
-					} else {
-						toast.info(toastContent, toastOpts);
+						if (toastType === 'success') {
+							toast.success(toastContent, toastOpts);
+						} else if (toastType === 'error') {
+							toast.error(toastContent, toastOpts);
+						} else if (toastType === 'warning') {
+							toast.warning(toastContent, toastOpts);
+						} else {
+							toast.info(toastContent, toastOpts);
+						}
 					}
 				} else if (type === 'confirmation') {
 					eventCallback = cb;
@@ -362,8 +414,6 @@
 				} else {
 					console.log('Unknown message type', data);
 				}
-
-				history.messages[event.message_id] = message;
 			}
 		}
 	};
@@ -957,8 +1007,6 @@
 			message.usage = usage;
 		}
 
-		history.messages[message.id] = message;
-
 		if (done) {
 			message.done = true;
 
@@ -975,7 +1023,7 @@
 				})
 			);
 
-			history.messages[message.id] = message;
+			flushRenderNow(message.id);
 
 			await tick();
 			if (autoScroll) {
@@ -983,14 +1031,11 @@
 			}
 
 			await chatCompletedHandler(chatId, message.model, createMessagesList(history, message.id));
+		} else {
+			scheduleRender();
 		}
 
 		console.log(data);
-		await tick();
-
-		if (autoScroll) {
-			scrollToBottom();
-		}
 	};
 
 	//////////////////////////
@@ -1221,6 +1266,10 @@
 		if (activeChatEmitter) {
 			clearInterval(activeChatEmitter);
 			activeChatEmitter = null;
+		}
+
+		if (newChat && _chatId) {
+			replaceState(`/c/${_chatId}`, {});
 		}
 
 		await refreshChatList(localStorage.token);
@@ -1585,10 +1634,7 @@
 
 			_chatId = chat.id;
 			console.log('[initChatHandler] chat created, setting chatId to', _chatId);
-			replaceState(`/c/${_chatId}`, {});
 			await chatId.set(_chatId);
-
-			await tick();
 
 			await refreshChatList(localStorage.token);
 
@@ -1858,12 +1904,11 @@
 										saveDraft(data, $chatId);
 									}
 								}}
-								on:submit={async (e) => {
+								onSubmit={async (prompt) => {
 									clearDraft();
-									if (e.detail || files.length > 0) {
+									if (prompt || files.length > 0) {
 										await tick();
-
-										submitPrompt(e.detail.replaceAll('\n\n', '\n'));
+										submitPrompt(prompt.replaceAll('\n\n', '\n'));
 									}
 								}}
 							/>
@@ -1892,11 +1937,11 @@
 										saveDraft(data);
 									}
 								}}
-								on:submit={async (e) => {
+								onSubmit={async (prompt) => {
 									clearDraft();
-									if (e.detail || files.length > 0) {
+									if (prompt || files.length > 0) {
 										await tick();
-										submitPrompt(e.detail.replaceAll('\n\n', '\n'));
+										submitPrompt(prompt.replaceAll('\n\n', '\n'));
 									}
 								}}
 							/>

@@ -52,11 +52,11 @@
 				break;
 			}
 			visitedMessageIds.add(message.id);
-			_messages.unshift({ ...message });
+			_messages.push({ ...message });
 			message = message.parentId !== null ? history.messages[message.parentId] : null;
 		}
 
-		return _messages;
+		return _messages.reverse();
 	});
 	let messagesLoading = $state(false);
 

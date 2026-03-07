@@ -799,46 +799,35 @@
 			content,
 			autofocus: messageInput ? true : false,
 			onTransaction: () => {
-				// force re-render so `editor.isActive` works as expected
-				editor = editor;
-				if (!editor) return;
+				// Defer state mutations out of the synchronous TipTap transaction
+				// to avoid Svelte 5 state_unsafe_mutation errors.
+				queueMicrotask(() => {
+					if (!editor) return;
 
-				htmlValue = editor.getHTML();
-				jsonValue = editor.getJSON();
+					htmlValue = editor.getHTML();
+					jsonValue = editor.getJSON();
 
-				if (richText) {
-					mdValue = turndownService
-						.turndown(
-							htmlValue
-								.replace(/<p><\/p>/g, '<br/>')
-								.replace(/ {2,}/g, (m) => m.replace(/ /g, '\u00a0'))
-						)
-						.replace(/\u00a0/g, ' ');
-				} else {
-					mdValue = turndownService
-						.turndown(
-							htmlValue
-								// Replace empty paragraphs with line breaks
-								.replace(/<p><\/p>/g, '<br/>')
-								// Replace multiple spaces with non-breaking spaces
-								.replace(/ {2,}/g, (m) => m.replace(/ /g, '\u00a0'))
-								// Replace tabs with non-breaking spaces (preserve indentation)
-								.replace(/\t/g, '\u00a0\u00a0\u00a0\u00a0') // 1 tab = 4 spaces
-						)
-						// Convert non-breaking spaces back to regular spaces for markdown
-						.replace(/\u00a0/g, ' ');
-				}
+					const sanitizedHtml = htmlValue
+						.replace(/<p><\/p>/g, '<br/>')
+						.replace(/ {2,}/g, (m) => m.replace(/ /g, '\u00a0'));
 
-				onChange({
-					html: htmlValue,
-					json: jsonValue,
-					md: mdValue
-				});
+					if (richText) {
+						mdValue = turndownService.turndown(sanitizedHtml).replace(/\u00a0/g, ' ');
+					} else {
+						mdValue = turndownService
+							.turndown(sanitizedHtml.replace(/\t/g, '\u00a0\u00a0\u00a0\u00a0'))
+							.replace(/\u00a0/g, ' ');
+					}
 
-				if (json) {
-					value = jsonValue;
-				} else {
-					if (raw) {
+					onChange({
+						html: htmlValue,
+						json: jsonValue,
+						md: mdValue
+					});
+
+					if (json) {
+						value = jsonValue;
+					} else if (raw) {
 						value = htmlValue;
 					} else {
 						if (!preserveBreaks) {
@@ -848,15 +837,12 @@
 						if (value !== mdValue) {
 							value = mdValue;
 
-							// check if the node is paragraph as well
-							if (editor.isActive('paragraph')) {
-								if (value === '') {
-									editor.commands.clearContent();
-								}
+							if (editor.isActive('paragraph') && value === '') {
+								editor.commands.clearContent();
 							}
 						}
 					}
-				}
+				});
 			},
 			editorProps: {
 				attributes: { id },

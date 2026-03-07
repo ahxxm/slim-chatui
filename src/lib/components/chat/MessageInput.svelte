@@ -9,9 +9,7 @@
 	dayjs.extend(duration);
 	dayjs.extend(relativeTime);
 
-	import { onMount, tick, getContext, createEventDispatcher, untrack } from 'svelte';
-
-	const dispatch = createEventDispatcher();
+	import { onMount, tick, getContext, untrack } from 'svelte';
 
 	import {
 		type Model,
@@ -81,6 +79,7 @@
 		onQueueSendNow = (id) => {},
 		onQueueEdit = (id) => {},
 		onQueueDelete = (id) => {},
+		onSubmit = (prompt: string) => {},
 		placeholder = ''
 	} = $props();
 
@@ -416,8 +415,13 @@
 			return null;
 		}
 
-		const tempItemId = uuidv4();
-		const fileItem = {
+		if (file.size === 0) {
+			toast.error($i18n.t('You cannot upload an empty file.'));
+			return null;
+		}
+
+		const itemId = uuidv4();
+		const placeholder = {
 			type: 'file',
 			file: '',
 			id: null,
@@ -426,49 +430,39 @@
 			status: 'uploading',
 			size: file.size,
 			error: '',
-			itemId: tempItemId,
+			itemId,
 			...itemData
 		};
+		const isMe = (f) => f?.itemId === itemId;
 
-		if (fileItem.size == 0) {
-			toast.error($i18n.t('You cannot upload an empty file.'));
-			return null;
-		}
-
-		files = [...files, fileItem];
+		files = [...files, placeholder];
 
 		if (!$temporaryChatEnabled) {
 			try {
 				const uploadedFile = await uploadFile(localStorage.token, file);
-
-				if (uploadedFile) {
-					console.log('File upload completed:', {
-						id: uploadedFile.id,
-						name: fileItem.name
-					});
-
-					if (uploadedFile.error) {
-						console.warn('File upload warning:', uploadedFile.error);
-						toast.warning(uploadedFile.error);
-					}
-
-					const idx = files.findIndex((item) => item?.itemId === tempItemId);
-					if (idx !== -1) {
-						files[idx] = {
-							...files[idx],
-							status: 'uploaded',
-							file: uploadedFile,
-							id: uploadedFile.id,
-							content_type: uploadedFile.meta?.content_type || uploadedFile.content_type,
-							url: `${uploadedFile.id}`
-						};
-					}
-				} else {
-					files = files.filter((item) => item?.itemId !== tempItemId);
+				if (!uploadedFile) {
+					files = files.filter((f) => !isMe(f));
+					return null;
 				}
+
+				if (uploadedFile.error) {
+					toast.warning(uploadedFile.error);
+				}
+
+				const completed = {
+					...placeholder,
+					status: 'uploaded',
+					file: uploadedFile,
+					id: uploadedFile.id,
+					content_type: uploadedFile.meta?.content_type || uploadedFile.content_type,
+					url: `${uploadedFile.id}`
+				};
+				files = files.map((f) => (isMe(f) ? completed : f));
+				return completed;
 			} catch (e) {
 				toast.error(`${e}`);
-				files = files.filter((item) => item?.itemId !== tempItemId);
+				files = files.filter((f) => !isMe(f));
+				return null;
 			}
 		} else {
 			const content = await extractContentFromFile(file).catch((error) => {
@@ -480,104 +474,69 @@
 
 			if (content === null) {
 				toast.error($i18n.t('Failed to extract content from the file.'));
-				files = files.filter((item) => item?.itemId !== tempItemId);
+				files = files.filter((f) => !isMe(f));
 				return null;
-			} else {
-				console.log('Extracted content from file:', {
-					name: file.name,
-					size: file.size,
-					content: content
-				});
-
-				const idx = files.findIndex((item) => item?.itemId === tempItemId);
-				if (idx !== -1) {
-					files[idx] = {
-						...files[idx],
-						status: 'uploaded',
-						type: 'text',
-						content: content,
-						id: uuidv4()
-					};
-				}
 			}
+
+			const completed = {
+				...placeholder,
+				status: 'uploaded',
+				type: 'text',
+				content: content,
+				id: uuidv4()
+			};
+			files = files.map((f) => (isMe(f) ? completed : f));
+			return completed;
 		}
 	};
 
+	const readFileAsDataURL = (file): Promise<string> =>
+		new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = (event) => resolve(event.target.result as string);
+			reader.onerror = reject;
+			reader.readAsDataURL(file);
+		});
+
+	const compressImageIfNeeded = async (imageUrl, settings = {}, config = {}) => {
+		const settingsCompression = settings?.imageCompression ?? false;
+		const configWidth = config?.file?.image_compression?.width ?? null;
+		const configHeight = config?.file?.image_compression?.height ?? null;
+
+		if (!settingsCompression && !configWidth && !configHeight) return imageUrl;
+
+		let width = settingsCompression ? (settings?.imageCompressionSize?.width ?? null) : null;
+		let height = settingsCompression ? (settings?.imageCompressionSize?.height ?? null) : null;
+
+		if (configWidth && (width === null || width > configWidth)) width = configWidth;
+		if (configHeight && (height === null || height > configHeight)) height = configHeight;
+
+		return width || height ? await compressImage(imageUrl, width, height) : imageUrl;
+	};
+
 	const inputFilesHandler = async (inputFiles) => {
-		console.log('Input files handler called with:', inputFiles);
-
-		inputFiles.forEach(async (file) => {
-			console.log('Processing file:', {
-				name: file.name,
-				type: file.type,
-				size: file.size,
-				extension: file.name.split('.').at(-1)
-			});
-
-			if (file['type'].startsWith('image/')) {
+		for (const file of inputFiles) {
+			if (file.type.startsWith('image/')) {
 				if (!visionCapable) {
 					toast.error($i18n.t('Selected model does not support image inputs'));
-					return;
+					continue;
 				}
 
-				const compressImageHandler = async (imageUrl, settings = {}, config = {}) => {
-					const settingsCompression = settings?.imageCompression ?? false;
-					const configWidth = config?.file?.image_compression?.width ?? null;
-					const configHeight = config?.file?.image_compression?.height ?? null;
+				const raw = file.type === 'image/heic' ? await convertHeicToJpeg(file) : file;
+				let imageUrl = await readFileAsDataURL(raw);
+				imageUrl = await compressImageIfNeeded(imageUrl, $settings, $config);
 
-					if (!settingsCompression && !configWidth && !configHeight) {
-						return imageUrl;
-					}
-
-					let width = null;
-					let height = null;
-
-					if (settingsCompression) {
-						width = settings?.imageCompressionSize?.width ?? null;
-						height = settings?.imageCompressionSize?.height ?? null;
-					}
-
-					if (configWidth && (width === null || width > configWidth)) {
-						width = configWidth;
-					}
-					if (configHeight && (height === null || height > configHeight)) {
-						height = configHeight;
-					}
-
-					if (width || height) {
-						return await compressImage(imageUrl, width, height);
-					}
-					return imageUrl;
-				};
-
-				let reader = new FileReader();
-
-				reader.onload = async (event) => {
-					let imageUrl = event.target.result;
-
-					imageUrl = await compressImageHandler(imageUrl, $settings, $config);
-
-					if ($temporaryChatEnabled) {
-						files = [
-							...files,
-							{
-								type: 'image',
-								url: imageUrl
-							}
-						];
-					} else {
-						const blob = await (await fetch(imageUrl)).blob();
-						const compressedFile = new File([blob], file.name, { type: file.type });
-
-						uploadFileHandler(compressedFile);
-					}
-				};
-
-				reader.readAsDataURL(file['type'] === 'image/heic' ? await convertHeicToJpeg(file) : file);
+				if ($temporaryChatEnabled) {
+					files = [...files, { type: 'image', url: imageUrl }];
+				} else {
+					const blob = await (await fetch(imageUrl)).blob();
+					const compressedFile = new File([blob], file.name, { type: file.type });
+					await uploadFileHandler(compressedFile);
+				}
 			} else {
-				uploadFileHandler(file);
+				await uploadFileHandler(file);
 			}
-		});
+		}
 	};
 
 	const onDragOver = (e) => {
@@ -786,7 +745,7 @@
 					<form
 						class="w-full flex flex-col gap-1.5"
 						on:submit|preventDefault={() => {
-							dispatch('submit', prompt);
+							onSubmit(prompt);
 						}}
 					>
 						<button
@@ -1043,7 +1002,7 @@
 																if (enterPressed) {
 																	e.preventDefault();
 																	if (prompt !== '' || files.length > 0) {
-																		dispatch('submit', prompt);
+																		onSubmit(prompt);
 																	}
 																}
 															}
