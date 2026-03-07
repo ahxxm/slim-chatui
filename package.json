@@ -92,7 +92,7 @@
 		"idb": "^7.1.1",
 		"katex": "^0.16.22",
 		"lowlight": "^3.3.0",
-		"marked": "^9.1.0",
+		"marked": "^17.0.0",
 		"mermaid": "^11.10.1",
 		"panzoom": "^9.4.3",
 		"prosemirror-model": "^1.23.0",
