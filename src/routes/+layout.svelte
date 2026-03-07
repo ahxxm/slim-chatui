@@ -208,26 +208,26 @@
 						});
 					}
 
-					if ($isLastActiveTab) {
-						if ($settings?.notificationEnabled ?? false) {
+					if ($settings?.notificationEnabled ?? false) {
+						if ($isLastActiveTab) {
 							new Notification(`${displayTitle} • Open WebUI`, {
 								body: content,
 								icon: `${WEBUI_BASE_URL}/static/favicon.png`
 							});
 						}
-					}
 
-					toast.custom(NotificationToast, {
-						componentProps: {
-							onClick: () => {
-								goto(`/c/${event.chat_id}`);
+						toast.custom(NotificationToast, {
+							componentProps: {
+								onClick: () => {
+									goto(`/c/${event.chat_id}`);
+								},
+								content: content,
+								title: displayTitle
 							},
-							content: content,
-							title: displayTitle
-						},
-						duration: 15000,
-						unstyled: true
-					});
+							duration: 15000,
+							unstyled: true
+						});
+					}
 				}
 			} else if (type === 'chat:title') {
 				await refreshChatList(localStorage.token);
