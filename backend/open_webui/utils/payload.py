@@ -1,4 +1,3 @@
-from open_webui.utils.task import prompt_template, prompt_variables_template
 from open_webui.utils.misc import (
     deep_update,
     add_or_update_system_message,
@@ -13,21 +12,10 @@ import json
 def apply_system_prompt_to_body(
     system: Optional[str],
     form_data: dict,
-    metadata: Optional[dict] = None,
-    user=None,
     replace: bool = False,
 ) -> dict:
     if not system:
         return form_data
-
-    # Metadata (WebUI Usage)
-    if metadata:
-        variables = metadata.get("variables", {})
-        if variables:
-            system = prompt_variables_template(system, variables)
-
-    # Legacy (API Usage)
-    system = prompt_template(system, user)
 
     if replace:
         form_data["messages"] = replace_system_message_content(

@@ -777,57 +777,6 @@ export const blobToFile = (blob: Blob, fileName: string) => {
 	return file;
 };
 
-export const getPromptVariables = (user_name: string, user_location: string, user_email = '') => {
-	return {
-		'{{USER_NAME}}': user_name,
-		'{{USER_EMAIL}}': user_email || 'Unknown',
-		'{{USER_LOCATION}}': user_location || 'Unknown',
-		'{{CURRENT_DATETIME}}': getCurrentDateTime(),
-		'{{CURRENT_DATE}}': getFormattedDate(),
-		'{{CURRENT_TIME}}': getFormattedTime(),
-		'{{CURRENT_WEEKDAY}}': getWeekday(),
-		'{{CURRENT_TIMEZONE}}': getUserTimezone(),
-		'{{USER_LANGUAGE}}': localStorage.getItem('locale') || 'en-US'
-	};
-};
-
-/**
- * This function is used to replace placeholders in a template string with the provided prompt.
- * The placeholders can be in the following formats:
- * - `{{prompt}}`: This will be replaced with the entire prompt.
- * - `{{prompt:start:<length>}}`: This will be replaced with the first <length> characters of the prompt.
- * - `{{prompt:end:<length>}}`: This will be replaced with the last <length> characters of the prompt.
- * - `{{prompt:middletruncate:<length>}}`: This will be replaced with the prompt truncated to <length> characters, with '...' in the middle.
- *
- * @param {string} template - The template string containing placeholders.
- * @param {string} prompt - The string to replace the placeholders with.
- * @returns {string} The template string with the placeholders replaced by the prompt.
- */
-export const titleGenerationTemplate = (template: string, prompt: string): string => {
-	template = template.replace(
-		/{{prompt}}|{{prompt:start:(\d+)}}|{{prompt:end:(\d+)}}|{{prompt:middletruncate:(\d+)}}/g,
-		(match, startLength, endLength, middleLength) => {
-			if (match === '{{prompt}}') {
-				return prompt;
-			} else if (match.startsWith('{{prompt:start:')) {
-				return prompt.substring(0, startLength);
-			} else if (match.startsWith('{{prompt:end:')) {
-				return prompt.slice(-endLength);
-			} else if (match.startsWith('{{prompt:middletruncate:')) {
-				if (prompt.length <= middleLength) {
-					return prompt;
-				}
-				const start = prompt.slice(0, Math.ceil(middleLength / 2));
-				const end = prompt.slice(-Math.floor(middleLength / 2));
-				return `${start}...${end}`;
-			}
-			return '';
-		}
-	);
-
-	return template;
-};
-
 export const approximateToHumanReadable = (nanoseconds: number) => {
 	const seconds = Math.floor((nanoseconds / 1e9) % 60);
 	const minutes = Math.floor((nanoseconds / 6e10) % 60);
@@ -939,36 +888,8 @@ export const bestMatchingLanguage = (
 	return match || defaultLocale;
 };
 
-// Get the date in the format YYYY-MM-DD
-export const getFormattedDate = () => {
-	const date = new Date();
-	const year = date.getFullYear();
-	const month = String(date.getMonth() + 1).padStart(2, '0');
-	const day = String(date.getDate()).padStart(2, '0');
-	return `${year}-${month}-${day}`;
-};
-
-// Get the time in the format HH:MM:SS
-export const getFormattedTime = () => {
-	const date = new Date();
-	return date.toTimeString().split(' ')[0];
-};
-
-// Get the current date and time in the format YYYY-MM-DD HH:MM:SS
-export const getCurrentDateTime = () => {
-	return `${getFormattedDate()} ${getFormattedTime()}`;
-};
-
-// Get the user's timezone
 export const getUserTimezone = () => {
 	return Intl.DateTimeFormat().resolvedOptions().timeZone;
-};
-
-// Get the weekday
-export const getWeekday = () => {
-	const date = new Date();
-	const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-	return weekdays[date.getDay()];
 };
 
 export const createMessagesList = (
@@ -1071,18 +992,6 @@ export const extractContentFromFile = async (file: File) => {
 	} catch (err) {
 		throw new Error('Unsupported or non-text file type: ' + (file.name || type));
 	}
-};
-
-export const getAge = (birthDate: string | number | Date) => {
-	const today = new Date();
-	const bDate = new Date(birthDate);
-	let age = today.getFullYear() - bDate.getFullYear();
-	const m = today.getMonth() - bDate.getMonth();
-
-	if (m < 0 || (m === 0 && today.getDate() < bDate.getDate())) {
-		age--;
-	}
-	return age.toString();
 };
 
 export const convertHeicToJpeg = async (file: File) => {

@@ -763,7 +763,7 @@ async def generate_chat_completion(
 
             payload = apply_model_params_to_body_openai(params, payload)
             if not bypass_system_prompt:
-                payload = apply_system_prompt_to_body(system, payload, metadata, user)
+                payload = apply_system_prompt_to_body(system, payload)
 
     # Check if model is already in app state cache to avoid expensive get_all_models() call
     models = request.app.state.OPENAI_MODELS

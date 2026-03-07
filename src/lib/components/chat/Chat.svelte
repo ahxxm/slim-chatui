@@ -36,7 +36,6 @@
 		convertMessagesToHistory,
 		copyToClipboard,
 		createMessagesList,
-		getPromptVariables,
 		processDetails
 	} from '$lib/utils';
 
@@ -1378,13 +1377,6 @@
 
 				files: (files?.length ?? 0) > 0 ? files : undefined,
 
-				variables: {
-					...getPromptVariables(
-						$user?.name,
-						$settings?.userLocation ? userLocation : undefined,
-						$user?.email
-					)
-				},
 				session_id: $socket?.id,
 				chat_id: $chatId,
 
