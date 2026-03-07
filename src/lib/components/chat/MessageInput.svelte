@@ -26,8 +26,6 @@
 		compressImage,
 		createMessagesList,
 		extractContentFromFile,
-		extractCurlyBraceWords,
-		extractInputVariables,
 		getAge,
 		getCurrentDateTime,
 		getFormattedDate,
@@ -52,7 +50,6 @@
 
 	import XMark from '../icons/XMark.svelte';
 
-	import InputVariablesModal from './MessageInput/InputVariablesModal.svelte';
 	import PlusAlt from '../icons/PlusAlt.svelte';
 
 	import CommandSuggestionList from './MessageInput/CommandSuggestionList.svelte';
@@ -87,11 +84,6 @@
 
 	let inputContent = $state(null);
 
-	let showInputVariablesModal = $state(false);
-	let inputVariablesModalCallback = $state((variableValues) => {});
-	let inputVariables = $state({});
-	let inputVariableValues = $state({});
-
 	$effect(() => {
 		untrack(() => onChange)({
 			prompt,
@@ -105,24 +97,6 @@
 				})
 		});
 	});
-
-	const inputVariableHandler = async (text: string): Promise<string> => {
-		inputVariables = extractInputVariables(text);
-
-		if (Object.keys(inputVariables).length === 0) {
-			return text;
-		}
-
-		showInputVariablesModal = true;
-		return await new Promise<string>((resolve) => {
-			inputVariablesModalCallback = (variableValues) => {
-				inputVariableValues = { ...inputVariableValues, ...variableValues };
-				replaceVariables(inputVariableValues);
-				showInputVariablesModal = false;
-				resolve(text);
-			};
-		});
-	};
 
 	const textVariableHandler = async (text: string) => {
 		if (text.includes('{{CLIPBOARD}}')) {
@@ -244,17 +218,6 @@
 		return text;
 	};
 
-	const replaceVariables = (variables: Record<string, any>) => {
-		console.log('Replacing variables:', variables);
-
-		const chatInput = document.getElementById('chat-input');
-
-		if (chatInput) {
-			chatInputElement.replaceVariables(variables);
-			chatInputElement.focus();
-		}
-	};
-
 	export const setText = async (text?: string, cb?: (text: string) => void) => {
 		const chatInput = document.getElementById('chat-input');
 
@@ -265,10 +228,6 @@
 
 			chatInputElement?.setText(text);
 			chatInputElement?.focus();
-
-			if (text !== '') {
-				text = await inputVariableHandler(text);
-			}
 
 			await tick();
 			if (cb) await cb(text);
@@ -306,8 +265,6 @@
 		}
 
 		await tick();
-		text = await inputVariableHandler(text);
-		await tick();
 
 		const chatInputContainer = document.getElementById('chat-input-container');
 		if (chatInputContainer) {
@@ -318,15 +275,7 @@
 		if (chatInput) {
 			chatInput.focus();
 			chatInput.dispatchEvent(new Event('input'));
-
-			const words = extractCurlyBraceWords(prompt);
-
-			if (words.length > 0) {
-				const word = words.at(0);
-				await tick();
-			} else {
-				chatInput.scrollTop = chatInput.scrollHeight;
-			}
+			chatInput.scrollTop = chatInput.scrollHeight;
 		}
 	};
 
@@ -657,12 +606,6 @@
 </script>
 
 <FilesOverlay show={dragged} />
-
-<InputVariablesModal
-	bind:show={showInputVariablesModal}
-	variables={inputVariables}
-	onSave={inputVariablesModalCallback}
-/>
 
 <InputModal
 	bind:show={showInputModal}
