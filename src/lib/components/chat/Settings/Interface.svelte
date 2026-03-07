@@ -361,7 +361,7 @@
 							ariaLabelledbyId="high-contrast-mode-label"
 							tooltip={true}
 							bind:state={highContrastMode}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ highContrastMode });
 							}}
 						/>
@@ -380,7 +380,7 @@
 							ariaLabelledbyId="use-chat-title-as-tab-title-label"
 							tooltip={true}
 							bind:state={showChatTitleInTab}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ showChatTitleInTab });
 							}}
 						/>
@@ -399,7 +399,7 @@
 							ariaLabelledbyId="notification-sound-label"
 							tooltip={true}
 							bind:state={notificationSound}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ notificationSound });
 							}}
 						/>
@@ -419,7 +419,7 @@
 								ariaLabelledbyId="play-notification-sound-label"
 								tooltip={true}
 								bind:state={notificationSoundAlways}
-								on:change={() => {
+								onchange={() => {
 									saveSettings({ notificationSoundAlways });
 								}}
 							/>
@@ -441,7 +441,7 @@
 							ariaLabelledbyId="haptic-feedback-label"
 							tooltip={true}
 							bind:state={hapticFeedback}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ hapticFeedback });
 							}}
 						/>
@@ -460,7 +460,7 @@
 							ariaLabelledbyId="copy-formatted-label"
 							tooltip={true}
 							bind:state={copyFormatted}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ copyFormatted });
 							}}
 						/>
@@ -481,7 +481,7 @@
 							ariaLabelledbyId="enable-message-queue-label"
 							tooltip={true}
 							bind:state={enableMessageQueue}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ enableMessageQueue });
 							}}
 						/>
@@ -570,7 +570,7 @@
 							tooltip={true}
 							ariaLabelledbyId="chat-bubble-ui-label"
 							bind:state={chatBubble}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ chatBubble });
 							}}
 						/>
@@ -590,7 +590,7 @@
 								ariaLabelledbyId="chat-bubble-username-label"
 								tooltip={true}
 								bind:state={showUsername}
-								on:change={() => {
+								onchange={() => {
 									saveSettings({ showUsername });
 								}}
 							/>
@@ -610,7 +610,7 @@
 							ariaLabelledbyId="widescreen-mode-label"
 							tooltip={true}
 							bind:state={widescreenMode}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ widescreenMode });
 							}}
 						/>
@@ -629,7 +629,7 @@
 							ariaLabelledbyId="temp-chat-default-label"
 							tooltip={true}
 							bind:state={temporaryChatByDefault}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ temporaryChatByDefault });
 							}}
 						/>
@@ -648,7 +648,7 @@
 							ariaLabelledbyId="fade-streaming-label"
 							tooltip={true}
 							bind:state={chatFadeStreamingText}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ chatFadeStreamingText });
 							}}
 						/>
@@ -667,7 +667,7 @@
 							ariaLabelledbyId="auto-generation-label"
 							tooltip={true}
 							bind:state={titleAutoGenerate}
-							on:change={() => {
+							onchange={() => {
 								toggleTitleAutoGenerate();
 							}}
 						/>
@@ -686,7 +686,7 @@
 							ariaLabelledbyId="follow-up-auto-generation-label"
 							tooltip={true}
 							bind:state={autoFollowUps}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ autoFollowUps });
 							}}
 						/>
@@ -705,7 +705,7 @@
 							ariaLabelledbyId="auto-copy-label"
 							tooltip={true}
 							bind:state={responseAutoCopy}
-							on:change={() => {
+							onchange={() => {
 								toggleResponseAutoCopy();
 							}}
 						/>
@@ -724,7 +724,7 @@
 							ariaLabelledbyId="insert-suggestion-prompt-label"
 							tooltip={true}
 							bind:state={insertSuggestionPrompt}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ insertSuggestionPrompt });
 							}}
 						/>
@@ -743,7 +743,7 @@
 							ariaLabelledbyId="keep-follow-up-prompts-label"
 							tooltip={true}
 							bind:state={keepFollowUpPrompts}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ keepFollowUpPrompts });
 							}}
 						/>
@@ -762,7 +762,7 @@
 							ariaLabelledbyId="insert-follow-up-prompt-label"
 							tooltip={true}
 							bind:state={insertFollowUpPrompt}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ insertFollowUpPrompt });
 							}}
 						/>
@@ -781,7 +781,7 @@
 							ariaLabelledbyId="regenerate-menu-label"
 							tooltip={true}
 							bind:state={regenerateMenu}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ regenerateMenu });
 							}}
 						/>
@@ -800,7 +800,7 @@
 							ariaLabelledbyId="always-collapse-label"
 							tooltip={true}
 							bind:state={collapseCodeBlocks}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ collapseCodeBlocks });
 							}}
 						/>
@@ -819,7 +819,7 @@
 							ariaLabelledbyId="always-expand-label"
 							tooltip={true}
 							bind:state={expandDetails}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ expandDetails });
 							}}
 						/>
@@ -838,7 +838,7 @@
 							ariaLabelledbyId="render-markdown-in-previews-label"
 							tooltip={true}
 							bind:state={renderMarkdownInPreviews}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ renderMarkdownInPreviews });
 							}}
 						/>
@@ -857,7 +857,7 @@
 							ariaLabelledbyId="scroll-on-branch-change-label"
 							tooltip={true}
 							bind:state={scrollOnBranchChange}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ scrollOnBranchChange });
 							}}
 						/>
@@ -889,7 +889,7 @@
 							ariaLabelledbyId="floating-action-buttons-label"
 							tooltip={true}
 							bind:state={showFloatingActionButtons}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ showFloatingActionButtons });
 							}}
 						/>
@@ -933,7 +933,7 @@
 							tooltip={true}
 							ariaLabelledbyId="rich-input-label"
 							bind:state={richTextInput}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ richTextInput });
 							}}
 						/>
@@ -953,7 +953,7 @@
 								ariaLabelledbyId="show-formatting-toolbar-label"
 								tooltip={true}
 								bind:state={showFormattingToolbar}
-								on:change={() => {
+								onchange={() => {
 									saveSettings({ showFormattingToolbar });
 								}}
 							/>
@@ -972,7 +972,7 @@
 								ariaLabelledbyId="insert-prompt-as-rich-text-label"
 								tooltip={true}
 								bind:state={insertPromptAsRichText}
-								on:change={() => {
+								onchange={() => {
 									saveSettings({ insertPromptAsRichText });
 								}}
 							/>
@@ -992,7 +992,7 @@
 							tooltip={true}
 							ariaLabelledbyId="paste-large-label"
 							bind:state={largeTextAsFile}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ largeTextAsFile });
 							}}
 						/>
@@ -1013,7 +1013,7 @@
 							ariaLabelledbyId="iframe-sandbox-allow-same-origin-label"
 							tooltip={true}
 							bind:state={iframeSandboxAllowSameOrigin}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ iframeSandboxAllowSameOrigin });
 							}}
 						/>
@@ -1032,7 +1032,7 @@
 							ariaLabelledbyId="iframe-sandbox-allow-forms-label"
 							tooltip={true}
 							bind:state={iframeSandboxAllowForms}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ iframeSandboxAllowForms });
 							}}
 						/>
@@ -1065,7 +1065,7 @@
 							ariaLabelledbyId="image-compression-label"
 							tooltip={true}
 							bind:state={imageCompression}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ imageCompression });
 							}}
 						/>

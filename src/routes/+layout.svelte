@@ -35,8 +35,6 @@
 
 	import '../tailwind.css';
 	import '../app.css';
-	import 'tippy.js/dist/tippy.css';
-
 	import { getBackendConfig, getVersion } from '$lib/apis';
 	import { getSessionUser, userSignOut } from '$lib/apis/auths';
 

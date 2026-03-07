@@ -1,9 +1,7 @@
 <script lang="ts">
 	import DOMPurify from 'dompurify';
-
-	import { onDestroy } from 'svelte';
-
-	import tippy from 'tippy.js';
+	import { tick, onDestroy } from 'svelte';
+	import { computePosition, flip, shift, offset as offsetMiddleware } from '@floating-ui/dom';
 
 	let {
 		elementId = '',
@@ -12,68 +10,88 @@
 		placement = 'top',
 		content = `I'm a tooltip!`,
 		touch = true,
-		theme = '',
 		offset = [0, 4],
 		allowHTML = true,
-		tippyOptions = {},
 		interactive = false,
+		duration = [150, 150] as [number, number],
 		onClick = () => {}
 	} = $props();
 
-	let tooltipElement = $state();
-	let tooltipInstance;
+	let triggerEl: HTMLElement | undefined = $state();
+	let tooltipEl: HTMLDivElement | undefined = $state();
 
-	const destroyInstance = () => {
-		if (tooltipInstance) {
-			tooltipInstance.destroy();
-			tooltipInstance = null;
-		}
+	function portal(node: HTMLElement) {
+		document.body.appendChild(node);
+		return {
+			destroy() {
+				node.remove();
+			}
+		};
+	}
+
+	const updatePosition = async () => {
+		if (!triggerEl || !tooltipEl) return;
+		const { x, y } = await computePosition(triggerEl, tooltipEl, {
+			placement: placement as any,
+			middleware: [
+				offsetMiddleware({ mainAxis: offset[1], crossAxis: offset[0] }),
+				flip(),
+				shift({ padding: 8 })
+			]
+		});
+		if (!tooltipEl) return;
+		tooltipEl.style.left = `${x}px`;
+		tooltipEl.style.top = `${y}px`;
+		tooltipEl.style.opacity = '1';
 	};
 
-	$effect(() => {
-		if (tooltipElement && (content || elementId)) {
-			let tooltipContent = null;
+	let visible = $state(false);
 
-			if (elementId) {
-				tooltipContent = document.getElementById(`${elementId}`);
-			} else {
-				tooltipContent = DOMPurify.sanitize(content);
-			}
+	const show = async () => {
+		if (!content && !elementId) return;
+		visible = true;
+		await tick();
+		updatePosition();
+	};
 
-			if (tooltipInstance && tooltipInstance.reference !== tooltipElement) {
-				destroyInstance();
-			}
-
-			if (tooltipInstance) {
-				tooltipInstance.setContent(tooltipContent);
-			} else {
-				if (content) {
-					tooltipInstance = tippy(tooltipElement, {
-						content: tooltipContent,
-						placement: placement,
-						allowHTML: allowHTML,
-						touch: touch,
-						...(theme !== '' ? { theme } : { theme: 'dark' }),
-						arrow: false,
-						offset: offset,
-						...(interactive ? { interactive: true } : {}),
-						...tippyOptions
-					});
-				}
-			}
-		} else if (tooltipInstance && content === '') {
-			destroyInstance();
-		}
-	});
-
-	onDestroy(() => {
-		destroyInstance();
-	});
+	const hide = () => {
+		visible = false;
+	};
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<svelte:element this={as} bind:this={tooltipElement} class={className} onclick={onClick}>
+<svelte:element
+	this={as}
+	bind:this={triggerEl}
+	class={className}
+	onclick={onClick}
+	onmouseenter={show}
+	onmouseleave={hide}
+	onfocus={show}
+	onblur={hide}
+	ontouchstart={touch ? show : undefined}
+>
 	<slot />
 </svelte:element>
 
-<slot name="tooltip"></slot>
+{#if visible}
+	<div
+		bind:this={tooltipEl}
+		use:portal
+		class="floating-tooltip"
+		class:pointer-events-none={!interactive}
+		style="position:fixed;z-index:9999;opacity:0;transition:opacity {duration[0]}ms"
+		role="tooltip"
+	>
+		{#if elementId}
+			{@const el = document.getElementById(elementId)}
+			{#if el}
+				{@html el.innerHTML}
+			{/if}
+		{:else if allowHTML}
+			{@html DOMPurify.sanitize(content)}
+		{:else}
+			{content}
+		{/if}
+	</div>
+{/if}

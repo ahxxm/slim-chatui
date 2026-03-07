@@ -117,7 +117,7 @@
 								? $i18n.t('Open link')
 								: $i18n.t('Open file')}
 							placement="top-start"
-							tippyOptions={{ duration: [500, 0] }}
+							duration={[500, 0]}
 						>
 							<a
 								class="hover:text-gray-500 dark:hover:text-gray-100 underline grow line-clamp-1"
@@ -191,7 +191,7 @@
 										className="w-fit"
 										content={$i18n.t('Relevance')}
 										placement="top-start"
-										tippyOptions={{ duration: [500, 0] }}
+										duration={[500, 0]}
 									>
 										<div class="text-sm my-1 dark:text-gray-400 flex items-center gap-2 w-fit">
 											{#if showPercentage}

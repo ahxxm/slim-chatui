@@ -1,17 +1,18 @@
 <script lang="ts">
 	import { Switch } from 'bits-ui';
-
-	import { createEventDispatcher, tick, getContext } from 'svelte';
+	import { tick, getContext } from 'svelte';
 	import { settings } from '$lib/stores';
-
 	import Tooltip from './Tooltip.svelte';
-	export let state = true;
-	export let id = '';
-	export let ariaLabelledbyId = '';
-	export let tooltip = false;
+
+	let {
+		state = $bindable(true),
+		id = '',
+		ariaLabelledbyId = '',
+		tooltip = false as boolean | string,
+		onchange = (_state: boolean) => {}
+	} = $props();
 
 	const i18n = getContext('i18n');
-	const dispatch = createEventDispatcher();
 </script>
 
 <Tooltip
@@ -34,7 +35,7 @@
 			: 'outline outline-1 outline-gray-100 dark:outline-gray-800'}"
 		onCheckedChange={async () => {
 			await tick();
-			dispatch('change', state);
+			onchange(state);
 		}}
 	>
 		<Switch.Thumb

@@ -544,7 +544,7 @@
 										>
 											<Switch
 												bind:state={model.is_active}
-												on:change={async () => {
+												onchange={async () => {
 													toggleModelHandler(model);
 												}}
 											/>
