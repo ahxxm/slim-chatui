@@ -142,7 +142,7 @@ async def generate_title(
         request.app.state.config.TITLE_GENERATION_PROMPT_TEMPLATE
         or DEFAULT_TITLE_GENERATION_PROMPT_TEMPLATE
     )
-    content = title_generation_template(template, form_data["messages"], user)
+    content = title_generation_template(template, form_data["messages"])
 
     return await _run_task(
         request,
@@ -167,7 +167,7 @@ async def generate_follow_ups(
         request.app.state.config.FOLLOW_UP_GENERATION_PROMPT_TEMPLATE
         or DEFAULT_FOLLOW_UP_GENERATION_PROMPT_TEMPLATE
     )
-    content = follow_up_generation_template(template, form_data["messages"], user)
+    content = follow_up_generation_template(template, form_data["messages"])
 
     return await _run_task(
         request,
@@ -183,7 +183,7 @@ async def generate_emoji(
     request: Request, form_data: dict, user=Depends(get_verified_user)
 ):
     content = emoji_generation_template(
-        DEFAULT_EMOJI_GENERATION_PROMPT_TEMPLATE, form_data["prompt"], user
+        DEFAULT_EMOJI_GENERATION_PROMPT_TEMPLATE, form_data["prompt"]
     )
 
     return await _run_task(

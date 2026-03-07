@@ -88,8 +88,7 @@ function seedStores() {
 		id: '1',
 		name: 'Admin',
 		email: 'admin@localhost',
-		role: 'admin',
-		profile_image_url: ''
+		role: 'admin'
 	} as any);
 	showSidebar.set(true);
 	pinnedChats.set([]);

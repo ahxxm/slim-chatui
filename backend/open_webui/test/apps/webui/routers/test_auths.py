@@ -18,7 +18,7 @@ class TestAuths(IntegrationTest):
 
         response = self.fast_api_client.post(
             self.create_url("/update/profile"),
-            json={"name": "Updated Name", "profile_image_url": "/user.png"},
+            json={"name": "Updated Name"},
             headers=headers,
         )
         assert response.status_code == 200

@@ -6,9 +6,6 @@
 	import { updateUserProfile, getSessionUser } from '$lib/apis/auths';
 
 	import UpdatePassword from './Account/UpdatePassword.svelte';
-	import { defaultUserImage } from '$lib/utils';
-	import Textarea from '$lib/components/common/Textarea.svelte';
-	import UserProfileImage from './Account/UserProfileImage.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -17,35 +14,16 @@
 
 	let loaded = false;
 
-	let profileImageUrl = '';
 	let name = '';
-	let bio = '';
-
-	let _gender = '';
-	let gender = '';
-	let dateOfBirth = '';
-
-	let profileImageInputElement: HTMLInputElement;
 
 	const submitHandler = async () => {
-		if (name !== $user?.name) {
-			if (profileImageUrl === defaultUserImage() || profileImageUrl === '') {
-				profileImageUrl = defaultUserImage();
-			}
-		}
-
 		const updatedUser = await updateUserProfile(localStorage.token, {
-			name: name,
-			profile_image_url: profileImageUrl,
-			bio: bio ? bio : null,
-			gender: gender ? gender : null,
-			date_of_birth: dateOfBirth ? dateOfBirth : null
+			name: name
 		}).catch((error) => {
 			toast.error(`${error}`);
 		});
 
 		if (updatedUser) {
-			// Get Session User Info
 			const sessionUser = await getSessionUser(localStorage.token).catch((error) => {
 				toast.error(`${error}`);
 				return null;
@@ -65,13 +43,6 @@
 
 		if (user) {
 			name = user?.name ?? '';
-			profileImageUrl = user?.profile_image_url ?? '';
-			bio = user?.bio ?? '';
-
-			_gender = user?.gender ?? '';
-			gender = _gender;
-
-			dateOfBirth = user?.date_of_birth ?? '';
 		}
 
 		loaded = true;
@@ -89,11 +60,7 @@
 				</div>
 			</div>
 
-			<!-- <div class=" text-sm font-medium">{$i18n.t('Account')}</div> -->
-
 			<div class="flex space-x-5 my-4">
-				<UserProfileImage bind:profileImageUrl user={$user} />
-
 				<div class="flex flex-1 flex-col">
 					<div class=" flex-1">
 						<div class="flex flex-col w-full">
@@ -107,72 +74,6 @@
 									aria-label={$i18n.t('Name')}
 									required
 									placeholder={$i18n.t('Enter your name')}
-								/>
-							</div>
-						</div>
-
-						<div class="flex flex-col w-full mt-2">
-							<div class=" mb-1 text-xs font-medium">{$i18n.t('Bio')}</div>
-
-							<div class="flex-1">
-								<Textarea
-									className="w-full text-sm dark:text-gray-300 bg-transparent outline-hidden"
-									minSize={60}
-									bind:value={bio}
-									ariaLabel={$i18n.t('Bio')}
-									placeholder={$i18n.t('Share your background and interests')}
-								/>
-							</div>
-						</div>
-
-						<div class="flex flex-col w-full mt-2">
-							<div class=" mb-1 text-xs font-medium">{$i18n.t('Gender')}</div>
-
-							<div class="flex-1">
-								<select
-									class="w-full text-sm dark:text-gray-300 bg-transparent outline-hidden"
-									bind:value={_gender}
-									aria-label={$i18n.t('Gender')}
-									on:change={(e) => {
-										console.log(_gender);
-
-										if (_gender === 'custom') {
-											// Handle custom gender input
-											gender = '';
-										} else {
-											gender = _gender;
-										}
-									}}
-								>
-									<option value="" selected>{$i18n.t('Prefer not to say')}</option>
-									<option value="male">{$i18n.t('Male')}</option>
-									<option value="female">{$i18n.t('Female')}</option>
-									<option value="custom">{$i18n.t('Custom')}</option>
-								</select>
-							</div>
-
-							{#if _gender === 'custom'}
-								<input
-									class="w-full text-sm dark:text-gray-300 bg-transparent outline-hidden mt-1"
-									type="text"
-									required
-									aria-label={$i18n.t('Custom Gender')}
-									placeholder={$i18n.t('Enter your gender')}
-									bind:value={gender}
-								/>
-							{/if}
-						</div>
-
-						<div class="flex flex-col w-full mt-2">
-							<div class=" mb-1 text-xs font-medium">{$i18n.t('Birth Date')}</div>
-
-							<div class="flex-1">
-								<input
-									class="w-full text-sm dark:text-gray-300 dark:placeholder:text-gray-300 bg-transparent outline-hidden"
-									type="date"
-									aria-label={$i18n.t('Birth Date')}
-									bind:value={dateOfBirth}
-									required
 								/>
 							</div>
 						</div>

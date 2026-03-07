@@ -29,7 +29,6 @@ export async function setup() {
 			...process.env,
 			DATA_DIR,
 			WEBUI_AUTH: 'false',
-			SKIP_FRONTEND_BUILD: 'true',
 			CORS_ALLOW_ORIGIN: '*'
 		},
 		stdio: ['ignore', 'ignore', 'pipe']

@@ -341,7 +341,6 @@ export interface ModelConfig {
 export interface ModelMeta {
 	description?: string;
 	capabilities?: object;
-	profile_image_url?: string;
 	hidden?: boolean;
 	user?: Record<string, any>;
 	suggestion_prompts?: { content: string }[];

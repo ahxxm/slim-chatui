@@ -15,8 +15,8 @@
 		selectedFolder,
 		refreshChatList
 	} from '$lib/stores';
-	import { sanitizeResponseContent, extractCurlyBraceWords } from '$lib/utils';
-	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+	import { sanitizeResponseContent } from '$lib/utils';
+	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import Suggestions from './Suggestions.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
@@ -79,7 +79,7 @@
 						<div class="flex mb-0.5" in:fade={{ duration: 100 }}>
 							{#if model}
 								<img
-									src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}`}
+									src={`${WEBUI_BASE_URL}/static/favicon.png`}
 									class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
 									aria-hidden="true"
 									draggable="false"

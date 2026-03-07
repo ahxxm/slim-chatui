@@ -1,19 +1,16 @@
 import time
 from typing import Optional
 
-from sqlalchemy.orm import Session, defer
+from sqlalchemy.orm import Session
 from open_webui.internal.db import Base, get_db_context
 
 
 from open_webui.models.chats import Chats
-from open_webui.utils.validate import validate_profile_image_url
 
 
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
-from sqlalchemy import BigInteger, JSON, Column, String, Text, Date
+from pydantic import BaseModel, ConfigDict
+from sqlalchemy import BigInteger, JSON, Column, String
 from sqlalchemy import or_, func
-
-import datetime
 
 ####################
 # User DB Schema
@@ -30,20 +27,10 @@ class User(Base):
 
     id = Column(String, primary_key=True, unique=True)
     email = Column(String)
-    username = Column(String(50), nullable=True)
     role = Column(String)
 
     name = Column(String)
 
-    profile_image_url = Column(Text)
-    profile_banner_image_url = Column(Text, nullable=True)
-
-    bio = Column(Text, nullable=True)
-    gender = Column(Text, nullable=True)
-    date_of_birth = Column(Date, nullable=True)
-    timezone = Column(String, nullable=True)
-
-    info = Column(JSON, nullable=True)
     settings = Column(JSON, nullable=True)
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
@@ -53,31 +40,15 @@ class UserModel(BaseModel):
     id: str
 
     email: str
-    username: Optional[str] = None
     role: str = "pending"
 
     name: str
 
-    profile_image_url: Optional[str] = None
-    profile_banner_image_url: Optional[str] = None
-
-    bio: Optional[str] = None
-    gender: Optional[str] = None
-    date_of_birth: Optional[datetime.date] = None
-    timezone: Optional[str] = None
-
-    info: Optional[dict] = None
     settings: Optional[UserSettings] = None
     updated_at: int  # timestamp in epoch
     created_at: int  # timestamp in epoch
 
     model_config = ConfigDict(from_attributes=True)
-
-    @model_validator(mode="after")
-    def set_profile_image_url(self):
-        if not self.profile_image_url:
-            self.profile_image_url = f"/api/v1/users/{self.id}/profile/image"
-        return self
 
 
 ####################
@@ -86,16 +57,7 @@ class UserModel(BaseModel):
 
 
 class UpdateProfileForm(BaseModel):
-    profile_image_url: str
     name: str
-    bio: Optional[str] = None
-    gender: Optional[str] = None
-    date_of_birth: Optional[datetime.date] = None
-
-    @field_validator("profile_image_url")
-    @classmethod
-    def check_profile_image_url(cls, v: str) -> str:
-        return validate_profile_image_url(v)
 
 
 class UserModelResponse(UserModel):
@@ -112,7 +74,6 @@ class UserInfoResponse(BaseModel):
     name: str
     email: str
     role: str
-    bio: Optional[str] = None
 
 
 class UserInfoListResponse(BaseModel):
@@ -132,20 +93,13 @@ class UserResponse(UserNameResponse):
 
 class UserProfileImageResponse(UserNameResponse):
     email: str
-    profile_image_url: str
 
 
 class UserUpdateForm(BaseModel):
     role: str
     name: str
     email: str
-    profile_image_url: str
     password: Optional[str] = None
-
-    @field_validator("profile_image_url")
-    @classmethod
-    def check_profile_image_url(cls, v: str) -> str:
-        return validate_profile_image_url(v)
 
 
 class UsersTable:
@@ -154,9 +108,7 @@ class UsersTable:
         id: str,
         name: str,
         email: str,
-        profile_image_url: str = "/user.png",
         role: str = "pending",
-        username: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> Optional[UserModel]:
         with get_db_context(db) as db:
@@ -165,10 +117,8 @@ class UsersTable:
                 email=email,
                 name=name,
                 role=role,
-                profile_image_url=profile_image_url,
                 created_at=int(time.time()),
                 updated_at=int(time.time()),
-                username=username,
             )
             result = User(**user.model_dump())
             db.add(result)
@@ -208,7 +158,7 @@ class UsersTable:
         db: Optional[Session] = None,
     ) -> dict:
         with get_db_context(db) as db:
-            query = db.query(User).options(defer(User.profile_image_url))
+            query = db.query(User)
 
             if filter:
                 query_key = filter.get("query")
@@ -286,12 +236,7 @@ class UsersTable:
         self, user_ids: list[str], db: Optional[Session] = None
     ) -> list[UserModel]:
         with get_db_context(db) as db:
-            users = (
-                db.query(User)
-                .options(defer(User.profile_image_url))
-                .filter(User.id.in_(user_ids))
-                .all()
-            )
+            users = db.query(User).filter(User.id.in_(user_ids)).all()
             return [UserModel.model_validate(user) for user in users]
 
     def get_num_users(self, db: Optional[Session] = None) -> Optional[int]:
@@ -319,21 +264,6 @@ class UsersTable:
                 if not user:
                     return None
                 user.role = role
-                db.flush()
-                db.refresh(user)
-                return UserModel.model_validate(user)
-        except Exception:
-            return None
-
-    def update_user_profile_image_url_by_id(
-        self, id: str, profile_image_url: str, db: Optional[Session] = None
-    ) -> Optional[UserModel]:
-        try:
-            with get_db_context(db) as db:
-                user = db.query(User).filter_by(id=id).first()
-                if not user:
-                    return None
-                user.profile_image_url = profile_image_url
                 db.flush()
                 db.refresh(user)
                 return UserModel.model_validate(user)

@@ -104,10 +104,7 @@ from open_webui.env import (
     ENV,
     ENABLE_CUSTOM_MODEL_FALLBACK,
     GLOBAL_LOG_LEVEL,
-    SAFE_MODE,
     VERSION,
-    DEPLOYMENT_ID,
-    INSTANCE_ID,
     WEBUI_BUILD_HASH,
     ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
     ENABLE_WEBSOCKET_SUPPORT,
@@ -151,9 +148,6 @@ from open_webui.tasks import (
 
 from open_webui.constants import ERROR_MESSAGES
 
-if SAFE_MODE:
-    print("SAFE MODE ENABLED")
-
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 
@@ -194,7 +188,6 @@ async def lifespan(app: FastAPI):
     # Store reference to main event loop for sync->async calls (e.g., embedding generation)
     # This allows sync functions to schedule work on the main loop without blocking health checks
     app.state.main_loop = asyncio.get_running_loop()
-    app.state.instance_id = INSTANCE_ID
     configure_logging()
 
     # Create admin account from env vars if specified and no users exist
@@ -220,7 +213,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.state.instance_id = None
 app.state.config = AppConfig()
 
 app.state.WEBUI_NAME = WEBUI_NAME
@@ -450,16 +442,7 @@ app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 @app.get("/api/models")
 @app.get("/api/v1/models")  # Experimental: Compatibility with OpenAI API
 async def get_models(request: Request, user=Depends(get_verified_user)):
-    all_models = await get_all_models(request, user=user)
-
-    models = []
-    for model in all_models:
-        # Remove profile image URL to reduce payload size
-        if model.get("info", {}).get("meta", {}).get("profile_image_url"):
-            model["info"]["meta"].pop("profile_image_url", None)
-
-        models.append(model)
-
+    models = await get_all_models(request, user=user)
     log.debug(
         f"/api/models returned filtered models accessible to the user: {json.dumps([model.get('id') for model in models])}"
     )
@@ -902,7 +885,6 @@ async def get_app_config(request: Request):
 async def get_app_version():
     return {
         "version": VERSION,
-        "deployment_id": DEPLOYMENT_ID,
     }
 
 

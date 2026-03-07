@@ -1,12 +1,9 @@
 import logging
 from typing import Optional
 from sqlalchemy.orm import Session
-import base64
-import io
 
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import Response, StreamingResponse, FileResponse
 
 from open_webui.models.auths import Auths
 
@@ -23,7 +20,6 @@ from open_webui.models.users import (
 )
 
 from open_webui.constants import ERROR_MESSAGES
-from open_webui.env import STATIC_DIR
 from open_webui.internal.db import get_session
 
 
@@ -144,54 +140,6 @@ async def update_user_settings_by_session_user(
 
 
 ############################
-# GetUserInfoBySessionUser
-############################
-
-
-@router.get("/user/info", response_model=Optional[dict])
-async def get_user_info_by_session_user(
-    user=Depends(get_verified_user),
-):
-    user = Users.get_user_by_id(user.id)
-    if user:
-        return user.info
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.USER_NOT_FOUND,
-        )
-
-
-############################
-# UpdateUserInfoBySessionUser
-############################
-
-
-@router.post("/user/info/update", response_model=Optional[dict])
-async def update_user_info_by_session_user(
-    form_data: dict, user=Depends(get_verified_user)
-):
-    user = Users.get_user_by_id(user.id)
-    if user:
-        if user.info is None:
-            user.info = {}
-
-        user = Users.update_user_by_id(user.id, {"info": {**user.info, **form_data}})
-        if user:
-            return user.info
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.USER_NOT_FOUND,
-            )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.USER_NOT_FOUND,
-        )
-
-
-############################
 # GetUserById
 ############################
 
@@ -226,44 +174,6 @@ async def get_user_info_by_id(user_id: str, user=Depends(get_verified_user)):
     user = Users.get_user_by_id(user_id)
     if user:
         return UserInfoResponse(**user.model_dump())
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.USER_NOT_FOUND,
-        )
-
-
-############################
-# GetUserProfileImageById
-############################
-
-
-@router.get("/{user_id}/profile/image")
-def get_user_profile_image_by_id(user_id: str, user=Depends(get_verified_user)):
-    user = Users.get_user_by_id(user_id)
-    if user:
-        if user.profile_image_url:
-            # check if it's url or base64
-            if user.profile_image_url.startswith("http"):
-                return Response(
-                    status_code=status.HTTP_302_FOUND,
-                    headers={"Location": user.profile_image_url},
-                )
-            elif user.profile_image_url.startswith("data:image"):
-                try:
-                    header, base64_data = user.profile_image_url.split(",", 1)
-                    image_data = base64.b64decode(base64_data)
-                    image_buffer = io.BytesIO(image_data)
-                    media_type = header.split(";")[0].lstrip("data:")
-
-                    return StreamingResponse(
-                        image_buffer,
-                        media_type=media_type,
-                        headers={"Content-Disposition": "inline"},
-                    )
-                except Exception as e:
-                    pass
-        return FileResponse(f"{STATIC_DIR}/user.png")
     else:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -336,7 +246,6 @@ async def update_user_by_id(
                 "role": form_data.role,
                 "name": form_data.name,
                 "email": form_data.email.lower(),
-                "profile_image_url": form_data.profile_image_url,
             },
             db=db,
         )

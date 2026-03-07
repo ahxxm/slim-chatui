@@ -25,20 +25,10 @@
 		convertHeicToJpeg,
 		compressImage,
 		createMessagesList,
-		extractContentFromFile,
-		extractCurlyBraceWords,
-		extractInputVariables,
-		getAge,
-		getCurrentDateTime,
-		getFormattedDate,
-		getFormattedTime,
-		getUserPosition,
-		getUserTimezone,
-		getWeekday
+		extractContentFromFile
 	} from '$lib/utils';
 	import { uploadFile } from '$lib/apis/files';
 	import { deleteFileById } from '$lib/apis/files';
-	import { getSessionUser } from '$lib/apis/auths';
 	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
 
 	import { getSuggestionRenderer } from '../common/RichTextInput/suggestions';
@@ -52,7 +42,6 @@
 
 	import XMark from '../icons/XMark.svelte';
 
-	import InputVariablesModal from './MessageInput/InputVariablesModal.svelte';
 	import PlusAlt from '../icons/PlusAlt.svelte';
 
 	import CommandSuggestionList from './MessageInput/CommandSuggestionList.svelte';
@@ -87,11 +76,6 @@
 
 	let inputContent = $state(null);
 
-	let showInputVariablesModal = $state(false);
-	let inputVariablesModalCallback = $state((variableValues) => {});
-	let inputVariables = $state({});
-	let inputVariableValues = $state({});
-
 	$effect(() => {
 		untrack(() => onChange)({
 			prompt,
@@ -106,169 +90,12 @@
 		});
 	});
 
-	const inputVariableHandler = async (text: string): Promise<string> => {
-		inputVariables = extractInputVariables(text);
-
-		if (Object.keys(inputVariables).length === 0) {
-			return text;
-		}
-
-		showInputVariablesModal = true;
-		return await new Promise<string>((resolve) => {
-			inputVariablesModalCallback = (variableValues) => {
-				inputVariableValues = { ...inputVariableValues, ...variableValues };
-				replaceVariables(inputVariableValues);
-				showInputVariablesModal = false;
-				resolve(text);
-			};
-		});
-	};
-
-	const textVariableHandler = async (text: string) => {
-		if (text.includes('{{CLIPBOARD}}')) {
-			const clipboardText = await navigator.clipboard.readText().catch((err) => {
-				toast.error($i18n.t('Failed to read clipboard contents'));
-				return '{{CLIPBOARD}}';
-			});
-
-			const clipboardItems = await navigator.clipboard.read().catch((err) => {
-				console.error('Failed to read clipboard items:', err);
-				return [];
-			});
-
-			for (const item of clipboardItems) {
-				for (const type of item.types) {
-					if (type.startsWith('image/')) {
-						const blob = await item.getType(type);
-						const file = new File([blob], `clipboard-image.${type.split('/')[1]}`, {
-							type: type
-						});
-
-						inputFilesHandler([file]);
-					}
-				}
-			}
-
-			text = text.replaceAll('{{CLIPBOARD}}', clipboardText.replaceAll('\r\n', '\n'));
-		}
-
-		if (text.includes('{{USER_LOCATION}}')) {
-			let location;
-			try {
-				location = await getUserPosition();
-			} catch (error) {
-				toast.error($i18n.t('Location access not allowed'));
-				location = 'LOCATION_UNKNOWN';
-			}
-			text = text.replaceAll('{{USER_LOCATION}}', String(location));
-		}
-
-		const sessionUser = await getSessionUser(localStorage.token);
-
-		if (text.includes('{{USER_NAME}}')) {
-			const name = sessionUser?.name || 'User';
-			text = text.replaceAll('{{USER_NAME}}', name);
-		}
-
-		if (text.includes('{{USER_EMAIL}}')) {
-			const email = sessionUser?.email || '';
-
-			if (email) {
-				text = text.replaceAll('{{USER_EMAIL}}', email);
-			}
-		}
-
-		if (text.includes('{{USER_BIO}}')) {
-			const bio = sessionUser?.bio || '';
-
-			if (bio) {
-				text = text.replaceAll('{{USER_BIO}}', bio);
-			}
-		}
-
-		if (text.includes('{{USER_GENDER}}')) {
-			const gender = sessionUser?.gender || '';
-
-			if (gender) {
-				text = text.replaceAll('{{USER_GENDER}}', gender);
-			}
-		}
-
-		if (text.includes('{{USER_BIRTH_DATE}}')) {
-			const birthDate = sessionUser?.date_of_birth || '';
-
-			if (birthDate) {
-				text = text.replaceAll('{{USER_BIRTH_DATE}}', birthDate);
-			}
-		}
-
-		if (text.includes('{{USER_AGE}}')) {
-			const birthDate = sessionUser?.date_of_birth || '';
-
-			if (birthDate) {
-				const age = getAge(birthDate);
-				text = text.replaceAll('{{USER_AGE}}', age);
-			}
-		}
-
-		if (text.includes('{{USER_LANGUAGE}}')) {
-			const language = localStorage.getItem('locale') || 'en-US';
-			text = text.replaceAll('{{USER_LANGUAGE}}', language);
-		}
-
-		if (text.includes('{{CURRENT_DATE}}')) {
-			const date = getFormattedDate();
-			text = text.replaceAll('{{CURRENT_DATE}}', date);
-		}
-
-		if (text.includes('{{CURRENT_TIME}}')) {
-			const time = getFormattedTime();
-			text = text.replaceAll('{{CURRENT_TIME}}', time);
-		}
-
-		if (text.includes('{{CURRENT_DATETIME}}')) {
-			const dateTime = getCurrentDateTime();
-			text = text.replaceAll('{{CURRENT_DATETIME}}', dateTime);
-		}
-
-		if (text.includes('{{CURRENT_TIMEZONE}}')) {
-			const timezone = getUserTimezone();
-			text = text.replaceAll('{{CURRENT_TIMEZONE}}', timezone);
-		}
-
-		if (text.includes('{{CURRENT_WEEKDAY}}')) {
-			const weekday = getWeekday();
-			text = text.replaceAll('{{CURRENT_WEEKDAY}}', weekday);
-		}
-
-		return text;
-	};
-
-	const replaceVariables = (variables: Record<string, any>) => {
-		console.log('Replacing variables:', variables);
-
-		const chatInput = document.getElementById('chat-input');
-
-		if (chatInput) {
-			chatInputElement.replaceVariables(variables);
-			chatInputElement.focus();
-		}
-	};
-
 	export const setText = async (text?: string, cb?: (text: string) => void) => {
 		const chatInput = document.getElementById('chat-input');
 
 		if (chatInput) {
-			if (text !== '') {
-				text = await textVariableHandler(text || '');
-			}
-
 			chatInputElement?.setText(text);
 			chatInputElement?.focus();
-
-			if (text !== '') {
-				text = await inputVariableHandler(text);
-			}
 
 			await tick();
 			if (cb) await cb(text);
@@ -297,16 +124,12 @@
 		const chatInput = document.getElementById('chat-input');
 		if (!chatInput) return;
 
-		text = await textVariableHandler(text);
-
 		if (command) {
 			replaceCommandWithText(text);
 		} else {
 			chatInputElement?.insertContent(text);
 		}
 
-		await tick();
-		text = await inputVariableHandler(text);
 		await tick();
 
 		const chatInputContainer = document.getElementById('chat-input-container');
@@ -318,15 +141,7 @@
 		if (chatInput) {
 			chatInput.focus();
 			chatInput.dispatchEvent(new Event('input'));
-
-			const words = extractCurlyBraceWords(prompt);
-
-			if (words.length > 0) {
-				const word = words.at(0);
-				await tick();
-			} else {
-				chatInput.scrollTop = chatInput.scrollHeight;
-			}
+			chatInput.scrollTop = chatInput.scrollHeight;
 		}
 	};
 
@@ -658,12 +473,6 @@
 
 <FilesOverlay show={dragged} />
 
-<InputVariablesModal
-	bind:show={showInputVariablesModal}
-	variables={inputVariables}
-	onSave={inputVariablesModalCallback}
-/>
-
 <InputModal
 	bind:show={showInputModal}
 	bind:value={prompt}
@@ -785,7 +594,7 @@
 											<img
 												alt="model profile"
 												class="size-3.5 max-w-[28px] object-cover rounded-full"
-												src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${$models.find((model) => model.id === atSelectedModel.id).id}&lang=${$i18n.language}`}
+												src={`${WEBUI_BASE_URL}/static/favicon.png`}
 											/>
 											<div class="translate-y-[0.5px]">
 												<span class="">{atSelectedModel.name}</span>

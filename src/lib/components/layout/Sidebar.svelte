@@ -43,7 +43,7 @@
 	} from '$lib/apis/chats';
 	import { createNewFolder, getFolders, updateFolderParentIdById } from '$lib/apis/folders';
 	import { checkActiveChats } from '$lib/apis/tasks';
-	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL } from '$lib/constants';
+	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import UserMenu from './Sidebar/UserMenu.svelte';
 	import ChatItem from './Sidebar/ChatItem.svelte';
@@ -628,7 +628,7 @@
 							>
 								<div class="self-center">
 									<img
-										src={`${WEBUI_API_BASE_URL}/users/${$user?.id}/profile/image`}
+										src={`${WEBUI_BASE_URL}/user.png`}
 										class=" size-7 object-cover rounded-full"
 										alt={$i18n.t('Open User Profile Menu')}
 										aria-label={$i18n.t('Open User Profile Menu')}
@@ -1075,7 +1075,7 @@
 							>
 								<div class=" self-center mr-3">
 									<img
-										src={`${WEBUI_API_BASE_URL}/users/${$user?.id}/profile/image`}
+										src={`${WEBUI_BASE_URL}/user.png`}
 										class=" size-7 object-cover rounded-full"
 										alt={$i18n.t('Open User Profile Menu')}
 										aria-label={$i18n.t('Open User Profile Menu')}

@@ -3,8 +3,6 @@
 	import { createEventDispatcher, onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import { updateUserInfo } from '$lib/apis/users';
-	import { getUserPosition } from '$lib/utils';
 	import { setTextScale } from '$lib/utils/text-scale';
 
 	import Minus from '$lib/components/icons/Minus.svelte';
@@ -31,8 +29,6 @@
 	let widescreenMode = false;
 	let splitLargeChunks = false;
 	let scrollOnBranchChange = true;
-	let userLocation = false;
-
 	// Interface
 	let defaultModelId = '';
 	let showUsername = false;
@@ -88,24 +84,6 @@
 	const toggleLandingPageMode = async () => {
 		landingPageMode = landingPageMode === '' ? 'chat' : '';
 		saveSettings({ landingPageMode: landingPageMode });
-	};
-
-	const toggleUserLocation = async () => {
-		if (userLocation) {
-			const position = await getUserPosition().catch((error) => {
-				toast.error(error.message);
-				return null;
-			});
-
-			if (position) {
-				await updateUserInfo(localStorage.token, { location: position });
-				toast.success($i18n.t('User location successfully retrieved.'));
-			} else {
-				userLocation = false;
-			}
-		}
-
-		saveSettings({ userLocation });
 	};
 
 	const toggleTitleAutoGenerate = async () => {
@@ -208,7 +186,6 @@
 
 		temporaryChatByDefault = $settings?.temporaryChatByDefault ?? false;
 		chatDirection = $settings?.chatDirection ?? 'auto';
-		userLocation = $settings?.userLocation ?? false;
 		showChatTitleInTab = $settings?.showChatTitleInTab ?? true;
 
 		notificationSound = $settings?.notificationSound ?? true;
@@ -451,22 +428,7 @@
 				</div>
 			{/if}
 
-			<div>
-				<div id="allow-user-location-label" class=" py-0.5 flex w-full justify-between">
-					<div class=" self-center text-xs">{$i18n.t('Allow User Location')}</div>
-
-					<div class="flex items-center gap-2 p-1">
-						<Switch
-							ariaLabelledbyId="allow-user-location-label"
-							tooltip={true}
-							bind:state={userLocation}
-							on:change={() => {
-								toggleUserLocation();
-							}}
-						/>
-					</div>
-				</div>
-			</div>
+			<div></div>
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">

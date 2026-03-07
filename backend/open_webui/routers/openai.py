@@ -26,8 +26,6 @@ from open_webui.env import (
     AIOHTTP_CLIENT_SESSION_SSL,
     AIOHTTP_CLIENT_TIMEOUT,
     AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST,
-    ENABLE_FORWARD_USER_INFO_HEADERS,
-    FORWARD_SESSION_INFO_HEADER_CHAT_ID,
 )
 from open_webui.models.users import UserModel
 
@@ -46,7 +44,6 @@ from open_webui.utils.misc import (
 )
 
 from open_webui.utils.auth import get_admin_user, get_verified_user
-from open_webui.utils.headers import include_user_info_headers
 from open_webui.utils.anthropic import is_anthropic_url, get_anthropic_models
 
 log = logging.getLogger(__name__)
@@ -67,9 +64,6 @@ async def send_get_request(url, key=None, user: UserModel = None):
                 **({"Authorization": f"Bearer {key}"} if key else {}),
             }
 
-            if ENABLE_FORWARD_USER_INFO_HEADERS and user:
-                headers = include_user_info_headers(headers, user)
-
             async with session.get(
                 url,
                 headers=headers,
@@ -84,7 +78,7 @@ async def send_get_request(url, key=None, user: UserModel = None):
 
 async def get_models_request(url, key=None, user: UserModel = None):
     if is_anthropic_url(url):
-        return await get_anthropic_models(url, key, user=user)
+        return await get_anthropic_models(url, key)
     return await send_get_request(f"{url}/models", key, user=user)
 
 
@@ -129,11 +123,6 @@ async def get_headers_and_cookies(
             else {}
         ),
     }
-
-    if ENABLE_FORWARD_USER_INFO_HEADERS and user:
-        headers = include_user_info_headers(headers, user)
-        if metadata and metadata.get("chat_id"):
-            headers[FORWARD_SESSION_INFO_HEADER_CHAT_ID] = metadata.get("chat_id")
 
     token = None
     auth_type = config.get("auth_type")
@@ -490,7 +479,7 @@ async def get_models(
                 )
 
                 if is_anthropic_url(url):
-                    models = await get_anthropic_models(url, key, user=user)
+                    models = await get_anthropic_models(url, key)
                     if models is None:
                         raise Exception("Failed to connect to Anthropic API")
                 else:
@@ -763,7 +752,7 @@ async def generate_chat_completion(
 
             payload = apply_model_params_to_body_openai(params, payload)
             if not bypass_system_prompt:
-                payload = apply_system_prompt_to_body(system, payload, metadata, user)
+                payload = apply_system_prompt_to_body(system, payload)
 
     # Check if model is already in app state cache to avoid expensive get_all_models() call
     models = request.app.state.OPENAI_MODELS

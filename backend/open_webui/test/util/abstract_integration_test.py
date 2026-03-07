@@ -55,7 +55,6 @@ class IntegrationTest:
                 "password": self.TEST_PASSWORD,
                 "name": self.TEST_NAME,
                 "role": "user",
-                "profile_image_url": "/user.png",
             },
             headers=headers,
         )

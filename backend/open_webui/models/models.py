@@ -29,8 +29,6 @@ class ModelParams(BaseModel):
 
 # ModelMeta is a model for the data stored in the meta field of the Model table
 class ModelMeta(BaseModel):
-    profile_image_url: Optional[str] = "/static/favicon.png"
-
     description: Optional[str] = None
     """
         User-facing description of the model.
@@ -200,7 +198,6 @@ class ModelsTable:
                             Model.base_model_id.ilike(f"%{query_key}%"),
                             User.name.ilike(f"%{query_key}%"),
                             User.email.ilike(f"%{query_key}%"),
-                            User.username.ilike(f"%{query_key}%"),
                         )
                     )
 

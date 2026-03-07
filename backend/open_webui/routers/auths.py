@@ -105,7 +105,6 @@ def create_session_response(
         "email": user.email,
         "name": user.name,
         "role": user.role,
-        "profile_image_url": f"/api/v1/users/{user.id}/profile/image",
     }
 
 
@@ -118,13 +117,7 @@ class SessionUserResponse(Token, UserProfileImageResponse):
     expires_at: Optional[int] = None
 
 
-class SessionUserInfoResponse(SessionUserResponse):
-    bio: Optional[str] = None
-    gender: Optional[str] = None
-    date_of_birth: Optional[datetime.date] = None
-
-
-@router.get("/", response_model=SessionUserInfoResponse)
+@router.get("/", response_model=SessionUserResponse)
 async def get_session_user(
     request: Request,
     response: Response,
@@ -169,10 +162,6 @@ async def get_session_user(
         "email": user.email,
         "name": user.name,
         "role": user.role,
-        "profile_image_url": user.profile_image_url,
-        "bio": user.bio,
-        "gender": user.gender,
-        "date_of_birth": user.date_of_birth,
     }
 
 
@@ -195,30 +184,6 @@ async def update_profile(
             return user
         else:
             raise HTTPException(400, detail=ERROR_MESSAGES.DEFAULT())
-    else:
-        raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
-
-
-############################
-# Update Timezone
-############################
-
-
-class UpdateTimezoneForm(BaseModel):
-    timezone: str
-
-
-@router.post("/update/timezone")
-async def update_timezone(
-    form_data: UpdateTimezoneForm,
-    session_user=Depends(get_current_user),
-):
-    if session_user:
-        Users.update_user_by_id(
-            session_user.id,
-            {"timezone": form_data.timezone},
-        )
-        return {"status": True}
     else:
         raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
 
@@ -323,7 +288,6 @@ def signup_handler(
     email: str,
     password: str,
     name: str,
-    profile_image_url: str = "/user.png",
     *,
     db: Session,
 ) -> UserModel:
@@ -338,7 +302,6 @@ def signup_handler(
         email=email.lower(),
         password=hashed,
         name=name,
-        profile_image_url=profile_image_url,
         role=role,
         db=db,
     )
@@ -391,7 +354,6 @@ async def signup(
             form_data.email,
             form_data.password,
             form_data.name,
-            form_data.profile_image_url,
             db=db,
         )
         return create_session_response(request, user, db, response, set_cookie=True)
@@ -452,7 +414,6 @@ async def add_user(
             form_data.email.lower(),
             hashed,
             form_data.name,
-            form_data.profile_image_url,
             form_data.role,
             db=db,
         )
@@ -466,7 +427,6 @@ async def add_user(
                 "email": user.email,
                 "name": user.name,
                 "role": user.role,
-                "profile_image_url": f"/api/v1/users/{user.id}/profile/image",
             }
         else:
             raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)

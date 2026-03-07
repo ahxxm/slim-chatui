@@ -10,7 +10,6 @@
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
-	import UserProfileImage from '$lib/components/chat/Settings/Account/UserProfileImage.svelte';
 
 	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();
@@ -32,7 +31,6 @@
 	};
 
 	let _user = $state({
-		profile_image_url: '',
 		role: 'pending',
 		name: '',
 		email: '',
@@ -76,14 +74,6 @@
 				>
 					<div class=" px-5 pt-3 pb-5 w-full">
 						<div class="flex self-center w-full">
-							<div class=" self-start h-full mr-6">
-								<UserProfileImage
-									imageClassName="size-14"
-									bind:profileImageUrl={_user.profile_image_url}
-									user={_user}
-								/>
-							</div>
-
 							<div class=" flex-1">
 								<div class="overflow-hidden w-ful mb-2">
 									<div class=" self-center capitalize font-medium truncate">
