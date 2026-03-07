@@ -6,10 +6,7 @@ import aiohttp
 from open_webui.env import (
     AIOHTTP_CLIENT_SESSION_SSL,
     AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST,
-    ENABLE_FORWARD_USER_INFO_HEADERS,
 )
-from open_webui.models.users import UserModel
-from open_webui.utils.headers import include_user_info_headers
 
 log = logging.getLogger(__name__)
 
@@ -19,7 +16,7 @@ def is_anthropic_url(url: str) -> bool:
     return "api.anthropic.com" in url
 
 
-async def get_anthropic_models(url: str, key: str, user: UserModel = None) -> dict:
+async def get_anthropic_models(url: str, key: str) -> dict:
     """
     Fetch models from Anthropic's /v1/models endpoint with pagination.
     Normalizes the response to OpenAI format.
@@ -34,9 +31,6 @@ async def get_anthropic_models(url: str, key: str, user: UserModel = None) -> di
                 "x-api-key": key,
                 "anthropic-version": "2023-06-01",
             }
-
-            if ENABLE_FORWARD_USER_INFO_HEADERS and user:
-                headers = include_user_info_headers(headers, user)
 
             while True:
                 params = {"limit": 1000}
