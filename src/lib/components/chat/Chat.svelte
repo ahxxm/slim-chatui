@@ -106,8 +106,6 @@
 	const EMIT_INTERVAL_MS = Math.round(1000 / TYPEWRITER_EMITS_PER_SEC);
 	const streamingBuffers: Map<string, any> = new Map();
 	let renderTimer: ReturnType<typeof setTimeout> | null = null;
-	let throttleScheduled = 0;
-	let throttleFlushed = 0;
 
 	const getStreamingMessage = (messageId: string): any => {
 		let buf = streamingBuffers.get(messageId);
@@ -120,7 +118,6 @@
 
 	const flushPendingRender = () => {
 		renderTimer = null;
-		throttleFlushed++;
 		for (const [id, message] of streamingBuffers) {
 			history.messages[id] = message;
 		}
@@ -128,7 +125,6 @@
 	};
 
 	const scheduleRender = () => {
-		throttleScheduled++;
 		if (!renderTimer) {
 			renderTimer = setTimeout(flushPendingRender, EMIT_INTERVAL_MS);
 		}
@@ -139,13 +135,6 @@
 			clearTimeout(renderTimer);
 			renderTimer = null;
 		}
-		// dev console: performance.getEntriesByType('measure')
-		performance.measure(`throttle: ${throttleScheduled} events → ${throttleFlushed} renders`, {
-			start: 0,
-			duration: 0
-		});
-		throttleScheduled = 0;
-		throttleFlushed = 0;
 		const buf = streamingBuffers.get(id);
 		if (buf) history.messages[id] = buf;
 		streamingBuffers.delete(id);
@@ -372,18 +361,20 @@
 						msg.sources = [data];
 					}
 				} else if (type === 'notification') {
-					const toastType = data?.type ?? 'info';
-					const toastContent = data?.content ?? '';
-					const toastOpts = { id: `stream-${event.message_id}-${toastType}` };
+					if ($settings?.notificationEnabled ?? false) {
+						const toastType = data?.type ?? 'info';
+						const toastContent = data?.content ?? '';
+						const toastOpts = { id: `stream-${event.message_id}-${toastType}` };
 
-					if (toastType === 'success') {
-						toast.success(toastContent, toastOpts);
-					} else if (toastType === 'error') {
-						toast.error(toastContent, toastOpts);
-					} else if (toastType === 'warning') {
-						toast.warning(toastContent, toastOpts);
-					} else {
-						toast.info(toastContent, toastOpts);
+						if (toastType === 'success') {
+							toast.success(toastContent, toastOpts);
+						} else if (toastType === 'error') {
+							toast.error(toastContent, toastOpts);
+						} else if (toastType === 'warning') {
+							toast.warning(toastContent, toastOpts);
+						} else {
+							toast.info(toastContent, toastOpts);
+						}
 					}
 				} else if (type === 'confirmation') {
 					eventCallback = cb;
@@ -1277,6 +1268,10 @@
 			activeChatEmitter = null;
 		}
 
+		if (newChat && _chatId) {
+			replaceState(`/c/${_chatId}`, {});
+		}
+
 		await refreshChatList(localStorage.token);
 	};
 
@@ -1639,10 +1634,7 @@
 
 			_chatId = chat.id;
 			console.log('[initChatHandler] chat created, setting chatId to', _chatId);
-			replaceState(`/c/${_chatId}`, {});
 			await chatId.set(_chatId);
-
-			await tick();
 
 			await refreshChatList(localStorage.token);
 
@@ -1912,12 +1904,11 @@
 										saveDraft(data, $chatId);
 									}
 								}}
-								on:submit={async (e) => {
+								onSubmit={async (prompt) => {
 									clearDraft();
-									if (e.detail || files.length > 0) {
+									if (prompt || files.length > 0) {
 										await tick();
-
-										submitPrompt(e.detail.replaceAll('\n\n', '\n'));
+										submitPrompt(prompt.replaceAll('\n\n', '\n'));
 									}
 								}}
 							/>
@@ -1946,11 +1937,11 @@
 										saveDraft(data);
 									}
 								}}
-								on:submit={async (e) => {
+								onSubmit={async (prompt) => {
 									clearDraft();
-									if (e.detail || files.length > 0) {
+									if (prompt || files.length > 0) {
 										await tick();
-										submitPrompt(e.detail.replaceAll('\n\n', '\n'));
+										submitPrompt(prompt.replaceAll('\n\n', '\n'));
 									}
 								}}
 							/>

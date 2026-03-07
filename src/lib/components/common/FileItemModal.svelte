@@ -18,7 +18,7 @@
 	import XMark from '../icons/XMark.svelte';
 	import Spinner from './Spinner.svelte';
 
-	let { item = $bindable(), show = $bindable(false) } = $props();
+	let { item = null, show = $bindable(false) } = $props();
 
 	let loading = $state(false);
 

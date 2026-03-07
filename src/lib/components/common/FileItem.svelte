@@ -44,7 +44,7 @@
 </script>
 
 {#if item}
-	<FileItemModal bind:show={showModal} bind:item />
+	<FileItemModal bind:show={showModal} {item} />
 {/if}
 
 <button
