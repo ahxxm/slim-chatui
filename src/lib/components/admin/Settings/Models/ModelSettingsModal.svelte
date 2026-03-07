@@ -134,7 +134,7 @@
 			</div>
 			<button
 				class="self-center"
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -147,7 +147,8 @@
 				{#if config}
 					<form
 						class="flex flex-col w-full"
-						on:submit|preventDefault={() => {
+						onsubmit={(e) => {
+							e.preventDefault();
 							submitHandler();
 						}}
 					>
@@ -180,7 +181,7 @@
 										<button
 											class="flex w-full justify-between items-center"
 											type="button"
-											on:click={() => {
+											onclick={() => {
 												showDefaultPromptSuggestions = !showDefaultPromptSuggestions;
 											}}
 										>
@@ -217,7 +218,7 @@
 										<button
 											class="flex w-full justify-between items-center"
 											type="button"
-											on:click={() => {
+											onclick={() => {
 												showDefaultCapabilities = !showDefaultCapabilities;
 											}}
 										>
@@ -246,7 +247,7 @@
 										<button
 											class="flex w-full justify-between items-center"
 											type="button"
-											on:click={() => {
+											onclick={() => {
 												showDefaultParams = !showDefaultParams;
 											}}
 										>
@@ -278,7 +279,7 @@
 											<button
 												class="text-sm font-normal text-gray-500 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300 transition hover:underline"
 												type="button"
-												on:click={() => {
+												onclick={() => {
 													showResetModal = true;
 												}}
 											>

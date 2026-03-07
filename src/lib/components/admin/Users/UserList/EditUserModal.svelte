@@ -56,7 +56,7 @@
 			<button
 				class="self-center"
 				aria-label={$i18n.t('Close')}
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -68,7 +68,8 @@
 			<div class=" flex flex-col w-full sm:flex-row sm:justify-center sm:space-x-6">
 				<form
 					class="flex flex-col w-full"
-					on:submit|preventDefault={() => {
+					onsubmit={(e) => {
+						e.preventDefault();
 						submitHandler();
 					}}
 				>

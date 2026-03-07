@@ -97,14 +97,14 @@
 		bind:this={modalElement}
 		class=" fixed top-0 right-0 left-0 bottom-0 bg-black/60 w-full h-screen max-h-[100dvh] flex justify-center z-99999999 overflow-hidden overscroll-contain"
 		in:fade={{ duration: 10 }}
-		on:mousedown={() => {
+		onmousedown={() => {
 			show = false;
 		}}
 	>
 		<div
 			class=" m-auto max-w-full w-[32rem] mx-2 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm rounded-4xl max-h-[100dvh] shadow-3xl border border-white dark:border-gray-900"
 			in:flyAndScale
-			on:mousedown={(e) => {
+			onmousedown={(e) => {
 				e.stopPropagation();
 			}}
 		>
@@ -156,7 +156,7 @@
 				<div class="mt-6 flex justify-between gap-1.5">
 					<button
 						class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-white font-medium w-full py-2 rounded-3xl transition"
-						on:click={() => {
+						onclick={() => {
 							show = false;
 							dispatch('cancel');
 						}}
@@ -166,7 +166,7 @@
 					</button>
 					<button
 						class="text-sm bg-gray-900 hover:bg-gray-850 text-gray-100 dark:bg-gray-100 dark:hover:bg-white dark:text-gray-800 font-medium w-full py-2 rounded-3xl transition"
-						on:click={() => {
+						onclick={() => {
 							confirmHandler();
 						}}
 						type="button"

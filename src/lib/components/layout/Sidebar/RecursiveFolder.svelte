@@ -477,14 +477,14 @@
 				folderId
 					? 'bg-gray-100 dark:bg-gray-900 selected'
 					: ''}"
-				on:dblclick={(e) => {
+				ondblclick={(e) => {
 					if (clickTimer) {
 						clearTimeout(clickTimer); // cancel the single-click action
 						clickTimer = null;
 					}
 					renameHandler();
 				}}
-				on:click={async (e) => {
+				onclick={async (e) => {
 					(e) => e.stopPropagation();
 					if (clickTimer) {
 						clearTimeout(clickTimer);
@@ -509,13 +509,13 @@
 						clickTimer = null;
 					}, 100); // 100ms delay (typical double-click threshold)
 				}}
-				on:pointerup={(e) => {
+				onpointerup={(e) => {
 					e.stopPropagation();
 				}}
 			>
 				<button
 					class="text-gray-500 dark:text-gray-500 transition-all p-1 hover:bg-gray-200 dark:hover:bg-gray-850 rounded-lg"
-					on:click={(e) => {
+					onclick={(e) => {
 						e.stopPropagation();
 						e.stopImmediatePropagation();
 						open = !open;
@@ -551,20 +551,20 @@
 							id="folder-{folderId}-input"
 							type="text"
 							bind:value={name}
-							on:blur={() => {
+							onblur={() => {
 								console.log('Blur');
 								updateHandler({ name });
 								edit = false;
 							}}
-							on:click={(e) => {
+							onclick={(e) => {
 								// Prevent accidental collapse toggling when clicking inside input
 								e.stopPropagation();
 							}}
-							on:mousedown={(e) => {
+							onmousedown={(e) => {
 								// Prevent accidental collapse toggling when clicking inside input
 								e.stopPropagation();
 							}}
-							on:keydown={(e) => {
+							onkeydown={(e) => {
 								if (e.key === 'Enter') {
 									updateHandler({ name });
 									edit = false;

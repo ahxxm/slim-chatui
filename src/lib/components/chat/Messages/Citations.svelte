@@ -131,7 +131,7 @@
 				? $i18n.t('Toggle 1 source')
 				: $i18n.t('Toggle {{COUNT}} sources', { COUNT: citations.length })}
 			aria-expanded={showCitations}
-			on:click={() => {
+			onclick={() => {
 				showCitations = !showCitations;
 			}}
 		>
@@ -169,7 +169,7 @@
 						name: decodeString(citation.source.name)
 					})}
 					class="no-toggle outline-hidden flex dark:text-gray-300 bg-transparent text-gray-600 rounded-xl gap-1.5 items-center"
-					on:click={() => {
+					onclick={() => {
 						showCitationModal = true;
 						selectedCitation = citation;
 					}}

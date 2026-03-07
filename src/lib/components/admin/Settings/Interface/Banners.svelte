@@ -91,7 +91,7 @@
 			<button
 				class="pr-3"
 				type="button"
-				on:click={() => {
+				onclick={() => {
 					banners = banners.filter((_, i) => i !== bannerIdx);
 				}}
 			>

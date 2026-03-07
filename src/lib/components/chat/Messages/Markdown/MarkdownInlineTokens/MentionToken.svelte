@@ -51,7 +51,7 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <span
 	class="mention cursor-pointer"
-	on:click={async () => {
+	onclick={async () => {
 		if (triggerChar === '@' && idType === 'M') {
 			await goto(`/?model=${id}`);
 		}

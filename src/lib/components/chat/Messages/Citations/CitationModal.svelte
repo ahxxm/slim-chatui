@@ -136,7 +136,7 @@
 			<button
 				class="self-center"
 				aria-label={$i18n.t('Close citation modal')}
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -244,7 +244,7 @@
 									{#if isTruncated}
 										<button
 											class="mt-1 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
-											on:click={() => {
+											onclick={() => {
 												expandedDocs.add(documentIdx);
 												expandedDocs = expandedDocs;
 											}}

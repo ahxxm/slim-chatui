@@ -79,12 +79,12 @@
 			<div>
 				<button
 					class=" p-5"
-					on:pointerdown={(e) => {
+					onpointerdown={(e) => {
 						e.stopImmediatePropagation();
 						e.preventDefault();
 						show = false;
 					}}
-					on:click={(e) => {
+					onclick={(e) => {
 						show = false;
 					}}
 				>
@@ -95,7 +95,7 @@
 			<div>
 				<button
 					class=" p-5 z-999"
-					on:click={() => {
+					onclick={() => {
 						if (src.startsWith('data:image/')) {
 							const base64Data = src.split(',')[1];
 							const blob = new Blob([Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0))], {

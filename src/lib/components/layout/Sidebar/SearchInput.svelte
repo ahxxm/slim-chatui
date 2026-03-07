@@ -120,10 +120,10 @@
 			autocomplete="off"
 			maxlength="500"
 			bind:value
-			on:input={() => {
+			oninput={() => {
 				dispatch('input');
 			}}
-			on:click={() => {
+			onclick={() => {
 				if (!focused) {
 					onFocus();
 					hovering = false;
@@ -131,12 +131,12 @@
 					focused = true;
 				}
 			}}
-			on:blur={() => {
+			onblur={() => {
 				if (!hovering) {
 					focused = false;
 				}
 			}}
-			on:keydown={(e) => {
+			onkeydown={(e) => {
 				if (e.key === 'Enter') {
 					if (filteredItems.length > 0) {
 						const itemElement = document.getElementById(`search-item-${selectedIdx}`);
@@ -195,7 +195,7 @@
 			<div class="self-center pl-1.5 translate-y-[0.5px] rounded-l-xl bg-transparent">
 				<button
 					class="p-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition"
-					on:click={clearSearchInput}
+					onclick={clearSearchInput}
 				>
 					<XMark className="size-3" strokeWidth="2" />
 				</button>
@@ -209,11 +209,11 @@
 			class="absolute top-0 mt-8 left-0 right-1 border border-gray-100 dark:border-gray-900 bg-gray-50 dark:bg-gray-950 rounded-2xl z-10 shadow-lg"
 			id="search-options-container"
 			in:fade={{ duration: 50 }}
-			on:mouseenter={() => {
+			onmouseenter={() => {
 				hovering = true;
 				selectedIdx = null;
 			}}
-			on:mouseleave={() => {
+			onmouseleave={() => {
 				hovering = false;
 				selectedIdx = 0;
 			}}
@@ -233,7 +233,8 @@
 									: ''}"
 								data-selected={selectedIdx === itemIdx}
 								id="search-item-{itemIdx}"
-								on:click|stopPropagation={async () => {
+								onclick={async (e) => {
+									e.stopPropagation();
 									const words = value.split(' ');
 
 									words.pop();
@@ -268,7 +269,8 @@
 									? 'bg-gray-100 dark:bg-gray-900'
 									: ''}"
 								id="search-option-{optionIdx}"
-								on:click|stopPropagation={async () => {
+								onclick={async (e) => {
+									e.stopPropagation();
 									const words = value.split(' ');
 
 									words.pop();

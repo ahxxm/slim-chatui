@@ -35,7 +35,7 @@
 			<button
 				class="self-center"
 				aria-label={$i18n.t('Close modal')}
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -47,7 +47,7 @@
 			<div class=" flex flex-col w-full sm:flex-row sm:justify-center sm:space-x-6">
 				<form
 					class="flex flex-col w-full px-1"
-					on:submit={(e) => {
+					onsubmit={(e) => {
 						e.preventDefault();
 						submitHandler();
 					}}
@@ -59,7 +59,7 @@
 							<div class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
 								<button
 									type="button"
-									on:click={() => {
+									onclick={() => {
 										if (floatingActionButtons === null) {
 											floatingActionButtons = [
 												{
@@ -91,7 +91,7 @@
 									<button
 										class=""
 										type="button"
-										on:click={() => {
+										onclick={() => {
 											let id = `new-button`;
 											let idx = 0;
 
@@ -152,7 +152,7 @@
 									<button
 										class="pl-3 text-xs flex rounded-sm transition"
 										aria-label={$i18n.t('Remove action')}
-										on:click={() => {
+										onclick={() => {
 											floatingActionButtons = floatingActionButtons.filter(
 												(b) => b.id !== button.id
 											);

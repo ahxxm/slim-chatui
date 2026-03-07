@@ -288,7 +288,7 @@
 							type="file"
 							accept=".json"
 							hidden
-							on:change={() => {
+							onchange={() => {
 								if (importFiles.length > 0) {
 									const reader = new FileReader();
 									reader.onload = async (event) => {
@@ -319,7 +319,7 @@
 						<button
 							class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-gray-200 transition"
 							disabled={modelsImportInProgress}
-							on:click={() => {
+							onclick={() => {
 								modelsImportInputElement.click();
 							}}
 						>
@@ -333,7 +333,7 @@
 
 						<button
 							class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-gray-200 transition"
-							on:click={async () => {
+							onclick={async () => {
 								downloadModels(models);
 							}}
 						>
@@ -346,7 +346,7 @@
 					<button
 						class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-black hover:bg-gray-900 text-white dark:bg-white dark:hover:bg-gray-100 dark:text-black transition font-medium"
 						type="button"
-						on:click={() => {
+						onclick={() => {
 							showConfigModal = true;
 						}}
 					>
@@ -424,7 +424,7 @@
 							<button
 								class=" flex flex-1 text-left space-x-3.5 cursor-pointer w-full"
 								type="button"
-								on:click={() => {
+								onclick={() => {
 									selectedModelId = model.id;
 								}}
 							>
@@ -471,7 +471,7 @@
 										<button
 											class="self-center w-fit text-sm px-2 py-2 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
 											type="button"
-											on:click={() => {
+											onclick={() => {
 												hideModelHandler(model);
 											}}
 										>
@@ -486,7 +486,7 @@
 									<button
 										class="self-center w-fit text-sm px-2 py-2 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
 										type="button"
-										on:click={() => {
+										onclick={() => {
 											selectedModelId = model.id;
 										}}
 									>

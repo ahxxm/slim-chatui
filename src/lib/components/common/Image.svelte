@@ -28,7 +28,7 @@
 <div class=" relative group w-fit flex items-center">
 	<button
 		class={className}
-		on:click={() => {
+		onclick={() => {
 			showImagePreview = true;
 		}}
 		aria-label={$i18n.t('Show image preview')}
@@ -43,7 +43,7 @@
 				aria-label={$i18n.t('Remove image')}
 				class=" bg-white text-black border border-white rounded-full group-hover:visible invisible transition"
 				type="button"
-				on:click={() => {
+				onclick={() => {
 					onDismiss();
 				}}
 			>

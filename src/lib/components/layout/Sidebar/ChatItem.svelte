@@ -367,8 +367,8 @@
 				class=" bg-transparent w-full outline-hidden mr-10"
 				placeholder={generating ? $i18n.t('Generating...') : ''}
 				disabled={generating}
-				on:keydown={chatTitleInputKeydownHandler}
-				on:blur={async (e) => {
+				onkeydown={chatTitleInputKeydownHandler}
+				onblur={async (e) => {
 					if (doubleClicked) {
 						e.preventDefault();
 						e.stopPropagation();
@@ -395,7 +395,7 @@
 					? 'bg-gray-100 dark:bg-gray-950 selected'
 					: ' group-hover:bg-gray-100 dark:group-hover:bg-gray-950'}  whitespace-nowrap text-ellipsis"
 			href="/c/{id}"
-			on:click={() => {
+			onclick={() => {
 				dispatch('select');
 
 				if ($selectedFolder) {
@@ -406,20 +406,20 @@
 					showSidebar.set(false);
 				}
 			}}
-			on:dblclick={async (e) => {
+			ondblclick={async (e) => {
 				e.preventDefault();
 				e.stopPropagation();
 
 				doubleClicked = true;
 				renameHandler();
 			}}
-			on:mouseenter={(e) => {
+			onmouseenter={(e) => {
 				mouseOver = true;
 			}}
-			on:mouseleave={(e) => {
+			onmouseleave={(e) => {
 				mouseOver = false;
 			}}
-			on:focus={(e) => {}}
+			onfocus={(e) => {}}
 			draggable="false"
 		>
 			<!-- Loading spinner for active chat (left side) -->
@@ -458,10 +458,10 @@
 			: 'right-1'} top-[4px] py-1 pr-0.5 mr-1.5 pl-5 bg-linear-to-l from-80%
 
               to-transparent"
-		on:mouseenter={(e) => {
+		onmouseenter={(e) => {
 			mouseOver = true;
 		}}
-		on:mouseleave={(e) => {
+		onmouseleave={(e) => {
 			mouseOver = false;
 		}}
 	>
@@ -474,7 +474,7 @@
 						class=" self-center dark:hover:text-white transition disabled:cursor-not-allowed"
 						id="generate-title-button"
 						disabled={generating}
-						on:click={() => {
+						onclick={() => {
 							generateTitleHandler();
 						}}
 					>
@@ -488,7 +488,7 @@
 					<button
 						class=" self-center dark:hover:text-white transition"
 						aria-label="Delete chat"
-						on:click={() => {
+						onclick={() => {
 							deleteChatHandler(id);
 						}}
 						type="button"
@@ -519,7 +519,7 @@
 					<button
 						aria-label="Chat Menu"
 						class=" self-center dark:hover:text-white transition m-0"
-						on:click={() => {
+						onclick={() => {
 							dispatch('select');
 						}}
 					>
@@ -541,7 +541,7 @@
 					<button
 						id="delete-chat-button"
 						class="hidden"
-						on:click={() => {
+						onclick={() => {
 							showDeleteConfirm = true;
 						}}
 					>

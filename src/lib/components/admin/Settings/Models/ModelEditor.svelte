@@ -164,7 +164,7 @@
 	{#if onBack}
 		<button
 			class="flex space-x-1"
-			on:click={() => {
+			onclick={() => {
 				onBack();
 			}}
 		>
@@ -190,7 +190,8 @@
 		{#if !edit || (edit && model)}
 			<form
 				class="flex flex-col md:flex-row w-full gap-3 md:gap-6"
-				on:submit|preventDefault={() => {
+				onsubmit={(e) => {
+					e.preventDefault();
 					submitHandler();
 				}}
 			>
@@ -267,7 +268,7 @@
 										aria-label={enableDescription
 											? $i18n.t('Custom description enabled')
 											: $i18n.t('Default description enabled')}
-										on:click={() => {
+										onclick={() => {
 											enableDescription = !enableDescription;
 										}}
 									>
@@ -340,7 +341,7 @@
 								<button
 									class="p-1 px-3 text-xs flex rounded-sm transition"
 									type="button"
-									on:click={() => {
+									onclick={() => {
 										showAdvanced = !showAdvanced;
 									}}
 								>
@@ -372,7 +373,7 @@
 								<button
 									class="p-1 text-xs flex rounded-sm transition"
 									type="button"
-									on:click={() => {
+									onclick={() => {
 										if ((info?.meta?.suggestion_prompts ?? null) === null) {
 											info.meta.suggestion_prompts = [{ content: '', title: ['', ''] }];
 										} else {
@@ -433,7 +434,7 @@
 							<button
 								class="p-1 px-3 text-xs flex rounded-sm transition"
 								type="button"
-								on:click={() => {
+								onclick={() => {
 									showPreview = !showPreview;
 								}}
 							>

@@ -135,7 +135,7 @@
 			<button
 				class="self-center"
 				aria-label={$i18n.t('Close')}
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -147,7 +147,8 @@
 			<div class=" flex flex-col w-full sm:flex-row sm:justify-center sm:space-x-6">
 				<form
 					class="flex flex-col w-full"
-					on:submit|preventDefault={() => {
+					onsubmit={(e) => {
+						e.preventDefault();
 						submitHandler();
 					}}
 				>
@@ -159,7 +160,7 @@
 								? ''
 								: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition"
 							type="button"
-							on:click={() => {
+							onclick={() => {
 								tab = '';
 							}}>{$i18n.t('Form')}</button
 						>
@@ -169,7 +170,7 @@
 								? ''
 								: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition"
 							type="button"
-							on:click={() => {
+							onclick={() => {
 								tab = 'import';
 							}}>{$i18n.t('CSV Import')}</button
 						>
@@ -257,7 +258,7 @@
 									<button
 										class="w-full text-sm font-medium py-3 bg-transparent hover:bg-gray-100 border border-dashed dark:border-gray-850 dark:hover:bg-gray-850 text-center rounded-xl"
 										type="button"
-										on:click={() => {
+										onclick={() => {
 											document.getElementById('upload-user-csv-input')?.click();
 										}}
 									>

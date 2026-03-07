@@ -294,10 +294,10 @@
 							: ''}"
 						data-arrow-selected={selectedIdx === idx ? 'true' : undefined}
 						dragabble="false"
-						on:mouseenter={() => {
+						onmouseenter={() => {
 							selectedIdx = idx;
 						}}
-						on:click={async () => {
+						onclick={async () => {
 							await action.onClick();
 						}}
 					>
@@ -358,10 +358,10 @@
 							href="/c/{chat.id}"
 							draggable="false"
 							data-arrow-selected={selectedIdx === idx + actions.length ? 'true' : undefined}
-							on:mouseenter={() => {
+							onmouseenter={() => {
 								selectedIdx = idx + actions.length;
 							}}
-							on:click={async () => {
+							onclick={async () => {
 								await goto(`/c/${chat.id}`);
 								show = false;
 								onClose();

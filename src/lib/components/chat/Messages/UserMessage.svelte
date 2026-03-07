@@ -236,7 +236,7 @@
 													? ''
 													: 'group-hover:visible invisible transition'}"
 												type="button"
-												on:click={() => {
+												onclick={() => {
 													editedFiles.splice(fileIdx, 1);
 													editedFiles = editedFiles;
 												}}
@@ -282,7 +282,7 @@
 							bind:this={messageEditTextAreaElement}
 							class=" bg-transparent outline-hidden w-full resize-none"
 							bind:value={editedContent}
-							on:input={(e) => {
+							oninput={(e) => {
 								const messagesContainer = document.getElementById('messages-container');
 								const savedScrollTop = messagesContainer?.scrollTop;
 								const savedInnerScroll = editScrollContainer?.scrollTop;
@@ -293,7 +293,7 @@
 								if (messagesContainer) messagesContainer.scrollTop = savedScrollTop;
 								if (editScrollContainer) editScrollContainer.scrollTop = savedInnerScroll;
 							}}
-							on:keydown={(e) => {
+							onkeydown={(e) => {
 								if (e.key === 'Escape') {
 									document.getElementById('close-edit-message-button')?.click();
 								}
@@ -313,7 +313,7 @@
 							<button
 								id="save-edit-message-button"
 								class="px-3.5 py-1.5 bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 border border-gray-100 dark:border-gray-700 text-gray-700 dark:text-gray-200 transition rounded-3xl"
-								on:click={() => {
+								onclick={() => {
 									editMessageConfirmHandler(false);
 								}}
 							>
@@ -325,7 +325,7 @@
 							<button
 								id="close-edit-message-button"
 								class="px-3.5 py-1.5 bg-white dark:bg-gray-900 hover:bg-gray-100 text-gray-800 dark:text-gray-100 transition rounded-3xl"
-								on:click={() => {
+								onclick={() => {
 									cancelEditMessage();
 								}}
 							>
@@ -335,7 +335,7 @@
 							<button
 								id="confirm-edit-message-button"
 								class="px-3.5 py-1.5 bg-gray-900 dark:bg-white hover:bg-gray-850 text-gray-100 dark:text-gray-800 transition rounded-3xl"
-								on:click={() => {
+								onclick={() => {
 									editMessageConfirmHandler();
 								}}
 							>
@@ -378,7 +378,7 @@
 							<div class="flex self-center" dir="ltr">
 								<button
 									class="self-center p-1 hover:bg-black/5 dark:hover:bg-white/5 dark:hover:text-white hover:text-black rounded-md transition"
-									on:click={() => {
+									onclick={() => {
 										showPreviousMessage(message);
 									}}
 								>
@@ -408,14 +408,14 @@
 											value={siblings.indexOf(message.id) + 1}
 											min="1"
 											max={siblings.length}
-											on:focus={(e) => {
+											onfocus={(e) => {
 												e.target.select();
 											}}
-											on:blur={(e) => {
+											onblur={(e) => {
 												gotoMessage(message, e.target.value - 1);
 												messageIndexEdit = false;
 											}}
-											on:keydown={(e) => {
+											onkeydown={(e) => {
 												if (e.key === 'Enter') {
 													gotoMessage(message, e.target.value - 1);
 													messageIndexEdit = false;
@@ -428,7 +428,7 @@
 									<!-- svelte-ignore a11y-no-static-element-interactions -->
 									<div
 										class="text-sm tracking-widest font-semibold self-center dark:text-gray-100 min-w-fit"
-										on:dblclick={async () => {
+										ondblclick={async () => {
 											messageIndexEdit = true;
 
 											await tick();
@@ -445,7 +445,7 @@
 
 								<button
 									class="self-center p-1 hover:bg-black/5 dark:hover:bg-white/5 dark:hover:text-white hover:text-black rounded-md transition"
-									on:click={() => {
+									onclick={() => {
 										showNextMessage(message);
 									}}
 								>
@@ -473,7 +473,7 @@
 								class="{($settings?.highContrastMode ?? false)
 									? ''
 									: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition edit-user-message-button"
-								on:click={() => {
+								onclick={() => {
 									editMessageHandler();
 								}}
 							>
@@ -501,7 +501,7 @@
 								class="{($settings?.highContrastMode ?? false)
 									? ''
 									: 'invisible group-hover:visible'} p-1.5 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg dark:hover:text-white hover:text-black transition"
-								on:click={() => {
+								onclick={() => {
 									copyToClipboard(message.content);
 								}}
 							>
@@ -529,7 +529,7 @@
 								class="{($settings?.highContrastMode ?? false)
 									? ''
 									: 'invisible group-hover:visible'} p-1 rounded-sm dark:hover:text-white hover:text-black transition"
-								on:click={() => {
+								onclick={() => {
 									showDeleteConfirm = true;
 								}}
 							>
@@ -556,7 +556,7 @@
 							<div class="flex self-center" dir="ltr">
 								<button
 									class="self-center p-1 hover:bg-black/5 dark:hover:bg-white/5 dark:hover:text-white hover:text-black rounded-md transition"
-									on:click={() => {
+									onclick={() => {
 										showPreviousMessage(message);
 									}}
 								>
@@ -586,14 +586,14 @@
 											value={siblings.indexOf(message.id) + 1}
 											min="1"
 											max={siblings.length}
-											on:focus={(e) => {
+											onfocus={(e) => {
 												e.target.select();
 											}}
-											on:blur={(e) => {
+											onblur={(e) => {
 												gotoMessage(message, e.target.value - 1);
 												messageIndexEdit = false;
 											}}
-											on:keydown={(e) => {
+											onkeydown={(e) => {
 												if (e.key === 'Enter') {
 													gotoMessage(message, e.target.value - 1);
 													messageIndexEdit = false;
@@ -606,7 +606,7 @@
 									<!-- svelte-ignore a11y-no-static-element-interactions -->
 									<div
 										class="text-sm tracking-widest font-semibold self-center dark:text-gray-100 min-w-fit"
-										on:dblclick={async () => {
+										ondblclick={async () => {
 											messageIndexEdit = true;
 
 											await tick();
@@ -623,7 +623,7 @@
 
 								<button
 									class="self-center p-1 hover:bg-black/5 dark:hover:bg-white/5 dark:hover:text-white hover:text-black rounded-md transition"
-									on:click={() => {
+									onclick={() => {
 										showNextMessage(message);
 									}}
 								>

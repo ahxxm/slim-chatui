@@ -72,7 +72,7 @@
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<svelte:element this={as} bind:this={tooltipElement} class={className} on:click={onClick}>
+<svelte:element this={as} bind:this={tooltipElement} class={className} onclick={onClick}>
 	<slot />
 </svelte:element>
 

@@ -117,7 +117,7 @@
 			</div>
 			<button
 				class="self-center"
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -129,7 +129,8 @@
 			<div class=" flex flex-col w-full sm:flex-row sm:justify-center sm:space-x-6">
 				<form
 					class="flex flex-col w-full"
-					on:submit|preventDefault={() => {
+					onsubmit={(e) => {
+						e.preventDefault();
 						submitHandler();
 					}}
 				>
@@ -153,7 +154,7 @@
 						type="file"
 						hidden
 						accept="image/*"
-						on:change={(e) => {
+						onchange={(e) => {
 							const inputFiles = e.target.files;
 
 							let reader = new FileReader();
@@ -186,7 +187,7 @@
 							<button
 								aria-labelledby="chat-background-label background-image-url-state"
 								class="p-1 px-3 text-xs flex rounded-sm transition"
-								on:click={() => {
+								onclick={() => {
 									if (meta?.background_image_url !== null) {
 										meta.background_image_url = null;
 									} else {

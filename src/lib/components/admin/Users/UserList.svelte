@@ -187,7 +187,7 @@
 					<Tooltip content={$i18n.t('Add User')}>
 						<button
 							class=" p-2 rounded-xl hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-850 transition font-medium text-sm flex items-center space-x-1"
-							on:click={() => {
+							onclick={() => {
 								showAddUserModal = !showAddUserModal;
 							}}
 						>
@@ -206,7 +206,7 @@
 					<th
 						scope="col"
 						class="px-2.5 py-2 cursor-pointer select-none"
-						on:click={() => setSortKey('role')}
+						onclick={() => setSortKey('role')}
 					>
 						<div class="flex gap-1.5 items-center">
 							{$i18n.t('Role')}
@@ -229,7 +229,7 @@
 					<th
 						scope="col"
 						class="px-2.5 py-2 cursor-pointer select-none"
-						on:click={() => setSortKey('name')}
+						onclick={() => setSortKey('name')}
 					>
 						<div class="flex gap-1.5 items-center">
 							{$i18n.t('Name')}
@@ -252,7 +252,7 @@
 					<th
 						scope="col"
 						class="px-2.5 py-2 cursor-pointer select-none"
-						on:click={() => setSortKey('email')}
+						onclick={() => setSortKey('email')}
 					>
 						<div class="flex gap-1.5 items-center">
 							{$i18n.t('Email')}
@@ -276,7 +276,7 @@
 					<th
 						scope="col"
 						class="px-2.5 py-2 cursor-pointer select-none"
-						on:click={() => setSortKey('created_at')}
+						onclick={() => setSortKey('created_at')}
 					>
 						<div class="flex gap-1.5 items-center">
 							{$i18n.t('Created at')}
@@ -306,7 +306,7 @@
 							<button
 								class=" translate-y-0.5"
 								aria-label={$i18n.t('Change User Role')}
-								on:click={() => {
+								onclick={() => {
 									selectedUser = user;
 									showEditUserModal = !showEditUserModal;
 								}}
@@ -341,7 +341,7 @@
 										<button
 											class="self-center w-fit text-sm px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
 											aria-label={$i18n.t('Chats')}
-											on:click={async () => {
+											onclick={async () => {
 												showUserChatsModal = !showUserChatsModal;
 												selectedUser = user;
 											}}
@@ -355,7 +355,7 @@
 									<button
 										class="self-center w-fit text-sm px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
 										aria-label={$i18n.t('Edit User')}
-										on:click={async () => {
+										onclick={async () => {
 											showEditUserModal = !showEditUserModal;
 											selectedUser = user;
 										}}
@@ -382,7 +382,7 @@
 										<button
 											class="self-center w-fit text-sm px-2 py-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
 											aria-label={$i18n.t('Delete User')}
-											on:click={async () => {
+											onclick={async () => {
 												showDeleteConfirmDialog = true;
 												selectedUser = user;
 											}}

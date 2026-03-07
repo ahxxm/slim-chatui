@@ -504,7 +504,7 @@
 		class=" {$isApp
 			? ' ml-[4.5rem] md:ml-0'
 			: ''} fixed md:hidden z-40 top-0 right-0 left-0 bottom-0 bg-black/60 w-full min-h-screen h-screen flex justify-center overflow-hidden overscroll-contain"
-		on:mousedown={() => {
+		onmousedown={() => {
 			showSidebar.set(!$showSidebar);
 		}}
 	/>
@@ -522,18 +522,18 @@
 <button
 	id="sidebar-new-chat-button"
 	class="hidden"
-	on:click={() => {
+	onclick={() => {
 		goto('/');
 		newChatHandler();
 	}}
 />
 
 <svelte:window
-	on:mousemove={(e) => {
+	onmousemove={(e) => {
 		if (!isResizing) return;
 		resizeSidebarHandler(e.clientX);
 	}}
-	on:mouseup={() => {
+	onmouseup={() => {
 		resizeEndHandler();
 	}}
 />
@@ -545,7 +545,7 @@
 	>
 		<button
 			class="flex flex-col flex-1 {isWindows ? 'cursor-pointer' : 'cursor-[e-resize]'}"
-			on:click={async () => {
+			onclick={async () => {
 				showSidebar.set(!$showSidebar);
 			}}
 		>
@@ -580,7 +580,7 @@
 							class=" cursor-pointer flex rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition group"
 							href="/"
 							draggable="false"
-							on:click={async (e) => {
+							onclick={async (e) => {
 								e.stopImmediatePropagation();
 								e.preventDefault();
 
@@ -600,7 +600,7 @@
 					<Tooltip content={$i18n.t('Search')} placement="right">
 						<button
 							class=" cursor-pointer flex rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition group"
-							on:click={(e) => {
+							onclick={(e) => {
 								e.stopImmediatePropagation();
 								e.preventDefault();
 
@@ -671,7 +671,7 @@
 					class="flex items-center rounded-xl size-8.5 h-full justify-center hover:bg-gray-100/50 dark:hover:bg-gray-850/50 transition no-drag-region"
 					href="/"
 					draggable="false"
-					on:click={newChatHandler}
+					onclick={newChatHandler}
 				>
 					<img
 						crossorigin="anonymous"
@@ -681,7 +681,7 @@
 					/>
 				</a>
 
-				<a href="/" class="flex flex-1 px-1.5" on:click={newChatHandler}>
+				<a href="/" class="flex flex-1 px-1.5" onclick={newChatHandler}>
 					<div
 						id="sidebar-webui-name"
 						class=" self-center font-medium text-gray-850 dark:text-white font-primary"
@@ -697,7 +697,7 @@
 						class="flex rounded-xl size-8.5 justify-center items-center hover:bg-gray-100/50 dark:hover:bg-gray-850/50 transition {isWindows
 							? 'cursor-pointer'
 							: 'cursor-[w-resize]'}"
-						on:click={() => {
+						onclick={() => {
 							showSidebar.set(!$showSidebar);
 						}}
 						aria-label={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}
@@ -717,7 +717,7 @@
 
 			<div
 				class="relative flex flex-col flex-1 overflow-y-auto scrollbar-hidden pt-3 pb-3"
-				on:scroll={(e) => {
+				onscroll={(e) => {
 					if (e.target.scrollTop === 0) {
 						scrollTop = 0;
 					} else {
@@ -732,7 +732,7 @@
 							class="group grow flex items-center space-x-3 rounded-2xl px-2.5 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition outline-none"
 							href="/"
 							draggable="false"
-							on:click={newChatHandler}
+							onclick={newChatHandler}
 							aria-label={$i18n.t('New Chat')}
 						>
 							<div class="self-center">
@@ -751,7 +751,7 @@
 						<button
 							id="sidebar-search-button"
 							class="group grow flex items-center space-x-3 rounded-2xl px-2.5 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition outline-none"
-							on:click={() => {
+							onclick={() => {
 								showSearch.set(true);
 							}}
 							draggable="false"
@@ -1094,7 +1094,7 @@
 		<div
 			class="relative flex items-center justify-center group border-l border-gray-50 dark:border-gray-850/30 hover:border-gray-200 dark:hover:border-gray-800 transition z-20"
 			id="sidebar-resizer"
-			on:mousedown={resizeStartHandler}
+			onmousedown={resizeStartHandler}
 			role="separator"
 		>
 			<div

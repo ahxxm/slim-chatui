@@ -40,7 +40,7 @@
 				type="file"
 				accept=".json"
 				hidden
-				on:change={(e) => {
+				onchange={(e) => {
 					const files = e.target.files;
 					if (!files || files.length === 0) {
 						return;
@@ -79,7 +79,7 @@
 			<button
 				class="flex text-xs items-center space-x-1 py-1 rounded-xl bg-transparent dark:text-gray-200 transition"
 				type="button"
-				on:click={() => {
+				onclick={() => {
 					const input = document.getElementById('prompt-suggestions-import-input');
 					if (input) {
 						input.click();
@@ -95,7 +95,7 @@
 				<button
 					class="flex text-xs items-center space-x-1 py-1 rounded-xl bg-transparent dark:text-gray-200 transition"
 					type="button"
-					on:click={async () => {
+					onclick={async () => {
 						let blob = new Blob([JSON.stringify(promptSuggestions)], {
 							type: 'application/json'
 						});
@@ -111,7 +111,7 @@
 			<button
 				class=" px-1.5 rounded-xl transition font-medium text-sm flex items-center"
 				type="button"
-				on:click={() => {
+				onclick={() => {
 					if (promptSuggestions.length === 0 || promptSuggestions.at(-1).content !== '') {
 						promptSuggestions = [...promptSuggestions, { content: '', title: ['', ''] }];
 					}
@@ -164,7 +164,7 @@
 					<button
 						class="p-1 self-start"
 						type="button"
-						on:click={() => {
+						onclick={() => {
 							promptSuggestions.splice(promptIdx, 1);
 							promptSuggestions = promptSuggestions;
 						}}

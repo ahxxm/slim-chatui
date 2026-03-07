@@ -136,7 +136,7 @@
 					<div class="self-center text-xs">{$i18n.t('Import Chats')}</div>
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
+						onclick={() => {
 							chatImportInputElement.click();
 						}}
 						type="button"
@@ -151,7 +151,7 @@
 					<div class="self-center text-xs">{$i18n.t('Export Chats')}</div>
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
+						onclick={() => {
 							exportChats();
 						}}
 						type="button"
@@ -166,7 +166,7 @@
 					<div class="self-center text-xs">{$i18n.t('Delete All Chats')}</div>
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
+						onclick={() => {
 							showDeleteConfirmDialog = true;
 						}}
 						type="button"
@@ -185,7 +185,7 @@
 					<div class="self-center text-xs">{$i18n.t('Manage Files')}</div>
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
+						onclick={() => {
 							showFilesModal = true;
 						}}
 						type="button"

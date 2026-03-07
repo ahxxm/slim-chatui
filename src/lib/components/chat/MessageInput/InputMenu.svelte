@@ -63,7 +63,7 @@
 	type="file"
 	accept="image/*"
 	capture="environment"
-	on:change={handleFileChange}
+	onchange={handleFileChange}
 	style="display: none;"
 />
 
@@ -144,7 +144,7 @@
 							class="flex gap-2 w-full items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl {!fileUploadEnabled
 								? 'opacity-50'
 								: ''}"
-							on:click={() => {
+							onclick={() => {
 								tab = 'chats';
 							}}
 						>
@@ -166,7 +166,7 @@
 				<div in:fly={{ x: 20, duration: 150 }}>
 					<button
 						class="flex w-full justify-between gap-2 items-center px-3 py-1.5 text-sm select-none cursor-pointer rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50"
-						on:click={() => {
+						onclick={() => {
 							tab = '';
 						}}
 					>

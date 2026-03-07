@@ -65,7 +65,7 @@
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<div
 			class="{buttonClassName} {disabled ? '' : 'cursor-pointer'}"
-			on:pointerup={() => {
+			onpointerup={() => {
 				if (!disabled) {
 					open = !open;
 				}
@@ -135,10 +135,10 @@
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<div
 			class="{buttonClassName} cursor-pointer"
-			on:click={(e) => {
+			onclick={(e) => {
 				e.stopPropagation();
 			}}
-			on:pointerup={(e) => {
+			onpointerup={(e) => {
 				if (!disabled) {
 					open = !open;
 				}
@@ -163,7 +163,7 @@
 					{#if open && !hide}
 						<div
 							transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}
-							on:pointerup={(e) => {
+							onpointerup={(e) => {
 								e.stopPropagation();
 							}}
 						>
