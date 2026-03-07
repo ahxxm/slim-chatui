@@ -2,10 +2,8 @@
 	import { toast } from 'svelte-sonner';
 	import { marked } from 'marked';
 
-	import { onMount, getContext, tick, createEventDispatcher } from 'svelte';
+	import { onMount, getContext, tick } from 'svelte';
 	import { blur, fade } from 'svelte/transition';
-
-	const dispatch = createEventDispatcher();
 
 	import { updateFolderById } from '$lib/apis/folders';
 
@@ -32,15 +30,16 @@
 	let {
 		createMessagePair,
 		stopResponse,
-		autoScroll = false,
-		atSelectedModel = undefined,
+		autoScroll = $bindable(false),
+		atSelectedModel = $bindable(undefined),
 		selectedModels,
 		history,
-		prompt = '',
-		files = [],
-		messageInput = null,
+		prompt = $bindable(''),
+		files = $bindable([]),
+		messageInput = $bindable(null),
 		onSelect = (e) => {},
-		onChange = (e) => {}
+		onChange = (e) => {},
+		onSubmit = (prompt: string) => {}
 	} = $props();
 
 	let model = $derived($_models.find((m) => m.id === selectedModels[0]));
@@ -154,9 +153,7 @@
 					{createMessagePair}
 					placeholder={$i18n.t('How can I help you today?')}
 					{onChange}
-					on:submit={(e) => {
-						dispatch('submit', e.detail);
-					}}
+					{onSubmit}
 				/>
 			</div>
 		</div>
