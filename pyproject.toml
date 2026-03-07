@@ -53,7 +53,7 @@ path = "package.json"
 pattern = '"version":\s*"(?P<version>[^"]+)"'
 
 [tool.hatch.build.targets.wheel]
-sources = ["backend"]
+packages = ["backend/open_webui"]
 exclude = [
     ".dockerignore",
     ".gitignore",
