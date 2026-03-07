@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
 	import { fade } from 'svelte/transition';
 
 	import { flyAndScale } from '$lib/utils/transitions';
@@ -54,7 +53,6 @@
 
 	$effect(() => {
 		if (show && modalElement) {
-			document.body.appendChild(modalElement);
 			focusTrap = FocusTrap.createFocusTrap(modalElement, {
 				allowOutsideClick: (e) => {
 					return (
@@ -66,21 +64,13 @@
 			focusTrap.activate();
 			window.addEventListener('keydown', handleKeyDown);
 			document.body.style.overflow = 'hidden';
-		} else if (modalElement) {
-			focusTrap.deactivate();
-			window.removeEventListener('keydown', handleKeyDown);
-			document.body.removeChild(modalElement);
-			document.body.style.overflow = 'unset';
-		}
-	});
 
-	onDestroy(() => {
-		show = false;
-		if (focusTrap) {
-			focusTrap.deactivate();
-		}
-		if (modalElement) {
-			document.body.removeChild(modalElement);
+			return () => {
+				focusTrap?.deactivate();
+				focusTrap = null;
+				window.removeEventListener('keydown', handleKeyDown);
+				document.body.style.overflow = 'unset';
+			};
 		}
 	});
 </script>
