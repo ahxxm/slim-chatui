@@ -1,8 +1,13 @@
-<script>
+<script lang="ts">
 	import { getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
-	export let status = null;
+	export let status: {
+		hidden?: boolean;
+		done?: boolean;
+		description?: string;
+		query?: string;
+	} | null = null;
 	export let done = false;
 </script>
 

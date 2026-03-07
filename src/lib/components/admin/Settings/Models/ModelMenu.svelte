@@ -22,7 +22,7 @@
 
 	export let onClose: Function;
 
-	let show = false;
+	let show: boolean = false;
 </script>
 
 <Dropdown
@@ -102,14 +102,14 @@
 					pinModelHandler(model?.id);
 				}}
 			>
-				{#if ($settings?.pinnedModels ?? []).includes(model?.id)}
+				{#if (($settings?.pinnedModels ?? []) as string[]).includes(model?.id)}
 					<PinSlash />
 				{:else}
 					<Pin />
 				{/if}
 
 				<div class="flex items-center">
-					{#if ($settings?.pinnedModels ?? []).includes(model?.id)}
+					{#if (($settings?.pinnedModels ?? []) as string[]).includes(model?.id)}
 						{$i18n.t('Hide from Sidebar')}
 					{:else}
 						{$i18n.t('Keep in Sidebar')}

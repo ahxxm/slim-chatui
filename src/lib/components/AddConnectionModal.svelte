@@ -41,7 +41,7 @@
 	let headers = $state('');
 
 	let modelId = $state('');
-	let modelIds = $state([]);
+	let modelIds: string[] = $state([]);
 
 	let loading = $state(false);
 

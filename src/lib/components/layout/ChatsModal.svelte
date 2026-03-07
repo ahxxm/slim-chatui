@@ -35,7 +35,7 @@
 	export let orderBy = 'updated_at';
 	export let direction = 'desc'; // 'asc' or 'desc'
 
-	export let chatList = null;
+	export let chatList: any[] | null = null;
 	export let allChatsLoaded = false;
 	export let chatListLoading = false;
 

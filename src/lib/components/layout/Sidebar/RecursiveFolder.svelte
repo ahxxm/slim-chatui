@@ -361,6 +361,7 @@
 		}, 500);
 	};
 
+	/** @type {{id: string; title: string; created_at: number}[] | null} */
 	let chats = $state(null);
 	export const setFolderItems = async () => {
 		await tick();

@@ -21,7 +21,12 @@
 		showRelevance = true
 	} = $props();
 
-	let mergedDocuments = $state([]);
+	let mergedDocuments: {
+		source: any;
+		document: any;
+		metadata: any;
+		distance: number | undefined;
+	}[] = $state([]);
 
 	function calculatePercentage(distance: number) {
 		if (typeof distance !== 'number') return null;

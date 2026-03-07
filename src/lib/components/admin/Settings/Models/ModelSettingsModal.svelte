@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { toast } from 'svelte-sonner';
 
 	import { createEventDispatcher, getContext, onMount, untrack } from 'svelte';
@@ -27,13 +27,13 @@
 
 	let { show = $bindable(false), initHandler = () => {} } = $props();
 
-	let config = $state(null);
+	let config: Record<string, any> | null = $state(null);
 
 	let selectedModelId = $state('');
-	let defaultModelIds = $state([]);
+	let defaultModelIds: string[] = $state([]);
 
 	let selectedPinnedModelId = $state('');
-	let defaultPinnedModelIds = $state([]);
+	let defaultPinnedModelIds: string[] = $state([]);
 
 	let loading = $state(false);
 	let showResetModal = $state(false);
@@ -44,7 +44,7 @@
 	let defaultCapabilities = $state({});
 	let defaultParams = $state({});
 
-	let promptSuggestions = $state([]);
+	let promptSuggestions: { content: string; title: string[] }[] = $state([]);
 
 	$effect(() => {
 		if (show) {

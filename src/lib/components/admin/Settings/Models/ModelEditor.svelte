@@ -48,7 +48,7 @@
 		meta: {
 			description: '',
 			suggestion_prompts: null,
-			tags: []
+			tags: [] as { name: string }[]
 		},
 		params: {
 			system: ''

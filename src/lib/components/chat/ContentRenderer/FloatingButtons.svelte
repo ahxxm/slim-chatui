@@ -35,23 +35,35 @@
 		id = '',
 		messageId = '',
 		model = null,
-		messages = [],
-		actions: actionsProp = [],
+		messages = [] as { role: string; content: string }[],
+		actions: actionsProp = [] as {
+			id: string;
+			label: string;
+			icon?: any;
+			input?: boolean;
+			prompt: string;
+		}[],
 		onAdd = (e) => {}
 	} = $props();
 
 	let actions = $derived(actionsProp.length > 0 ? actionsProp : DEFAULT_ACTIONS);
 
 	let floatingInput = $state(false);
-	let selectedAction = $state(null);
+	let selectedAction: {
+		id: string;
+		label: string;
+		icon?: any;
+		input?: boolean;
+		prompt: string;
+	} | null = $state(null);
 
 	let selectedText = $state('');
 	let floatingInputValue = $state('');
 
 	let content = $state('');
-	let responseContent = $state(null);
+	let responseContent: string | null = $state(null);
 	let responseDone = $state(false);
-	let controller = $state(null);
+	let controller: AbortController | null = $state(null);
 
 	const autoScroll = async () => {
 		const responseContainer = document.getElementById('response-container');

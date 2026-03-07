@@ -31,7 +31,7 @@
 	let meta = $state({
 		background_image_url: null
 	});
-	let data = $state({
+	let data: { system_prompt: string; files: any[] } = $state({
 		system_prompt: '',
 		files: []
 	});

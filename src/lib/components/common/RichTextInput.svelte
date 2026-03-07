@@ -501,10 +501,10 @@
 	};
 
 	// Function to find the next template in the document
-	function findNextTemplate(doc, from = 0) {
+	function findNextTemplate(doc: any, from = 0): { from: number; to: number } | null {
 		const patterns = [{ start: '{{', end: '}}' }];
 
-		let result = null;
+		let result: { from: number; to: number } | null = null;
 
 		doc.nodesBetween(from, doc.content.size, (node, pos) => {
 			if (result) return false; // Stop if we've found a match

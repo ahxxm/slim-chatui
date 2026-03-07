@@ -40,7 +40,7 @@
 		})
 	);
 
-	let filteredItems = $state([]);
+	let filteredItems: { id: string; name: string; type: string }[] = $state([]);
 
 	$effect(() => {
 		if (lastWord && lastWord !== null) {

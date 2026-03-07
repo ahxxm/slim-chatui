@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import Sortable from 'sortablejs';
 
 	import { onMount, tick } from 'svelte';
@@ -10,7 +10,7 @@
 
 	let { selectedChatId = $bindable(null), shiftKey = false } = $props();
 
-	let pinnedModels = $state([]);
+	let pinnedModels: string[] = $state([]);
 
 	const initPinnedModelsSortable = () => {
 		const pinnedModelsList = document.getElementById('pinned-models-list');
@@ -21,7 +21,7 @@
 					const modelId = event.item.dataset.id;
 					const newIndex = event.newIndex;
 
-					const pinnedModels = $settings.pinnedModels;
+					const pinnedModels = ($settings.pinnedModels ?? []) as string[];
 					const oldIndex = pinnedModels.indexOf(modelId);
 
 					pinnedModels.splice(oldIndex, 1);
@@ -35,13 +35,15 @@
 	};
 
 	$effect(() => {
-		pinnedModels = $settings?.pinnedModels ?? [];
+		pinnedModels = ($settings?.pinnedModels ?? []) as string[];
 	});
 
 	onMount(async () => {
 		if (pinnedModels.length === 0 && $config?.default_pinned_models) {
 			const defaultPinnedModels = ($config?.default_pinned_models).split(',').filter((id) => id);
-			pinnedModels = defaultPinnedModels.filter((id) => $models.find((model) => model.id === id));
+			pinnedModels = defaultPinnedModels.filter((id: string) =>
+				$models.find((model) => model.id === id)
+			);
 
 			settings.set({ ...$settings, pinnedModels });
 			await updateUserSettings(localStorage.token, { ui: $settings });
@@ -66,9 +68,11 @@
 						showSidebar.set(false);
 					}
 				}}
-				onUnpin={($settings?.pinnedModels ?? []).includes(modelId)
+				onUnpin={(($settings?.pinnedModels ?? []) as string[]).includes(modelId)
 					? () => {
-							const pinnedModels = $settings.pinnedModels.filter((id) => id !== modelId);
+							const pinnedModels = ($settings.pinnedModels as string[]).filter(
+								(id: string) => id !== modelId
+							);
 							settings.set({ ...$settings, pinnedModels });
 							updateUserSettings(localStorage.token, { ui: $settings });
 						}

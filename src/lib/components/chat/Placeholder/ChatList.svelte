@@ -20,7 +20,7 @@
 		loadHandler = null
 	} = $props();
 
-	let chatList = $state(null);
+	let chatList: (Record<string, any> & { time_range?: string })[] | null = $state(null);
 
 	const init = async () => {
 		if (chats.length === 0) {

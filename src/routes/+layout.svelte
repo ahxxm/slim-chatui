@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { io } from 'socket.io-client';
 	import { spring } from 'svelte/motion';
 	import { Toaster, toast } from 'svelte-sonner';
@@ -81,6 +81,8 @@
 	let showRefresh = false;
 
 	let heartbeatInterval = null;
+
+	let onMountCleanup: (() => void) | null = null;
 
 	const BREAKPOINT = 768;
 
@@ -461,7 +463,7 @@
 			loaded = true;
 		}
 
-		return () => {
+		onMountCleanup = () => {
 			window.removeEventListener('resize', onResize);
 			document.removeEventListener('touchstart', touchstartHandler);
 			document.removeEventListener('touchmove', touchmoveHandler);
@@ -471,6 +473,7 @@
 	});
 
 	onDestroy(() => {
+		onMountCleanup?.();
 		bc.close();
 	});
 </script>

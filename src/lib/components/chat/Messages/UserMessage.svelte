@@ -44,7 +44,7 @@
 
 	let edit = $state(false);
 	let editedContent = $state('');
-	let editedFiles = $state([]);
+	let editedFiles: any[] = $state([]);
 
 	let messageEditTextAreaElement = $state();
 	let editScrollContainer = $state();

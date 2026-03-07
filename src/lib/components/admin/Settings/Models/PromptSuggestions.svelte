@@ -8,7 +8,7 @@
 
 	let { promptSuggestions = $bindable([]) } = $props();
 
-	let _promptSuggestions = $state([]);
+	let _promptSuggestions: { content: string; title: string[] }[] = $state([]);
 
 	const setPromptSuggestions = () => {
 		_promptSuggestions = promptSuggestions.map((s) => {

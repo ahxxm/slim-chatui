@@ -22,7 +22,7 @@
 	export let modal = false;
 	export let loading = false;
 
-	export let item = null;
+	export let item: Record<string, any> | null = null;
 	export let small = false;
 
 	export let name: string;

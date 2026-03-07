@@ -9,7 +9,7 @@
 
 	let { suggestionPrompts = [], className = '', inputValue = '', onSelect = (e) => {} } = $props();
 
-	let sortedPrompts = $state([]);
+	let sortedPrompts: { id?: string; content: string; title?: string[] }[] = $state([]);
 
 	const fuseOptions = {
 		keys: ['content', 'title'],

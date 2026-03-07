@@ -38,7 +38,7 @@
 	let query = $state('');
 	let page = $state(1);
 
-	let chatList = $state(null);
+	let chatList: any[] | null = $state(null);
 
 	let chatListLoading = $state(false);
 	let allChatsLoaded = $state(false);
@@ -46,7 +46,7 @@
 	let searchDebounceTimeout;
 
 	let selectedIdx = $state(null);
-	let selectedChat = $state(null);
+	let selectedChat: { id: string; [key: string]: any } | null = $state(null);
 
 	let selectedModels = $state(['']);
 	let history = $state(null);

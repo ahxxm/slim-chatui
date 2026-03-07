@@ -17,6 +17,7 @@
 	} from '$lib/apis/models';
 	import { copyToClipboard } from '$lib/utils';
 	import { page } from '$app/stores';
+	import { onDestroy } from 'svelte';
 	import { updateUserSettings } from '$lib/apis/users';
 
 	import { getModels } from '$lib/apis';
@@ -37,15 +38,16 @@
 	import Pagination from '$lib/components/common/Pagination.svelte';
 
 	let shiftKey = $state(false);
+	let onMountCleanup: (() => void) | null = null;
 
 	let modelsImportInProgress = $state(false);
 	let importFiles = $state();
 	let modelsImportInputElement: HTMLInputElement;
 
-	let models = $state(null);
+	let models: any[] | null = $state(null);
 
-	let workspaceModels = null;
-	let baseModels = null;
+	let workspaceModels: any[] | null = null;
+	let baseModels: any[] | null = null;
 
 	let selectedModelId = $state(null);
 
@@ -216,7 +218,7 @@
 	};
 
 	const pinModelHandler = async (modelId) => {
-		let pinnedModels = $settings?.pinnedModels ?? [];
+		let pinnedModels: string[] = $settings?.pinnedModels ?? [];
 
 		if (pinnedModels.includes(modelId)) {
 			pinnedModels = pinnedModels.filter((id) => id !== modelId);
@@ -256,11 +258,15 @@
 		window.addEventListener('keyup', onKeyUp);
 		window.addEventListener('blur-sm', onBlur);
 
-		return () => {
+		onMountCleanup = () => {
 			window.removeEventListener('keydown', onKeyDown);
 			window.removeEventListener('keyup', onKeyUp);
 			window.removeEventListener('blur-sm', onBlur);
 		};
+	});
+
+	onDestroy(() => {
+		onMountCleanup?.();
 	});
 </script>
 
