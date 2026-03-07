@@ -15,7 +15,6 @@
 		theme,
 		WEBUI_NAME,
 		WEBUI_VERSION,
-		WEBUI_DEPLOYMENT_ID,
 		mobile,
 		socket,
 		chatId,
@@ -105,18 +104,12 @@
 			console.log('connected', _socket.id);
 			const res = await getVersion(localStorage.token);
 
-			const deploymentId = res?.deployment_id ?? null;
 			const version = res?.version ?? null;
 
-			if (version !== null || deploymentId !== null) {
-				if (
-					($WEBUI_VERSION !== null && version !== $WEBUI_VERSION) ||
-					($WEBUI_DEPLOYMENT_ID !== null && deploymentId !== $WEBUI_DEPLOYMENT_ID)
-				) {
-					await unregisterServiceWorkers();
-					location.href = location.href;
-					return;
-				}
+			if (version !== null && $WEBUI_VERSION !== null && version !== $WEBUI_VERSION) {
+				await unregisterServiceWorkers();
+				location.href = location.href;
+				return;
 			}
 
 			// Send heartbeat every 30 seconds
@@ -126,10 +119,6 @@
 					_socket.emit('heartbeat', {});
 				}
 			}, 30000);
-
-			if (deploymentId !== null) {
-				WEBUI_DEPLOYMENT_ID.set(deploymentId);
-			}
 
 			if (version !== null) {
 				WEBUI_VERSION.set(version);

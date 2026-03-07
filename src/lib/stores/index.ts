@@ -11,7 +11,6 @@ import emojiShortCodes from '$lib/emoji-shortcodes.json';
 export const WEBUI_NAME = writable(APP_NAME);
 
 export const WEBUI_VERSION: Writable<string | null> = writable(null);
-export const WEBUI_DEPLOYMENT_ID: Writable<string | null> = writable(null);
 
 export const config: Writable<Config | undefined> = writable(undefined);
 export const user: Writable<SessionUser | undefined> = writable(undefined);
@@ -120,7 +119,6 @@ type Settings = {
 	hapticFeedback?: boolean;
 	responseAutoCopy?: any;
 	richTextInput?: boolean;
-	userLocation?: any;
 	autoFollowUps?: boolean;
 	splitLargeChunks?: boolean;
 	backgroundImageUrl?: null;
@@ -204,5 +202,4 @@ export type SessionUser = {
 	email: string;
 	name: string;
 	role: string;
-	profile_image_url: string;
 };

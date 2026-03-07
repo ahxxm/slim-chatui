@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { WEBUI_API_BASE_URL } from '$lib/constants';
+	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { config, user } from '$lib/stores';
 	import { getContext, onDestroy, untrack } from 'svelte';
 
@@ -321,7 +321,7 @@
 							<div class="flex items-center gap-2">
 								<img
 									class="rounded-full w-6 min-w-6 h-6 object-cover mr-0.5 flex-shrink-0"
-									src={`${WEBUI_API_BASE_URL}/users/${user.id}/profile/image`}
+									src={`${WEBUI_BASE_URL}/user.png`}
 									alt="user"
 								/>
 

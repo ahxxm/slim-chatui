@@ -87,7 +87,6 @@ class TestAuthUserLifecycle(IntegrationTest):
             json={
                 "name": "New Name",
                 "email": "new@test.com",
-                "profile_image_url": "/user.png",
                 "role": "user",
             },
             headers=admin_headers,

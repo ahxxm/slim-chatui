@@ -287,8 +287,6 @@ export const compressImage = async (imageUrl: string, maxWidth: number, maxHeigh
 		img.src = imageUrl;
 	});
 };
-export const defaultUserImage = () => `${WEBUI_BASE_URL}/user.png`;
-
 export const formatDate = (inputDate: string | number | Date) => {
 	const date = dayjs(inputDate);
 
@@ -460,55 +458,6 @@ export const compareVersion = (latest: string, current: string) => {
 			}) < 0;
 };
 
-export const extractCurlyBraceWords = (text: string) => {
-	const regex = /\{\{([^}]+)\}\}/g;
-	const matches = [];
-	let match;
-
-	while ((match = regex.exec(text)) !== null) {
-		matches.push({
-			word: match[1].trim(),
-			startIndex: match.index,
-			endIndex: regex.lastIndex - 1
-		});
-	}
-
-	return matches;
-};
-
-export const removeLastWordFromString = (inputString: string, wordString: string) => {
-	console.log('inputString', inputString);
-	// Split the string by newline characters to handle lines separately
-	const lines = inputString.split('\n');
-
-	// Take the last line to operate only on it
-	const lastLine = lines.pop();
-
-	// Split the last line into an array of words
-	const words = lastLine.split(' ');
-
-	// Conditional to check for the last word removal
-	if (words.at(-1) === wordString || (wordString === '' && words.at(-1) === '\\#')) {
-		words.pop(); // Remove last word if condition is satisfied
-	}
-
-	// Join the remaining words back into a string and handle space correctly
-	let updatedLastLine = words.join(' ');
-
-	// Add a trailing space to the updated last line if there are still words
-	if (updatedLastLine !== '') {
-		updatedLastLine += ' ';
-	}
-
-	// Combine the lines together again, placing the updated last line back in
-	const resultString = [...lines, updatedLastLine].join('\n');
-
-	// Return the final string
-	console.log('resultString', resultString);
-
-	return resultString;
-};
-
 export const removeFirstHashWord = (inputString: string) => {
 	// Split the string into an array of words
 	const words = inputString.split(' ');
@@ -583,29 +532,6 @@ export const getImportOrigin = (_chats: any[]) => {
 		return 'openai';
 	}
 	return 'webui';
-};
-
-export const getUserPosition = async (raw = false) => {
-	// Get the user's location using the Geolocation API
-	const position = await new Promise((resolve, reject) => {
-		navigator.geolocation.getCurrentPosition(resolve, reject);
-	}).catch((error) => {
-		console.error('Error getting user location:', error);
-		throw error;
-	});
-
-	if (!position) {
-		return 'Location not available';
-	}
-
-	// Extract the latitude and longitude from the position
-	const { latitude, longitude } = position.coords;
-
-	if (raw) {
-		return { latitude, longitude };
-	} else {
-		return `${latitude.toFixed(3)}, ${longitude.toFixed(3)} (lat, long)`;
-	}
 };
 
 const convertOpenAIMessages = (convo: any) => {
@@ -826,57 +752,6 @@ export const blobToFile = (blob: Blob, fileName: string) => {
 	return file;
 };
 
-export const getPromptVariables = (user_name: string, user_location: string, user_email = '') => {
-	return {
-		'{{USER_NAME}}': user_name,
-		'{{USER_EMAIL}}': user_email || 'Unknown',
-		'{{USER_LOCATION}}': user_location || 'Unknown',
-		'{{CURRENT_DATETIME}}': getCurrentDateTime(),
-		'{{CURRENT_DATE}}': getFormattedDate(),
-		'{{CURRENT_TIME}}': getFormattedTime(),
-		'{{CURRENT_WEEKDAY}}': getWeekday(),
-		'{{CURRENT_TIMEZONE}}': getUserTimezone(),
-		'{{USER_LANGUAGE}}': localStorage.getItem('locale') || 'en-US'
-	};
-};
-
-/**
- * This function is used to replace placeholders in a template string with the provided prompt.
- * The placeholders can be in the following formats:
- * - `{{prompt}}`: This will be replaced with the entire prompt.
- * - `{{prompt:start:<length>}}`: This will be replaced with the first <length> characters of the prompt.
- * - `{{prompt:end:<length>}}`: This will be replaced with the last <length> characters of the prompt.
- * - `{{prompt:middletruncate:<length>}}`: This will be replaced with the prompt truncated to <length> characters, with '...' in the middle.
- *
- * @param {string} template - The template string containing placeholders.
- * @param {string} prompt - The string to replace the placeholders with.
- * @returns {string} The template string with the placeholders replaced by the prompt.
- */
-export const titleGenerationTemplate = (template: string, prompt: string): string => {
-	template = template.replace(
-		/{{prompt}}|{{prompt:start:(\d+)}}|{{prompt:end:(\d+)}}|{{prompt:middletruncate:(\d+)}}/g,
-		(match, startLength, endLength, middleLength) => {
-			if (match === '{{prompt}}') {
-				return prompt;
-			} else if (match.startsWith('{{prompt:start:')) {
-				return prompt.substring(0, startLength);
-			} else if (match.startsWith('{{prompt:end:')) {
-				return prompt.slice(-endLength);
-			} else if (match.startsWith('{{prompt:middletruncate:')) {
-				if (prompt.length <= middleLength) {
-					return prompt;
-				}
-				const start = prompt.slice(0, Math.ceil(middleLength / 2));
-				const end = prompt.slice(-Math.floor(middleLength / 2));
-				return `${start}...${end}`;
-			}
-			return '';
-		}
-	);
-
-	return template;
-};
-
 export const approximateToHumanReadable = (nanoseconds: number) => {
 	const seconds = Math.floor((nanoseconds / 1e9) % 60);
 	const minutes = Math.floor((nanoseconds / 6e10) % 60);
@@ -988,38 +863,6 @@ export const bestMatchingLanguage = (
 	return match || defaultLocale;
 };
 
-// Get the date in the format YYYY-MM-DD
-export const getFormattedDate = () => {
-	const date = new Date();
-	const year = date.getFullYear();
-	const month = String(date.getMonth() + 1).padStart(2, '0');
-	const day = String(date.getDate()).padStart(2, '0');
-	return `${year}-${month}-${day}`;
-};
-
-// Get the time in the format HH:MM:SS
-export const getFormattedTime = () => {
-	const date = new Date();
-	return date.toTimeString().split(' ')[0];
-};
-
-// Get the current date and time in the format YYYY-MM-DD HH:MM:SS
-export const getCurrentDateTime = () => {
-	return `${getFormattedDate()} ${getFormattedTime()}`;
-};
-
-// Get the user's timezone
-export const getUserTimezone = () => {
-	return Intl.DateTimeFormat().resolvedOptions().timeZone;
-};
-
-// Get the weekday
-export const getWeekday = () => {
-	const date = new Date();
-	const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-	return weekdays[date.getDay()];
-};
-
 export const createMessagesList = (
 	history: { messages: Record<string, any> },
 	messageId: string | null
@@ -1074,139 +917,6 @@ export const slugify = (str: string): string => {
 	);
 };
 
-export const extractInputVariables = (text: string): Record<string, any> => {
-	const regex = /{{\s*([^|}\s]+)\s*\|\s*([^}]+)\s*}}/g;
-	const regularRegex = /{{\s*([^|}\s]+)\s*}}/g;
-	const variables: Record<string, any> = {};
-	let match;
-	// Use exec() loop instead of matchAll() for better compatibility
-	while ((match = regex.exec(text)) !== null) {
-		const varName = match[1].trim();
-		const definition = match[2].trim();
-		variables[varName] = parseVariableDefinition(definition);
-	}
-	// Then, extract regular variables (without pipe) - only if not already processed
-	while ((match = regularRegex.exec(text)) !== null) {
-		const varName = match[1].trim();
-		// Only add if not already processed as custom variable
-		if (!variables.hasOwnProperty(varName)) {
-			variables[varName] = { type: 'text' }; // Default type for regular variables
-		}
-	}
-	return variables;
-};
-
-export const splitProperties = (str: string, delimiter: string): string[] => {
-	const result: string[] = [];
-	let current = '';
-	let depth = 0;
-	let inString = false;
-	let escapeNext = false;
-
-	for (let i = 0; i < str.length; i++) {
-		const char = str[i];
-
-		if (escapeNext) {
-			current += char;
-			escapeNext = false;
-			continue;
-		}
-
-		if (char === '\\') {
-			current += char;
-			escapeNext = true;
-			continue;
-		}
-
-		if (char === '"' && !escapeNext) {
-			inString = !inString;
-			current += char;
-			continue;
-		}
-
-		if (!inString) {
-			if (char === '{' || char === '[') {
-				depth++;
-			} else if (char === '}' || char === ']') {
-				depth--;
-			}
-
-			if (char === delimiter && depth === 0) {
-				result.push(current.trim());
-				current = '';
-				continue;
-			}
-		}
-
-		current += char;
-	}
-
-	if (current.trim()) {
-		result.push(current.trim());
-	}
-
-	return result;
-};
-
-export const parseVariableDefinition = (definition: string): Record<string, any> => {
-	// Use splitProperties for the main colon delimiter to handle quoted strings
-	const parts = splitProperties(definition, ':');
-	const [firstPart, ...propertyParts] = parts;
-
-	// Parse type (explicit or implied)
-	const type = firstPart.startsWith('type=') ? firstPart.slice(5) : firstPart;
-
-	// Parse properties; support both key=value and bare flags (e.g., ":required")
-	const properties = propertyParts.reduce(
-		(props, part) => {
-			const trimmed = part.trim();
-			if (!trimmed) return props;
-
-			// Use splitProperties for the equals sign as well, in case there are nested quotes
-			const equalsParts = splitProperties(trimmed, '=');
-
-			if (equalsParts.length === 1) {
-				// It's a flag with no value, e.g. "required" -> true
-				const flagName = equalsParts[0].trim();
-				if (flagName.length > 0) {
-					return { ...props, [flagName]: true };
-				}
-				return props;
-			}
-
-			const [propertyName, ...valueParts] = equalsParts;
-			const propertyValueRaw = valueParts.join('='); // Handle values with extra '='
-
-			if (!propertyName || propertyValueRaw == null) return props;
-
-			return {
-				...props,
-				[propertyName.trim()]: parseJsonValue(propertyValueRaw.trim())
-			};
-		},
-		{} as Record<string, any>
-	);
-
-	return { type, ...properties };
-};
-export const parseJsonValue = (value: string): any => {
-	// Remove surrounding quotes if present (for string values)
-	if (value.startsWith('"') && value.endsWith('"')) {
-		return value.slice(1, -1);
-	}
-
-	// Check if it starts with square or curly brackets (JSON)
-	if (/^[\[{]/.test(value)) {
-		try {
-			return JSON.parse(value);
-		} catch {
-			return value; // Return as string if JSON parsing fails
-		}
-	}
-
-	return value;
-};
-
 export const extractContentFromFile = async (file: File) => {
 	// Known text file extensions for extra fallback
 	const textExtensions = [
@@ -1253,18 +963,6 @@ export const extractContentFromFile = async (file: File) => {
 	} catch (err) {
 		throw new Error('Unsupported or non-text file type: ' + (file.name || type));
 	}
-};
-
-export const getAge = (birthDate: string | number | Date) => {
-	const today = new Date();
-	const bDate = new Date(birthDate);
-	let age = today.getFullYear() - bDate.getFullYear();
-	const m = today.getMonth() - bDate.getMonth();
-
-	if (m < 0 || (m === 0 && today.getDate() < bDate.getDate())) {
-		age--;
-	}
-	return age.toString();
 };
 
 export const convertHeicToJpeg = async (file: File) => {

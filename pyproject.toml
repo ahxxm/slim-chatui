@@ -52,10 +52,8 @@ allow-direct-references = true
 path = "package.json"
 pattern = '"version":\s*"(?P<version>[^"]+)"'
 
-[tool.hatch.build.hooks.custom]  # keep this for reading hooks from `hatch_build.py`
-
 [tool.hatch.build.targets.wheel]
-sources = ["backend"]
+packages = ["backend/open_webui"]
 exclude = [
     ".dockerignore",
     ".gitignore",
@@ -64,7 +62,6 @@ exclude = [
     "start.sh",
     "webui.db",
 ]
-force-include = { build = "open_webui/frontend" }
 
 [tool.pytest.ini_options]
 testpaths = ["backend/open_webui/test"]

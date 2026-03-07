@@ -27,7 +27,7 @@ ENV ENV=prod \
 
 WORKDIR /app/backend
 
-COPY ./package.json ./LICENSE ./README.md ./pyproject.toml ./hatch_build.py /app/
+COPY ./package.json ./LICENSE ./README.md ./pyproject.toml /app/
 COPY ./backend .
 COPY --from=build /app/build /app/build
 

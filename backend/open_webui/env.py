@@ -7,7 +7,6 @@ import shutil
 import traceback
 from datetime import datetime, timezone
 from typing import Any
-from uuid import uuid4
 from pathlib import Path
 import re
 
@@ -115,47 +114,6 @@ else:
 
 VERSION = PACKAGE_DATA["version"]
 
-
-DEPLOYMENT_ID = os.environ.get("DEPLOYMENT_ID", "")
-INSTANCE_ID = os.environ.get("INSTANCE_ID", str(uuid4()))
-
-
-####################################
-# SAFE_MODE
-####################################
-
-SAFE_MODE = os.environ.get("SAFE_MODE", "false").lower() == "true"
-
-
-####################################
-# ENABLE_FORWARD_USER_INFO_HEADERS
-####################################
-
-ENABLE_FORWARD_USER_INFO_HEADERS = (
-    os.environ.get("ENABLE_FORWARD_USER_INFO_HEADERS", "False").lower() == "true"
-)
-
-# Header names for user info forwarding (customizable via environment variables)
-FORWARD_USER_INFO_HEADER_USER_NAME = os.environ.get(
-    "FORWARD_USER_INFO_HEADER_USER_NAME", "X-OpenWebUI-User-Name"
-)
-FORWARD_USER_INFO_HEADER_USER_ID = os.environ.get(
-    "FORWARD_USER_INFO_HEADER_USER_ID", "X-OpenWebUI-User-Id"
-)
-FORWARD_USER_INFO_HEADER_USER_EMAIL = os.environ.get(
-    "FORWARD_USER_INFO_HEADER_USER_EMAIL", "X-OpenWebUI-User-Email"
-)
-FORWARD_USER_INFO_HEADER_USER_ROLE = os.environ.get(
-    "FORWARD_USER_INFO_HEADER_USER_ROLE", "X-OpenWebUI-User-Role"
-)
-
-# Header name for chat ID forwarding (customizable via environment variable)
-FORWARD_SESSION_INFO_HEADER_MESSAGE_ID = os.environ.get(
-    "FORWARD_SESSION_INFO_HEADER_MESSAGE_ID", "X-OpenWebUI-Message-Id"
-)
-FORWARD_SESSION_INFO_HEADER_CHAT_ID = os.environ.get(
-    "FORWARD_SESSION_INFO_HEADER_CHAT_ID", "X-OpenWebUI-Chat-Id"
-)
 
 ENABLE_EASTER_EGGS = os.environ.get("ENABLE_EASTER_EGGS", "True").lower() == "true"
 

@@ -15,7 +15,7 @@
 		formatDate,
 		removeAllDetails
 	} from '$lib/utils';
-	import { WEBUI_API_BASE_URL } from '$lib/constants';
+	import { WEBUI_BASE_URL } from '$lib/constants';
 
 	import Name from './Name.svelte';
 	import ProfileImage from './ProfileImage.svelte';
@@ -229,7 +229,7 @@
 	>
 		<div class={`shrink-0 ltr:mr-3 rtl:ml-3 hidden @lg:flex mt-1 self-start`}>
 			<ProfileImage
-				src={`${WEBUI_API_BASE_URL}/models/model/profile/image?id=${model?.id}&lang=${$i18n.language}`}
+				src={`${WEBUI_BASE_URL}/static/favicon.png`}
 				className={'size-8 assistant-message-profile-image'}
 			/>
 		</div>
