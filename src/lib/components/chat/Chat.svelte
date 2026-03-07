@@ -102,7 +102,7 @@
 	// All land as unified/natural word-chunks like typewriter output.
 	// Technically, streamingBuffers holds plain (non-proxy) message objects
 	// so mutations don't trigger Svelte reactivity until we explicitly flush.
-	const TYPEWRITER_EMITS_PER_SEC = 10;
+	const TYPEWRITER_EMITS_PER_SEC = 23;
 	const EMIT_INTERVAL_MS = Math.round(1000 / TYPEWRITER_EMITS_PER_SEC);
 	const streamingBuffers: Map<string, any> = new Map();
 	let renderTimer: ReturnType<typeof setTimeout> | null = null;
