@@ -104,10 +104,7 @@ from open_webui.env import (
     ENV,
     ENABLE_CUSTOM_MODEL_FALLBACK,
     GLOBAL_LOG_LEVEL,
-    SAFE_MODE,
     VERSION,
-    DEPLOYMENT_ID,
-    INSTANCE_ID,
     WEBUI_BUILD_HASH,
     ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
     ENABLE_WEBSOCKET_SUPPORT,
@@ -151,9 +148,6 @@ from open_webui.tasks import (
 
 from open_webui.constants import ERROR_MESSAGES
 
-if SAFE_MODE:
-    print("SAFE MODE ENABLED")
-
 logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 
@@ -194,7 +188,6 @@ async def lifespan(app: FastAPI):
     # Store reference to main event loop for sync->async calls (e.g., embedding generation)
     # This allows sync functions to schedule work on the main loop without blocking health checks
     app.state.main_loop = asyncio.get_running_loop()
-    app.state.instance_id = INSTANCE_ID
     configure_logging()
 
     # Create admin account from env vars if specified and no users exist
@@ -220,7 +213,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-app.state.instance_id = None
 app.state.config = AppConfig()
 
 app.state.WEBUI_NAME = WEBUI_NAME
@@ -893,7 +885,6 @@ async def get_app_config(request: Request):
 async def get_app_version():
     return {
         "version": VERSION,
-        "deployment_id": DEPLOYMENT_ID,
     }
 
 

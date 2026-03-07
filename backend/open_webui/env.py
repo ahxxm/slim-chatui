@@ -7,7 +7,6 @@ import shutil
 import traceback
 from datetime import datetime, timezone
 from typing import Any
-from uuid import uuid4
 from pathlib import Path
 import re
 
@@ -114,17 +113,6 @@ else:
         PACKAGE_DATA = {"version": "0.0.0"}
 
 VERSION = PACKAGE_DATA["version"]
-
-
-DEPLOYMENT_ID = os.environ.get("DEPLOYMENT_ID", "")
-INSTANCE_ID = os.environ.get("INSTANCE_ID", str(uuid4()))
-
-
-####################################
-# SAFE_MODE
-####################################
-
-SAFE_MODE = os.environ.get("SAFE_MODE", "false").lower() == "true"
 
 
 ENABLE_EASTER_EGGS = os.environ.get("ENABLE_EASTER_EGGS", "True").lower() == "true"

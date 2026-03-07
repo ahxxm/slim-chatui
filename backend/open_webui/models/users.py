@@ -9,7 +9,7 @@ from open_webui.models.chats import Chats
 
 
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import BigInteger, JSON, Column, String, Text
+from sqlalchemy import BigInteger, JSON, Column, String
 from sqlalchemy import or_, func
 
 ####################
@@ -27,12 +27,9 @@ class User(Base):
 
     id = Column(String, primary_key=True, unique=True)
     email = Column(String)
-    username = Column(String(50), nullable=True)
     role = Column(String)
 
     name = Column(String)
-
-    profile_image_url = Column(Text)
 
     settings = Column(JSON, nullable=True)
     updated_at = Column(BigInteger)
@@ -43,7 +40,6 @@ class UserModel(BaseModel):
     id: str
 
     email: str
-    username: Optional[str] = None
     role: str = "pending"
 
     name: str
@@ -113,7 +109,6 @@ class UsersTable:
         name: str,
         email: str,
         role: str = "pending",
-        username: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> Optional[UserModel]:
         with get_db_context(db) as db:
@@ -124,7 +119,6 @@ class UsersTable:
                 role=role,
                 created_at=int(time.time()),
                 updated_at=int(time.time()),
-                username=username,
             )
             result = User(**user.model_dump())
             db.add(result)

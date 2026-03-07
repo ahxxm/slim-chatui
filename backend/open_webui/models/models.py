@@ -198,7 +198,6 @@ class ModelsTable:
                             Model.base_model_id.ilike(f"%{query_key}%"),
                             User.name.ilike(f"%{query_key}%"),
                             User.email.ilike(f"%{query_key}%"),
-                            User.username.ilike(f"%{query_key}%"),
                         )
                     )
 
