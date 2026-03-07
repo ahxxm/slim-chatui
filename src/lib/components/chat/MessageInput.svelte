@@ -21,11 +21,7 @@
 		temporaryChatEnabled
 	} from '$lib/stores';
 
-	import {
-		compressImage,
-		createMessagesList,
-		extractContentFromFile
-	} from '$lib/utils';
+	import { compressImage, createMessagesList, extractContentFromFile } from '$lib/utils';
 	import { uploadFile } from '$lib/apis/files';
 	import { deleteFileById } from '$lib/apis/files';
 	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';

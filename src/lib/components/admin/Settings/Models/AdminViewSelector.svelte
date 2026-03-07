@@ -34,7 +34,8 @@
 	>
 		<span
 			class="inline-flex h-input px-0.5 w-full outline-hidden bg-transparent truncate placeholder-gray-400 focus:outline-hidden"
-		>{items.find((item) => item.value === value)?.label ?? placeholder}</span>
+			>{items.find((item) => item.value === value)?.label ?? placeholder}</span
+		>
 		<ChevronDown className="size-3.5" strokeWidth="2.5" />
 	</Select.Trigger>
 

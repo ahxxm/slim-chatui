@@ -33,32 +33,32 @@
 	</DropdownMenu.Trigger>
 
 	<DropdownMenu.Portal>
-	<DropdownMenu.Content class="bits-content" {align}>
-		<div
-			class="dark:bg-gray-850 z-50 w-full rounded-2xl border border-gray-100 bg-white p-1 shadow-lg dark:border-gray-800 dark:text-white"
-		>
-			{#each items as item}
-				<button
-					class="flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 {value ===
-					item.value
-						? ' '
-						: '  text-gray-500 dark:text-gray-400'}"
-					type="button"
-					on:click={() => {
-						if (value === item.value) {
-							value = null;
-						} else {
-							value = item.value;
-						}
+		<DropdownMenu.Content class="bits-content" {align}>
+			<div
+				class="dark:bg-gray-850 z-50 w-full rounded-2xl border border-gray-100 bg-white p-1 shadow-lg dark:border-gray-800 dark:text-white"
+			>
+				{#each items as item}
+					<button
+						class="flex w-full cursor-pointer items-center gap-2 rounded-xl px-3 py-1.5 text-sm hover:bg-gray-50 dark:hover:bg-gray-800 {value ===
+						item.value
+							? ' '
+							: '  text-gray-500 dark:text-gray-400'}"
+						type="button"
+						on:click={() => {
+							if (value === item.value) {
+								value = null;
+							} else {
+								value = item.value;
+							}
 
-						open = false;
-						onChange(value);
-					}}
-				>
-					{item.label}
-				</button>
-			{/each}
-		</div>
-	</DropdownMenu.Content>
+							open = false;
+							onChange(value);
+						}}
+					>
+						{item.label}
+					</button>
+				{/each}
+			</div>
+		</DropdownMenu.Content>
 	</DropdownMenu.Portal>
 </DropdownMenu.Root>

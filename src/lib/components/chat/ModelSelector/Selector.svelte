@@ -94,7 +94,10 @@
 					<div class="max-h-64 overflow-y-auto py-1">
 						{#each visibleItems as item (item.value)}
 							<DropdownMenu.Item
-								class="flex w-full items-center rounded-xl py-2 pl-3 pr-2 text-sm text-gray-700 dark:text-gray-100 outline-hidden hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer {value === item.value ? 'bg-gray-100 dark:bg-gray-800' : ''}"
+								class="flex w-full items-center rounded-xl py-2 pl-3 pr-2 text-sm text-gray-700 dark:text-gray-100 outline-hidden hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer {value ===
+								item.value
+									? 'bg-gray-100 dark:bg-gray-800'
+									: ''}"
 								onclick={() => {
 									value = item.value;
 									show = false;

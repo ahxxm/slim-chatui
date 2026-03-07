@@ -20,12 +20,9 @@
 	import { updateUserSettings } from '$lib/apis/users';
 
 	import { getModels } from '$lib/apis';
-	import Search from '$lib/components/icons/Search.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
-
 	import ModelEditor from './Models/ModelEditor.svelte';
 	import { toast } from 'svelte-sonner';
 	import ModelSettingsModal from './Models/ModelSettingsModal.svelte';
@@ -50,7 +47,6 @@
 	let workspaceModels = null;
 	let baseModels = null;
 
-	let filteredModels = $state([]);
 	let selectedModelId = $state(null);
 
 	let showConfigModal = $state(false);
@@ -60,29 +56,20 @@
 	const perPage = 30;
 	let currentPage = $state(1);
 
-	$effect(() => {
-		if (models) {
-			filteredModels = models
-				.filter(
-					(m) => searchValue === '' || m.name.toLowerCase().includes(searchValue.toLowerCase())
-				)
-				.filter((m) => {
-					if (viewOption === 'enabled') return m?.is_active ?? true;
-					if (viewOption === 'disabled') return !(m?.is_active ?? true);
-					if (viewOption === 'visible') return !(m?.meta?.hidden ?? false);
-					if (viewOption === 'hidden') return m?.meta?.hidden === true;
-					return true;
-				})
-				.sort((a, b) => {
-					return (a?.name ?? a?.id ?? '').localeCompare(b?.name ?? b?.id ?? '');
-				});
-		}
-	});
-
-	let searchValue = $state('');
+	let filteredModels = $derived(
+		(models ?? [])
+			.filter((m) => {
+				if (viewOption === 'enabled') return m?.is_active ?? true;
+				if (viewOption === 'disabled') return !(m?.is_active ?? true);
+				if (viewOption === 'visible') return !(m?.meta?.hidden ?? false);
+				if (viewOption === 'hidden') return m?.meta?.hidden === true;
+				return true;
+			})
+			.sort((a, b) => (a?.name ?? a?.id ?? '').localeCompare(b?.name ?? b?.id ?? ''))
+	);
 
 	$effect(() => {
-		if (searchValue || viewOption !== undefined) {
+		if (viewOption !== undefined) {
 			currentPage = 1;
 		}
 	});
@@ -374,32 +361,7 @@
 		<div
 			class="py-2 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100/30 dark:border-gray-850/30"
 		>
-			<div class="px-3.5 flex flex-1 items-center w-full space-x-2 py-0.5 pb-2">
-				<div class="flex flex-1 items-center">
-					<div class=" self-center ml-1 mr-3">
-						<Search className="size-3.5" />
-					</div>
-					<input
-						class=" w-full text-sm py-1 rounded-r-xl outline-hidden bg-transparent"
-						bind:value={searchValue}
-						placeholder={$i18n.t('Search Models')}
-					/>
-					{#if searchValue}
-						<div class="self-center pl-1.5 translate-y-[0.5px] rounded-l-xl bg-transparent">
-							<button
-								class="p-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition"
-								on:click={() => {
-									searchValue = '';
-								}}
-							>
-								<XMark className="size-3" strokeWidth="2" />
-							</button>
-						</div>
-					{/if}
-				</div>
-			</div>
-
-			<div class="px-3 flex w-full items-center bg-transparent overflow-x-auto scrollbar-none">
+			<div class="px-3 flex w-full items-center bg-transparent overflow-x-auto scrollbar-none pt-2">
 				<div
 					class="flex gap-0.5 w-fit text-center text-sm rounded-full bg-transparent whitespace-nowrap"
 				>
@@ -592,7 +554,7 @@
 							<div class=" text-3xl mb-3">😕</div>
 							<div class=" text-lg font-medium mb-1">{$i18n.t('No models found')}</div>
 							<div class=" text-gray-500 text-center text-xs">
-								{$i18n.t('Try adjusting your search or filter to find what you are looking for.')}
+								{$i18n.t('Try adjusting your filter to find what you are looking for.')}
 							</div>
 						</div>
 					</div>

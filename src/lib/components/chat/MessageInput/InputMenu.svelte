@@ -87,101 +87,101 @@
 			side="bottom"
 			align="start"
 		>
-						{#if tab === ''}
-							<div in:fly={{ x: -20, duration: 150 }}>
-								<Tooltip
-									content={!fileUploadEnabled ? $i18n.t('Model does not support file upload') : ''}
-									className="w-full"
-								>
-									<DropdownMenu.Item
-										class="flex gap-2 items-center px-3 py-1.5 text-sm select-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl {!fileUploadEnabled
-											? 'opacity-50'
-											: ''}"
-										onclick={() => {
-											if (fileUploadEnabled) {
-												uploadFilesHandler();
-											}
-										}}
-									>
-										<Clip />
+			{#if tab === ''}
+				<div in:fly={{ x: -20, duration: 150 }}>
+					<Tooltip
+						content={!fileUploadEnabled ? $i18n.t('Model does not support file upload') : ''}
+						className="w-full"
+					>
+						<DropdownMenu.Item
+							class="flex gap-2 items-center px-3 py-1.5 text-sm select-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl {!fileUploadEnabled
+								? 'opacity-50'
+								: ''}"
+							onclick={() => {
+								if (fileUploadEnabled) {
+									uploadFilesHandler();
+								}
+							}}
+						>
+							<Clip />
 
-										<div class="line-clamp-1">{$i18n.t('Upload Files')}</div>
-									</DropdownMenu.Item>
-								</Tooltip>
+							<div class="line-clamp-1">{$i18n.t('Upload Files')}</div>
+						</DropdownMenu.Item>
+					</Tooltip>
 
-								<Tooltip
-									content={!fileUploadEnabled ? $i18n.t('Model does not support file upload') : ''}
-									className="w-full"
-								>
-									<DropdownMenu.Item
-										class="flex gap-2 items-center px-3 py-1.5 text-sm select-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50  rounded-xl {!fileUploadEnabled
-											? 'opacity-50'
-											: ''}"
-										onclick={() => {
-											if (fileUploadEnabled) {
-												if (!detectMobile()) {
-													screenCaptureHandler();
-												} else {
-													const cameraInputElement = document.getElementById('camera-input');
+					<Tooltip
+						content={!fileUploadEnabled ? $i18n.t('Model does not support file upload') : ''}
+						className="w-full"
+					>
+						<DropdownMenu.Item
+							class="flex gap-2 items-center px-3 py-1.5 text-sm select-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50  rounded-xl {!fileUploadEnabled
+								? 'opacity-50'
+								: ''}"
+							onclick={() => {
+								if (fileUploadEnabled) {
+									if (!detectMobile()) {
+										screenCaptureHandler();
+									} else {
+										const cameraInputElement = document.getElementById('camera-input');
 
-													if (cameraInputElement) {
-														cameraInputElement.click();
-													}
-												}
-											}
-										}}
-									>
-										<Camera />
-										<div class=" line-clamp-1">{$i18n.t('Capture')}</div>
-									</DropdownMenu.Item>
-								</Tooltip>
+										if (cameraInputElement) {
+											cameraInputElement.click();
+										}
+									}
+								}
+							}}
+						>
+							<Camera />
+							<div class=" line-clamp-1">{$i18n.t('Capture')}</div>
+						</DropdownMenu.Item>
+					</Tooltip>
 
-								<Tooltip
-									content={!fileUploadEnabled ? $i18n.t('Model does not support file upload') : ''}
-									className="w-full"
-								>
-									<button
-										class="flex gap-2 w-full items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl {!fileUploadEnabled
-											? 'opacity-50'
-											: ''}"
-										on:click={() => {
-											tab = 'chats';
-										}}
-									>
-										<ClockRotateRight />
+					<Tooltip
+						content={!fileUploadEnabled ? $i18n.t('Model does not support file upload') : ''}
+						className="w-full"
+					>
+						<button
+							class="flex gap-2 w-full items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl {!fileUploadEnabled
+								? 'opacity-50'
+								: ''}"
+							on:click={() => {
+								tab = 'chats';
+							}}
+						>
+							<ClockRotateRight />
 
-										<div class="flex items-center w-full justify-between">
-											<div class=" line-clamp-1">
-												{$i18n.t('Reference Chats')}
-											</div>
+							<div class="flex items-center w-full justify-between">
+								<div class=" line-clamp-1">
+									{$i18n.t('Reference Chats')}
+								</div>
 
-											<div class="text-gray-500">
-												<ChevronRight />
-											</div>
-										</div>
-									</button>
-								</Tooltip>
+								<div class="text-gray-500">
+									<ChevronRight />
+								</div>
 							</div>
-						{:else if tab === 'chats'}
-							<div in:fly={{ x: 20, duration: 150 }}>
-								<button
-									class="flex w-full justify-between gap-2 items-center px-3 py-1.5 text-sm select-none cursor-pointer rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50"
-									on:click={() => {
-										tab = '';
-									}}
-								>
-									<ChevronLeft />
+						</button>
+					</Tooltip>
+				</div>
+			{:else if tab === 'chats'}
+				<div in:fly={{ x: 20, duration: 150 }}>
+					<button
+						class="flex w-full justify-between gap-2 items-center px-3 py-1.5 text-sm select-none cursor-pointer rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50"
+						on:click={() => {
+							tab = '';
+						}}
+					>
+						<ChevronLeft />
 
-									<div class="flex items-center w-full justify-between">
-										<div>
-											{$i18n.t('Chats')}
-										</div>
-									</div>
-								</button>
-
-								<Chats {onSelect} />
+						<div class="flex items-center w-full justify-between">
+							<div>
+								{$i18n.t('Chats')}
 							</div>
-						{/if}
+						</div>
+					</button>
+
+					<Chats {onSelect} />
+				</div>
+			{/if}
 		</DropdownMenu.Content>
 	{/snippet}
 </Dropdown>
