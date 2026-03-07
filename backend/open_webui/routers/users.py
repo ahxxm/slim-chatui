@@ -1,12 +1,10 @@
 import logging
 from typing import Optional
 from sqlalchemy.orm import Session
-import base64
-import io
 
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import Response, StreamingResponse, FileResponse
+from fastapi.responses import FileResponse
 
 from open_webui.models.auths import Auths
 
@@ -194,27 +192,6 @@ async def get_user_info_by_id(user_id: str, user=Depends(get_verified_user)):
 def get_user_profile_image_by_id(user_id: str, user=Depends(get_verified_user)):
     user = Users.get_user_by_id(user_id)
     if user:
-        if user.profile_image_url:
-            # check if it's url or base64
-            if user.profile_image_url.startswith("http"):
-                return Response(
-                    status_code=status.HTTP_302_FOUND,
-                    headers={"Location": user.profile_image_url},
-                )
-            elif user.profile_image_url.startswith("data:image"):
-                try:
-                    header, base64_data = user.profile_image_url.split(",", 1)
-                    image_data = base64.b64decode(base64_data)
-                    image_buffer = io.BytesIO(image_data)
-                    media_type = header.split(";")[0].lstrip("data:")
-
-                    return StreamingResponse(
-                        image_buffer,
-                        media_type=media_type,
-                        headers={"Content-Disposition": "inline"},
-                    )
-                except Exception as e:
-                    pass
         return FileResponse(f"{STATIC_DIR}/user.png")
     else:
         raise HTTPException(
@@ -288,7 +265,6 @@ async def update_user_by_id(
                 "role": form_data.role,
                 "name": form_data.name,
                 "email": form_data.email.lower(),
-                "profile_image_url": form_data.profile_image_url,
             },
             db=db,
         )

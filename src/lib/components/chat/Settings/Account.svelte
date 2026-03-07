@@ -6,8 +6,6 @@
 	import { updateUserProfile, getSessionUser } from '$lib/apis/auths';
 
 	import UpdatePassword from './Account/UpdatePassword.svelte';
-	import { defaultUserImage } from '$lib/utils';
-	import UserProfileImage from './Account/UserProfileImage.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -16,27 +14,16 @@
 
 	let loaded = false;
 
-	let profileImageUrl = '';
 	let name = '';
 
-	let profileImageInputElement: HTMLInputElement;
-
 	const submitHandler = async () => {
-		if (name !== $user?.name) {
-			if (profileImageUrl === defaultUserImage() || profileImageUrl === '') {
-				profileImageUrl = defaultUserImage();
-			}
-		}
-
 		const updatedUser = await updateUserProfile(localStorage.token, {
-			name: name,
-			profile_image_url: profileImageUrl
+			name: name
 		}).catch((error) => {
 			toast.error(`${error}`);
 		});
 
 		if (updatedUser) {
-			// Get Session User Info
 			const sessionUser = await getSessionUser(localStorage.token).catch((error) => {
 				toast.error(`${error}`);
 				return null;
@@ -56,7 +43,6 @@
 
 		if (user) {
 			name = user?.name ?? '';
-			profileImageUrl = user?.profile_image_url ?? '';
 		}
 
 		loaded = true;
@@ -74,11 +60,7 @@
 				</div>
 			</div>
 
-			<!-- <div class=" text-sm font-medium">{$i18n.t('Account')}</div> -->
-
 			<div class="flex space-x-5 my-4">
-				<UserProfileImage bind:profileImageUrl user={$user} />
-
 				<div class="flex flex-1 flex-col">
 					<div class=" flex-1">
 						<div class="flex flex-col w-full">

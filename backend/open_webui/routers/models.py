@@ -1,6 +1,4 @@
 from typing import Optional
-import io
-import base64
 import json
 import logging
 
@@ -20,9 +18,8 @@ from fastapi import (
     HTTPException,
     Request,
     status,
-    Response,
 )
-from fastapi.responses import FileResponse, StreamingResponse
+from fastapi.responses import FileResponse
 
 
 from open_webui.utils.auth import get_admin_user, get_verified_user
@@ -272,39 +269,7 @@ async def get_model_by_id(id: str, user=Depends(get_verified_user)):
 
 @router.get("/model/profile/image")
 def get_model_profile_image(id: str, user=Depends(get_verified_user)):
-    model = Models.get_model_by_id(id)
-
-    if model:
-        etag = f'"{model.updated_at}"' if model.updated_at else None
-
-        if model.meta.profile_image_url:
-            if model.meta.profile_image_url.startswith("http"):
-                return Response(
-                    status_code=status.HTTP_302_FOUND,
-                    headers={"Location": model.meta.profile_image_url},
-                )
-            elif model.meta.profile_image_url.startswith("data:image"):
-                try:
-                    header, base64_data = model.meta.profile_image_url.split(",", 1)
-                    image_data = base64.b64decode(base64_data)
-                    image_buffer = io.BytesIO(image_data)
-                    media_type = header.split(";")[0].lstrip("data:")
-
-                    headers = {"Content-Disposition": "inline"}
-                    if etag:
-                        headers["ETag"] = etag
-
-                    return StreamingResponse(
-                        image_buffer,
-                        media_type=media_type,
-                        headers=headers,
-                    )
-                except Exception as e:
-                    pass
-
-        return FileResponse(f"{STATIC_DIR}/favicon.png")
-    else:
-        return FileResponse(f"{STATIC_DIR}/favicon.png")
+    return FileResponse(f"{STATIC_DIR}/favicon.png")
 
 
 ############################

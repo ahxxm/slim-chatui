@@ -287,8 +287,6 @@ export const compressImage = async (imageUrl: string, maxWidth: number, maxHeigh
 		img.src = imageUrl;
 	});
 };
-export const defaultUserImage = () => `${WEBUI_BASE_URL}/user.png`;
-
 export const formatDate = (inputDate: string | number | Date) => {
 	const date = dayjs(inputDate);
 

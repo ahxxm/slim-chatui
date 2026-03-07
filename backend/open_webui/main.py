@@ -450,16 +450,7 @@ app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
 @app.get("/api/models")
 @app.get("/api/v1/models")  # Experimental: Compatibility with OpenAI API
 async def get_models(request: Request, user=Depends(get_verified_user)):
-    all_models = await get_all_models(request, user=user)
-
-    models = []
-    for model in all_models:
-        # Remove profile image URL to reduce payload size
-        if model.get("info", {}).get("meta", {}).get("profile_image_url"):
-            model["info"]["meta"].pop("profile_image_url", None)
-
-        models.append(model)
-
+    models = await get_all_models(request, user=user)
     log.debug(
         f"/api/models returned filtered models accessible to the user: {json.dumps([model.get('id') for model in models])}"
     )

@@ -6,10 +6,9 @@ from open_webui.internal.db import Base, get_db_context
 
 
 from open_webui.models.chats import Chats
-from open_webui.utils.validate import validate_profile_image_url
 
 
-from pydantic import BaseModel, ConfigDict, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, model_validator
 from sqlalchemy import BigInteger, JSON, Column, String, Text
 from sqlalchemy import or_, func
 
@@ -34,7 +33,6 @@ class User(Base):
     name = Column(String)
 
     profile_image_url = Column(Text)
-    profile_banner_image_url = Column(Text, nullable=True)
 
     settings = Column(JSON, nullable=True)
     updated_at = Column(BigInteger)
@@ -51,7 +49,6 @@ class UserModel(BaseModel):
     name: str
 
     profile_image_url: Optional[str] = None
-    profile_banner_image_url: Optional[str] = None
 
     settings: Optional[UserSettings] = None
     updated_at: int  # timestamp in epoch
@@ -61,8 +58,7 @@ class UserModel(BaseModel):
 
     @model_validator(mode="after")
     def set_profile_image_url(self):
-        if not self.profile_image_url:
-            self.profile_image_url = f"/api/v1/users/{self.id}/profile/image"
+        self.profile_image_url = "/user.png"
         return self
 
 
@@ -72,13 +68,7 @@ class UserModel(BaseModel):
 
 
 class UpdateProfileForm(BaseModel):
-    profile_image_url: str
     name: str
-
-    @field_validator("profile_image_url")
-    @classmethod
-    def check_profile_image_url(cls, v: str) -> str:
-        return validate_profile_image_url(v)
 
 
 class UserModelResponse(UserModel):
@@ -121,13 +111,7 @@ class UserUpdateForm(BaseModel):
     role: str
     name: str
     email: str
-    profile_image_url: str
     password: Optional[str] = None
-
-    @field_validator("profile_image_url")
-    @classmethod
-    def check_profile_image_url(cls, v: str) -> str:
-        return validate_profile_image_url(v)
 
 
 class UsersTable:
@@ -136,7 +120,6 @@ class UsersTable:
         id: str,
         name: str,
         email: str,
-        profile_image_url: str = "/user.png",
         role: str = "pending",
         username: Optional[str] = None,
         db: Optional[Session] = None,
@@ -147,7 +130,7 @@ class UsersTable:
                 email=email,
                 name=name,
                 role=role,
-                profile_image_url=profile_image_url,
+                profile_image_url="/user.png",
                 created_at=int(time.time()),
                 updated_at=int(time.time()),
                 username=username,
@@ -301,21 +284,6 @@ class UsersTable:
                 if not user:
                     return None
                 user.role = role
-                db.flush()
-                db.refresh(user)
-                return UserModel.model_validate(user)
-        except Exception:
-            return None
-
-    def update_user_profile_image_url_by_id(
-        self, id: str, profile_image_url: str, db: Optional[Session] = None
-    ) -> Optional[UserModel]:
-        try:
-            with get_db_context(db) as db:
-                user = db.query(User).filter_by(id=id).first()
-                if not user:
-                    return None
-                user.profile_image_url = profile_image_url
                 db.flush()
                 db.refresh(user)
                 return UserModel.model_validate(user)

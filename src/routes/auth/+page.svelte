@@ -14,8 +14,6 @@
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { WEBUI_NAME, config, user, socket } from '$lib/stores';
 
-	import { defaultUserImage } from '$lib/utils';
-
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import OnBoarding from '$lib/components/OnBoarding.svelte';
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
@@ -67,12 +65,10 @@
 			}
 		}
 
-		const sessionUser = await userSignUp(name, email, password, defaultUserImage()).catch(
-			(error) => {
-				toast.error(`${error}`);
-				return null;
-			}
-		);
+		const sessionUser = await userSignUp(name, email, password).catch((error) => {
+			toast.error(`${error}`);
+			return null;
+		});
 
 		await setSessionUser(sessionUser);
 	};

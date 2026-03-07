@@ -41,27 +41,3 @@ class TestUsers(IntegrationTest):
         assert response.status_code == 200
         assert response.json() == settings
 
-    def test_user_info(self):
-        _, admin_headers = self.sign_up()
-        _, user_headers = self.add_user(admin_headers)
-
-        # empty initially
-        response = self.fast_api_client.get(
-            self.create_url("/user/info"), headers=user_headers
-        )
-        assert response.status_code == 200
-        assert response.json() is None
-
-        # update
-        info = {"attr1": "value1", "attr2": "value2"}
-        response = self.fast_api_client.post(
-            self.create_url("/user/info/update"), json=info, headers=user_headers
-        )
-        assert response.status_code == 200
-
-        # read back
-        response = self.fast_api_client.get(
-            self.create_url("/user/info"), headers=user_headers
-        )
-        assert response.status_code == 200
-        assert response.json() == info

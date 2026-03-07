@@ -428,8 +428,7 @@
 				</div>
 			{/if}
 
-			<div>
-				</div>
+			<div></div>
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">

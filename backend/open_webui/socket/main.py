@@ -47,13 +47,7 @@ SESSION_POOL_TIMEOUT = 120  # seconds without heartbeat before session is reaped
 MODELS = {}
 SESSION_POOL = {}
 
-_USER_SESSION_EXCLUDE_FIELDS = [
-    "profile_image_url",
-    "profile_banner_image_url",
-    "date_of_birth",
-    "bio",
-    "gender",
-]
+_USER_SESSION_EXCLUDE_FIELDS = []
 
 
 async def periodic_session_pool_cleanup():

@@ -19,9 +19,6 @@
 	let loading = $state(false);
 	let success = $state(false);
 
-	let filesInputElement = $state();
-	let inputFiles = $state();
-
 	let showAdvanced = $state(false);
 	let showPreview = $state(false);
 
@@ -49,7 +46,6 @@
 		base_model_id: null,
 		name: '',
 		meta: {
-			profile_image_url: `${WEBUI_BASE_URL}/static/favicon.png`,
 			description: '',
 			suggestion_prompts: null,
 			tags: []
@@ -191,75 +187,6 @@
 	{/if}
 
 	<div class="w-full max-h-full flex justify-center">
-		<input
-			bind:this={filesInputElement}
-			bind:files={inputFiles}
-			type="file"
-			hidden
-			accept="image/*"
-			on:change={() => {
-				let reader = new FileReader();
-				reader.onload = (event) => {
-					let originalImageUrl = `${event.target?.result}`;
-
-					const fileType = (inputFiles[0] as any)?.['type'];
-					if (fileType === 'image/gif' || fileType === 'image/webp') {
-						info.meta.profile_image_url = originalImageUrl;
-						inputFiles = null;
-						filesInputElement.value = '';
-						return;
-					}
-
-					const img = new Image();
-					img.src = originalImageUrl;
-
-					img.onload = function () {
-						const canvas = document.createElement('canvas');
-						const ctx = canvas.getContext('2d');
-
-						const aspectRatio = img.width / img.height;
-
-						let newWidth, newHeight;
-						if (aspectRatio > 1) {
-							newWidth = 250 * aspectRatio;
-							newHeight = 250;
-						} else {
-							newWidth = 250;
-							newHeight = 250 / aspectRatio;
-						}
-
-						canvas.width = 250;
-						canvas.height = 250;
-
-						const offsetX = (250 - newWidth) / 2;
-						const offsetY = (250 - newHeight) / 2;
-
-						ctx.drawImage(img, offsetX, offsetY, newWidth, newHeight);
-
-						const compressedSrc = canvas.toDataURL('image/webp', 0.8);
-
-						info.meta.profile_image_url = compressedSrc;
-
-						inputFiles = null;
-						filesInputElement.value = '';
-					};
-				};
-
-				if (
-					inputFiles &&
-					inputFiles.length > 0 &&
-					['image/gif', 'image/webp', 'image/jpeg', 'image/png', 'image/svg+xml'].includes(
-						(inputFiles[0] as any)?.['type']
-					)
-				) {
-					reader.readAsDataURL(inputFiles[0]);
-				} else {
-					console.log(`Unsupported File Type '${(inputFiles[0] as any)?.['type']}'.`);
-					inputFiles = null;
-				}
-			}}
-		/>
-
 		{#if !edit || (edit && model)}
 			<form
 				class="flex flex-col md:flex-row w-full gap-3 md:gap-6"
@@ -270,70 +197,11 @@
 				<div class="w-full px-1">
 					<div class="flex flex-row gap-4 md:gap-6 w-full">
 						<div class="self-start flex justify-center my-2 shrink-0">
-							<div class="self-center">
-								<button
-									class="rounded-2xl flex shrink-0 items-center {info.meta.profile_image_url !==
-									`${WEBUI_BASE_URL}/static/favicon.png`
-										? 'bg-transparent'
-										: 'bg-white'} shadow-xl group relative"
-									type="button"
-									aria-label={$i18n.t('Upload profile image')}
-									on:click={() => {
-										filesInputElement.click();
-									}}
-								>
-									{#if info.meta.profile_image_url}
-										<img
-											src={info.meta.profile_image_url}
-											alt="model profile"
-											class="rounded-xl size-20 md:size-48 object-cover shrink-0"
-										/>
-									{:else}
-										<img
-											src="{WEBUI_BASE_URL}/static/favicon.png"
-											alt="model profile"
-											class=" rounded-xl size-20 md:size-48 object-cover shrink-0"
-										/>
-									{/if}
-
-									<div class="absolute bottom-0 right-0 z-10">
-										<div class="m-1.5">
-											<div
-												class="shadow-xl p-1 rounded-full border-2 border-white bg-gray-800 text-white group-hover:bg-gray-600 transition dark:border-black dark:bg-white dark:group-hover:bg-gray-200 dark:text-black"
-											>
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													viewBox="0 0 16 16"
-													fill="currentColor"
-													class="size-5"
-												>
-													<path
-														fill-rule="evenodd"
-														d="M2 4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V4Zm10.5 5.707a.5.5 0 0 0-.146-.353l-1-1a.5.5 0 0 0-.708 0L9.354 9.646a.5.5 0 0 1-.708 0L6.354 7.354a.5.5 0 0 0-.708 0l-2 2a.5.5 0 0 0-.146.353V12a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5V9.707ZM12 5a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z"
-														clip-rule="evenodd"
-													/>
-												</svg>
-											</div>
-										</div>
-									</div>
-
-									<div
-										class="absolute top-0 bottom-0 left-0 right-0 bg-white dark:bg-black rounded-lg opacity-0 group-hover:opacity-20 transition"
-									></div>
-								</button>
-
-								<div class="flex w-full mt-1 justify-end">
-									<button
-										class="px-2 py-1 text-gray-500 rounded-lg text-xs"
-										on:click={() => {
-											info.meta.profile_image_url = `${WEBUI_BASE_URL}/static/favicon.png`;
-										}}
-										type="button"
-									>
-										{$i18n.t('Reset Image')}</button
-									>
-								</div>
-							</div>
+							<img
+								src="{WEBUI_BASE_URL}/static/favicon.png"
+								alt="model profile"
+								class="rounded-xl size-20 md:size-48 object-cover shrink-0 bg-white shadow-xl"
+							/>
 						</div>
 
 						<div class="flex flex-col w-full flex-1">
