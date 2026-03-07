@@ -10,10 +10,8 @@ from open_webui.utils.validate import validate_profile_image_url
 
 
 from pydantic import BaseModel, ConfigDict, field_validator, model_validator
-from sqlalchemy import BigInteger, JSON, Column, String, Text, Date
+from sqlalchemy import BigInteger, JSON, Column, String, Text
 from sqlalchemy import or_, func
-
-import datetime
 
 ####################
 # User DB Schema
@@ -38,12 +36,6 @@ class User(Base):
     profile_image_url = Column(Text)
     profile_banner_image_url = Column(Text, nullable=True)
 
-    bio = Column(Text, nullable=True)
-    gender = Column(Text, nullable=True)
-    date_of_birth = Column(Date, nullable=True)
-    timezone = Column(String, nullable=True)
-
-    info = Column(JSON, nullable=True)
     settings = Column(JSON, nullable=True)
     updated_at = Column(BigInteger)
     created_at = Column(BigInteger)
@@ -61,12 +53,6 @@ class UserModel(BaseModel):
     profile_image_url: Optional[str] = None
     profile_banner_image_url: Optional[str] = None
 
-    bio: Optional[str] = None
-    gender: Optional[str] = None
-    date_of_birth: Optional[datetime.date] = None
-    timezone: Optional[str] = None
-
-    info: Optional[dict] = None
     settings: Optional[UserSettings] = None
     updated_at: int  # timestamp in epoch
     created_at: int  # timestamp in epoch
@@ -88,9 +74,6 @@ class UserModel(BaseModel):
 class UpdateProfileForm(BaseModel):
     profile_image_url: str
     name: str
-    bio: Optional[str] = None
-    gender: Optional[str] = None
-    date_of_birth: Optional[datetime.date] = None
 
     @field_validator("profile_image_url")
     @classmethod
@@ -112,7 +95,6 @@ class UserInfoResponse(BaseModel):
     name: str
     email: str
     role: str
-    bio: Optional[str] = None
 
 
 class UserInfoListResponse(BaseModel):

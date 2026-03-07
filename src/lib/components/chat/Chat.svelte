@@ -47,7 +47,7 @@
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
 	import { generateOpenAIChatCompletion } from '$lib/apis/openai';
-	import { getAndUpdateUserLocation, getUserSettings } from '$lib/apis/users';
+	import { getUserSettings } from '$lib/apis/users';
 	import { chatCompleted, stopTask, getTaskIdsByChatId } from '$lib/apis';
 	import { updateFolderById } from '$lib/apis/folders';
 
@@ -1311,14 +1311,6 @@
 			})
 		);
 		await tick();
-
-		let userLocation;
-		if ($settings?.userLocation) {
-			userLocation = await getAndUpdateUserLocation(localStorage.token).catch((err) => {
-				console.error(err);
-				return undefined;
-			});
-		}
 
 		const stream = model?.info?.params?.stream_response ?? true;
 

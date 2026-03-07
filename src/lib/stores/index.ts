@@ -120,7 +120,6 @@ type Settings = {
 	hapticFeedback?: boolean;
 	responseAutoCopy?: any;
 	richTextInput?: boolean;
-	userLocation?: any;
 	autoFollowUps?: boolean;
 	splitLargeChunks?: boolean;
 	backgroundImageUrl?: null;

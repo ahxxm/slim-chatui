@@ -536,29 +536,6 @@ export const getImportOrigin = (_chats: any[]) => {
 	return 'webui';
 };
 
-export const getUserPosition = async (raw = false) => {
-	// Get the user's location using the Geolocation API
-	const position = await new Promise((resolve, reject) => {
-		navigator.geolocation.getCurrentPosition(resolve, reject);
-	}).catch((error) => {
-		console.error('Error getting user location:', error);
-		throw error;
-	});
-
-	if (!position) {
-		return 'Location not available';
-	}
-
-	// Extract the latitude and longitude from the position
-	const { latitude, longitude } = position.coords;
-
-	if (raw) {
-		return { latitude, longitude };
-	} else {
-		return `${latitude.toFixed(3)}, ${longitude.toFixed(3)} (lat, long)`;
-	}
-};
-
 const convertOpenAIMessages = (convo: any) => {
 	// Parse OpenAI chat messages and create chat dictionary for creating new chats
 	const mapping = convo['mapping'];
@@ -886,10 +863,6 @@ export const bestMatchingLanguage = (
 		.find(Boolean);
 
 	return match || defaultLocale;
-};
-
-export const getUserTimezone = () => {
-	return Intl.DateTimeFormat().resolvedOptions().timeZone;
 };
 
 export const createMessagesList = (
