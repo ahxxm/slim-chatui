@@ -1,17 +1,16 @@
 <script>
 	import Sortable from 'sortablejs';
 
-	import { onDestroy, onMount, tick } from 'svelte';
+	import { onMount, tick } from 'svelte';
 
 	import { chatId, config, mobile, models, settings, showSidebar } from '$lib/stores';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { updateUserSettings } from '$lib/apis/users';
 	import PinnedModelItem from './PinnedModelItem.svelte';
 
-	export let selectedChatId = null;
-	export let shiftKey = false;
+	let { selectedChatId = $bindable(null), shiftKey = false } = $props();
 
-	let pinnedModels = [];
+	let pinnedModels = $state([]);
 
 	const initPinnedModelsSortable = () => {
 		const pinnedModelsList = document.getElementById('pinned-models-list');
@@ -35,11 +34,11 @@
 		}
 	};
 
-	let unsubscribeSettings;
+	$effect(() => {
+		pinnedModels = $settings?.pinnedModels ?? [];
+	});
 
 	onMount(async () => {
-		pinnedModels = $settings?.pinnedModels ?? [];
-
 		if (pinnedModels.length === 0 && $config?.default_pinned_models) {
 			const defaultPinnedModels = ($config?.default_pinned_models).split(',').filter((id) => id);
 			pinnedModels = defaultPinnedModels.filter((id) => $models.find((model) => model.id === id));
@@ -48,18 +47,8 @@
 			await updateUserSettings(localStorage.token, { ui: $settings });
 		}
 
-		unsubscribeSettings = settings.subscribe((value) => {
-			pinnedModels = value?.pinnedModels ?? [];
-		});
-
 		await tick();
 		initPinnedModelsSortable();
-	});
-
-	onDestroy(() => {
-		if (unsubscribeSettings) {
-			unsubscribeSettings();
-		}
 	});
 </script>
 

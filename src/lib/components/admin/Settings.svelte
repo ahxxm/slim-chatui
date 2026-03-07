@@ -134,16 +134,24 @@
 	onMount(() => {
 		const containerElement = document.getElementById('admin-settings-tabs-container');
 
+		const wheelHandler = (event) => {
+			if (event.deltaY !== 0) {
+				containerElement.scrollLeft += event.deltaY;
+			}
+		};
+
 		if (containerElement) {
-			containerElement.addEventListener('wheel', function (event) {
-				if (event.deltaY !== 0) {
-					containerElement.scrollLeft += event.deltaY;
-				}
-			});
+			containerElement.addEventListener('wheel', wheelHandler);
 		}
 
 		setFilteredSettings();
 		scrollToTab(selectedTab);
+
+		return () => {
+			if (containerElement) {
+				containerElement.removeEventListener('wheel', wheelHandler);
+			}
+		};
 	});
 </script>
 

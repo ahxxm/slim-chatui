@@ -548,6 +548,10 @@
 		chatInput?.focus();
 
 		return () => {
+			if (renderTimer) {
+				clearTimeout(renderTimer);
+				renderTimer = null;
+			}
 			if (activeChatEmitter) {
 				clearInterval(activeChatEmitter);
 				activeChatEmitter = null;

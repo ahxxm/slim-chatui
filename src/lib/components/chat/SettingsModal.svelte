@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { getContext, onMount, tick } from 'svelte';
+	import { getContext, tick } from 'svelte';
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { config, models, settings, user } from '$lib/stores';
+	import { models, settings, user } from '$lib/stores';
 	import { updateUserSettings } from '$lib/apis/users';
 	import { getModels as _getModels } from '$lib/apis';
 	import { goto } from '$app/navigation';
@@ -297,31 +297,29 @@
 		}
 	];
 
-	let availableSettings = $state([]);
-	let filteredSettings = $state([]);
-
 	let search = $state('');
 	let searchDebounceTimeout;
+	let debouncedSearch = $state('');
 
-	const getAvailableSettings = () => {
-		return allSettings;
-	};
-
-	const setFilteredSettings = () => {
-		filteredSettings = availableSettings
+	let filteredSettings = $derived(
+		allSettings
 			.filter((tab) => {
 				return (
-					search === '' ||
-					tab.title.toLowerCase().includes(search.toLowerCase().trim()) ||
-					tab.keywords.some((keyword) => keyword.includes(search.toLowerCase().trim()))
+					debouncedSearch === '' ||
+					tab.title.toLowerCase().includes(debouncedSearch.toLowerCase().trim()) ||
+					tab.keywords.some((keyword) =>
+						keyword.includes(debouncedSearch.toLowerCase().trim())
+					)
 				);
 			})
-			.map((tab) => tab.id);
+			.map((tab) => tab.id)
+	);
 
+	$effect(() => {
 		if (filteredSettings.length > 0 && !filteredSettings.includes(selectedTab)) {
 			selectedTab = filteredSettings[0];
 		}
-	};
+	});
 
 	const searchDebounceHandler = () => {
 		if (searchDebounceTimeout) {
@@ -329,7 +327,7 @@
 		}
 
 		searchDebounceTimeout = setTimeout(() => {
-			setFilteredSettings();
+			debouncedSearch = search;
 		}, 100);
 	};
 
@@ -370,15 +368,6 @@
 		}
 	};
 
-	onMount(() => {
-		availableSettings = getAvailableSettings();
-		setFilteredSettings();
-
-		config.subscribe((configData) => {
-			availableSettings = getAvailableSettings();
-			setFilteredSettings();
-		});
-	});
 </script>
 
 <Modal size="2xl" bind:show>
