@@ -103,6 +103,7 @@ from open_webui.config import (
 from open_webui.env import (
     ENV,
     ENABLE_CUSTOM_MODEL_FALLBACK,
+    ENABLE_GZIP_MIDDLEWARE,
     GLOBAL_LOG_LEVEL,
     VERSION,
     WEBUI_BUILD_HASH,
@@ -351,7 +352,8 @@ class RedirectMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(RedirectMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
-app.add_middleware(GZipMiddleware, minimum_size=500)
+if ENABLE_GZIP_MIDDLEWARE:
+    app.add_middleware(GZipMiddleware, minimum_size=500)
 
 
 @app.middleware("http")

@@ -180,6 +180,10 @@ except ValueError:
     UVICORN_WORKERS = 1
     log.info(f"Invalid UVICORN_WORKERS value, defaulting to {UVICORN_WORKERS}")
 
+ENABLE_GZIP_MIDDLEWARE = (
+    os.environ.get("ENABLE_GZIP_MIDDLEWARE", "False").lower() == "true"
+)
+
 ####################################
 # WEBUI_AUTH (Required for security)
 ####################################
