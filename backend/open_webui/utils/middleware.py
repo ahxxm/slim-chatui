@@ -118,16 +118,14 @@ def serialize_output(output: list) -> str:
                 content = f'{content}<details type="web_search" done="false" query="{query}">\n<summary>Searching the web…</summary>\n</details>\n'
 
         elif item_type == "reasoning":
-            reasoning_content = ""
             # Check for 'summary' (new structure) or 'content' (legacy/fallback)
             source_list = item.get("summary", []) or item.get("content", [])
-            for content_part in source_list:
-                if "text" in content_part:
-                    reasoning_content += content_part.get("text", "")
-                elif "summary" in content_part:  # Handle potential nested logic if any
-                    pass
-
-            reasoning_content = reasoning_content.strip()
+            reasoning_parts = [
+                content_part.get("text", "")
+                for content_part in source_list
+                if "text" in content_part
+            ]
+            reasoning_content = "\n\n".join(reasoning_parts).strip()
 
             duration = item.get("duration")
             status = item.get("status", "in_progress")
