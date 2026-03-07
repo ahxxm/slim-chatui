@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
-	import { flyAndScale } from '$lib/utils/transitions';
-
 	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
 
@@ -25,94 +23,93 @@
 
 <DropdownMenu.Root
 	bind:open={show}
-	closeFocus={false}
 	onOpenChange={(state) => {
 		if (state === false) {
 			onClose();
 		}
 	}}
-	typeahead={false}
 >
 	<DropdownMenu.Trigger>
-		<Tooltip
-			content={$i18n.t('More')}
-			className={($settings?.highContrastMode ?? false)
-				? ''
-				: 'group-hover/item:opacity-100 opacity-0'}
-		>
-			<slot />
-		</Tooltip>
+		{#snippet child({ props })}
+			<div {...props}>
+				<Tooltip
+					content={$i18n.t('More')}
+					className={($settings?.highContrastMode ?? false)
+						? ''
+						: 'group-hover/item:opacity-100 opacity-0'}
+				>
+					<slot />
+				</Tooltip>
+			</div>
+		{/snippet}
 	</DropdownMenu.Trigger>
 
+	<DropdownMenu.Portal>
 	<DropdownMenu.Content
-		strategy="fixed"
-		class="w-full max-w-[210px] text-sm rounded-2xl p-1 z-[9999999] bg-white dark:bg-gray-850 dark:text-white shadow-lg border border-gray-100  dark:border-gray-800"
+		class="bits-content w-full max-w-[210px] text-sm rounded-2xl p-1 z-[9999999] bg-white dark:bg-gray-850 dark:text-white shadow-lg border border-gray-100  dark:border-gray-800"
 		sideOffset={-2}
 		side="bottom"
 		align="end"
-		transition={flyAndScale}
 	>
-		{#if $user?.role === 'admin'}
-			<DropdownMenu.Item
-				type="button"
-				class="select-none flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition items-center gap-2"
-				on:click={(e) => {
-					e.stopPropagation();
-					e.preventDefault();
+					{#if $user?.role === 'admin'}
+						<DropdownMenu.Item
+										class="select-none flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition items-center gap-2"
+							onclick={(e) => {
+								e.stopPropagation();
+								e.preventDefault();
 
-					goto(`/admin/settings/models?id=${encodeURIComponent(model?.id ?? '')}`);
-					show = false;
-				}}
-			>
-				<Pencil className="size-4" />
+								goto(`/admin/settings/models?id=${encodeURIComponent(model?.id ?? '')}`);
+								show = false;
+							}}
+						>
+							<Pencil className="size-4" />
 
-				<div class="flex items-center">{$i18n.t('Edit')}</div>
-			</DropdownMenu.Item>
+							<div class="flex items-center">{$i18n.t('Edit')}</div>
+						</DropdownMenu.Item>
 
-			<hr class="border-gray-50 dark:border-gray-800/30 my-1" />
-		{/if}
+						<hr class="border-gray-50 dark:border-gray-800/30 my-1" />
+					{/if}
 
-		<DropdownMenu.Item
-			type="button"
-			aria-pressed={($settings?.pinnedModels ?? []).includes(model?.id)}
-			class="select-none flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition items-center gap-2"
-			on:click={(e) => {
-				e.stopPropagation();
-				e.preventDefault();
+					<DropdownMenu.Item
+								aria-pressed={($settings?.pinnedModels ?? []).includes(model?.id)}
+						class="select-none flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition items-center gap-2"
+						onclick={(e) => {
+							e.stopPropagation();
+							e.preventDefault();
 
-				pinModelHandler(model?.id);
-				show = false;
-			}}
-		>
-			{#if ($settings?.pinnedModels ?? []).includes(model?.id)}
-				<PinSlash />
-			{:else}
-				<Pin />
-			{/if}
+							pinModelHandler(model?.id);
+							show = false;
+						}}
+					>
+						{#if ($settings?.pinnedModels ?? []).includes(model?.id)}
+							<PinSlash />
+						{:else}
+							<Pin />
+						{/if}
 
-			<div class="flex items-center">
-				{#if ($settings?.pinnedModels ?? []).includes(model?.id)}
-					{$i18n.t('Hide from Sidebar')}
-				{:else}
-					{$i18n.t('Keep in Sidebar')}
-				{/if}
-			</div>
-		</DropdownMenu.Item>
+						<div class="flex items-center">
+							{#if ($settings?.pinnedModels ?? []).includes(model?.id)}
+								{$i18n.t('Hide from Sidebar')}
+							{:else}
+								{$i18n.t('Keep in Sidebar')}
+							{/if}
+						</div>
+					</DropdownMenu.Item>
 
-		<DropdownMenu.Item
-			type="button"
-			class="select-none flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition items-center gap-2"
-			on:click={(e) => {
-				e.stopPropagation();
-				e.preventDefault();
+					<DropdownMenu.Item
+								class="select-none flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition items-center gap-2"
+						onclick={(e) => {
+							e.stopPropagation();
+							e.preventDefault();
 
-				copyLinkHandler();
-				show = false;
-			}}
-		>
-			<Link />
+							copyLinkHandler();
+							show = false;
+						}}
+					>
+						<Link />
 
-			<div class="flex items-center">{$i18n.t('Copy Link')}</div>
-		</DropdownMenu.Item>
+						<div class="flex items-center">{$i18n.t('Copy Link')}</div>
+					</DropdownMenu.Item>
 	</DropdownMenu.Content>
+	</DropdownMenu.Portal>
 </DropdownMenu.Root>

@@ -32,7 +32,8 @@
 		</div>
 	</DropdownMenu.Trigger>
 
-	<DropdownMenu.Content {align}>
+	<DropdownMenu.Portal>
+	<DropdownMenu.Content class="bits-content" {align}>
 		<div
 			class="dark:bg-gray-850 z-50 w-full rounded-2xl border border-gray-100 bg-white p-1 shadow-lg dark:border-gray-800 dark:text-white"
 		>
@@ -59,4 +60,5 @@
 			{/each}
 		</div>
 	</DropdownMenu.Content>
+	</DropdownMenu.Portal>
 </DropdownMenu.Root>

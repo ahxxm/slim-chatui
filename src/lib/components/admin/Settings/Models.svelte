@@ -35,7 +35,6 @@
 	import Eye from '$lib/components/icons/Eye.svelte';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { DropdownMenu } from 'bits-ui';
-	import { flyAndScale } from '$lib/utils/transitions';
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import AdminViewSelector from './Models/AdminViewSelector.svelte';
 	import Pagination from '$lib/components/common/Pagination.svelte';
@@ -419,17 +418,16 @@
 						</button>
 					</Tooltip>
 
-					<div slot="content">
+					{#snippet content()}
 						<DropdownMenu.Content
-							class="w-full max-w-[170px] rounded-xl p-1 border border-gray-100 dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-sm"
+							class="bits-content w-full max-w-[170px] rounded-xl p-1 border border-gray-100 dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-sm"
 							sideOffset={-2}
 							side="bottom"
 							align="end"
-							transition={flyAndScale}
 						>
 							<DropdownMenu.Item
 								class="select-none flex gap-2 items-center px-3 py-1.5 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
-								on:click={() => {
+								onclick={() => {
 									enableAllHandler();
 								}}
 							>
@@ -439,7 +437,7 @@
 
 							<DropdownMenu.Item
 								class="select-none flex gap-2 items-center px-3 py-1.5 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
-								on:click={() => {
+								onclick={() => {
 									disableAllHandler();
 								}}
 							>
@@ -447,7 +445,7 @@
 								<div class="flex items-center">{$i18n.t('Disable All')}</div>
 							</DropdownMenu.Item>
 						</DropdownMenu.Content>
-					</div>
+					{/snippet}
 				</Dropdown>
 			</div>
 

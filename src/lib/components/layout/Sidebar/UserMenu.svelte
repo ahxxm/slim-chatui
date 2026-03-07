@@ -2,8 +2,6 @@
 	import { DropdownMenu } from 'bits-ui';
 	import { createEventDispatcher, getContext, tick } from 'svelte';
 
-	import { fade } from 'svelte/transition';
-
 	import { userSignOut } from '$lib/apis/auths';
 
 	import { showSettings, mobile, showSidebar, showShortcuts, user } from '$lib/stores';
@@ -37,20 +35,24 @@
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 <DropdownMenu.Root bind:open={show} onOpenChange={handleDropdownChange}>
 	<DropdownMenu.Trigger>
-		<slot />
+		{#snippet child({ props })}
+			<div {...props}>
+				<slot />
+			</div>
+		{/snippet}
 	</DropdownMenu.Trigger>
 
+	<DropdownMenu.Portal>
 	<slot name="content">
 		<DropdownMenu.Content
-			class="w-full {className} rounded-2xl px-1 py-1 border border-gray-100 dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg text-sm"
+			class="bits-content w-full {className} rounded-2xl px-1 py-1 border border-gray-100 dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg text-sm"
 			sideOffset={4}
 			side="top"
 			align="end"
-			transition={(e) => fade(e, { duration: 100 })}
 		>
 			<DropdownMenu.Item
 				class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-				on:click={async () => {
+				onclick={async () => {
 					show = false;
 
 					await showSettings.set(true);
@@ -68,23 +70,27 @@
 			</DropdownMenu.Item>
 
 			{#if role === 'admin'}
-				<DropdownMenu.Item
-					as="a"
-					href="/admin"
-					draggable="false"
-					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-					on:click={async () => {
-						show = false;
-						if ($mobile) {
-							await tick();
-							showSidebar.set(false);
-						}
-					}}
-				>
-					<div class=" self-center mr-3">
-						<UserGroup className="w-5 h-5" strokeWidth="1.5" />
-					</div>
-					<div class=" self-center truncate">{$i18n.t('Admin Panel')}</div>
+				<DropdownMenu.Item>
+					{#snippet child({ props })}
+						<a
+							href="/admin"
+							draggable="false"
+							{...props}
+							class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
+							onclick={async () => {
+								show = false;
+								if ($mobile) {
+									await tick();
+									showSidebar.set(false);
+								}
+							}}
+						>
+							<div class=" self-center mr-3">
+								<UserGroup className="w-5 h-5" strokeWidth="1.5" />
+							</div>
+							<div class=" self-center truncate">{$i18n.t('Admin Panel')}</div>
+						</a>
+					{/snippet}
 				</DropdownMenu.Item>
 			{/if}
 
@@ -96,7 +102,7 @@
 				<DropdownMenu.Item
 					class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
 					id="chat-share-button"
-					on:click={async () => {
+					onclick={async () => {
 						show = false;
 						showShortcuts.set(!$showShortcuts);
 
@@ -117,7 +123,7 @@
 
 			<DropdownMenu.Item
 				class="flex rounded-xl py-1.5 px-3 w-full hover:bg-gray-50 dark:hover:bg-gray-800 transition cursor-pointer select-none"
-				on:click={async () => {
+				onclick={async () => {
 					const res = await userSignOut();
 					user.set(null);
 					localStorage.removeItem('token');
@@ -133,4 +139,5 @@
 			</DropdownMenu.Item>
 		</DropdownMenu.Content>
 	</slot>
+	</DropdownMenu.Portal>
 </DropdownMenu.Root>

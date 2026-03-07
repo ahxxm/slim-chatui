@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
-	import { flyAndScale } from '$lib/utils/transitions';
 	import { getContext, createEventDispatcher, untrack } from 'svelte';
 
 	import fileSaver from 'file-saver';
@@ -111,13 +110,12 @@
 		<slot />
 	</Tooltip>
 
-	<div slot="content">
+	{#snippet content()}
 		<DropdownMenu.Content
-			class="select-none w-full max-w-[200px] rounded-2xl px-1 py-1  border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg transition"
+			class="bits-content select-none w-full max-w-[200px] rounded-2xl px-1 py-1  border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg transition"
 			sideOffset={-2}
 			side="bottom"
 			align="start"
-			transition={flyAndScale}
 		>
 			<DropdownMenu.Sub>
 				<DropdownMenu.SubTrigger
@@ -129,14 +127,13 @@
 					<div class="flex items-center">{$i18n.t('Download')}</div>
 				</DropdownMenu.SubTrigger>
 				<DropdownMenu.SubContent
-					class="select-none w-full rounded-2xl p-1 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg border border-gray-100  dark:border-gray-800"
-					transition={flyAndScale}
+					class="bits-content select-none w-full rounded-2xl p-1 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg border border-gray-100  dark:border-gray-800"
 					sideOffset={8}
 				>
 					<DropdownMenu.Item
 						draggable="false"
 						class="flex gap-2 items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-						on:click={() => {
+						onclick={() => {
 							downloadJSONExport();
 						}}
 					>
@@ -146,7 +143,7 @@
 					<DropdownMenu.Item
 						draggable="false"
 						class="flex gap-2 items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-						on:click={() => {
+						onclick={() => {
 							downloadTxt();
 						}}
 					>
@@ -158,7 +155,7 @@
 			<DropdownMenu.Item
 				draggable="false"
 				class="flex gap-2 items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-				on:click={() => {
+				onclick={() => {
 					renameHandler();
 				}}
 			>
@@ -171,7 +168,7 @@
 			<DropdownMenu.Item
 				draggable="false"
 				class="flex gap-2 items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-				on:click={() => {
+				onclick={() => {
 					pinHandler();
 				}}
 			>
@@ -187,7 +184,7 @@
 			<DropdownMenu.Item
 				draggable="false"
 				class="flex gap-2 items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-				on:click={() => {
+				onclick={() => {
 					cloneChatHandler();
 				}}
 			>
@@ -206,15 +203,14 @@
 						<div class="flex items-center">{$i18n.t('Move')}</div>
 					</DropdownMenu.SubTrigger>
 					<DropdownMenu.SubContent
-						class="select-none w-full rounded-2xl p-1 z-50 bg-white dark:bg-gray-850 dark:text-white border border-gray-100  dark:border-gray-800 shadow-lg max-h-52 overflow-y-auto scrollbar-hidden"
-						transition={flyAndScale}
+						class="bits-content select-none w-full rounded-2xl p-1 z-50 bg-white dark:bg-gray-850 dark:text-white border border-gray-100  dark:border-gray-800 shadow-lg max-h-52 overflow-y-auto scrollbar-hidden"
 						sideOffset={8}
 					>
 						{#each $folders.sort((a, b) => b.updated_at - a.updated_at) as folder}
 							<DropdownMenu.Item
 								draggable="false"
 								class="flex gap-2 items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-								on:click={() => {
+								onclick={() => {
 									moveChatHandler(chatId, folder.id);
 								}}
 							>
@@ -230,7 +226,7 @@
 			<DropdownMenu.Item
 				draggable="false"
 				class="flex  gap-2  items-center px-3 py-1.5 text-sm  cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-				on:click={() => {
+				onclick={() => {
 					deleteHandler();
 				}}
 			>
@@ -238,5 +234,5 @@
 				<div class="flex items-center">{$i18n.t('Delete')}</div>
 			</DropdownMenu.Item>
 		</DropdownMenu.Content>
-	</div>
+	{/snippet}
 </Dropdown>
