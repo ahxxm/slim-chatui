@@ -62,7 +62,6 @@ exclude = [
     "start.sh",
     "webui.db",
 ]
-force-include = { build = "open_webui/frontend" }
 
 [tool.pytest.ini_options]
 testpaths = ["backend/open_webui/test"]
