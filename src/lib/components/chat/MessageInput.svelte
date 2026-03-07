@@ -22,7 +22,6 @@
 	} from '$lib/stores';
 
 	import {
-		convertHeicToJpeg,
 		compressImage,
 		createMessagesList,
 		extractContentFromFile
@@ -337,8 +336,7 @@
 					continue;
 				}
 
-				const raw = file.type === 'image/heic' ? await convertHeicToJpeg(file) : file;
-				let imageUrl = await readFileAsDataURL(raw);
+				let imageUrl = await readFileAsDataURL(file);
 				imageUrl = await compressImageIfNeeded(imageUrl, $settings, $config);
 
 				if ($temporaryChatEnabled) {
