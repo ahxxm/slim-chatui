@@ -9,7 +9,6 @@
 		user,
 		chats,
 		settings,
-		showSettings,
 		chatId,
 		folders as _folders,
 		showSidebar,
@@ -61,8 +60,6 @@
 	import { slide } from 'svelte/transition';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
 
-	const BREAKPOINT = 768;
-
 	let scrollTop = $state(0);
 
 	let navElement = $state<HTMLElement | undefined>();
@@ -81,9 +78,7 @@
 	let folderRegistry = $state<Record<string, any>>({});
 
 	const initFolders = async () => {
-		const folderList = await getFolders(localStorage.token).catch((error) => {
-			return [];
-		});
+		const folderList = await getFolders(localStorage.token).catch(() => []);
 		_folders.set(folderList.sort((a, b) => b.updated_at - a.updated_at));
 
 		folders = {};
@@ -475,17 +470,6 @@
 		}, 0);
 	};
 
-	const itemClickHandler = async () => {
-		selectedChatId = null;
-		chatId.set('');
-
-		if ($mobile) {
-			showSidebar.set(false);
-		}
-
-		await tick();
-	};
-
 	const isWindows = /Windows/i.test(navigator.userAgent);
 </script>
 
@@ -817,7 +801,7 @@
 						bind:folderRegistry
 						{folders}
 						{shiftKey}
-						onDelete={(folderId) => {
+						onDelete={() => {
 							selectedFolder.set(null);
 							initChatList();
 						}}
@@ -839,7 +823,7 @@
 					className="px-2 mt-0.5"
 					name={$i18n.t('Chats')}
 					chevron={false}
-					on:change={async (e) => {
+					on:change={async () => {
 						selectedFolder.set(null);
 					}}
 					on:import={(e) => {
@@ -849,9 +833,7 @@
 						const { type, id, item } = e.detail;
 
 						if (type === 'chat') {
-							let chat = await getChatById(localStorage.token, id).catch((error) => {
-								return null;
-							});
+							let chat = await getChatById(localStorage.token, id).catch(() => null);
 							if (!chat && item) {
 								chat = await importChats(localStorage.token, [
 									{
@@ -868,18 +850,16 @@
 							if (chat) {
 								console.log(chat);
 								if (chat.folder_id) {
-									const res = await updateChatFolderIdById(localStorage.token, chat.id, null).catch(
-										(error) => {
-											toast.error(`${error}`);
-											return null;
-										}
-									);
+									await updateChatFolderIdById(localStorage.token, chat.id, null).catch((error) => {
+										toast.error(`${error}`);
+										return null;
+									});
 
 									folderRegistry[chat.folder_id]?.setFolderItems();
 								}
 
 								if (chat.pinned) {
-									const res = await toggleChatPinnedStatusById(localStorage.token, chat.id);
+									await toggleChatPinnedStatusById(localStorage.token, chat.id);
 								}
 
 								initChatList();
@@ -915,9 +895,7 @@
 										const { type, id, item } = e.detail;
 
 										if (type === 'chat') {
-											let chat = await getChatById(localStorage.token, id).catch((error) => {
-												return null;
-											});
+											let chat = await getChatById(localStorage.token, id).catch(() => null);
 											if (!chat && item) {
 												chat = await importChats(localStorage.token, [
 													{
@@ -934,18 +912,16 @@
 											if (chat) {
 												console.log(chat);
 												if (chat.folder_id) {
-													const res = await updateChatFolderIdById(
-														localStorage.token,
-														chat.id,
-														null
-													).catch((error) => {
-														toast.error(`${error}`);
-														return null;
-													});
+													await updateChatFolderIdById(localStorage.token, chat.id, null).catch(
+														(error) => {
+															toast.error(`${error}`);
+															return null;
+														}
+													);
 												}
 
 												if (!chat.pinned) {
-													const res = await toggleChatPinnedStatusById(localStorage.token, chat.id);
+													await toggleChatPinnedStatusById(localStorage.token, chat.id);
 												}
 
 												initChatList();

@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { v4 as uuidv4 } from 'uuid';
 	import { settings, user as _user, temporaryChatEnabled, refreshChatList } from '$lib/stores';
-	import { tick, getContext, createEventDispatcher, untrack } from 'svelte';
-	const dispatch = createEventDispatcher();
+	import { tick, getContext, untrack } from 'svelte';
 
 	import { toast } from 'svelte-sonner';
 	import { updateChatById } from '$lib/apis/chats';
-	import type { ChatHistory } from '$lib/types';
 
 	import Message from './Messages/Message.svelte';
 	import Loader from '../common/Loader.svelte';
@@ -344,7 +342,7 @@
 					<h2 class="sr-only" id="chat-conversation">{$i18n.t('Chat Conversation')}</h2>
 					{#if messages.at(0)?.parentId !== null}
 						<Loader
-							on:visible={(e) => {
+							on:visible={() => {
 								console.log('visible');
 								if (!messagesLoading) {
 									loadMoreMessages();

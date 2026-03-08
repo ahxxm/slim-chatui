@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import { flyAndScale } from '$lib/utils/transitions';
-	import { fade, fly, slide } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 
 	let { show = $bindable(false), className = '', onClose = () => {} } = $props();
 
@@ -29,7 +28,7 @@
 			window.removeEventListener('keydown', handleKeyDown);
 
 			if (document.body.contains(modalElement)) {
-				document.body.removeChild(modalElement);
+				modalElement.remove();
 				document.body.style.overflow = 'unset';
 			}
 		}
@@ -39,7 +38,7 @@
 		show = false;
 		if (modalElement) {
 			if (document.body.contains(modalElement)) {
-				document.body.removeChild(modalElement);
+				modalElement.remove();
 				document.body.style.overflow = 'unset';
 			}
 		}

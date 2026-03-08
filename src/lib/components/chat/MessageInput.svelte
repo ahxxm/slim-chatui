@@ -11,19 +11,10 @@
 
 	import { onMount, tick, getContext, untrack } from 'svelte';
 
-	import {
-		type Model,
-		mobile,
-		settings,
-		models,
-		config,
-		user as _user,
-		temporaryChatEnabled
-	} from '$lib/stores';
+	import { mobile, settings, models, config, temporaryChatEnabled } from '$lib/stores';
 
-	import { compressImage, createMessagesList, extractContentFromFile } from '$lib/utils';
+	import { compressImage, extractContentFromFile } from '$lib/utils';
 	import { uploadFile } from '$lib/apis/files';
-	import { deleteFileById } from '$lib/apis/files';
 	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
 
 	import { getSuggestionRenderer } from '../common/RichTextInput/suggestions';
@@ -40,7 +31,6 @@
 	import PlusAlt from '../icons/PlusAlt.svelte';
 
 	import CommandSuggestionList from './MessageInput/CommandSuggestionList.svelte';
-	import { goto } from '$app/navigation';
 	import InputModal from '../common/InputModal.svelte';
 	import Expand from '../icons/Expand.svelte';
 	import QueuedMessageItem from './MessageInput/QueuedMessageItem.svelte';
@@ -158,11 +148,9 @@
 		return false;
 	}
 
-	let chatInputContainerElement = $state();
 	let chatInputElement = $state();
 
 	let filesInputElement = $state();
-	let commandsElement = $state();
 
 	let inputFiles = $state();
 
@@ -170,8 +158,6 @@
 
 	let dragged = $state(false);
 	let shiftKey = $state(false);
-
-	let user = $state(null);
 
 	let activeModel = $derived($models.find((m) => m.id === activeModelId));
 	let visionCapable = $derived(activeModel?.info?.meta?.capabilities?.vision ?? true);

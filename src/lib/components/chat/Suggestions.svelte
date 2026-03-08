@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Fuse from 'fuse.js';
 	import Bolt from '$lib/components/icons/Bolt.svelte';
-	import { onMount, getContext } from 'svelte';
+	import { getContext } from 'svelte';
 	import { settings, WEBUI_NAME } from '$lib/stores';
 	import { WEBUI_VERSION } from '$lib/constants';
 

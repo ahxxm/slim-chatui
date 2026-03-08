@@ -8,7 +8,7 @@
 
 	const i18n = getContext<Writable<i18nType>>('i18n');
 
-	import { config, models, settings } from '$lib/stores';
+	import { models, settings } from '$lib/stores';
 	import {
 		copyToClipboard as _copyToClipboard,
 		sanitizeResponseContent,

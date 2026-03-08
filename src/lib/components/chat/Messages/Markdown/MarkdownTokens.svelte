@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { decode } from 'html-entities';
-	import { onMount, getContext } from 'svelte';
+	import { getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import fileSaver from 'file-saver';

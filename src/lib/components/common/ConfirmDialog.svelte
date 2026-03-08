@@ -72,7 +72,7 @@
 			focusTrap.deactivate();
 
 			window.removeEventListener('keydown', handleKeyDown);
-			document.body.removeChild(modalElement);
+			modalElement.remove();
 
 			document.body.style.overflow = 'unset';
 		}
@@ -85,7 +85,7 @@
 			focusTrap.deactivate();
 		}
 		if (modalElement) {
-			document.body.removeChild(modalElement);
+			modalElement.remove();
 		}
 	});
 </script>

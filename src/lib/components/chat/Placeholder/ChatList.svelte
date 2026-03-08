@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext, onMount } from 'svelte';
+	import { getContext } from 'svelte';
 	import { untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
@@ -170,7 +170,7 @@
 
 		{#if !allChatsLoaded && loadHandler}
 			<Loader
-				on:visible={(e) => {
+				on:visible={() => {
 					if (!chatListLoading) {
 						loadHandler();
 					}

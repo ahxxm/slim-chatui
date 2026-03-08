@@ -1,11 +1,8 @@
 <script lang="ts">
 	import { Select } from 'bits-ui';
-	import { createEventDispatcher } from 'svelte';
 	import ChevronDown from '../icons/ChevronDown.svelte';
 	import Check from '../icons/Check.svelte';
 	import Search from '../icons/Search.svelte';
-
-	const dispatch = createEventDispatcher();
 
 	let {
 		value = $bindable(''),

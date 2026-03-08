@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { decode } from 'html-entities';
-	import { v4 as uuidv4 } from 'uuid';
-
 	import { getContext, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
@@ -55,8 +52,6 @@
 	$effect(() => {
 		onChange(open);
 	});
-
-	const collapsibleId = uuidv4();
 </script>
 
 <div {id} class={className}>
@@ -138,7 +133,7 @@
 			onclick={(e) => {
 				e.stopPropagation();
 			}}
-			onpointerup={(e) => {
+			onpointerup={() => {
 				if (!disabled) {
 					open = !open;
 				}
@@ -163,7 +158,7 @@
 					{#if open && !hide}
 						<div
 							transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}
-							onpointerup={(e) => {
+							onpointerup={() => {
 								e.stopPropagation();
 							}}
 						>

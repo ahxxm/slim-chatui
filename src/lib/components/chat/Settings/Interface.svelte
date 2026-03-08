@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { config, models, settings, user } from '$lib/stores';
+	import { config, settings } from '$lib/stores';
 	import { createEventDispatcher, onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { setTextScale } from '$lib/utils/text-scale';
 
 	import Minus from '$lib/components/icons/Minus.svelte';
@@ -27,7 +26,6 @@
 
 	let responseAutoCopy = false;
 	let widescreenMode = false;
-	let splitLargeChunks = false;
 	let scrollOnBranchChange = true;
 	// Interface
 	let defaultModelId = '';
@@ -181,7 +179,6 @@
 		landingPageMode = $settings?.landingPageMode ?? '';
 		chatBubble = $settings?.chatBubble ?? true;
 		widescreenMode = $settings?.widescreenMode ?? false;
-		splitLargeChunks = $settings?.splitLargeChunks ?? false;
 		scrollOnBranchChange = $settings?.scrollOnBranchChange ?? true;
 
 		temporaryChatByDefault = $settings?.temporaryChatByDefault ?? false;

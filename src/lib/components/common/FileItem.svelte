@@ -37,7 +37,7 @@
 	const decodeString = (str: string) => {
 		try {
 			return decodeURIComponent(str);
-		} catch (e) {
+		} catch {
 			return str;
 		}
 	};

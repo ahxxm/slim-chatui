@@ -2,7 +2,7 @@
 	import { toast } from 'svelte-sonner';
 	import { onMount, getContext } from 'svelte';
 
-	import { user, config, settings } from '$lib/stores';
+	import { user } from '$lib/stores';
 	import { updateUserProfile, getSessionUser } from '$lib/apis/auths';
 
 	import UpdatePassword from './Account/UpdatePassword.svelte';
@@ -11,8 +11,6 @@
 
 	export let saveHandler: Function;
 	export let saveSettings: Function;
-
-	let loaded = false;
 
 	let name = '';
 
@@ -44,8 +42,6 @@
 		if (user) {
 			name = user?.name ?? '';
 		}
-
-		loaded = true;
 	});
 </script>
 

@@ -4,14 +4,13 @@
 	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();
 
-	import DOMPurify from 'dompurify';
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
 
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 
-	import { chatId, mobile, selectedFolder, showSidebar } from '$lib/stores';
+	import { mobile, selectedFolder, showSidebar } from '$lib/stores';
 
 	import {
 		deleteFolderById,
@@ -147,9 +146,8 @@
 							} else if (type === 'chat') {
 								open = true;
 
-								let chat = await getChatById(localStorage.token, id).catch((error) => {
-									return null;
-								});
+								let chat = await getChatById(localStorage.token, id).catch(() => null);
+
 								if (!chat && item) {
 									chat = await importChats(localStorage.token, [
 										{
@@ -344,12 +342,10 @@
 	};
 
 	const isExpandedUpdateHandler = async () => {
-		const res = await updateFolderIsExpandedById(localStorage.token, folderId, open).catch(
-			(error) => {
-				toast.error(`${error}`);
-				return null;
-			}
-		);
+		await updateFolderIsExpandedById(localStorage.token, folderId, open).catch((error) => {
+			toast.error(`${error}`);
+			return null;
+		});
 	};
 
 	let isExpandedUpdateTimeout;
@@ -478,7 +474,7 @@
 				folderId
 					? 'bg-gray-100 dark:bg-gray-900 selected'
 					: ''}"
-				ondblclick={(e) => {
+				ondblclick={() => {
 					if (clickTimer) {
 						clearTimeout(clickTimer); // cancel the single-click action
 						clickTimer = null;

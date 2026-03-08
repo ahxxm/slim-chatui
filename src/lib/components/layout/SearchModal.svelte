@@ -13,7 +13,7 @@
 	import calendar from 'dayjs/plugin/calendar';
 	import Loader from '../common/Loader.svelte';
 	import { createMessagesList } from '$lib/utils';
-	import { config, user } from '$lib/stores';
+	import { user } from '$lib/stores';
 	import Messages from '../chat/Messages.svelte';
 	import { goto } from '$app/navigation';
 	import PencilSquare from '../icons/PencilSquare.svelte';
@@ -78,9 +78,7 @@
 
 		const chatId = chatList[selectedChatIdx].id;
 
-		const chat = await getChatById(localStorage.token, chatId).catch(async (error) => {
-			return null;
-		});
+		const chat = await getChatById(localStorage.token, chatId).catch(() => null);
 
 		if (chat) {
 			if (chat?.chat?.history) {
@@ -390,7 +388,7 @@
 
 					{#if !allChatsLoaded}
 						<Loader
-							on:visible={(e) => {
+							on:visible={() => {
 								if (!chatListLoading) {
 									loadMoreChats();
 								}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { goto, invalidate, invalidateAll } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { onMount, getContext, createEventDispatcher, tick, onDestroy, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
@@ -27,8 +27,6 @@
 	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import DragGhost from '$lib/components/common/DragGhost.svelte';
-	import Check from '$lib/components/icons/Check.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
 	import Document from '$lib/components/icons/Document.svelte';
 	import Sparkles from '$lib/components/icons/Sparkles.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
@@ -167,7 +165,6 @@
 
 	let generating = $state(false);
 
-	let ignoreBlur = false;
 	let doubleClicked = $state(false);
 
 	let dragged = $state(false);
@@ -413,13 +410,13 @@
 				doubleClicked = true;
 				renameHandler();
 			}}
-			onmouseenter={(e) => {
+			onmouseenter={() => {
 				mouseOver = true;
 			}}
-			onmouseleave={(e) => {
+			onmouseleave={() => {
 				mouseOver = false;
 			}}
-			onfocus={(e) => {}}
+			onfocus={() => {}}
 			draggable="false"
 		>
 			<!-- Loading spinner for active chat (left side) -->
@@ -458,10 +455,10 @@
 			: 'right-1'} top-[4px] py-1 pr-0.5 mr-1.5 pl-5 bg-linear-to-l from-80%
 
               to-transparent"
-		onmouseenter={(e) => {
+		onmouseenter={() => {
 			mouseOver = true;
 		}}
-		onmouseleave={(e) => {
+		onmouseleave={() => {
 			mouseOver = false;
 		}}
 	>

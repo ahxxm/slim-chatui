@@ -1,4 +1,3 @@
-import { mount, unmount } from 'svelte';
 import { createClassComponent } from 'svelte/legacy';
 import { computePosition, flip, shift, offset } from '@floating-ui/dom';
 

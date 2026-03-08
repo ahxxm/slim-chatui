@@ -1,14 +1,11 @@
 <script lang="ts">
-	import { getContext, createEventDispatcher, tick, untrack } from 'svelte';
+	import { getContext, tick, untrack } from 'svelte';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 
 	import { toast } from 'svelte-sonner';
-	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
-	import { user } from '$lib/stores';
 
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import { getFolderById } from '$lib/apis/folders';

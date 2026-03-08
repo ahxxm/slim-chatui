@@ -11,9 +11,8 @@
 
 	import { oneDark } from '@codemirror/theme-one-dark';
 
-	import { onMount, createEventDispatcher, getContext, tick, untrack } from 'svelte';
+	import { onMount, getContext, untrack } from 'svelte';
 
-	const dispatch = createEventDispatcher();
 	const i18n = getContext('i18n');
 
 	let {

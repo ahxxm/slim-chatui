@@ -104,7 +104,7 @@
 
 			{#if !allItemsLoaded}
 				<Loader
-					on:visible={(e) => {
+					on:visible={() => {
 						if (!itemsLoading) {
 							loadMoreItems();
 						}

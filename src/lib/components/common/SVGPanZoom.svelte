@@ -7,12 +7,11 @@
 	import panzoom, { type PanZoom } from 'panzoom';
 	import DOMPurify from 'dompurify';
 
-	import { onMount, getContext } from 'svelte';
+	import { getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import { copyToClipboard } from '$lib/utils';
 
-	import DocumentDuplicate from '../icons/DocumentDuplicate.svelte';
 	import Tooltip from './Tooltip.svelte';
 	import Clipboard from '../icons/Clipboard.svelte';
 	import Reset from '../icons/Reset.svelte';

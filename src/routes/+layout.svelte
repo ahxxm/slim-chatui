@@ -38,7 +38,7 @@
 	import { getBackendConfig, getVersion } from '$lib/apis';
 	import { getSessionUser, userSignOut } from '$lib/apis/auths';
 
-	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL, WEBUI_HOSTNAME } from '$lib/constants';
+	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { bestMatchingLanguage } from '$lib/utils';
 	import { setTextScale } from '$lib/utils/text-scale';
 
@@ -156,9 +156,7 @@
 		});
 	};
 
-	const chatEventHandler = async (event, cb) => {
-		const chat = $page.url.pathname.includes(`/c/${event.chat_id}`);
-
+	const chatEventHandler = async (event) => {
 		// Skip events from temporary chats that are not the current chat.
 		// This prevents notifications from being sent to other tabs/devices
 		// for privacy, since temporary chats are not meant to be persisted or visible elsewhere.

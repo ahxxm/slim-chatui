@@ -16,14 +16,12 @@
 
 	import {
 		chatId,
-		chats,
 		config,
 		type Model,
 		models,
 		settings,
 		showSidebar,
 		WEBUI_NAME,
-		user,
 		socket,
 		temporaryChatEnabled,
 		chatTitle,
@@ -47,7 +45,6 @@
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
 	import { generateOpenAIChatCompletion } from '$lib/apis/openai';
-	import { getUserSettings } from '$lib/apis/users';
 	import { chatCompleted, stopTask, getTaskIdsByChatId } from '$lib/apis';
 	import { updateFolderById } from '$lib/apis/folders';
 
@@ -205,7 +202,7 @@
 							messageQueue = restoredQueue;
 						}
 					}
-				} catch (e) {}
+				} catch {}
 			}
 
 			if (storageChatInput) {
@@ -216,7 +213,7 @@
 						messageInput?.setText(input.prompt);
 						files = input.files;
 					}
-				} catch (e) {}
+				} catch {}
 			}
 
 			const chatInput = document.getElementById('chat-input');
@@ -541,7 +538,7 @@
 					messageInput?.setText(input.prompt);
 					files = input.files;
 				}
-			} catch (e) {}
+			} catch {}
 		}
 
 		const chatInput = document.getElementById('chat-input');
@@ -1045,7 +1042,7 @@
 	// Chat functions
 	//////////////////////////
 
-	const submitPrompt = async (userPrompt, { _raw = false } = {}) => {
+	const submitPrompt = async (userPrompt) => {
 		console.log('submitPrompt', userPrompt, $chatId);
 
 		if (userPrompt === '' && files.length === 0) {
@@ -1262,8 +1259,7 @@
 			model,
 			messages && messages.length > 0 ? messages : createMessagesList(_history, responseMessageId),
 			_history,
-			responseMessageId,
-			_chatId
+			responseMessageId
 		);
 
 		if (activeChatEmitter) {
@@ -1278,7 +1274,7 @@
 		await refreshChatList(localStorage.token);
 	};
 
-	const sendMessageSocket = async (model, _messages, _history, responseMessageId, _chatId) => {
+	const sendMessageSocket = async (model, _messages, _history, responseMessageId) => {
 		const responseMessage = _history.messages[responseMessageId];
 		const userMessage = _history.messages[responseMessage.parentId];
 
@@ -1594,8 +1590,7 @@
 					model,
 					createMessagesList(history, responseMessage.id),
 					history,
-					responseMessage.id,
-					_chatId
+					responseMessage.id
 				);
 			}
 		}

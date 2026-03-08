@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 
-	import { onMount, getContext, tick, untrack } from 'svelte';
-	import { models, user } from '$lib/stores';
+	import { onMount, getContext, tick } from 'svelte';
+	import { models } from '$lib/stores';
 	import { WEBUI_BASE_URL, DEFAULT_CAPABILITIES } from '$lib/constants';
 
 	import AdvancedParams from '$lib/components/chat/Settings/Advanced/AdvancedParams.svelte';
@@ -17,7 +17,6 @@
 	let { onSubmit, onBack = null, model = null, edit = false, preset = true } = $props();
 
 	let loading = $state(false);
-	let success = $state(false);
 
 	let showAdvanced = $state(false);
 	let showPreview = $state(false);
@@ -102,7 +101,6 @@
 		await onSubmit(info);
 
 		loading = false;
-		success = false;
 	};
 
 	onMount(async () => {

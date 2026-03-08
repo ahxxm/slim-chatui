@@ -3,13 +3,12 @@
 	import fileSaver from 'file-saver';
 	const { saveAs } = fileSaver;
 
-	import { onMount, getContext, tick } from 'svelte';
+	import { onMount, getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
-	import { WEBUI_NAME, mobile, models as _models, settings, user } from '$lib/stores';
+	import { models as _models, settings, user } from '$lib/stores';
 	import {
 		createNewModel,
-		deleteAllModels,
 		getBaseModels,
 		toggleModelById,
 		updateModelById,
@@ -131,9 +130,7 @@
 		model.base_model_id = null;
 
 		if (workspaceModels.find((m) => m.id === model.id)) {
-			const res = await updateModelById(localStorage.token, model.id, model).catch((error) => {
-				return null;
-			});
+			const res = await updateModelById(localStorage.token, model.id, model).catch(() => null);
 
 			if (res) {
 				toast.success($i18n.t('Model updated successfully'));
@@ -146,9 +143,7 @@
 				base_model_id: null,
 				params: {},
 				...model
-			}).catch((error) => {
-				return null;
-			});
+			}).catch(() => null);
 
 			if (res) {
 				toast.success($i18n.t('Model updated successfully'));
@@ -168,9 +163,7 @@
 				meta: {},
 				params: {},
 				is_active: model.is_active
-			}).catch((error) => {
-				return null;
-			});
+			}).catch(() => null);
 		} else {
 			await toggleModelById(localStorage.token, model.id);
 		}

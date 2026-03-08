@@ -6,7 +6,6 @@
 
 	import { showSettings, mobile, showSidebar, showShortcuts, user } from '$lib/stores';
 
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Keyboard from '$lib/components/icons/Keyboard.svelte';
 	import ShortcutsModal from '$lib/components/chat/ShortcutsModal.svelte';
 	import Settings from '$lib/components/icons/Settings.svelte';

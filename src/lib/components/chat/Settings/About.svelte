@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
-	import { WEBUI_NAME, config } from '$lib/stores';
-	import { onMount, getContext } from 'svelte';
+	import { WEBUI_NAME } from '$lib/stores';
+	import { getContext } from 'svelte';
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 

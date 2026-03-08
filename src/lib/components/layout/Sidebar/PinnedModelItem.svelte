@@ -21,10 +21,10 @@
 	<div
 		class=" flex justify-center text-gray-800 dark:text-gray-200 cursor-grab relative group"
 		data-id={model?.id}
-		on:mouseenter={(e) => {
+		on:mouseenter={() => {
 			mouseOver = true;
 		}}
-		on:mouseleave={(e) => {
+		on:mouseleave={() => {
 			mouseOver = false;
 		}}
 	>

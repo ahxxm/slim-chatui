@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Fuse from 'fuse.js';
 
-	import { getContext, untrack } from 'svelte';
+	import { getContext } from 'svelte';
 
 	import { models } from '$lib/stores';
 	import { WEBUI_BASE_URL } from '$lib/constants';

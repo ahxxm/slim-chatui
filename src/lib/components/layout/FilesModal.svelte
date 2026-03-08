@@ -70,7 +70,7 @@
 			const newFiles = await searchFiles(localStorage.token, pattern, 0, PAGE_SIZE);
 			files = sortFiles(newFiles);
 			allFilesLoaded = newFiles.length < PAGE_SIZE;
-		} catch (error) {
+		} catch {
 			// Handle 404 or other errors - show empty state instead of spinner
 			files = [];
 			allFilesLoaded = true;
@@ -92,7 +92,7 @@
 			if (newFiles.length > 0) {
 				files = sortFiles([...(files || []), ...newFiles]);
 			}
-		} catch (error) {
+		} catch {
 			// Handle errors silently for load more
 			allFilesLoaded = true;
 		}

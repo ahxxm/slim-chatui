@@ -42,7 +42,7 @@
 	// Add custom table header rule before using GFM plugin
 	turndownService.addRule('tableHeaders', {
 		filter: 'th',
-		replacement: function (content, node) {
+		replacement: function (content) {
 			return content;
 		}
 	});
@@ -112,9 +112,9 @@
 	const eventDispatch = createEventDispatcher();
 
 	import { Fragment, DOMParser } from 'prosemirror-model';
-	import { EditorState, Plugin, PluginKey, TextSelection, Selection } from 'prosemirror-state';
+	import { Plugin, PluginKey, TextSelection, Selection } from 'prosemirror-state';
 	import { Decoration, DecorationSet } from 'prosemirror-view';
-	import { Editor, Extension, mergeAttributes } from '@tiptap/core';
+	import { Editor, Extension } from '@tiptap/core';
 
 	import StarterKit from '@tiptap/starter-kit';
 
@@ -132,7 +132,6 @@
 
 	import FileHandler from '@tiptap/extension-file-handler';
 	import Typography from '@tiptap/extension-typography';
-	import Highlight from '@tiptap/extension-highlight';
 	import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 
 	import Mention from '@tiptap/extension-mention';
@@ -289,10 +288,6 @@
 	let bubbleMenuElement: Element | null = $state(null);
 	let element: Element | null = $state(null);
 
-	const options = {
-		throwOnError: false
-	};
-
 	$effect(() => {
 		if (editor) {
 			editor.setOptions({
@@ -314,7 +309,6 @@
 		const doc = state.doc;
 		const resolvedPos = doc.resolve(pos);
 		const textBlock = resolvedPos.parent;
-		const paraStart = resolvedPos.start();
 		const text = textBlock.textContent;
 		const offset = resolvedPos.parentOffset;
 
@@ -323,9 +317,7 @@
 		while (wordStart > 0 && !/\s/.test(text[wordStart - 1])) wordStart--;
 		while (wordEnd < text.length && !/\s/.test(text[wordEnd])) wordEnd++;
 
-		const word = text.slice(wordStart, wordEnd);
-
-		return word;
+		return text.slice(wordStart, wordEnd);
 	};
 
 	// Returns {start, end} of the word at pos
@@ -470,8 +462,6 @@
 
 	export const insertContent = (content) => {
 		if (!editor || !editor.view) return;
-		const { state, view } = editor;
-		const { schema, tr } = state;
 
 		// If content is a string, convert it to a ProseMirror node
 		const htmlContent = richTextMarked.parse(content);
@@ -626,7 +616,7 @@
 			if (preserveBreaks) {
 				turndownService.addRule('preserveBreaks', {
 					filter: 'br', // Target <br> elements
-					replacement: function (content) {
+					replacement: function () {
 						return '<br/>';
 					}
 				});
@@ -639,7 +629,7 @@
 						return richTextMarked.parse(value.replaceAll(`\n<br/>`, `<br/>`), {
 							breaks: false
 						});
-					} catch (error) {
+					} catch {
 						// If no attempts remain, fallback to plain text
 						if (attempts <= 1) {
 							return value;
@@ -723,7 +713,7 @@
 									theme: 'transparent',
 									offset: [0, 2]
 								},
-								shouldShow: ({ editor, view, state, oldState, from, to }) => {
+								shouldShow: ({ editor, from, to }) => {
 									// safety check
 									if (!editor || !editor.view || editor.isDestroyed) {
 										return false;
@@ -741,7 +731,7 @@
 									theme: 'transparent',
 									offset: [-12, 4]
 								},
-								shouldShow: ({ editor, view, state, oldState }) => {
+								shouldShow: ({ editor }) => {
 									// safety check
 									if (!editor || !editor.view || editor.isDestroyed) {
 										return false;

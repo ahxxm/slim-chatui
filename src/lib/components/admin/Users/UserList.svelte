@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { WEBUI_BASE_URL } from '$lib/constants';
-	import { config, user } from '$lib/stores';
+	import { user } from '$lib/stores';
 	import { getContext, onDestroy, untrack } from 'svelte';
 
 	import dayjs from 'dayjs';
@@ -9,7 +9,7 @@
 
 	import { toast } from 'svelte-sonner';
 
-	import { updateUserRole, getUsers, deleteUserById } from '$lib/apis/users';
+	import { getUsers, deleteUserById } from '$lib/apis/users';
 
 	import Pagination from '$lib/components/common/Pagination.svelte';
 	import ChatBubbles from '$lib/components/icons/ChatBubbles.svelte';
@@ -20,7 +20,6 @@
 	import AddUserModal from '$lib/components/admin/Users/UserList/AddUserModal.svelte';
 
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
-	import RoleUpdateConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 
 	import Badge from '$lib/components/common/Badge.svelte';
 	import Plus from '$lib/components/icons/Plus.svelte';
@@ -300,7 +299,7 @@
 				</tr>
 			</thead>
 			<tbody class="">
-				{#each users as user, userIdx (user.id)}
+				{#each users as user (user.id)}
 					<tr class="bg-white dark:bg-gray-900 dark:border-gray-850 text-xs">
 						<td class="px-3 py-1 min-w-[7rem] w-28">
 							<button

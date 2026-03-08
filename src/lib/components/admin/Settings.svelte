@@ -1,7 +1,6 @@
 <script>
 	import { getContext, tick, onMount, untrack } from 'svelte';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 
 	import { config } from '$lib/stores';

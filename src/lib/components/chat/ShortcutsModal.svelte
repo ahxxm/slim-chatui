@@ -6,13 +6,6 @@
 	import ShortcutItem from './ShortcutItem.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 
-	type CategorizedShortcuts = {
-		[category: string]: {
-			left: Shortcut[];
-			right: Shortcut[];
-		};
-	};
-
 	const i18n = getContext('i18n');
 
 	let { show = $bindable(false) } = $props();

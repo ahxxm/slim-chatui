@@ -40,7 +40,6 @@
 	export let chatListLoading = false;
 
 	let selectedChatId = null;
-	let selectedIdx = 0;
 	let showDeleteConfirmDialog = false;
 
 	export let onUpdate = () => {};
@@ -57,7 +56,7 @@
 	};
 
 	const deleteHandler = async (chatId) => {
-		const res = await deleteChatById(localStorage.token, chatId).catch((error) => {
+		await deleteChatById(localStorage.token, chatId).catch((error) => {
 			toast.error(`${error}`);
 		});
 
@@ -131,7 +130,6 @@
 									class="p-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition"
 									on:click={() => {
 										query = '';
-										selectedIdx = 0;
 									}}
 								>
 									<XMark className="size-3" strokeWidth="2" />
@@ -316,7 +314,7 @@
 
 							{#if !allChatsLoaded && loadHandler}
 								<Loader
-									on:visible={(e) => {
+									on:visible={() => {
 										if (!chatListLoading) {
 											loadHandler();
 										}

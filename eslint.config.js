@@ -7,6 +7,15 @@ import prettier from 'eslint-config-prettier';
 import svelteParser from 'svelte-eslint-parser';
 import globals from 'globals';
 
+const tsRules = {
+	'no-unused-vars': 'off',
+	...tsPlugin.configs.recommended.rules,
+	'@typescript-eslint/no-unused-vars': [
+		'error',
+		{ argsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }
+	]
+};
+
 export default [
 	{ ignores: ['.svelte-kit/**', 'build/**', 'static/**', 'backend/**'] },
 	js.configs.recommended,
@@ -18,17 +27,17 @@ export default [
 			parserOptions: { sourceType: 'module', ecmaVersion: 2020 },
 			globals: { ...globals.browser, ...globals.es2017, ...globals.node }
 		},
-		rules: {
-			...tsPlugin.configs.recommended.rules
-		}
+		rules: tsRules
 	},
 	...sveltePlugin.configs['flat/recommended'],
 	{
 		files: ['**/*.svelte'],
+		plugins: { '@typescript-eslint': tsPlugin },
 		languageOptions: {
 			parser: svelteParser,
 			parserOptions: { parser: tsParser }
-		}
+		},
+		rules: tsRules
 	},
 	cypressPlugin.configs.recommended,
 	prettier

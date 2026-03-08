@@ -2,7 +2,7 @@
 	import { toast } from 'svelte-sonner';
 	import dayjs from 'dayjs';
 	import { createEventDispatcher, untrack } from 'svelte';
-	import { onMount, getContext } from 'svelte';
+	import { getContext } from 'svelte';
 
 	import { updateUserById } from '$lib/apis/users';
 

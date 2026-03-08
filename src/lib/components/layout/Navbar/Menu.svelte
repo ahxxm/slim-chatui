@@ -8,7 +8,7 @@
 
 	import { copyToClipboard, createMessagesList } from '$lib/utils';
 
-	import { mobile, temporaryChatEnabled, theme, user, folders } from '$lib/stores';
+	import { temporaryChatEnabled, folders } from '$lib/stores';
 	import { getChatById } from '$lib/apis/chats';
 
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
@@ -26,7 +26,7 @@
 	const getChatAsText = async () => {
 		const history = chat.chat.history;
 		const messages = createMessagesList(history, history.currentId);
-		const chatText = messages.reduce((a, message, i, arr) => {
+		const chatText = messages.reduce((a, message) => {
 			return `${a}### ${message.role.toUpperCase()}\n${message.content}\n\n`;
 		}, '');
 

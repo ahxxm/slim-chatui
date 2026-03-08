@@ -19,7 +19,7 @@
 		getChatPinnedStatusById,
 		toggleChatPinnedStatusById
 	} from '$lib/apis/chats';
-	import { chats, folders, theme } from '$lib/stores';
+	import { folders } from '$lib/stores';
 	import { createMessagesList } from '$lib/utils';
 	import Download from '$lib/components/icons/Download.svelte';
 	import Folder from '$lib/components/icons/Folder.svelte';
@@ -45,8 +45,6 @@
 	let show = $state(false);
 	let pinned = $state(false);
 
-	let chat = $state(null);
-
 	const pinHandler = async () => {
 		await toggleChatPinnedStatusById(localStorage.token, chatId);
 		dispatch('change');
@@ -59,7 +57,7 @@
 	const getChatAsText = async (chat) => {
 		const history = chat.chat.history;
 		const messages = createMessagesList(history, history.currentId);
-		const chatText = messages.reduce((a, message, i, arr) => {
+		const chatText = messages.reduce((a, message) => {
 			return `${a}### ${message.role.toUpperCase()}\n${message.content}\n\n`;
 		}, '');
 

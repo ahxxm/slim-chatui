@@ -64,7 +64,7 @@
 							});
 
 							promptSuggestions = [...promptSuggestions, ...suggestions];
-						} catch (error) {
+						} catch {
 							toast.error($i18n.t('Invalid JSON file'));
 							return;
 						}

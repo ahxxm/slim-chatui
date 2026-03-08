@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 
-	import { createEventDispatcher, getContext, onMount, untrack } from 'svelte';
+	import { getContext, onMount, untrack } from 'svelte';
 	const i18n = getContext('i18n');
-	const dispatch = createEventDispatcher();
 
 	import { models, config as _config } from '$lib/stores';
 	import { DEFAULT_CAPABILITIES } from '$lib/constants';
@@ -29,10 +28,7 @@
 
 	let config: Record<string, any> | null = $state(null);
 
-	let selectedModelId = $state('');
 	let defaultModelIds: string[] = $state([]);
-
-	let selectedPinnedModelId = $state('');
 	let defaultPinnedModelIds: string[] = $state([]);
 
 	let loading = $state(false);

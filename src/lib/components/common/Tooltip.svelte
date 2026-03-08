@@ -1,6 +1,6 @@
 <script lang="ts">
 	import DOMPurify from 'dompurify';
-	import { tick, onDestroy } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { computePosition, flip, shift, offset as offsetMiddleware } from '@floating-ui/dom';
 
 	let {
@@ -18,16 +18,7 @@
 	} = $props();
 
 	let triggerEl: HTMLElement | undefined = $state();
-	let tooltipEl: HTMLDivElement | undefined = $state();
-
-	function portal(node: HTMLElement) {
-		document.body.appendChild(node);
-		return {
-			destroy() {
-				node.remove();
-			}
-		};
-	}
+	let tooltipEl: HTMLDivElement | null = null;
 
 	const updatePosition = async () => {
 		if (!triggerEl || !tooltipEl) return;
@@ -45,18 +36,52 @@
 		tooltipEl.style.opacity = '1';
 	};
 
-	let visible = $state(false);
+	const setTooltipContent = () => {
+		if (!tooltipEl) return;
+		if (elementId) {
+			const el = document.getElementById(elementId);
+			if (el) {
+				tooltipEl.innerHTML = '';
+				tooltipEl.appendChild(el.cloneNode(true));
+			}
+		} else if (allowHTML) {
+			tooltipEl.innerHTML = DOMPurify.sanitize(content);
+		} else {
+			tooltipEl.textContent = content;
+		}
+	};
 
 	const show = async () => {
 		if (!content && !elementId) return;
-		visible = true;
-		await tick();
+		if (!tooltipEl) {
+			tooltipEl = document.createElement('div');
+			tooltipEl.className = `floating-tooltip${interactive ? '' : ' pointer-events-none'}`;
+			tooltipEl.setAttribute('role', 'tooltip');
+			tooltipEl.style.cssText = `position:fixed;z-index:9999;opacity:0;transition:opacity ${duration[0]}ms`;
+			document.body.appendChild(tooltipEl);
+		}
+		setTooltipContent();
 		updatePosition();
 	};
 
 	const hide = () => {
-		visible = false;
+		if (tooltipEl) {
+			tooltipEl.style.transition = `opacity ${duration[1]}ms`;
+			tooltipEl.style.opacity = '0';
+			const el = tooltipEl;
+			setTimeout(() => {
+				el.remove();
+				if (tooltipEl === el) tooltipEl = null;
+			}, duration[1]);
+		}
 	};
+
+	onDestroy(() => {
+		if (tooltipEl) {
+			tooltipEl.remove();
+			tooltipEl = null;
+		}
+	});
 </script>
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
@@ -73,25 +98,3 @@
 >
 	<slot />
 </svelte:element>
-
-{#if visible}
-	<div
-		bind:this={tooltipEl}
-		use:portal
-		class="floating-tooltip"
-		class:pointer-events-none={!interactive}
-		style="position:fixed;z-index:9999;opacity:0;transition:opacity {duration[0]}ms"
-		role="tooltip"
-	>
-		{#if elementId}
-			{@const el = document.getElementById(elementId)}
-			{#if el}
-				{@html el.innerHTML}
-			{/if}
-		{:else if allowHTML}
-			{@html DOMPurify.sanitize(content)}
-		{:else}
-			{content}
-		{/if}
-	</div>
-{/if}

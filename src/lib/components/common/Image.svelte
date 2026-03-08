@@ -12,8 +12,7 @@
 		className = ` w-full ${($settings?.highContrastMode ?? false) ? '' : 'outline-hidden focus:outline-hidden'}`,
 		imageClassName = 'rounded-lg',
 		dismissible = false,
-		onDismiss = () => {},
-		...restProps
+		onDismiss = () => {}
 	} = $props();
 
 	const i18n = getContext('i18n');

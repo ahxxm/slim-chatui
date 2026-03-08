@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, tick, getContext } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 
@@ -36,7 +36,7 @@
 		}
 	};
 
-const setUserSettings = async (cb: () => Promise<void>) => {
+	const setUserSettings = async (cb: () => Promise<void>) => {
 		let userSettings = await getUserSettings(localStorage.token).catch((error) => {
 			console.error(error);
 			return null;
@@ -204,7 +204,6 @@ const setUserSettings = async (cb: () => Promise<void>) => {
 			{#if !['user', 'admin'].includes($user?.role)}
 				<AccountPending />
 			{:else}
-	
 				<Sidebar />
 
 				{#if loaded}
