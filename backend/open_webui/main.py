@@ -144,6 +144,7 @@ from open_webui.tasks import (
     create_task,
     stop_task,
     list_tasks,
+    periodic_orphan_file_cleanup,
 )
 
 
@@ -202,6 +203,7 @@ async def lifespan(app: FastAPI):
         limiter.total_tokens = THREAD_POOL_SIZE
 
     asyncio.create_task(periodic_session_pool_cleanup())
+    asyncio.create_task(periodic_orphan_file_cleanup())
 
     yield
 

@@ -15,16 +15,6 @@ from test.util.abstract_integration_test import IntegrationTest
 
 
 class TestChatDeleteRace(IntegrationTest):
-    BASE_PATH = "/api/v1/chats"
-
-    def _create_chat(self, headers, title="test"):
-        resp = self.fast_api_client.post(
-            "/api/v1/chats/new",
-            json={"chat": {"messages": [], "title": title}},
-            headers=headers,
-        )
-        assert resp.status_code == 200, f"create chat failed: {resp.text}"
-        return resp.json()["id"]
 
     def _frontend_delete_click(self, chat_id, headers):
         """Exact HTTP sequence one shift-click delete triggers in the frontend."""
@@ -40,7 +30,7 @@ class TestChatDeleteRace(IntegrationTest):
 
     def test_rapid_delete_2_of_10(self):
         _, headers = self.sign_up()
-        chat_ids = [self._create_chat(headers, f"Chat {i}") for i in range(10)]
+        chat_ids = [self.create_chat(headers)["id"] for i in range(10)]
 
         resp = self.fast_api_client.get("/api/v1/chats/?page=1", headers=headers)
         assert len(resp.json()) == 10, "setup: expect 10 chats"

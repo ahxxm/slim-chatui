@@ -1,3 +1,4 @@
+import io
 from urllib.parse import urlencode
 
 
@@ -45,6 +46,24 @@ class IntegrationTest:
         data = resp.json()
         headers = {"Authorization": f"Bearer {data['token']}"}
         return data, headers
+
+    def upload_image(self, headers):
+        resp = self.fast_api_client.post(
+            "/api/v1/files/",
+            files={"file": ("test.png", io.BytesIO(b"\x89PNG fake"), "image/png")},
+            headers=headers,
+        )
+        assert resp.status_code == 200, f"upload_image failed: {resp.text}"
+        return resp.json()
+
+    def create_chat(self, headers, chat=None):
+        resp = self.fast_api_client.post(
+            "/api/v1/chats/new",
+            json={"chat": chat or {"messages": []}},
+            headers=headers,
+        )
+        assert resp.status_code == 200, f"create_chat failed: {resp.text}"
+        return resp.json()
 
     def add_user(self, headers):
         """Admin adds a user via API. Returns (data, headers)."""
