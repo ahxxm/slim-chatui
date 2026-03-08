@@ -3,8 +3,7 @@
 	import { DropdownMenu } from 'bits-ui';
 	import { getContext } from 'svelte';
 
-	import fileSaver from 'file-saver';
-	const { saveAs } = fileSaver;
+	import { saveAs } from '$lib/utils';
 
 	import { copyToClipboard, createMessagesList } from '$lib/utils';
 

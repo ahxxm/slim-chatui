@@ -31,7 +31,9 @@
 	let responseAutoCopy = $state($settings?.responseAutoCopy ?? false);
 	let widescreenMode = $state($settings?.widescreenMode ?? false);
 	let scrollOnBranchChange = $state($settings?.scrollOnBranchChange ?? true);
-	let defaultModelId = $state($config?.default_models?.split(',')[0] ?? $settings?.models?.at(0) ?? '');
+	let defaultModelId = $state(
+		$config?.default_models?.split(',')[0] ?? $settings?.models?.at(0) ?? ''
+	);
 	let showUsername = $state($settings?.showUsername ?? false);
 	let notificationSound = $state($settings?.notificationSound ?? true);
 	let notificationSoundAlways = $state($settings?.notificationSoundAlways ?? false);
@@ -134,7 +136,6 @@
 		}
 		saveSettings({ textScale });
 	};
-
 </script>
 
 <ManageFloatingActionButtonsModal
@@ -157,7 +158,11 @@
 <form
 	id="tab-interface"
 	class="flex flex-col h-full justify-between space-y-3 text-sm"
-	onsubmit={(e) => { e.preventDefault(); updateInterfaceHandler(); onsave(); }}
+	onsubmit={(e) => {
+		e.preventDefault();
+		updateInterfaceHandler();
+		onsave();
+	}}
 >
 	<input
 		bind:this={filesInputElement}

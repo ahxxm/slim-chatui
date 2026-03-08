@@ -116,7 +116,13 @@
 	onSubmit={addOpenAIConnectionHandler}
 />
 
-<form class="flex flex-col h-full justify-between text-sm" onsubmit={(e) => { e.preventDefault(); submitHandler(); }}>
+<form
+	class="flex flex-col h-full justify-between text-sm"
+	onsubmit={(e) => {
+		e.preventDefault();
+		submitHandler();
+	}}
+>
 	<div class=" overflow-y-scroll scrollbar-hidden h-full">
 		{#if loaded}
 			<div class="mb-3.5">

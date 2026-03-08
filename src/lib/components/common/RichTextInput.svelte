@@ -118,8 +118,6 @@
 
 	import StarterKit from '@tiptap/starter-kit';
 
-
-
 	import { TableKit } from '@tiptap/extension-table';
 	import { ListKit } from '@tiptap/extension-list';
 	import { Placeholder, CharacterCount } from '@tiptap/extensions';
@@ -166,7 +164,7 @@
 		messageInput = false,
 		shiftEnter = false,
 		largeTextAsFile = false,
-		insertPromptAsRichText = false,
+		insertPromptAsRichText = false
 	}: {
 		oncompositionstart?: (e: any) => void;
 		oncompositionend?: (e: any) => void;
@@ -196,7 +194,6 @@
 		shiftEnter?: boolean;
 		largeTextAsFile?: boolean;
 		insertPromptAsRichText?: boolean;
-
 	} = $props();
 
 	// create a lowlight instance with all languages loaded
@@ -695,8 +692,8 @@
 								onPaste: onFilePaste
 							})
 						]
-					: []),
-				],
+					: [])
+			],
 			content,
 			autofocus: messageInput ? true : false,
 			onTransaction: () => {

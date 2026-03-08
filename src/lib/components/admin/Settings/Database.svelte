@@ -1,6 +1,5 @@
 <script lang="ts">
-	import fileSaver from 'file-saver';
-	const { saveAs } = fileSaver;
+	import { saveAs } from '$lib/utils';
 
 	import { downloadDatabase } from '$lib/apis/utils';
 	import { getContext } from 'svelte';

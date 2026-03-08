@@ -46,8 +46,7 @@ vi.mock('$app/stores', () => ({
 // Sidebar imports these but they're not relevant to the chat list race
 vi.mock('$lib/apis/folders', () => ({
 	createNewFolder: vi.fn(),
-	getFolders: vi.fn().mockResolvedValue([]),
-	updateFolderParentIdById: vi.fn()
+	getFolders: vi.fn().mockResolvedValue([])
 }));
 vi.mock('$lib/apis/tasks', () => ({
 	checkActiveChats: vi.fn().mockResolvedValue({ active_chat_ids: [] })

@@ -22,7 +22,6 @@ log = logging.getLogger(__name__)
 class Folder(Base):
     __tablename__ = "folder"
     id = Column(Text, primary_key=True, unique=True)
-    parent_id = Column(Text, nullable=True)
     user_id = Column(Text)
     name = Column(Text)
     items = Column(JSON, nullable=True)
@@ -35,7 +34,6 @@ class Folder(Base):
 
 class FolderModel(BaseModel):
     id: str
-    parent_id: Optional[str] = None
     user_id: str
     name: str
     items: Optional[dict] = None
@@ -56,7 +54,6 @@ class FolderNameIdResponse(BaseModel):
     id: str
     name: str
     meta: Optional[FolderMetadataResponse] = None
-    parent_id: Optional[str] = None
     is_expanded: bool = False
     created_at: int
     updated_at: int
@@ -86,7 +83,6 @@ class FolderTable:
         self,
         user_id: str,
         form_data: FolderForm,
-        parent_id: Optional[str] = None,
         db: Optional[Session] = None,
     ) -> Optional[FolderModel]:
         with get_db_context(db) as db:
@@ -96,7 +92,6 @@ class FolderTable:
                     "id": id,
                     "user_id": user_id,
                     **(form_data.model_dump(exclude_unset=True) or {}),
-                    "parent_id": parent_id,
                     "created_at": int(time.time()),
                     "updated_at": int(time.time()),
                 }
@@ -128,30 +123,6 @@ class FolderTable:
         except Exception:
             return None
 
-    def get_children_folders_by_id_and_user_id(
-        self, id: str, user_id: str, db: Optional[Session] = None
-    ) -> Optional[list[FolderModel]]:
-        try:
-            with get_db_context(db) as db:
-                folders = []
-
-                def get_children(folder):
-                    children = self.get_folders_by_parent_id_and_user_id(
-                        folder.id, user_id, db=db
-                    )
-                    for child in children:
-                        get_children(child)
-                        folders.append(child)
-
-                folder = db.query(Folder).filter_by(id=id, user_id=user_id).first()
-                if not folder:
-                    return None
-
-                get_children(folder)
-                return folders
-        except Exception:
-            return None
-
     def get_folders_by_user_id(
         self, user_id: str, db: Optional[Session] = None
     ) -> list[FolderModel]:
@@ -161,19 +132,17 @@ class FolderTable:
                 for folder in db.query(Folder).filter_by(user_id=user_id).all()
             ]
 
-    def get_folder_by_parent_id_and_user_id_and_name(
+    def get_folder_by_user_id_and_name(
         self,
-        parent_id: Optional[str],
         user_id: str,
         name: str,
         db: Optional[Session] = None,
     ) -> Optional[FolderModel]:
         try:
             with get_db_context(db) as db:
-                # Check if folder exists
                 folder = (
                     db.query(Folder)
-                    .filter_by(parent_id=parent_id, user_id=user_id)
+                    .filter_by(user_id=user_id)
                     .filter(Folder.name.ilike(name))
                     .first()
                 )
@@ -183,43 +152,8 @@ class FolderTable:
 
                 return FolderModel.model_validate(folder)
         except Exception as e:
-            log.error(f"get_folder_by_parent_id_and_user_id_and_name: {e}")
+            log.error(f"get_folder_by_user_id_and_name: {e}")
             return None
-
-    def get_folders_by_parent_id_and_user_id(
-        self, parent_id: Optional[str], user_id: str, db: Optional[Session] = None
-    ) -> list[FolderModel]:
-        with get_db_context(db) as db:
-            return [
-                FolderModel.model_validate(folder)
-                for folder in db.query(Folder)
-                .filter_by(parent_id=parent_id, user_id=user_id)
-                .all()
-            ]
-
-    def update_folder_parent_id_by_id_and_user_id(
-        self,
-        id: str,
-        user_id: str,
-        parent_id: str,
-        db: Optional[Session] = None,
-    ) -> Optional[FolderModel]:
-        try:
-            with get_db_context(db) as db:
-                folder = db.query(Folder).filter_by(id=id, user_id=user_id).first()
-
-                if not folder:
-                    return None
-
-                folder.parent_id = parent_id
-                folder.updated_at = int(time.time())
-
-                db.flush()
-
-                return FolderModel.model_validate(folder)
-        except Exception as e:
-            log.error(f"update_folder: {e}")
-            return
 
     def update_folder_by_id_and_user_id(
         self,
@@ -241,7 +175,6 @@ class FolderTable:
                     db.query(Folder)
                     .filter_by(
                         name=form_data.get("name"),
-                        parent_id=folder.parent_id,
                         user_id=user_id,
                     )
                     .first()
@@ -295,32 +228,14 @@ class FolderTable:
         self, id: str, user_id: str, db: Optional[Session] = None
     ) -> list[str]:
         try:
-            folder_ids = []
             with get_db_context(db) as db:
                 folder = db.query(Folder).filter_by(id=id, user_id=user_id).first()
                 if not folder:
-                    return folder_ids
+                    return []
 
-                folder_ids.append(folder.id)
-
-                # Delete all children folders
-                def delete_children(folder):
-                    folder_children = self.get_folders_by_parent_id_and_user_id(
-                        folder.id, user_id, db=db
-                    )
-                    for folder_child in folder_children:
-
-                        delete_children(folder_child)
-                        folder_ids.append(folder_child.id)
-
-                        folder = db.query(Folder).filter_by(id=folder_child.id).first()
-                        db.delete(folder)
-                        db.flush()
-
-                delete_children(folder)
                 db.delete(folder)
                 db.flush()
-                return folder_ids
+                return [folder.id]
         except Exception as e:
             log.error(f"delete_folder: {e}")
             return []
@@ -346,13 +261,6 @@ class FolderTable:
             for folder in folders:
                 if self.normalize_folder_name(folder.name) in normalized_queries:
                     results[folder.id] = FolderModel.model_validate(folder)
-
-                    # get children folders
-                    children = self.get_children_folders_by_id_and_user_id(
-                        folder.id, user_id, db=db
-                    )
-                    for child in children:
-                        results[child.id] = child
 
         # Return the results as a list
         if not results:

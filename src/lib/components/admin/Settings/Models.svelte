@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { marked } from 'marked';
-	import fileSaver from 'file-saver';
-	const { saveAs } = fileSaver;
+	import { saveAs } from '$lib/utils';
 
 	import { onMount, getContext } from 'svelte';
 	const i18n = getContext('i18n');

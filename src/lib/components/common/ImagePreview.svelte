@@ -2,8 +2,7 @@
 	import { onDestroy, getContext } from 'svelte';
 	import panzoom, { type PanZoom } from 'panzoom';
 
-	import fileSaver from 'file-saver';
-	const { saveAs } = fileSaver;
+	import { saveAs } from '$lib/utils';
 
 	import XMark from '$lib/components/icons/XMark.svelte';
 

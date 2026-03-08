@@ -40,7 +40,7 @@
 		updateChatFolderIdById,
 		importChats
 	} from '$lib/apis/chats';
-	import { createNewFolder, getFolders, updateFolderParentIdById } from '$lib/apis/folders';
+	import { createNewFolder, getFolders } from '$lib/apis/folders';
 	import { checkActiveChats } from '$lib/apis/tasks';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
@@ -87,23 +87,6 @@
 		for (const folder of folderList) {
 			folders[folder.id] = { ...(folders[folder.id] || {}), ...folder };
 		}
-
-		// Second pass: Tie child folders to their parents
-		for (const folder of folderList) {
-			if (folder.parent_id) {
-				if (!folders[folder.parent_id]) {
-					folders[folder.parent_id] = {};
-				}
-
-				folders[folder.parent_id].childrenIds = folders[folder.parent_id].childrenIds
-					? [...folders[folder.parent_id].childrenIds, folder.id]
-					: [folder.id];
-
-				folders[folder.parent_id].childrenIds.sort((a, b) => {
-					return folders[b].updated_at - folders[a].updated_at;
-				});
-			}
-		}
 	};
 
 	const createFolder = async ({ name, data }) => {
@@ -113,11 +96,11 @@
 			return;
 		}
 
-		const rootFolders = Object.values(folders).filter((folder) => folder.parent_id === null);
-		if (rootFolders.find((folder) => folder.name.toLowerCase() === name.toLowerCase())) {
+		const allFolders = Object.values(folders);
+		if (allFolders.find((folder) => folder.name.toLowerCase() === name.toLowerCase())) {
 			let i = 1;
 			while (
-				rootFolders.find((folder) => folder.name.toLowerCase() === `${name} ${i}`.toLowerCase())
+				allFolders.find((folder) => folder.name.toLowerCase() === `${name} ${i}`.toLowerCase())
 			) {
 				i++;
 			}
@@ -776,26 +759,6 @@
 						showCreateFolderModal = true;
 					}}
 					onAddLabel={$i18n.t('New Folder')}
-					ondrop={async (data) => {
-						const { type, id } = data;
-
-						if (type === 'folder') {
-							if (folders[id].parent_id === null) {
-								return;
-							}
-
-							const res = await updateFolderParentIdById(localStorage.token, id, null).catch(
-								(error) => {
-									toast.error(`${error}`);
-									return null;
-								}
-							);
-
-							if (res) {
-								await initFolders();
-							}
-						}
-					}}
 				>
 					<Folders
 						bind:folderRegistry
@@ -805,12 +768,7 @@
 							selectedFolder.set(null);
 							initChatList();
 						}}
-						on:update={() => {
-							initChatList();
-						}}
-						on:change={async () => {
-							initChatList();
-						}}
+						onchange={() => initChatList()}
 					/>
 				</Folder>
 
@@ -856,21 +814,6 @@
 								}
 
 								initChatList();
-							}
-						} else if (type === 'folder') {
-							if (folders[id].parent_id === null) {
-								return;
-							}
-
-							const res = await updateFolderParentIdById(localStorage.token, id, null).catch(
-								(error) => {
-									toast.error(`${error}`);
-									return null;
-								}
-							);
-
-							if (res) {
-								await initFolders();
 							}
 						}
 					}}

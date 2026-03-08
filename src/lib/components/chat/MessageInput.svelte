@@ -726,7 +726,6 @@
 													richText={$settings?.richTextInput ?? true}
 													messageInput={true}
 													showFormattingToolbar={$settings?.showFormattingToolbar ?? false}
-
 													insertPromptAsRichText={$settings?.insertPromptAsRichText ?? false}
 													shiftEnter={!($settings?.ctrlEnterToSend ?? false) &&
 														!$mobile &&

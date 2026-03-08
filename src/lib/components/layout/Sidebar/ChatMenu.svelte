@@ -2,8 +2,7 @@
 	import { DropdownMenu } from 'bits-ui';
 	import { getContext, createEventDispatcher, untrack } from 'svelte';
 
-	import fileSaver from 'file-saver';
-	const { saveAs } = fileSaver;
+	import { saveAs } from '$lib/utils';
 
 	const dispatch = createEventDispatcher();
 

@@ -70,7 +70,11 @@
 {#if models !== null && taskConfig}
 	<form
 		class="flex flex-col h-full justify-between space-y-3 text-sm"
-		onsubmit={(e) => { e.preventDefault(); updateInterfaceHandler(); onsave(); }}
+		onsubmit={(e) => {
+			e.preventDefault();
+			updateInterfaceHandler();
+			onsave();
+		}}
 	>
 		<div class="  overflow-y-scroll scrollbar-hidden h-full pr-1.5">
 			<div class="mb-3.5">
