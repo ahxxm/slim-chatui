@@ -64,6 +64,13 @@
 		updatePosition();
 	};
 
+	const showFromTouch = () => {
+		show();
+		requestAnimationFrame(() => {
+			document.addEventListener('touchstart', hide, { once: true });
+		});
+	};
+
 	const hide = () => {
 		if (tooltipEl) {
 			tooltipEl.style.transition = `opacity ${duration[1]}ms`;
@@ -77,6 +84,7 @@
 	};
 
 	onDestroy(() => {
+		document.removeEventListener('touchstart', hide);
 		if (tooltipEl) {
 			tooltipEl.remove();
 			tooltipEl = null;
@@ -94,7 +102,7 @@
 	onmouseleave={hide}
 	onfocus={show}
 	onblur={hide}
-	ontouchstart={touch ? show : undefined}
+	ontouchstart={touch ? showFromTouch : undefined}
 >
 	<slot />
 </svelte:element>
