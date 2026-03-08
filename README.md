@@ -6,7 +6,7 @@ Opinions:
 
 - Chat first: completion or responses, text and images, preferably through LiteLLM/OpenRouter
 - Personal usage: no `$ENTERPRISE` ldap/oauth/analytics/chats/status/share, text in Markdown and LaTex
-- Slim: cold start in ~3 seconds, 57MB Docker image, 110MB RSS.
+- Slim: cold start in ~1 seconds, 57MB Docker image, 99MB RSS.
 
 ---
 

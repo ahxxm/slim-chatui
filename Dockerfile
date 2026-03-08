@@ -31,11 +31,15 @@ COPY ./package.json ./LICENSE ./README.md ./pyproject.toml /app/
 COPY ./backend .
 COPY --from=build /app/build /app/build
 
+# Precompile bytecode makes startup much faster, 3s->1s.
+# At the cost of increased Docker image compressed size, 
+# +7M gzip or +6M zstd at default levels.
 RUN pip3 install --no-cache-dir uv && \
     uv pip compile --no-header --all-extras /app/pyproject.toml -o /tmp/requirements.txt && \
     uv pip install --system --no-cache-dir -r /tmp/requirements.txt && \
     pip3 uninstall -y uv pip && \
     rm /tmp/requirements.txt && \
+    python3 -m compileall -q /usr/local/lib/python3.12/site-packages/ && \
     mkdir -p /app/backend/data
 
 EXPOSE 8080
