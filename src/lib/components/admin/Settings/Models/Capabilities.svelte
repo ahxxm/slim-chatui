@@ -31,13 +31,17 @@
 		}
 	};
 
-	export let capabilities: {
-		vision?: boolean;
-		file_upload?: boolean;
-		usage?: boolean;
-		citations?: boolean;
-		status_updates?: boolean;
-	} = {};
+	let {
+		capabilities = $bindable({})
+	}: {
+		capabilities?: {
+			vision?: boolean;
+			file_upload?: boolean;
+			usage?: boolean;
+			citations?: boolean;
+			status_updates?: boolean;
+		};
+	} = $props();
 </script>
 
 <div>
@@ -48,9 +52,9 @@
 		{#each Object.keys(capabilityLabels) as capability}
 			<div class=" flex items-center gap-2 mr-3">
 				<Checkbox
-					state={capabilities[capability] ? 'checked' : 'unchecked'}
-					on:change={(e) => {
-						capabilities[capability] = e.detail === 'checked';
+					checked={capabilities[capability] ? 'checked' : 'unchecked'}
+					onchange={(value) => {
+						capabilities[capability] = value === 'checked';
 					}}
 				/>
 

@@ -215,7 +215,7 @@
 <DeleteConfirmDialog
 	bind:show={showDeleteConfirm}
 	title={$i18n.t('Delete message?')}
-	on:confirm={() => {
+	onConfirm={() => {
 		deleteMessageHandler();
 	}}
 />

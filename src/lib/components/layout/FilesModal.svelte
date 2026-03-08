@@ -181,7 +181,7 @@
 
 <ConfirmDialog
 	bind:show={showDeleteConfirmDialog}
-	on:confirm={() => {
+	onConfirm={() => {
 		if (selectedFileId) {
 			deleteHandler(selectedFileId);
 			selectedFileId = null;

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
-	import { createEventDispatcher, getContext } from 'svelte';
+	import { getContext } from 'svelte';
 
 	const i18n = getContext('i18n');
 
@@ -12,21 +12,14 @@
 		content
 	}: {
 		show?: boolean;
-		side?: string;
-		align?: string;
+		side?: 'bottom' | 'top' | 'right' | 'left';
+		align?: 'start' | 'center' | 'end';
 		children?: any;
 		content?: any;
 	} = $props();
-
-	const dispatch = createEventDispatcher();
 </script>
 
-<DropdownMenu.Root
-	bind:open={show}
-	onOpenChange={(state) => {
-		dispatch('change', state);
-	}}
->
+<DropdownMenu.Root bind:open={show}>
 	<DropdownMenu.Trigger>
 		{#snippet child({ props })}
 			<div {...props}>

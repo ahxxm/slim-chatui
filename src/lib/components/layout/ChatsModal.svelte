@@ -66,7 +66,7 @@
 
 <ConfirmDialog
 	bind:show={showDeleteConfirmDialog}
-	on:confirm={() => {
+	onConfirm={() => {
 		if (selectedChatId) {
 			deleteHandler(selectedChatId);
 			selectedChatId = null;
@@ -141,7 +141,7 @@
 			{/if}
 
 			<div class=" flex flex-col w-full sm:flex-row sm:justify-center sm:space-x-6">
-				{#if chatList}
+				{#if chatList?.length != null}
 					<div class="w-full">
 						{#if chatList.length > 0}
 							<div class="flex text-xs font-medium mb-1.5">

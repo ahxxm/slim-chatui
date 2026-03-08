@@ -776,8 +776,8 @@
 						showCreateFolderModal = true;
 					}}
 					onAddLabel={$i18n.t('New Folder')}
-					on:drop={async (e) => {
-						const { type, id, item } = e.detail;
+					ondrop={async (data) => {
+						const { type, id } = data;
 
 						if (type === 'folder') {
 							if (folders[id].parent_id === null) {
@@ -808,10 +808,6 @@
 						on:update={() => {
 							initChatList();
 						}}
-						on:import={(e) => {
-							const { folderId, items } = e.detail;
-							importChatHandler(items, false, folderId);
-						}}
 						on:change={async () => {
 							initChatList();
 						}}
@@ -823,14 +819,11 @@
 					className="px-2 mt-0.5"
 					name={$i18n.t('Chats')}
 					chevron={false}
-					on:change={async () => {
+					onchange={async () => {
 						selectedFolder.set(null);
 					}}
-					on:import={(e) => {
-						importChatHandler(e.detail);
-					}}
-					on:drop={async (e) => {
-						const { type, id, item } = e.detail;
+					ondrop={async (data) => {
+						const { type, id, item } = data;
 
 						if (type === 'chat') {
 							let chat = await getChatById(localStorage.token, id).catch(() => null);
@@ -888,11 +881,8 @@
 								<Folder
 									id="sidebar-pinned-chats"
 									buttonClassName=" text-gray-500"
-									on:import={(e) => {
-										importChatHandler(e.detail, true);
-									}}
-									on:drop={async (e) => {
-										const { type, id, item } = e.detail;
+									ondrop={async (data) => {
+										const { type, id, item } = data;
 
 										if (type === 'chat') {
 											let chat = await getChatById(localStorage.token, id).catch(() => null);

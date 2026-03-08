@@ -114,14 +114,14 @@
 
 <ConfirmDialog
 	bind:show={showDeleteConfirmDialog}
-	on:confirm={() => {
+	onConfirm={() => {
 		deleteUserHandler(selectedUser.id);
 	}}
 />
 
 <AddUserModal
 	bind:show={showAddUserModal}
-	on:save={async () => {
+	onsave={async () => {
 		getUserList();
 	}}
 />
@@ -130,7 +130,7 @@
 	bind:show={showEditUserModal}
 	{selectedUser}
 	sessionUser={$user}
-	on:save={async () => {
+	onsave={async () => {
 		getUserList();
 	}}
 />

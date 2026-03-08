@@ -1,23 +1,27 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	const dispatch = createEventDispatcher();
-
 	let {
-		state = 'unchecked',
+		checked = 'unchecked',
 		indeterminate = false,
 		disabled = false,
-		disabledClassName = 'opacity-50 cursor-not-allowed'
+		disabledClassName = 'opacity-50 cursor-not-allowed',
+		onchange
+	}: {
+		checked?: string;
+		indeterminate?: boolean;
+		disabled?: boolean;
+		disabledClassName?: string;
+		onchange: (value: string) => void;
 	} = $props();
 
-	let _state = $state('unchecked');
+	let current = $state('unchecked');
 
 	$effect(() => {
-		_state = state;
+		current = checked;
 	});
 </script>
 
 <button
-	class=" outline -outline-offset-1 outline-[1.5px] outline-gray-200 dark:outline-gray-600 {state !==
+	class=" outline -outline-offset-1 outline-[1.5px] outline-gray-200 dark:outline-gray-600 {current !==
 	'unchecked'
 		? 'bg-black outline-black '
 		: 'hover:outline-gray-500 hover:bg-gray-50 dark:hover:bg-gray-800'} text-white transition-all rounded-sm inline-block w-3.5 h-3.5 relative {disabled
@@ -26,24 +30,24 @@
 	onclick={() => {
 		if (disabled) return;
 
-		if (_state === 'unchecked') {
-			_state = 'checked';
-			dispatch('change', _state);
-		} else if (_state === 'checked') {
-			_state = 'unchecked';
+		if (current === 'unchecked') {
+			current = 'checked';
+			onchange(current);
+		} else if (current === 'checked') {
+			current = 'unchecked';
 			if (!indeterminate) {
-				dispatch('change', _state);
+				onchange(current);
 			}
 		} else if (indeterminate) {
-			_state = 'checked';
-			dispatch('change', _state);
+			current = 'checked';
+			onchange(current);
 		}
 	}}
 	type="button"
 	{disabled}
 >
 	<div class="top-0 left-0 absolute w-full flex justify-center">
-		{#if _state === 'checked'}
+		{#if current === 'checked'}
 			<svg
 				class="w-3.5 h-3.5"
 				aria-hidden="true"

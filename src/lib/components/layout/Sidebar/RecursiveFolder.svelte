@@ -84,110 +84,70 @@
 		}
 
 		if (folderElement.contains(e.target)) {
-			console.log('Dropped on the Button');
+			const dataTransfer = e.dataTransfer.getData('text/plain');
 
-			if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-				// Iterate over all items in the DataTransferItemList use functional programming
-				for (const item of Array.from(e.dataTransfer.items)) {
-					// If dropped items aren't files, reject them
-					if (item.kind === 'file') {
-						const file = item.getAsFile();
-						if (file && file.type === 'application/json') {
-							console.log('Dropped file is a JSON file!');
+			if (dataTransfer) {
+				try {
+					const data = JSON.parse(dataTransfer);
+					const { type, id, item } = data;
 
-							// Read the JSON file with FileReader
-							const reader = new FileReader();
-							reader.onload = async function (event) {
-								try {
-									const fileContent = JSON.parse(event.target.result);
-									open = true;
-									dispatch('import', {
-										folderId: folderId,
-										items: fileContent
-									});
-								} catch (error) {
-									console.error('Error parsing JSON file:', error);
+					if (type === 'folder') {
+						open = true;
+						if (id === folderId) {
+							return;
+						}
+						const res = await updateFolderParentIdById(localStorage.token, id, folderId).catch(
+							(error) => {
+								toast.error(`${error}`);
+								return null;
+							}
+						);
+
+						if (res) {
+							dispatch('update');
+						}
+					} else if (type === 'chat') {
+						open = true;
+
+						let chat = await getChatById(localStorage.token, id).catch(() => null);
+
+						if (!chat && item) {
+							chat = await importChats(localStorage.token, [
+								{
+									chat: item.chat,
+									meta: item?.meta ?? {},
+									pinned: false,
+									folder_id: null,
+									created_at: item?.created_at ?? null,
+									updated_at: item?.updated_at ?? null
 								}
-							};
-
-							// Start reading the file
-							reader.readAsText(file);
-						} else {
-							console.error('Only JSON file types are supported.');
+							]).catch((error) => {
+								toast.error(`${error}`);
+								return null;
+							});
 						}
 
-						console.log(file);
-					} else {
-						// Handle the drag-and-drop data for folders or chats (same as before)
-						const dataTransfer = e.dataTransfer.getData('text/plain');
+						const res = await updateChatFolderIdById(
+							localStorage.token,
+							chat.id,
+							folderId
+						).catch((error) => {
+							toast.error(`${error}`);
+							return null;
+						});
 
-						try {
-							const data = JSON.parse(dataTransfer);
-							console.log(data);
+						onItemMove({
+							originFolderId: chat.folder_id,
+							targetFolderId: folderId,
+							e
+						});
 
-							const { type, id, item } = data;
-
-							if (type === 'folder') {
-								open = true;
-								if (id === folderId) {
-									return;
-								}
-								// Move the folder
-								const res = await updateFolderParentIdById(localStorage.token, id, folderId).catch(
-									(error) => {
-										toast.error(`${error}`);
-										return null;
-									}
-								);
-
-								if (res) {
-									dispatch('update');
-								}
-							} else if (type === 'chat') {
-								open = true;
-
-								let chat = await getChatById(localStorage.token, id).catch(() => null);
-
-								if (!chat && item) {
-									chat = await importChats(localStorage.token, [
-										{
-											chat: item.chat,
-											meta: item?.meta ?? {},
-											pinned: false,
-											folder_id: null,
-											created_at: item?.created_at ?? null,
-											updated_at: item?.updated_at ?? null
-										}
-									]).catch((error) => {
-										toast.error(`${error}`);
-										return null;
-									});
-								}
-
-								// Move the chat
-								const res = await updateChatFolderIdById(
-									localStorage.token,
-									chat.id,
-									folderId
-								).catch((error) => {
-									toast.error(`${error}`);
-									return null;
-								});
-
-								onItemMove({
-									originFolderId: chat.folder_id,
-									targetFolderId: folderId,
-									e
-								});
-
-								if (res) {
-									dispatch('update');
-								}
-							}
-						} catch (error) {
-							console.log('Error parsing dataTransfer:', error);
+						if (res) {
+							dispatch('update');
 						}
 					}
+				} catch (error) {
+					console.log('Error parsing dataTransfer:', error);
 				}
 			}
 
@@ -413,7 +373,7 @@
 <DeleteConfirmDialog
 	bind:show={showDeleteConfirm}
 	title={$i18n.t('Delete folder?')}
-	on:confirm={() => {
+	onConfirm={() => {
 		deleteHandler();
 	}}
 >
@@ -620,9 +580,6 @@
 								parentDragged={dragged}
 								{onItemMove}
 								{onDelete}
-								on:import={(e) => {
-									dispatch('import', e.detail);
-								}}
 								on:update={(e) => {
 									dispatch('update', e.detail);
 								}}

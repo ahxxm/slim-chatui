@@ -170,7 +170,7 @@
 			/>
 		{:else if selectedTab === 'connections'}
 			<Connections
-				on:save={() => {
+				onsave={() => {
 					toast.success($i18n.t('Settings saved successfully!'));
 				}}
 			/>
@@ -178,7 +178,7 @@
 			<Models />
 		{:else if selectedTab === 'interface'}
 			<Interface
-				on:save={() => {
+				onsave={() => {
 					toast.success($i18n.t('Settings saved successfully!'));
 				}}
 			/>

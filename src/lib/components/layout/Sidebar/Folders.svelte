@@ -56,9 +56,6 @@
 		{shiftKey}
 		{onDelete}
 		{onItemMove}
-		on:import={(e) => {
-			dispatch('import', e.detail);
-		}}
 		on:update={(e) => {
 			dispatch('update', e.detail);
 		}}

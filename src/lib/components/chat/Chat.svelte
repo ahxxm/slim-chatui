@@ -1710,14 +1710,14 @@
 	inputPlaceholder={eventConfirmationInputPlaceholder}
 	inputValue={eventConfirmationInputValue}
 	inputType={eventConfirmationInputType}
-	on:confirm={(e) => {
-		if (e.detail) {
-			eventCallback(e.detail);
+	onConfirm={(value) => {
+		if (value) {
+			eventCallback(value);
 		} else {
 			eventCallback(true);
 		}
 	}}
-	on:cancel={() => {
+	oncancel={() => {
 		eventCallback(false);
 	}}
 />

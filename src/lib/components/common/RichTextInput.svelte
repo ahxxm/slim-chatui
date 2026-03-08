@@ -118,10 +118,7 @@
 
 	import StarterKit from '@tiptap/starter-kit';
 
-	// Bubble and Floating menus are currently fixed to v2 due to styling issues in v3
-	// TODO: Update to v3 when styling issues are resolved
-	import BubbleMenu from '@tiptap/extension-bubble-menu';
-	import FloatingMenu from '@tiptap/extension-floating-menu';
+
 
 	import { TableKit } from '@tiptap/extension-table';
 	import { ListKit } from '@tiptap/extension-list';
@@ -170,7 +167,6 @@
 		shiftEnter = false,
 		largeTextAsFile = false,
 		insertPromptAsRichText = false,
-		floatingMenuPlacement = 'bottom-start'
 	}: {
 		oncompositionstart?: (e: any) => void;
 		oncompositionend?: (e: any) => void;
@@ -200,7 +196,7 @@
 		shiftEnter?: boolean;
 		largeTextAsFile?: boolean;
 		insertPromptAsRichText?: boolean;
-		floatingMenuPlacement?: string;
+
 	} = $props();
 
 	// create a lowlight instance with all languages loaded
@@ -284,8 +280,6 @@
 	let jsonValue = $state('');
 	let mdValue = $state('');
 
-	let floatingMenuElement: Element | null = $state(null);
-	let bubbleMenuElement: Element | null = $state(null);
 	let element: Element | null = $state(null);
 
 	$effect(() => {
@@ -702,47 +696,7 @@
 							})
 						]
 					: []),
-				...(richText && showFormattingToolbar
-					? [
-							BubbleMenu.configure({
-								element: bubbleMenuElement,
-								tippyOptions: {
-									duration: 100,
-									arrow: false,
-									placement: 'top',
-									theme: 'transparent',
-									offset: [0, 2]
-								},
-								shouldShow: ({ editor, from, to }) => {
-									// safety check
-									if (!editor || !editor.view || editor.isDestroyed) {
-										return false;
-									}
-									// default logic
-									return from !== to;
-								}
-							}),
-							FloatingMenu.configure({
-								element: floatingMenuElement,
-								tippyOptions: {
-									duration: 100,
-									arrow: false,
-									placement: floatingMenuPlacement,
-									theme: 'transparent',
-									offset: [-12, 4]
-								},
-								shouldShow: ({ editor }) => {
-									// safety check
-									if (!editor || !editor.view || editor.isDestroyed) {
-										return false;
-									}
-									// default logic
-									return editor.isActive('paragraph');
-								}
-							})
-						]
-					: [])
-			],
+				],
 			content,
 			autofocus: messageInput ? true : false,
 			onTransaction: () => {
@@ -1128,12 +1082,8 @@
 	};
 </script>
 
-{#if richText && showFormattingToolbar}
-	<div bind:this={bubbleMenuElement} id="bubble-menu" class="p-0 {editor ? '' : 'hidden'}">
-		<FormattingButtons {editor} />
-	</div>
-
-	<div bind:this={floatingMenuElement} id="floating-menu" class="p-0 {editor ? '' : 'hidden'}">
+{#if richText && showFormattingToolbar && editor}
+	<div class="mb-1">
 		<FormattingButtons {editor} />
 	</div>
 {/if}

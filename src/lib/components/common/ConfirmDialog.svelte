@@ -1,11 +1,10 @@
 <script lang="ts">
 	import DOMPurify from 'dompurify';
 
-	import { getContext, createEventDispatcher, onDestroy, tick, untrack } from 'svelte';
+	import { getContext, tick, untrack } from 'svelte';
 	import * as FocusTrap from 'focus-trap';
 
 	const i18n = getContext('i18n');
-	const dispatch = createEventDispatcher();
 
 	import { fade } from 'svelte/transition';
 	import { flyAndScale } from '$lib/utils/transitions';
@@ -17,12 +16,25 @@
 		message = '',
 		cancelLabel = $i18n.t('Cancel'),
 		confirmLabel = $i18n.t('Confirm'),
-		onConfirm = () => {},
+		onConfirm = (value?: string) => {},
+		oncancel = () => {},
 		input = false,
 		inputPlaceholder = '',
 		inputValue = $bindable(''),
 		inputType = '',
 		show = $bindable(false)
+	}: {
+		title?: string;
+		message?: string;
+		cancelLabel?: string;
+		confirmLabel?: string;
+		onConfirm?: (value?: string) => void;
+		oncancel?: () => void;
+		input?: boolean;
+		inputPlaceholder?: string;
+		inputValue?: string;
+		inputType?: string;
+		show?: boolean;
 	} = $props();
 
 	$effect(() => {
@@ -31,62 +43,45 @@
 		}
 	});
 
-	let modalElement = $state(null);
-
-	let focusTrap: FocusTrap.FocusTrap | null = null;
+	let modalElement: HTMLDivElement | null = $state(null);
 
 	const init = () => {
 		inputValue = '';
 	};
 
-	const handleKeyDown = (event: KeyboardEvent) => {
-		if (event.key === 'Escape') {
-			console.log('Escape');
-			show = false;
-		}
+	const confirmHandler = async () => {
+		show = false;
+		await tick();
+		onConfirm(inputValue);
+	};
 
+	const handleKeyDown = (event: KeyboardEvent) => {
 		if (event.key === 'Enter') {
-			console.log('Enter');
 			event.preventDefault();
 			event.stopPropagation();
 			confirmHandler();
 		}
 	};
 
-	const confirmHandler = async () => {
-		show = false;
-		await tick();
-		await onConfirm();
-		dispatch('confirm', inputValue);
-	};
-
 	$effect(() => {
-		if (show && modalElement) {
-			document.body.appendChild(modalElement);
-			focusTrap = FocusTrap.createFocusTrap(modalElement);
-			focusTrap.activate();
+		if (!show || !modalElement) return;
 
-			window.addEventListener('keydown', handleKeyDown);
-			document.body.style.overflow = 'hidden';
-		} else if (modalElement) {
-			focusTrap.deactivate();
+		document.body.style.overflow = 'hidden';
+		const trap = FocusTrap.createFocusTrap(modalElement, {
+			escapeDeactivates: () => {
+				show = false;
+				return true;
+			},
+			allowOutsideClick: true
+		});
+		trap.activate();
+		window.addEventListener('keydown', handleKeyDown);
 
+		return () => {
+			trap.deactivate();
 			window.removeEventListener('keydown', handleKeyDown);
-			modalElement.remove();
-
 			document.body.style.overflow = 'unset';
-		}
-	});
-
-	onDestroy(() => {
-		show = false;
-		window.removeEventListener('keydown', handleKeyDown);
-		if (focusTrap) {
-			focusTrap.deactivate();
-		}
-		if (modalElement) {
-			modalElement.remove();
-		}
+		};
 	});
 </script>
 
@@ -95,7 +90,7 @@
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div
 		bind:this={modalElement}
-		class=" fixed top-0 right-0 left-0 bottom-0 bg-black/60 w-full h-screen max-h-[100dvh] flex justify-center z-99999999 overflow-hidden overscroll-contain"
+		class=" fixed top-0 right-0 left-0 bottom-0 bg-black/60 w-full h-screen max-h-[100dvh] flex justify-center z-9999 overflow-hidden overscroll-contain"
 		in:fade={{ duration: 10 }}
 		onmousedown={() => {
 			show = false;
@@ -158,7 +153,7 @@
 						class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-800 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-white font-medium w-full py-2 rounded-3xl transition"
 						onclick={() => {
 							show = false;
-							dispatch('cancel');
+							oncancel();
 						}}
 						type="button"
 					>

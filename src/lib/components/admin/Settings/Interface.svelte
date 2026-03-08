@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getModels, getTaskConfig, updateTaskConfig } from '$lib/apis';
-	import { createEventDispatcher, onMount, getContext } from 'svelte';
+	import { onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
 	import { getBaseModels } from '$lib/apis/models';
@@ -10,33 +10,30 @@
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
-	const dispatch = createEventDispatcher();
+	let { onsave }: { onsave: () => void } = $props();
 
 	const i18n = getContext('i18n');
 
-	let taskConfig = {
+	let taskConfig = $state({
 		TASK_MODEL: '',
 		ENABLE_TITLE_GENERATION: true,
 		TITLE_GENERATION_PROMPT_TEMPLATE: '',
 		ENABLE_FOLLOW_UP_GENERATION: true,
 		FOLLOW_UP_GENERATION_PROMPT_TEMPLATE: ''
-	};
+	});
 
 	const updateInterfaceHandler = async () => {
 		taskConfig = await updateTaskConfig(localStorage.token, taskConfig);
 	};
 
-	let workspaceModels = null;
-	let baseModels = null;
-
-	let models = null;
+	let models: any[] | null = $state(null);
 
 	const init = async () => {
 		try {
 			taskConfig = await getTaskConfig(localStorage.token);
 
-			workspaceModels = await getBaseModels(localStorage.token);
-			baseModels = await getModels(localStorage.token, null, false);
+			const workspaceModels = await getBaseModels(localStorage.token);
+			const baseModels = await getModels(localStorage.token, null, false);
 
 			models = baseModels.map((m) => {
 				const workspaceModel = workspaceModels.find((wm) => wm.id === m.id);
@@ -73,10 +70,7 @@
 {#if models !== null && taskConfig}
 	<form
 		class="flex flex-col h-full justify-between space-y-3 text-sm"
-		on:submit|preventDefault={() => {
-			updateInterfaceHandler();
-			dispatch('save');
-		}}
+		onsubmit={(e) => { e.preventDefault(); updateInterfaceHandler(); onsave(); }}
 	>
 		<div class="  overflow-y-scroll scrollbar-hidden h-full pr-1.5">
 			<div class="mb-3.5">
@@ -113,7 +107,7 @@
 						class="w-full rounded-lg py-2 px-4 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden"
 						bind:value={taskConfig.TASK_MODEL}
 						placeholder={$i18n.t('Select a model')}
-						on:change={() => {
+						onchange={() => {
 							if (taskConfig.TASK_MODEL) {
 								const model = models.find((m) => m.id === taskConfig.TASK_MODEL);
 								if (model) {
