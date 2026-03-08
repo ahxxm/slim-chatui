@@ -90,7 +90,7 @@
 						<button
 							aria-label={$i18n.t('Get started')}
 							class="relative z-20 flex p-1 rounded-full bg-white/5 hover:bg-white/10 transition font-medium text-sm"
-							on:click={() => {
+							onclick={() => {
 								getStartedHandler();
 							}}
 						>

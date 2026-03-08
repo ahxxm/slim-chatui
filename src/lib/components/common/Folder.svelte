@@ -1,8 +1,5 @@
 <script lang="ts">
-	import { getContext, createEventDispatcher, onMount, onDestroy } from 'svelte';
-
-	const i18n = getContext('i18n');
-	const dispatch = createEventDispatcher();
+	import { onMount, onDestroy, type Snippet } from 'svelte';
 
 	import ChevronDown from '../icons/ChevronDown.svelte';
 	import ChevronRight from '../icons/ChevronRight.svelte';
@@ -10,96 +7,69 @@
 	import Tooltip from './Tooltip.svelte';
 	import Plus from '../icons/Plus.svelte';
 
-	export let open = true;
+	let {
+		open = $bindable(true),
+		id = '',
+		name = '',
+		collapsible = true,
+		className = '',
+		buttonClassName = 'text-gray-600 dark:text-gray-400',
+		chevron = true,
+		onAddLabel = '',
+		onAdd = null as null | (() => void),
+		dragAndDrop = true,
+		ondrop = (data: any) => {},
+		onchange = (state: boolean) => {},
+		children
+	}: {
+		open?: boolean;
+		id?: string;
+		name?: string;
+		collapsible?: boolean;
+		className?: string;
+		buttonClassName?: string;
+		chevron?: boolean;
+		onAddLabel?: string;
+		onAdd?: null | (() => void);
+		dragAndDrop?: boolean;
+		ondrop?: (data: any) => void;
+		onchange?: (state: boolean) => void;
+		children?: Snippet;
+	} = $props();
 
-	export let id = '';
-	export let name = '';
-	export let collapsible = true;
+	let folderElement: HTMLDivElement;
+	let loaded = $state(false);
+	let draggedOver = $state(false);
 
-	export let className = '';
-	export let buttonClassName = 'text-gray-600 dark:text-gray-400';
-
-	export let chevron = true;
-	export let onAddLabel: string = '';
-	export let onAdd: null | Function = null;
-
-	export let dragAndDrop = true;
-
-	let folderElement;
-	let loaded = false;
-
-	let draggedOver = false;
-
-	const onDragOver = (e) => {
+	const onDragOver = (e: DragEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
 		draggedOver = true;
 	};
 
-	const onDrop = (e) => {
+	const onDrop = (e: DragEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
 
-		if (folderElement.contains(e.target)) {
-			console.log('Dropped on the Button');
-
-			if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-				// Iterate over all items in the DataTransferItemList use functional programming
-				for (const item of Array.from(e.dataTransfer.items)) {
-					// If dropped items aren't files, reject them
-					if (item.kind === 'file') {
-						const file = item.getAsFile();
-						if (file && file.type === 'application/json') {
-							console.log('Dropped file is a JSON file!');
-
-							// Read the JSON file with FileReader
-							const reader = new FileReader();
-							reader.onload = async function (event) {
-								try {
-									const fileContent = JSON.parse(event.target.result);
-									console.log('Parsed JSON Content: ', fileContent);
-									open = true;
-									dispatch('import', fileContent);
-								} catch (error) {
-									console.error('Error parsing JSON file:', error);
-								}
-							};
-
-							// Start reading the file
-							reader.readAsText(file);
-						} else {
-							console.error('Only JSON file types are supported.');
-						}
-					} else {
-						open = true;
-						try {
-							const dataTransfer = e.dataTransfer.getData('text/plain');
-							if (dataTransfer) {
-								const data = JSON.parse(dataTransfer);
-								console.log(data);
-								dispatch('drop', data);
-							} else {
-								console.log('Dropped text data is empty or not text/plain.');
-							}
-						} catch (error) {
-							console.log(
-								'Dropped data is not valid JSON text or is empty. Ignoring drop event for this type of data.'
-							);
-						} finally {
-							draggedOver = false;
-						}
-					}
+		if (folderElement.contains(e.target as Node)) {
+			try {
+				const dataTransfer = e.dataTransfer?.getData('text/plain');
+				if (dataTransfer) {
+					const data = JSON.parse(dataTransfer);
+					open = true;
+					ondrop(data);
 				}
+			} catch {
+				// Not valid JSON — ignore
+			} finally {
+				draggedOver = false;
 			}
-
-			draggedOver = false;
 		}
 	};
 
-	const onDragLeave = (e) => {
+	const onDragLeave = (e: DragEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
-
 		draggedOver = false;
 	};
 
@@ -108,24 +78,19 @@
 		if (state !== null) {
 			open = state === 'true';
 		}
-
 		loaded = true;
 
-		if (!dragAndDrop) {
-			return;
-		}
+		if (!dragAndDrop) return;
 		folderElement.addEventListener('dragover', onDragOver);
 		folderElement.addEventListener('drop', onDrop);
 		folderElement.addEventListener('dragleave', onDragLeave);
 	});
 
 	onDestroy(() => {
-		if (!dragAndDrop) {
-			return;
-		}
-		folderElement.removeEventListener('dragover', onDragOver);
-		folderElement.removeEventListener('drop', onDrop);
-		folderElement.removeEventListener('dragleave', onDragLeave);
+		if (!dragAndDrop) return;
+		folderElement?.removeEventListener('dragover', onDragOver);
+		folderElement?.removeEventListener('drop', onDrop);
+		folderElement?.removeEventListener('dragleave', onDragLeave);
 	});
 </script>
 
@@ -142,8 +107,8 @@
 				bind:open
 				className="w-full "
 				buttonClassName="w-full"
-				onChange={(state) => {
-					dispatch('change', state);
+				onChange={(state: boolean) => {
+					onchange(state);
 					localStorage.setItem(`${id}-folder-state`, `${state}`);
 				}}
 			>
@@ -171,10 +136,10 @@
 					{#if onAdd}
 						<button
 							class="absolute z-10 right-2 invisible group-hover:visible self-center flex items-center dark:text-gray-300"
-							on:pointerup={(e) => {
+							onpointerup={(e) => {
 								e.stopPropagation();
 							}}
-							on:click={(e) => {
+							onclick={(e) => {
 								e.stopPropagation();
 								onAdd();
 							}}
@@ -182,7 +147,7 @@
 							<Tooltip content={onAddLabel}>
 								<button
 									class="p-0.5 dark:hover:bg-gray-850 rounded-lg touch-auto"
-									on:click={(e) => {}}
+									onclick={() => {}}
 								>
 									<Plus className=" size-3" strokeWidth="2.5" />
 								</button>
@@ -192,11 +157,11 @@
 				</div>
 
 				<div slot="content" class="w-full">
-					<slot></slot>
+					{@render children?.()}
 				</div>
 			</Collapsible>
 		{:else}
-			<slot></slot>
+			{@render children?.()}
 		{/if}
 	{/if}
 </div>

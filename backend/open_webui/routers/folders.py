@@ -38,16 +38,8 @@ async def get_folders(
 ):
     folders = Folders.get_folders_by_user_id(user.id)
 
-    # Verify folder data integrity
     folder_list = []
     for folder in folders:
-        if folder.parent_id and not Folders.get_folder_by_id_and_user_id(
-            folder.parent_id, user.id
-        ):
-            folder = Folders.update_folder_parent_id_by_id_and_user_id(
-                folder.id, user.id, None
-            )
-
         if folder.data:
             if "files" in folder.data:
                 valid_files = []
@@ -81,9 +73,7 @@ def create_folder(
     form_data: FolderForm,
     user=Depends(get_verified_user),
 ):
-    folder = Folders.get_folder_by_parent_id_and_user_id_and_name(
-        None, user.id, form_data.name
-    )
+    folder = Folders.get_folder_by_user_id_and_name(user.id, form_data.name)
 
     if folder:
         raise HTTPException(
@@ -136,8 +126,8 @@ async def update_folder_name_by_id(
 
         if form_data.name is not None:
             # Check if folder with same name exists
-            existing_folder = Folders.get_folder_by_parent_id_and_user_id_and_name(
-                folder.parent_id, user.id, form_data.name
+            existing_folder = Folders.get_folder_by_user_id_and_name(
+                user.id, form_data.name
             )
             if existing_folder and existing_folder.id != id:
                 raise HTTPException(
@@ -147,52 +137,6 @@ async def update_folder_name_by_id(
 
         try:
             folder = Folders.update_folder_by_id_and_user_id(id, user.id, form_data)
-            return folder
-        except Exception as e:
-            log.exception(e)
-            log.error(f"Error updating folder: {id}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.DEFAULT("Error updating folder"),
-            )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-
-############################
-# Update Folder Parent Id By Id
-############################
-
-
-class FolderParentIdForm(BaseModel):
-    parent_id: Optional[str] = None
-
-
-@router.post("/{id}/update/parent")
-async def update_folder_parent_id_by_id(
-    id: str,
-    form_data: FolderParentIdForm,
-    user=Depends(get_verified_user),
-):
-    folder = Folders.get_folder_by_id_and_user_id(id, user.id)
-    if folder:
-        existing_folder = Folders.get_folder_by_parent_id_and_user_id_and_name(
-            form_data.parent_id, user.id, folder.name
-        )
-
-        if existing_folder:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.DEFAULT("Folder already exists"),
-            )
-
-        try:
-            folder = Folders.update_folder_parent_id_by_id_and_user_id(
-                id, user.id, form_data.parent_id
-            )
             return folder
         except Exception as e:
             log.exception(e)
@@ -256,41 +200,29 @@ async def delete_folder_by_id(
     user=Depends(get_verified_user),
     db: Session = Depends(get_session),
 ):
-    folders = []
-    folders.append(Folders.get_folder_by_id_and_user_id(id, user.id, db=db))
-    while folders:
-        folder = folders.pop()
-        if folder:
-            try:
-                folder_ids = Folders.delete_folder_by_id_and_user_id(id, user.id, db=db)
-
-                for folder_id in folder_ids:
-                    if delete_contents:
-                        Chats.delete_chats_by_user_id_and_folder_id(
-                            user.id, folder_id, db=db
-                        )
-                    else:
-                        Chats.move_chats_by_user_id_and_folder_id(
-                            user.id, folder_id, None, db=db
-                        )
-
-                return True
-            except Exception as e:
-                log.exception(e)
-                log.error(f"Error deleting folder: {id}")
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=ERROR_MESSAGES.DEFAULT("Error deleting folder"),
-                )
-            finally:
-                # Get all subfolders
-                subfolders = Folders.get_folders_by_parent_id_and_user_id(
-                    folder.id, user.id, db=db
-                )
-                folders.extend(subfolders)
-
-    else:
+    folder = Folders.get_folder_by_id_and_user_id(id, user.id, db=db)
+    if not folder:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+
+    try:
+        folder_ids = Folders.delete_folder_by_id_and_user_id(id, user.id, db=db)
+
+        for folder_id in folder_ids:
+            if delete_contents:
+                Chats.delete_chats_by_user_id_and_folder_id(user.id, folder_id, db=db)
+            else:
+                Chats.move_chats_by_user_id_and_folder_id(
+                    user.id, folder_id, None, db=db
+                )
+
+        return True
+    except Exception as e:
+        log.exception(e)
+        log.error(f"Error deleting folder: {id}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.DEFAULT("Error deleting folder"),
         )

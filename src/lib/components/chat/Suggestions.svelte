@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Fuse from 'fuse.js';
 	import Bolt from '$lib/components/icons/Bolt.svelte';
-	import { onMount, getContext } from 'svelte';
+	import { getContext } from 'svelte';
 	import { settings, WEBUI_NAME } from '$lib/stores';
 	import { WEBUI_VERSION } from '$lib/constants';
 
@@ -9,7 +9,7 @@
 
 	let { suggestionPrompts = [], className = '', inputValue = '', onSelect = (e) => {} } = $props();
 
-	let sortedPrompts = $state([]);
+	let sortedPrompts: { id?: string; content: string; title?: string[] }[] = $state([]);
 
 	const fuseOptions = {
 		keys: ['content', 'title'],
@@ -59,7 +59,7 @@
 				       px-3 py-2 rounded-xl bg-transparent hover:bg-black/5
 				       dark:hover:bg-white/5 transition group"
 					style="animation-delay: {idx * 60}ms"
-					on:click={() => onSelect({ type: 'prompt', data: prompt.content })}
+					onclick={() => onSelect({ type: 'prompt', data: prompt.content })}
 				>
 					<div class="flex flex-col text-left">
 						{#if prompt.title && prompt.title[0] !== ''}

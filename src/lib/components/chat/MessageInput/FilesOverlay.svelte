@@ -14,7 +14,7 @@
 			});
 		} else if (overlayElement) {
 			untrack(() => {
-				document.body.removeChild(overlayElement);
+				overlayElement.remove();
 				document.body.style.overflow = 'unset';
 			});
 		}

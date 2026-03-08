@@ -1,9 +1,8 @@
-<script>
+<script lang="ts">
 	import { toast } from 'svelte-sonner';
 
-	import { createEventDispatcher, getContext, onMount, untrack } from 'svelte';
+	import { getContext, onMount, untrack } from 'svelte';
 	const i18n = getContext('i18n');
-	const dispatch = createEventDispatcher();
 
 	import { models, config as _config } from '$lib/stores';
 	import { DEFAULT_CAPABILITIES } from '$lib/constants';
@@ -27,13 +26,10 @@
 
 	let { show = $bindable(false), initHandler = () => {} } = $props();
 
-	let config = $state(null);
+	let config: Record<string, any> | null = $state(null);
 
-	let selectedModelId = $state('');
-	let defaultModelIds = $state([]);
-
-	let selectedPinnedModelId = $state('');
-	let defaultPinnedModelIds = $state([]);
+	let defaultModelIds: string[] = $state([]);
+	let defaultPinnedModelIds: string[] = $state([]);
 
 	let loading = $state(false);
 	let showResetModal = $state(false);
@@ -44,7 +40,7 @@
 	let defaultCapabilities = $state({});
 	let defaultParams = $state({});
 
-	let promptSuggestions = $state([]);
+	let promptSuggestions: { content: string; title: string[] }[] = $state([]);
 
 	$effect(() => {
 		if (show) {
@@ -134,7 +130,7 @@
 			</div>
 			<button
 				class="self-center"
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -147,7 +143,8 @@
 				{#if config}
 					<form
 						class="flex flex-col w-full"
-						on:submit|preventDefault={() => {
+						onsubmit={(e) => {
+							e.preventDefault();
 							submitHandler();
 						}}
 					>
@@ -180,7 +177,7 @@
 										<button
 											class="flex w-full justify-between items-center"
 											type="button"
-											on:click={() => {
+											onclick={() => {
 												showDefaultPromptSuggestions = !showDefaultPromptSuggestions;
 											}}
 										>
@@ -217,7 +214,7 @@
 										<button
 											class="flex w-full justify-between items-center"
 											type="button"
-											on:click={() => {
+											onclick={() => {
 												showDefaultCapabilities = !showDefaultCapabilities;
 											}}
 										>
@@ -246,7 +243,7 @@
 										<button
 											class="flex w-full justify-between items-center"
 											type="button"
-											on:click={() => {
+											onclick={() => {
 												showDefaultParams = !showDefaultParams;
 											}}
 										>
@@ -278,7 +275,7 @@
 											<button
 												class="text-sm font-normal text-gray-500 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300 transition hover:underline"
 												type="button"
-												on:click={() => {
+												onclick={() => {
 													showResetModal = true;
 												}}
 											>

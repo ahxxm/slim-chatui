@@ -103,7 +103,7 @@
 
 			{#if !allLoaded && onLoadMore}
 				<Loader
-					on:visible={() => {
+					onvisible={() => {
 						if (!loading) {
 							onLoadMore();
 						}

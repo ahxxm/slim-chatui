@@ -1,8 +1,7 @@
 <script lang="ts">
-	import { config, models, settings, user } from '$lib/stores';
-	import { createEventDispatcher, onMount, getContext } from 'svelte';
+	import { config, settings } from '$lib/stores';
+	import { getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { setTextScale } from '$lib/utils/text-scale';
 
 	import Minus from '$lib/components/icons/Minus.svelte';
@@ -11,75 +10,63 @@
 	import ManageFloatingActionButtonsModal from './Interface/ManageFloatingActionButtonsModal.svelte';
 	import ManageImageCompressionModal from './Interface/ManageImageCompressionModal.svelte';
 
-	const dispatch = createEventDispatcher();
-
 	const i18n = getContext('i18n');
 
-	export let saveSettings: Function;
+	let {
+		saveSettings,
+		onsave
+	}: {
+		saveSettings: (settings: Record<string, unknown>) => void;
+		onsave: () => void;
+	} = $props();
 
-	let backgroundImageUrl = null;
-	let inputFiles = null;
-	let filesInputElement;
+	let inputFiles = $state(null);
+	let filesInputElement: HTMLInputElement;
+	let showManageFloatingActionButtonsModal = $state(false);
+	let showManageImageCompressionModal = $state(false);
 
-	// Addons
-	let titleAutoGenerate = true;
-	let autoFollowUps = true;
-
-	let responseAutoCopy = false;
-	let widescreenMode = false;
-	let splitLargeChunks = false;
-	let scrollOnBranchChange = true;
-	// Interface
-	let defaultModelId = '';
-	let showUsername = false;
-
-	let notificationSound = true;
-	let notificationSoundAlways = false;
-
-	let highContrastMode = false;
-
-	let richTextInput = true;
-	let showFormattingToolbar = false;
-	let insertPromptAsRichText = false;
-	let largeTextAsFile = false;
-
-	let insertSuggestionPrompt = false;
-	let keepFollowUpPrompts = false;
-	let insertFollowUpPrompt = false;
-
-	let regenerateMenu = true;
-	let enableMessageQueue = true;
-
-	let landingPageMode = '';
-	let chatBubble = true;
-	let chatDirection: 'LTR' | 'RTL' | 'auto' = 'auto';
-	let ctrlEnterToSend = false;
-	let copyFormatted = false;
-
-	let temporaryChatByDefault = false;
-	let chatFadeStreamingText = true;
-	let collapseCodeBlocks = false;
-	let expandDetails = false;
-	let renderMarkdownInPreviews = true;
-	let showChatTitleInTab = true;
-
-	let showFloatingActionButtons = true;
-	let floatingActionButtons = null;
-
-	let imageCompression = false;
-	let imageCompressionSize = {
-		width: '',
-		height: ''
-	};
-	let hapticFeedback = false;
-
-	let iframeSandboxAllowSameOrigin = false;
-	let iframeSandboxAllowForms = false;
-
-	let showManageFloatingActionButtonsModal = false;
-	let showManageImageCompressionModal = false;
-
-	let textScale = null;
+	// Settings state — initialized from $settings store, defaults match store schema
+	let titleAutoGenerate = $state($settings?.title?.auto ?? true);
+	let autoFollowUps = $state($settings?.autoFollowUps ?? true);
+	let responseAutoCopy = $state($settings?.responseAutoCopy ?? false);
+	let widescreenMode = $state($settings?.widescreenMode ?? false);
+	let scrollOnBranchChange = $state($settings?.scrollOnBranchChange ?? true);
+	let defaultModelId = $state(
+		$config?.default_models?.split(',')[0] ?? $settings?.models?.at(0) ?? ''
+	);
+	let showUsername = $state($settings?.showUsername ?? false);
+	let notificationSound = $state($settings?.notificationSound ?? true);
+	let notificationSoundAlways = $state($settings?.notificationSoundAlways ?? false);
+	let highContrastMode = $state($settings?.highContrastMode ?? false);
+	let richTextInput = $state($settings?.richTextInput ?? true);
+	let showFormattingToolbar = $state($settings?.showFormattingToolbar ?? false);
+	let insertPromptAsRichText = $state($settings?.insertPromptAsRichText ?? false);
+	let largeTextAsFile = $state($settings?.largeTextAsFile ?? false);
+	let insertSuggestionPrompt = $state($settings?.insertSuggestionPrompt ?? false);
+	let keepFollowUpPrompts = $state($settings?.keepFollowUpPrompts ?? false);
+	let insertFollowUpPrompt = $state($settings?.insertFollowUpPrompt ?? false);
+	let regenerateMenu = $state($settings?.regenerateMenu ?? true);
+	let enableMessageQueue = $state($settings?.enableMessageQueue ?? true);
+	let landingPageMode = $state($settings?.landingPageMode ?? '');
+	let chatBubble = $state($settings?.chatBubble ?? true);
+	let chatDirection: 'LTR' | 'RTL' | 'auto' = $state($settings?.chatDirection ?? 'auto');
+	let ctrlEnterToSend = $state($settings?.ctrlEnterToSend ?? false);
+	let copyFormatted = $state($settings?.copyFormatted ?? false);
+	let temporaryChatByDefault = $state($settings?.temporaryChatByDefault ?? false);
+	let chatFadeStreamingText = $state($settings?.chatFadeStreamingText ?? true);
+	let collapseCodeBlocks = $state($settings?.collapseCodeBlocks ?? false);
+	let expandDetails = $state($settings?.expandDetails ?? false);
+	let renderMarkdownInPreviews = $state($settings?.renderMarkdownInPreviews ?? true);
+	let showChatTitleInTab = $state($settings?.showChatTitleInTab ?? true);
+	let showFloatingActionButtons = $state($settings?.showFloatingActionButtons ?? true);
+	let floatingActionButtons = $state($settings?.floatingActionButtons ?? null);
+	let imageCompression = $state($settings?.imageCompression ?? false);
+	let imageCompressionSize = $state($settings?.imageCompressionSize ?? { width: '', height: '' });
+	let hapticFeedback = $state($settings?.hapticFeedback ?? false);
+	let iframeSandboxAllowSameOrigin = $state($settings?.iframeSandboxAllowSameOrigin ?? false);
+	let iframeSandboxAllowForms = $state($settings?.iframeSandboxAllowForms ?? false);
+	let backgroundImageUrl = $state($settings?.backgroundImageUrl ?? null);
+	let textScale: number | null = $state($settings?.textScale ?? null);
 
 	const toggleLandingPageMode = async () => {
 		landingPageMode = landingPageMode === '' ? 'chat' : '';
@@ -149,68 +136,6 @@
 		}
 		saveSettings({ textScale });
 	};
-
-	onMount(async () => {
-		titleAutoGenerate = $settings?.title?.auto ?? true;
-		autoFollowUps = $settings?.autoFollowUps ?? true;
-
-		highContrastMode = $settings?.highContrastMode ?? false;
-
-		responseAutoCopy = $settings?.responseAutoCopy ?? false;
-
-		showUsername = $settings?.showUsername ?? false;
-		chatFadeStreamingText = $settings?.chatFadeStreamingText ?? true;
-
-		richTextInput = $settings?.richTextInput ?? true;
-		showFormattingToolbar = $settings?.showFormattingToolbar ?? false;
-		insertPromptAsRichText = $settings?.insertPromptAsRichText ?? false;
-		insertSuggestionPrompt = $settings?.insertSuggestionPrompt ?? false;
-		keepFollowUpPrompts = $settings?.keepFollowUpPrompts ?? false;
-		insertFollowUpPrompt = $settings?.insertFollowUpPrompt ?? false;
-
-		regenerateMenu = $settings?.regenerateMenu ?? true;
-		enableMessageQueue = $settings?.enableMessageQueue ?? true;
-
-		largeTextAsFile = $settings?.largeTextAsFile ?? false;
-		copyFormatted = $settings?.copyFormatted ?? false;
-
-		collapseCodeBlocks = $settings?.collapseCodeBlocks ?? false;
-		expandDetails = $settings?.expandDetails ?? false;
-		renderMarkdownInPreviews = $settings?.renderMarkdownInPreviews ?? true;
-
-		landingPageMode = $settings?.landingPageMode ?? '';
-		chatBubble = $settings?.chatBubble ?? true;
-		widescreenMode = $settings?.widescreenMode ?? false;
-		splitLargeChunks = $settings?.splitLargeChunks ?? false;
-		scrollOnBranchChange = $settings?.scrollOnBranchChange ?? true;
-
-		temporaryChatByDefault = $settings?.temporaryChatByDefault ?? false;
-		chatDirection = $settings?.chatDirection ?? 'auto';
-		showChatTitleInTab = $settings?.showChatTitleInTab ?? true;
-
-		notificationSound = $settings?.notificationSound ?? true;
-		notificationSoundAlways = $settings?.notificationSoundAlways ?? false;
-
-		iframeSandboxAllowSameOrigin = $settings?.iframeSandboxAllowSameOrigin ?? false;
-		iframeSandboxAllowForms = $settings?.iframeSandboxAllowForms ?? false;
-
-		hapticFeedback = $settings?.hapticFeedback ?? false;
-		ctrlEnterToSend = $settings?.ctrlEnterToSend ?? false;
-
-		showFloatingActionButtons = $settings?.showFloatingActionButtons ?? true;
-		floatingActionButtons = $settings?.floatingActionButtons ?? null;
-
-		imageCompression = $settings?.imageCompression ?? false;
-		imageCompressionSize = $settings?.imageCompressionSize ?? { width: '', height: '' };
-		defaultModelId = $settings?.models?.at(0) ?? '';
-		if ($config?.default_models) {
-			defaultModelId = $config.default_models.split(',')[0];
-		}
-
-		backgroundImageUrl = $settings?.backgroundImageUrl ?? null;
-
-		textScale = $settings?.textScale ?? null;
-	});
 </script>
 
 <ManageFloatingActionButtonsModal
@@ -233,9 +158,10 @@
 <form
 	id="tab-interface"
 	class="flex flex-col h-full justify-between space-y-3 text-sm"
-	on:submit|preventDefault={() => {
+	onsubmit={(e) => {
+		e.preventDefault();
 		updateInterfaceHandler();
-		dispatch('save');
+		onsave();
 	}}
 >
 	<input
@@ -244,7 +170,7 @@
 		type="file"
 		hidden
 		accept="image/*"
-		on:change={() => {
+		onchange={() => {
 			let reader = new FileReader();
 			reader.onload = (event) => {
 				let originalImageUrl = `${event.target.result}`;
@@ -281,7 +207,7 @@
 							class="text-xs"
 							aria-live="polite"
 							type="button"
-							on:click={() => {
+							onclick={() => {
 								if (textScale === null) {
 									textScale = 1;
 								} else {
@@ -304,7 +230,7 @@
 						<button
 							type="button"
 							class="rounded-lg p-1 transition outline-gray-200 hover:bg-gray-100 dark:outline-gray-700 dark:hover:bg-gray-800"
-							on:click={() => {
+							onclick={() => {
 								textScale = Math.max(1, parseFloat((textScale - 0.1).toFixed(2)));
 								setTextScaleHandler(textScale);
 							}}
@@ -323,7 +249,7 @@
 								max="1.5"
 								step={0.01}
 								bind:value={textScale}
-								on:change={() => {
+								onchange={() => {
 									setTextScaleHandler(textScale);
 								}}
 								aria-labelledby="ui-scale-label"
@@ -337,7 +263,7 @@
 						<button
 							type="button"
 							class="rounded-lg p-1 transition outline-gray-200 hover:bg-gray-100 dark:outline-gray-700 dark:hover:bg-gray-800"
-							on:click={() => {
+							onclick={() => {
 								textScale = Math.min(1.5, parseFloat((textScale + 0.1).toFixed(2)));
 								setTextScaleHandler(textScale);
 							}}
@@ -361,7 +287,7 @@
 							ariaLabelledbyId="high-contrast-mode-label"
 							tooltip={true}
 							bind:state={highContrastMode}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ highContrastMode });
 							}}
 						/>
@@ -380,7 +306,7 @@
 							ariaLabelledbyId="use-chat-title-as-tab-title-label"
 							tooltip={true}
 							bind:state={showChatTitleInTab}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ showChatTitleInTab });
 							}}
 						/>
@@ -399,7 +325,7 @@
 							ariaLabelledbyId="notification-sound-label"
 							tooltip={true}
 							bind:state={notificationSound}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ notificationSound });
 							}}
 						/>
@@ -419,7 +345,7 @@
 								ariaLabelledbyId="play-notification-sound-label"
 								tooltip={true}
 								bind:state={notificationSoundAlways}
-								on:change={() => {
+								onchange={() => {
 									saveSettings({ notificationSoundAlways });
 								}}
 							/>
@@ -441,7 +367,7 @@
 							ariaLabelledbyId="haptic-feedback-label"
 							tooltip={true}
 							bind:state={hapticFeedback}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ hapticFeedback });
 							}}
 						/>
@@ -460,7 +386,7 @@
 							ariaLabelledbyId="copy-formatted-label"
 							tooltip={true}
 							bind:state={copyFormatted}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ copyFormatted });
 							}}
 						/>
@@ -481,7 +407,7 @@
 							ariaLabelledbyId="enable-message-queue-label"
 							tooltip={true}
 							bind:state={enableMessageQueue}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ enableMessageQueue });
 							}}
 						/>
@@ -498,7 +424,7 @@
 					<button
 						aria-labelledby="chat-direction-label chat-direction-mode"
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={toggleChangeChatDirection}
+						onclick={toggleChangeChatDirection}
 						type="button"
 					>
 						<span class="ml-2 self-center" id="chat-direction-mode">
@@ -521,7 +447,7 @@
 					<button
 						aria-labelledby="landing-page-mode-label notification-sound-state"
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
+						onclick={() => {
 							toggleLandingPageMode();
 						}}
 						type="button"
@@ -542,7 +468,7 @@
 					<button
 						aria-labelledby="chat-background-label background-image-url-state"
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
+						onclick={() => {
 							if (backgroundImageUrl !== null) {
 								backgroundImageUrl = null;
 								saveSettings({ backgroundImageUrl });
@@ -570,7 +496,7 @@
 							tooltip={true}
 							ariaLabelledbyId="chat-bubble-ui-label"
 							bind:state={chatBubble}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ chatBubble });
 							}}
 						/>
@@ -590,7 +516,7 @@
 								ariaLabelledbyId="chat-bubble-username-label"
 								tooltip={true}
 								bind:state={showUsername}
-								on:change={() => {
+								onchange={() => {
 									saveSettings({ showUsername });
 								}}
 							/>
@@ -610,7 +536,7 @@
 							ariaLabelledbyId="widescreen-mode-label"
 							tooltip={true}
 							bind:state={widescreenMode}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ widescreenMode });
 							}}
 						/>
@@ -629,7 +555,7 @@
 							ariaLabelledbyId="temp-chat-default-label"
 							tooltip={true}
 							bind:state={temporaryChatByDefault}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ temporaryChatByDefault });
 							}}
 						/>
@@ -648,7 +574,7 @@
 							ariaLabelledbyId="fade-streaming-label"
 							tooltip={true}
 							bind:state={chatFadeStreamingText}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ chatFadeStreamingText });
 							}}
 						/>
@@ -667,7 +593,7 @@
 							ariaLabelledbyId="auto-generation-label"
 							tooltip={true}
 							bind:state={titleAutoGenerate}
-							on:change={() => {
+							onchange={() => {
 								toggleTitleAutoGenerate();
 							}}
 						/>
@@ -686,7 +612,7 @@
 							ariaLabelledbyId="follow-up-auto-generation-label"
 							tooltip={true}
 							bind:state={autoFollowUps}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ autoFollowUps });
 							}}
 						/>
@@ -705,7 +631,7 @@
 							ariaLabelledbyId="auto-copy-label"
 							tooltip={true}
 							bind:state={responseAutoCopy}
-							on:change={() => {
+							onchange={() => {
 								toggleResponseAutoCopy();
 							}}
 						/>
@@ -724,7 +650,7 @@
 							ariaLabelledbyId="insert-suggestion-prompt-label"
 							tooltip={true}
 							bind:state={insertSuggestionPrompt}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ insertSuggestionPrompt });
 							}}
 						/>
@@ -743,7 +669,7 @@
 							ariaLabelledbyId="keep-follow-up-prompts-label"
 							tooltip={true}
 							bind:state={keepFollowUpPrompts}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ keepFollowUpPrompts });
 							}}
 						/>
@@ -762,7 +688,7 @@
 							ariaLabelledbyId="insert-follow-up-prompt-label"
 							tooltip={true}
 							bind:state={insertFollowUpPrompt}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ insertFollowUpPrompt });
 							}}
 						/>
@@ -781,7 +707,7 @@
 							ariaLabelledbyId="regenerate-menu-label"
 							tooltip={true}
 							bind:state={regenerateMenu}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ regenerateMenu });
 							}}
 						/>
@@ -800,7 +726,7 @@
 							ariaLabelledbyId="always-collapse-label"
 							tooltip={true}
 							bind:state={collapseCodeBlocks}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ collapseCodeBlocks });
 							}}
 						/>
@@ -819,7 +745,7 @@
 							ariaLabelledbyId="always-expand-label"
 							tooltip={true}
 							bind:state={expandDetails}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ expandDetails });
 							}}
 						/>
@@ -838,7 +764,7 @@
 							ariaLabelledbyId="render-markdown-in-previews-label"
 							tooltip={true}
 							bind:state={renderMarkdownInPreviews}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ renderMarkdownInPreviews });
 							}}
 						/>
@@ -857,7 +783,7 @@
 							ariaLabelledbyId="scroll-on-branch-change-label"
 							tooltip={true}
 							bind:state={scrollOnBranchChange}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ scrollOnBranchChange });
 							}}
 						/>
@@ -877,7 +803,7 @@
 								class="text-xs text-gray-700 dark:text-gray-400 underline"
 								type="button"
 								aria-label={$i18n.t('Open Modal To Manage Floating Quick Actions')}
-								on:click={() => {
+								onclick={() => {
 									showManageFloatingActionButtonsModal = true;
 								}}
 							>
@@ -889,7 +815,7 @@
 							ariaLabelledbyId="floating-action-buttons-label"
 							tooltip={true}
 							bind:state={showFloatingActionButtons}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ showFloatingActionButtons });
 							}}
 						/>
@@ -908,7 +834,7 @@
 					<button
 						aria-labelledby="enter-key-behavior-label"
 						class="p-1 px-3 text-xs flex rounded transition"
-						on:click={() => {
+						onclick={() => {
 							togglectrlEnterToSend();
 						}}
 						type="button"
@@ -933,7 +859,7 @@
 							tooltip={true}
 							ariaLabelledbyId="rich-input-label"
 							bind:state={richTextInput}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ richTextInput });
 							}}
 						/>
@@ -953,7 +879,7 @@
 								ariaLabelledbyId="show-formatting-toolbar-label"
 								tooltip={true}
 								bind:state={showFormattingToolbar}
-								on:change={() => {
+								onchange={() => {
 									saveSettings({ showFormattingToolbar });
 								}}
 							/>
@@ -972,7 +898,7 @@
 								ariaLabelledbyId="insert-prompt-as-rich-text-label"
 								tooltip={true}
 								bind:state={insertPromptAsRichText}
-								on:change={() => {
+								onchange={() => {
 									saveSettings({ insertPromptAsRichText });
 								}}
 							/>
@@ -992,7 +918,7 @@
 							tooltip={true}
 							ariaLabelledbyId="paste-large-label"
 							bind:state={largeTextAsFile}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ largeTextAsFile });
 							}}
 						/>
@@ -1013,7 +939,7 @@
 							ariaLabelledbyId="iframe-sandbox-allow-same-origin-label"
 							tooltip={true}
 							bind:state={iframeSandboxAllowSameOrigin}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ iframeSandboxAllowSameOrigin });
 							}}
 						/>
@@ -1032,7 +958,7 @@
 							ariaLabelledbyId="iframe-sandbox-allow-forms-label"
 							tooltip={true}
 							bind:state={iframeSandboxAllowForms}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ iframeSandboxAllowForms });
 							}}
 						/>
@@ -1053,7 +979,7 @@
 								class="text-xs text-gray-700 dark:text-gray-400 underline"
 								type="button"
 								aria-label={$i18n.t('Open Modal To Manage Image Compression')}
-								on:click={() => {
+								onclick={() => {
 									showManageImageCompressionModal = true;
 								}}
 							>
@@ -1065,7 +991,7 @@
 							ariaLabelledbyId="image-compression-label"
 							tooltip={true}
 							bind:state={imageCompression}
-							on:change={() => {
+							onchange={() => {
 								saveSettings({ imageCompression });
 							}}
 						/>

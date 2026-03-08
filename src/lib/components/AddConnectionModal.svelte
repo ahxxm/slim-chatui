@@ -41,7 +41,7 @@
 	let headers = $state('');
 
 	let modelId = $state('');
-	let modelIds = $state([]);
+	let modelIds: string[] = $state([]);
 
 	let loading = $state(false);
 
@@ -180,7 +180,7 @@
 			<button
 				class="self-center"
 				aria-label={$i18n.t('Close modal')}
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -192,7 +192,7 @@
 			<div class=" flex flex-col w-full sm:flex-row sm:justify-center sm:space-x-6">
 				<form
 					class="flex flex-col w-full"
-					on:submit={(e) => {
+					onsubmit={(e) => {
 						e.preventDefault();
 						submitHandler();
 					}}
@@ -234,7 +234,7 @@
 							<Tooltip content={$i18n.t('Verify Connection')} className="self-end -mb-1">
 								<button
 									class="self-center p-1 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-850 rounded-lg transition"
-									on:click={() => {
+									onclick={() => {
 										verifyOpenAIHandler();
 									}}
 									type="button"
@@ -377,7 +377,7 @@
 
 							<div>
 								<button
-									on:click={() => {
+									onclick={() => {
 										apiType = apiType === 'responses' ? '' : 'responses';
 									}}
 									type="button"
@@ -427,7 +427,7 @@
 														MODELID: modelId
 													})}
 													type="button"
-													on:click={() => {
+													onclick={() => {
 														modelIds = modelIds.filter((_, idx) => idx !== modelIdx);
 													}}
 												>
@@ -466,7 +466,7 @@
 								<button
 									type="button"
 									aria-label={$i18n.t('Add')}
-									on:click={() => {
+									onclick={() => {
 										addModelHandler();
 									}}
 								>
@@ -481,7 +481,7 @@
 							<button
 								class="px-3.5 py-1.5 text-sm font-medium dark:bg-black dark:hover:bg-gray-900 dark:text-white bg-white text-black hover:bg-gray-100 transition rounded-full flex flex-row space-x-1 items-center"
 								type="button"
-								on:click={() => {
+								onclick={() => {
 									onDelete();
 									show = false;
 								}}

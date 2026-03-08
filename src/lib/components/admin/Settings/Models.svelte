@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { marked } from 'marked';
-	import fileSaver from 'file-saver';
-	const { saveAs } = fileSaver;
+	import { saveAs } from '$lib/utils';
 
-	import { onMount, getContext, tick } from 'svelte';
+	import { onMount, getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
-	import { WEBUI_NAME, mobile, models as _models, settings, user } from '$lib/stores';
+	import { models as _models, settings, user } from '$lib/stores';
 	import {
 		createNewModel,
-		deleteAllModels,
 		getBaseModels,
 		toggleModelById,
 		updateModelById,
@@ -17,15 +15,13 @@
 	} from '$lib/apis/models';
 	import { copyToClipboard } from '$lib/utils';
 	import { page } from '$app/stores';
+	import { onDestroy } from 'svelte';
 	import { updateUserSettings } from '$lib/apis/users';
 
 	import { getModels } from '$lib/apis';
-	import Search from '$lib/components/icons/Search.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
-
 	import ModelEditor from './Models/ModelEditor.svelte';
 	import { toast } from 'svelte-sonner';
 	import ModelSettingsModal from './Models/ModelSettingsModal.svelte';
@@ -35,23 +31,22 @@
 	import Eye from '$lib/components/icons/Eye.svelte';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { DropdownMenu } from 'bits-ui';
-	import { flyAndScale } from '$lib/utils/transitions';
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import AdminViewSelector from './Models/AdminViewSelector.svelte';
 	import Pagination from '$lib/components/common/Pagination.svelte';
 
 	let shiftKey = $state(false);
+	let onMountCleanup: (() => void) | null = null;
 
 	let modelsImportInProgress = $state(false);
 	let importFiles = $state();
 	let modelsImportInputElement: HTMLInputElement;
 
-	let models = $state(null);
+	let models: any[] | null = $state(null);
 
-	let workspaceModels = null;
-	let baseModels = null;
+	let workspaceModels: any[] | null = null;
+	let baseModels: any[] | null = null;
 
-	let filteredModels = $state([]);
 	let selectedModelId = $state(null);
 
 	let showConfigModal = $state(false);
@@ -61,29 +56,20 @@
 	const perPage = 30;
 	let currentPage = $state(1);
 
-	$effect(() => {
-		if (models) {
-			filteredModels = models
-				.filter(
-					(m) => searchValue === '' || m.name.toLowerCase().includes(searchValue.toLowerCase())
-				)
-				.filter((m) => {
-					if (viewOption === 'enabled') return m?.is_active ?? true;
-					if (viewOption === 'disabled') return !(m?.is_active ?? true);
-					if (viewOption === 'visible') return !(m?.meta?.hidden ?? false);
-					if (viewOption === 'hidden') return m?.meta?.hidden === true;
-					return true;
-				})
-				.sort((a, b) => {
-					return (a?.name ?? a?.id ?? '').localeCompare(b?.name ?? b?.id ?? '');
-				});
-		}
-	});
-
-	let searchValue = $state('');
+	let filteredModels = $derived(
+		(models ?? [])
+			.filter((m) => {
+				if (viewOption === 'enabled') return m?.is_active ?? true;
+				if (viewOption === 'disabled') return !(m?.is_active ?? true);
+				if (viewOption === 'visible') return !(m?.meta?.hidden ?? false);
+				if (viewOption === 'hidden') return m?.meta?.hidden === true;
+				return true;
+			})
+			.sort((a, b) => (a?.name ?? a?.id ?? '').localeCompare(b?.name ?? b?.id ?? ''))
+	);
 
 	$effect(() => {
-		if (searchValue || viewOption !== undefined) {
+		if (viewOption !== undefined) {
 			currentPage = 1;
 		}
 	});
@@ -143,9 +129,7 @@
 		model.base_model_id = null;
 
 		if (workspaceModels.find((m) => m.id === model.id)) {
-			const res = await updateModelById(localStorage.token, model.id, model).catch((error) => {
-				return null;
-			});
+			const res = await updateModelById(localStorage.token, model.id, model).catch(() => null);
 
 			if (res) {
 				toast.success($i18n.t('Model updated successfully'));
@@ -158,9 +142,7 @@
 				base_model_id: null,
 				params: {},
 				...model
-			}).catch((error) => {
-				return null;
-			});
+			}).catch(() => null);
 
 			if (res) {
 				toast.success($i18n.t('Model updated successfully'));
@@ -180,9 +162,7 @@
 				meta: {},
 				params: {},
 				is_active: model.is_active
-			}).catch((error) => {
-				return null;
-			});
+			}).catch(() => null);
 		} else {
 			await toggleModelById(localStorage.token, model.id);
 		}
@@ -230,7 +210,7 @@
 	};
 
 	const pinModelHandler = async (modelId) => {
-		let pinnedModels = $settings?.pinnedModels ?? [];
+		let pinnedModels: string[] = $settings?.pinnedModels ?? [];
 
 		if (pinnedModels.includes(modelId)) {
 			pinnedModels = pinnedModels.filter((id) => id !== modelId);
@@ -270,11 +250,15 @@
 		window.addEventListener('keyup', onKeyUp);
 		window.addEventListener('blur-sm', onBlur);
 
-		return () => {
+		onMountCleanup = () => {
 			window.removeEventListener('keydown', onKeyDown);
 			window.removeEventListener('keyup', onKeyUp);
 			window.removeEventListener('blur-sm', onBlur);
 		};
+	});
+
+	onDestroy(() => {
+		onMountCleanup?.();
 	});
 </script>
 
@@ -302,7 +286,7 @@
 							type="file"
 							accept=".json"
 							hidden
-							on:change={() => {
+							onchange={() => {
 								if (importFiles.length > 0) {
 									const reader = new FileReader();
 									reader.onload = async (event) => {
@@ -333,7 +317,7 @@
 						<button
 							class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-gray-200 transition"
 							disabled={modelsImportInProgress}
-							on:click={() => {
+							onclick={() => {
 								modelsImportInputElement.click();
 							}}
 						>
@@ -347,7 +331,7 @@
 
 						<button
 							class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-gray-200 transition"
-							on:click={async () => {
+							onclick={async () => {
 								downloadModels(models);
 							}}
 						>
@@ -360,7 +344,7 @@
 					<button
 						class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-black hover:bg-gray-900 text-white dark:bg-white dark:hover:bg-gray-100 dark:text-black transition font-medium"
 						type="button"
-						on:click={() => {
+						onclick={() => {
 							showConfigModal = true;
 						}}
 					>
@@ -375,32 +359,7 @@
 		<div
 			class="py-2 bg-white dark:bg-gray-900 rounded-3xl border border-gray-100/30 dark:border-gray-850/30"
 		>
-			<div class="px-3.5 flex flex-1 items-center w-full space-x-2 py-0.5 pb-2">
-				<div class="flex flex-1 items-center">
-					<div class=" self-center ml-1 mr-3">
-						<Search className="size-3.5" />
-					</div>
-					<input
-						class=" w-full text-sm py-1 rounded-r-xl outline-hidden bg-transparent"
-						bind:value={searchValue}
-						placeholder={$i18n.t('Search Models')}
-					/>
-					{#if searchValue}
-						<div class="self-center pl-1.5 translate-y-[0.5px] rounded-l-xl bg-transparent">
-							<button
-								class="p-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition"
-								on:click={() => {
-									searchValue = '';
-								}}
-							>
-								<XMark className="size-3" strokeWidth="2" />
-							</button>
-						</div>
-					{/if}
-				</div>
-			</div>
-
-			<div class="px-3 flex w-full items-center bg-transparent overflow-x-auto scrollbar-none">
+			<div class="px-3 flex w-full items-center bg-transparent overflow-x-auto scrollbar-none pt-2">
 				<div
 					class="flex gap-0.5 w-fit text-center text-sm rounded-full bg-transparent whitespace-nowrap"
 				>
@@ -419,17 +378,16 @@
 						</button>
 					</Tooltip>
 
-					<div slot="content">
+					{#snippet content()}
 						<DropdownMenu.Content
-							class="w-full max-w-[170px] rounded-xl p-1 border border-gray-100 dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-sm"
+							class="bits-content w-full max-w-[170px] rounded-xl p-1 border border-gray-100 dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-sm"
 							sideOffset={-2}
 							side="bottom"
 							align="end"
-							transition={flyAndScale}
 						>
 							<DropdownMenu.Item
 								class="select-none flex gap-2 items-center px-3 py-1.5 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
-								on:click={() => {
+								onclick={() => {
 									enableAllHandler();
 								}}
 							>
@@ -439,7 +397,7 @@
 
 							<DropdownMenu.Item
 								class="select-none flex gap-2 items-center px-3 py-1.5 text-sm font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
-								on:click={() => {
+								onclick={() => {
 									disableAllHandler();
 								}}
 							>
@@ -447,7 +405,7 @@
 								<div class="flex items-center">{$i18n.t('Disable All')}</div>
 							</DropdownMenu.Item>
 						</DropdownMenu.Content>
-					</div>
+					{/snippet}
 				</Dropdown>
 			</div>
 
@@ -464,7 +422,7 @@
 							<button
 								class=" flex flex-1 text-left space-x-3.5 cursor-pointer w-full"
 								type="button"
-								on:click={() => {
+								onclick={() => {
 									selectedModelId = model.id;
 								}}
 							>
@@ -511,7 +469,7 @@
 										<button
 											class="self-center w-fit text-sm px-2 py-2 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
 											type="button"
-											on:click={() => {
+											onclick={() => {
 												hideModelHandler(model);
 											}}
 										>
@@ -526,7 +484,7 @@
 									<button
 										class="self-center w-fit text-sm px-2 py-2 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
 										type="button"
-										on:click={() => {
+										onclick={() => {
 											selectedModelId = model.id;
 										}}
 									>
@@ -578,7 +536,7 @@
 										>
 											<Switch
 												bind:state={model.is_active}
-												on:change={async () => {
+												onchange={async () => {
 													toggleModelHandler(model);
 												}}
 											/>
@@ -594,7 +552,7 @@
 							<div class=" text-3xl mb-3">😕</div>
 							<div class=" text-lg font-medium mb-1">{$i18n.t('No models found')}</div>
 							<div class=" text-gray-500 text-center text-xs">
-								{$i18n.t('Try adjusting your search or filter to find what you are looking for.')}
+								{$i18n.t('Try adjusting your filter to find what you are looking for.')}
 							</div>
 						</div>
 					</div>

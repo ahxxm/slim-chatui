@@ -2,8 +2,7 @@
 	import { onDestroy, getContext } from 'svelte';
 	import panzoom, { type PanZoom } from 'panzoom';
 
-	import fileSaver from 'file-saver';
-	const { saveAs } = fileSaver;
+	import { saveAs } from '$lib/utils';
 
 	import XMark from '$lib/components/icons/XMark.svelte';
 
@@ -15,7 +14,6 @@
 
 	let instance: PanZoom;
 
-	let sceneParentElement: HTMLElement;
 	let sceneElement: HTMLElement = $state();
 
 	$effect(() => {
@@ -30,12 +28,6 @@
 			});
 		}
 	});
-	const resetPanZoomViewport = () => {
-		instance.moveTo(0, 0);
-		instance.zoomAbs(0, 0, 1);
-		console.log(instance.getTransform());
-	};
-
 	const handleKeyDown = (event: KeyboardEvent) => {
 		if (event.key === 'Escape') {
 			console.log('Escape');
@@ -50,7 +42,7 @@
 			document.body.style.overflow = 'hidden';
 		} else if (previewElement) {
 			window.removeEventListener('keydown', handleKeyDown);
-			document.body.removeChild(previewElement);
+			previewElement.remove();
 			document.body.style.overflow = 'unset';
 		}
 	});
@@ -63,7 +55,7 @@
 		show = false;
 
 		if (previewElement) {
-			document.body.removeChild(previewElement);
+			previewElement.remove();
 		}
 	});
 </script>
@@ -79,12 +71,12 @@
 			<div>
 				<button
 					class=" p-5"
-					on:pointerdown={(e) => {
-						e.stopImmediatePropagation();
-						e.preventDefault();
+					onpointerdown={(event) => {
+						event.stopImmediatePropagation();
+						event.preventDefault();
 						show = false;
 					}}
-					on:click={(e) => {
+					onclick={() => {
 						show = false;
 					}}
 				>
@@ -95,7 +87,7 @@
 			<div>
 				<button
 					class=" p-5 z-999"
-					on:click={() => {
+					onclick={() => {
 						if (src.startsWith('data:image/')) {
 							const base64Data = src.split(',')[1];
 							const blob = new Blob([Uint8Array.from(atob(base64Data), (c) => c.charCodeAt(0))], {

@@ -47,20 +47,16 @@
 		}
 
 		page = 1;
-		chatList = null;
+
+		const fetchChats = async () => {
+			chatList = await getChatListByUserId(localStorage.token, user.id, page, filter);
+			allChatsLoaded = (chatList ?? []).length === 0;
+		};
 
 		if (query === '') {
-			chatList = await getChatListByUserId(localStorage.token, user.id, page, filter);
+			await fetchChats();
 		} else {
-			searchDebounceTimeout = setTimeout(async () => {
-				chatList = await getChatListByUserId(localStorage.token, user.id, page, filter);
-			}, 500);
-		}
-
-		if ((chatList ?? []).length === 0) {
-			allChatsLoaded = true;
-		} else {
-			allChatsLoaded = false;
+			searchDebounceTimeout = setTimeout(fetchChats, 500);
 		}
 	};
 
@@ -90,9 +86,7 @@
 		if (show) {
 			untrack(() => init());
 		} else {
-			chatList = null;
 			page = 1;
-
 			allChatsLoaded = false;
 			chatListLoading = false;
 		}

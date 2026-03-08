@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext, onMount, tick } from 'svelte';
+	import { getContext } from 'svelte';
 
 	const i18n = getContext('i18n');
 
@@ -24,7 +24,7 @@
 	const decodeString = (str: string) => {
 		try {
 			return decodeURIComponent(str);
-		} catch (e) {
+		} catch {
 			return str;
 		}
 	};

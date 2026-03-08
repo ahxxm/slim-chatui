@@ -1,14 +1,11 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { createEventDispatcher, onMount, getContext, tick } from 'svelte';
-
-	const dispatch = createEventDispatcher();
+	import { onMount, getContext } from 'svelte';
 
 	import { getOpenAIConfig, updateOpenAIConfig, getOpenAIModels } from '$lib/apis/openai';
 	import { getModels as _getModels, getBackendConfig } from '$lib/apis';
-	import { models, user } from '$lib/stores';
+	import { config, models, user } from '$lib/stores';
 
-	import Switch from '$lib/components/common/Switch.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Plus from '$lib/components/icons/Plus.svelte';
@@ -18,18 +15,20 @@
 
 	const i18n = getContext('i18n');
 
+	let { onsave }: { onsave: () => void } = $props();
+
 	const getModels = async () => {
 		const models = await _getModels(localStorage.token, false, true);
 		return models;
 	};
 
-	let OPENAI_API_KEYS = [''];
-	let OPENAI_API_BASE_URLS = [''];
-	let OPENAI_API_CONFIGS = {};
+	let OPENAI_API_KEYS = $state(['']);
+	let OPENAI_API_BASE_URLS = $state(['']);
+	let OPENAI_API_CONFIGS: Record<number, any> = $state({});
 
-	let loaded = false;
+	let loaded = $state(false);
 
-	let showAddOpenAIConnectionModal = false;
+	let showAddOpenAIConnectionModal = $state(false);
 
 	const updateOpenAIHandler = async () => {
 		// Remove trailing slashes
@@ -106,7 +105,7 @@
 	const submitHandler = async () => {
 		updateOpenAIHandler();
 
-		dispatch('save');
+		onsave();
 
 		await config.set(await getBackendConfig());
 	};
@@ -117,7 +116,13 @@
 	onSubmit={addOpenAIConnectionHandler}
 />
 
-<form class="flex flex-col h-full justify-between text-sm" on:submit|preventDefault={submitHandler}>
+<form
+	class="flex flex-col h-full justify-between text-sm"
+	onsubmit={(e) => {
+		e.preventDefault();
+		submitHandler();
+	}}
+>
 	<div class=" overflow-y-scroll scrollbar-hidden h-full">
 		{#if loaded}
 			<div class="mb-3.5">
@@ -133,7 +138,7 @@
 							<Tooltip content={$i18n.t(`Add Connection`)}>
 								<button
 									class="px-1"
-									on:click={() => {
+									onclick={() => {
 										showAddOpenAIConnectionModal = true;
 									}}
 									type="button"

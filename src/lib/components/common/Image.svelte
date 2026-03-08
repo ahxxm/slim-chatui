@@ -12,8 +12,7 @@
 		className = ` w-full ${($settings?.highContrastMode ?? false) ? '' : 'outline-hidden focus:outline-hidden'}`,
 		imageClassName = 'rounded-lg',
 		dismissible = false,
-		onDismiss = () => {},
-		...restProps
+		onDismiss = () => {}
 	} = $props();
 
 	const i18n = getContext('i18n');
@@ -28,7 +27,7 @@
 <div class=" relative group w-fit flex items-center">
 	<button
 		class={className}
-		on:click={() => {
+		onclick={() => {
 			showImagePreview = true;
 		}}
 		aria-label={$i18n.t('Show image preview')}
@@ -43,7 +42,7 @@
 				aria-label={$i18n.t('Remove image')}
 				class=" bg-white text-black border border-white rounded-full group-hover:visible invisible transition"
 				type="button"
-				on:click={() => {
+				onclick={() => {
 					onDismiss();
 				}}
 			>

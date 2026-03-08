@@ -164,7 +164,7 @@
 				<div class="flex items-center gap-0.5">
 					<button
 						class="flex gap-1 items-center bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
-						on:click={collapseCodeBlock}
+						onclick={collapseCodeBlock}
 					>
 						<div class=" -translate-y-[0.5px]">
 							<ChevronUpDown className="size-3" />
@@ -178,7 +178,7 @@
 					{#if save}
 						<button
 							class="save-code-button bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
-							on:click={saveCode}
+							onclick={saveCode}
 						>
 							{saved ? $i18n.t('Saved') : $i18n.t('Save')}
 						</button>
@@ -186,7 +186,7 @@
 
 					<button
 						class="copy-code-button bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
-						on:click={copyCode}>{copied ? $i18n.t('Copied') : $i18n.t('Copy')}</button
+						onclick={copyCode}>{copied ? $i18n.t('Copied') : $i18n.t('Copy')}</button
 					>
 				</div>
 			</div>

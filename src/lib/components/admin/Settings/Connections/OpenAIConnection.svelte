@@ -1,15 +1,12 @@
 <script lang="ts">
-	import { getContext, tick } from 'svelte';
+	import { getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
-	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 	import Cog6 from '$lib/components/icons/Cog6.svelte';
 	import AddConnectionModal from '$lib/components/AddConnectionModal.svelte';
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
-
-	import { connect } from 'socket.io-client';
 
 	export let onDelete = () => {};
 	export let onSubmit = () => {};
@@ -24,7 +21,7 @@
 
 <ConfirmDialog
 	bind:show={showDeleteConfirmDialog}
-	on:confirm={() => {
+	onConfirm={() => {
 		onDelete();
 	}}
 />
@@ -90,7 +87,7 @@
 		<Tooltip content={(config?.enable ?? true) ? $i18n.t('Enabled') : $i18n.t('Disabled')}>
 			<Switch
 				bind:state={config.enable}
-				on:change={() => {
+				onchange={() => {
 					config.enable = config.enable ?? false;
 					onSubmit({ url, key, config });
 				}}

@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { io } from 'socket.io-client';
 	import { spring } from 'svelte/motion';
 	import { Toaster, toast } from 'svelte-sonner';
@@ -35,12 +35,10 @@
 
 	import '../tailwind.css';
 	import '../app.css';
-	import 'tippy.js/dist/tippy.css';
-
 	import { getBackendConfig, getVersion } from '$lib/apis';
 	import { getSessionUser, userSignOut } from '$lib/apis/auths';
 
-	import { WEBUI_API_BASE_URL, WEBUI_BASE_URL, WEBUI_HOSTNAME } from '$lib/constants';
+	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { bestMatchingLanguage } from '$lib/utils';
 	import { setTextScale } from '$lib/utils/text-scale';
 
@@ -81,6 +79,8 @@
 	let showRefresh = false;
 
 	let heartbeatInterval = null;
+
+	let onMountCleanup: (() => void) | null = null;
 
 	const BREAKPOINT = 768;
 
@@ -156,9 +156,7 @@
 		});
 	};
 
-	const chatEventHandler = async (event, cb) => {
-		const chat = $page.url.pathname.includes(`/c/${event.chat_id}`);
-
+	const chatEventHandler = async (event) => {
 		// Skip events from temporary chats that are not the current chat.
 		// This prevents notifications from being sent to other tabs/devices
 		// for privacy, since temporary chats are not meant to be persisted or visible elsewhere.
@@ -198,14 +196,8 @@
 					}
 
 					if ($settings?.notificationEnabled ?? false) {
-						if ($isLastActiveTab) {
-							new Notification(`${displayTitle} • Open WebUI`, {
-								body: content,
-								icon: `${WEBUI_BASE_URL}/static/favicon.png`
-							});
-						}
-
 						toast.custom(NotificationToast, {
+							id: `completion-${event.chat_id}-${event.message_id}`,
 							componentProps: {
 								onClick: () => {
 									goto(`/c/${event.chat_id}`);
@@ -461,7 +453,7 @@
 			loaded = true;
 		}
 
-		return () => {
+		onMountCleanup = () => {
 			window.removeEventListener('resize', onResize);
 			document.removeEventListener('touchstart', touchstartHandler);
 			document.removeEventListener('touchmove', touchmoveHandler);
@@ -471,6 +463,7 @@
 	});
 
 	onDestroy(() => {
+		onMountCleanup?.();
 		bc.close();
 	});
 </script>

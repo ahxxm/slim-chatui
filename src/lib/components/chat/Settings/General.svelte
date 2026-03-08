@@ -1,45 +1,38 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
-	import { createEventDispatcher, onMount, getContext } from 'svelte';
+	import { onMount, getContext } from 'svelte';
 	import { getLanguages, changeLanguage } from '$lib/i18n';
-	const dispatch = createEventDispatcher();
 
-	import { config, models, settings, theme, user } from '$lib/stores';
+	import { config, settings, theme } from '$lib/stores';
 
 	const i18n = getContext('i18n');
 
 	import Textarea from '$lib/components/common/Textarea.svelte';
-	export let saveSettings: Function;
 
-	// General
-	let themes = ['dark', 'light', 'oled-dark'];
-	let selectedTheme = 'system';
+	let {
+		saveSettings,
+		onsave
+	}: {
+		saveSettings: (settings: Record<string, unknown>) => void;
+		onsave: () => void;
+	} = $props();
 
-	let languages: Awaited<ReturnType<typeof getLanguages>> = [];
-	let lang = $i18n.language;
-	let notificationEnabled = false;
-	let system = '';
+	const themes = ['dark', 'light', 'oled-dark'];
+	let selectedTheme = $state('system');
+	let languages: Awaited<ReturnType<typeof getLanguages>> = $state([]);
+	let lang = $state($i18n.language);
+	let notificationEnabled = $state(false);
+	let system = $state('');
 
-	const toggleNotification = async () => {
-		const permission = await Notification.requestPermission();
-
-		if (permission === 'granted') {
-			notificationEnabled = !notificationEnabled;
-			saveSettings({ notificationEnabled: notificationEnabled });
-		} else {
-			toast.error(
-				$i18n.t(
-					'Response notifications cannot be activated as the website permissions have been denied. Please visit your browser settings to grant the necessary access.'
-				)
-			);
-		}
+	const toggleNotification = () => {
+		notificationEnabled = !notificationEnabled;
+		saveSettings({ notificationEnabled });
 	};
 
 	const saveHandler = async () => {
 		saveSettings({
 			system: system !== '' ? system : undefined
 		});
-		dispatch('save');
+		onsave();
 	};
 
 	onMount(async () => {
@@ -140,7 +133,7 @@
 							: 'outline-hidden'}"
 						bind:value={selectedTheme}
 						placeholder={$i18n.t('Select a theme')}
-						on:change={() => themeChangeHandler(selectedTheme)}
+						onchange={() => themeChangeHandler(selectedTheme)}
 					>
 						<option value="system">⚙️ {$i18n.t('System')}</option>
 						<option value="dark">🌑 {$i18n.t('Dark')}</option>
@@ -162,7 +155,7 @@
 							: 'outline-hidden'}"
 						bind:value={lang}
 						placeholder={$i18n.t('Select a language')}
-						on:change={(e) => {
+						onchange={() => {
 							changeLanguage(lang);
 						}}
 					>
@@ -179,7 +172,7 @@
 
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
+						onclick={() => {
 							toggleNotification();
 						}}
 						type="button"
@@ -215,7 +208,7 @@
 	<div class="flex justify-end pt-3 text-sm font-medium">
 		<button
 			class="px-3.5 py-1.5 text-sm font-medium bg-black hover:bg-gray-900 text-white dark:bg-white dark:text-black dark:hover:bg-gray-100 transition rounded-full"
-			on:click={() => {
+			onclick={() => {
 				saveHandler();
 			}}
 		>

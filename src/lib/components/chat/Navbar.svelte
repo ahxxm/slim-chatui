@@ -1,12 +1,8 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import { toast } from 'svelte-sonner';
-
 	import {
-		WEBUI_NAME,
 		banners,
 		chatId,
-		config,
 		mobile,
 		settings,
 		showSidebar,
@@ -14,7 +10,6 @@
 		user
 	} from '$lib/stores';
 
-	import { slide } from 'svelte/transition';
 	import { page } from '$app/stores';
 	import { goto, replaceState } from '$app/navigation';
 
@@ -23,7 +18,6 @@
 	import Menu from '$lib/components/layout/Navbar/Menu.svelte';
 	import UserMenu from '$lib/components/layout/Sidebar/UserMenu.svelte';
 
-	import PencilSquare from '../icons/PencilSquare.svelte';
 	import Banner from '../common/Banner.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
 

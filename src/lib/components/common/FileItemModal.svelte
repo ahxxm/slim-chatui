@@ -121,7 +121,8 @@
 						<a
 							href="#"
 							class="hover:underline line-clamp-1"
-							on:click|preventDefault={() => {
+							onclick={(e) => {
+								e.preventDefault();
 								if (!isPDF && item.url) {
 									window.open(
 										item.type === 'file'
@@ -141,7 +142,7 @@
 
 				<div>
 					<button
-						on:click={() => {
+						onclick={() => {
 							show = false;
 						}}
 					>
@@ -185,7 +186,7 @@
 								? ' '
 								: ' border-transparent text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition"
 							type="button"
-							on:click={() => {
+							onclick={() => {
 								selectedTab = '';
 							}}>{$i18n.t('Content')}</button
 						>
@@ -195,7 +196,7 @@
 								? ' '
 								: ' border-transparent text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition"
 							type="button"
-							on:click={() => {
+							onclick={() => {
 								selectedTab = 'preview';
 							}}>{$i18n.t('Preview')}</button
 						>
@@ -230,7 +231,7 @@
 							{#if isTruncated}
 								<button
 									class="mt-1 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
-									on:click={() => {
+									onclick={() => {
 										expandedContent = true;
 									}}
 								>
@@ -262,7 +263,7 @@
 							{#if isTruncated}
 								<button
 									class="mt-1 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
-									on:click={() => {
+									onclick={() => {
 										expandedContent = true;
 									}}
 								>

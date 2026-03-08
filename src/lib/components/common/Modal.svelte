@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onDestroy } from 'svelte';
 	import { fade } from 'svelte/transition';
 
 	import { flyAndScale } from '$lib/utils/transitions';
@@ -54,7 +53,6 @@
 
 	$effect(() => {
 		if (show && modalElement) {
-			document.body.appendChild(modalElement);
 			focusTrap = FocusTrap.createFocusTrap(modalElement, {
 				allowOutsideClick: (e) => {
 					return (
@@ -66,21 +64,13 @@
 			focusTrap.activate();
 			window.addEventListener('keydown', handleKeyDown);
 			document.body.style.overflow = 'hidden';
-		} else if (modalElement) {
-			focusTrap.deactivate();
-			window.removeEventListener('keydown', handleKeyDown);
-			document.body.removeChild(modalElement);
-			document.body.style.overflow = 'unset';
-		}
-	});
 
-	onDestroy(() => {
-		show = false;
-		if (focusTrap) {
-			focusTrap.deactivate();
-		}
-		if (modalElement) {
-			document.body.removeChild(modalElement);
+			return () => {
+				focusTrap?.deactivate();
+				focusTrap = null;
+				window.removeEventListener('keydown', handleKeyDown);
+				document.body.style.overflow = 'unset';
+			};
 		}
 	});
 </script>
@@ -95,8 +85,8 @@
 		role="dialog"
 		class="modal fixed top-0 right-0 left-0 bottom-0 bg-black/30 dark:bg-black/60 w-full h-screen max-h-[100dvh] {containerClassName}  flex justify-center z-9999 overflow-y-auto overscroll-contain"
 		style="scrollbar-gutter: stable;"
-		in:fade={{ duration: 10 }}
-		on:mousedown={() => {
+		transition:fade={{ duration: 100 }}
+		onmousedown={() => {
 			show = false;
 		}}
 	>
@@ -104,8 +94,8 @@
 			class="m-auto max-w-full {sizeToWidth(size)} {size !== 'full'
 				? 'mx-2'
 				: ''} shadow-3xl min-h-fit scrollbar-hidden {className} border border-white dark:border-gray-850"
-			in:flyAndScale
-			on:mousedown={(e) => {
+			transition:flyAndScale
+			onmousedown={(e) => {
 				e.stopPropagation();
 			}}
 		>

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext, onMount, tick, untrack } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Markdown from '$lib/components/chat/Messages/Markdown.svelte';
@@ -21,7 +21,12 @@
 		showRelevance = true
 	} = $props();
 
-	let mergedDocuments = $state([]);
+	let mergedDocuments: {
+		source: any;
+		document: any;
+		metadata: any;
+		distance: number | undefined;
+	}[] = $state([]);
 
 	function calculatePercentage(distance: number) {
 		if (typeof distance !== 'number') return null;
@@ -112,7 +117,7 @@
 								? $i18n.t('Open link')
 								: $i18n.t('Open file')}
 							placement="top-start"
-							tippyOptions={{ duration: [500, 0] }}
+							duration={[500, 0]}
 						>
 							<a
 								class="hover:text-gray-500 dark:hover:text-gray-100 underline grow line-clamp-1"
@@ -136,7 +141,7 @@
 			<button
 				class="self-center"
 				aria-label={$i18n.t('Close citation modal')}
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -186,7 +191,7 @@
 										className="w-fit"
 										content={$i18n.t('Relevance')}
 										placement="top-start"
-										tippyOptions={{ duration: [500, 0] }}
+										duration={[500, 0]}
 									>
 										<div class="text-sm my-1 dark:text-gray-400 flex items-center gap-2 w-fit">
 											{#if showPercentage}
@@ -244,7 +249,7 @@
 									{#if isTruncated}
 										<button
 											class="mt-1 text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition"
-											on:click={() => {
+											onclick={() => {
 												expandedDocs.add(documentIdx);
 												expandedDocs = expandedDocs;
 											}}

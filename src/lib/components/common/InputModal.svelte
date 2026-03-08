@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, getContext } from 'svelte';
+	import { getContext } from 'svelte';
 	import { settings } from '$lib/stores';
 
 	import Drawer from './Drawer.svelte';
@@ -65,7 +65,6 @@
 					richText={$settings?.richTextInput ?? true}
 					messageInput={true}
 					showFormattingToolbar={$settings?.showFormattingToolbar ?? false}
-					floatingMenuPlacement={'top-start'}
 					insertPromptAsRichText={$settings?.insertPromptAsRichText ?? false}
 				/>
 			</div>

@@ -29,7 +29,6 @@ export type FolderItem = {
 	id: string;
 	name: string;
 	meta?: Record<string, any> | null;
-	parent_id?: string | null;
 	is_expanded: boolean;
 	created_at: number;
 	updated_at: number;

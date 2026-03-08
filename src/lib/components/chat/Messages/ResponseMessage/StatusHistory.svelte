@@ -25,7 +25,7 @@
 				class="w-full"
 				aria-label={$i18n.t('Toggle status history')}
 				aria-expanded={showHistory}
-				on:click={() => {
+				onclick={() => {
 					showHistory = !showHistory;
 				}}
 			>

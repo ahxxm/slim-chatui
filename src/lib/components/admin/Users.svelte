@@ -1,22 +1,15 @@
 <script>
-	import { getContext, tick, onMount } from 'svelte';
-	import { toast } from 'svelte-sonner';
+	import { onMount } from 'svelte';
 
 	import { goto } from '$app/navigation';
 	import { user } from '$lib/stores';
 
 	import UserList from './Users/UserList.svelte';
 
-	const i18n = getContext('i18n');
-
-	let loaded = false;
-
 	onMount(async () => {
 		if ($user?.role !== 'admin') {
 			await goto('/');
 		}
-
-		loaded = true;
 	});
 </script>
 
