@@ -20,19 +20,9 @@
 	let notificationEnabled = false;
 	let system = '';
 
-	const toggleNotification = async () => {
-		const permission = await Notification.requestPermission();
-
-		if (permission === 'granted') {
-			notificationEnabled = !notificationEnabled;
-			saveSettings({ notificationEnabled: notificationEnabled });
-		} else {
-			toast.error(
-				$i18n.t(
-					'Response notifications cannot be activated as the website permissions have been denied. Please visit your browser settings to grant the necessary access.'
-				)
-			);
-		}
+	const toggleNotification = () => {
+		notificationEnabled = !notificationEnabled;
+		saveSettings({ notificationEnabled });
 	};
 
 	const saveHandler = async () => {

@@ -196,14 +196,8 @@
 					}
 
 					if ($settings?.notificationEnabled ?? false) {
-						if ($isLastActiveTab) {
-							new Notification(`${displayTitle} • Open WebUI`, {
-								body: content,
-								icon: `${WEBUI_BASE_URL}/static/favicon.png`
-							});
-						}
-
 						toast.custom(NotificationToast, {
+							id: `completion-${event.chat_id}-${event.message_id}`,
 							componentProps: {
 								onClick: () => {
 									goto(`/c/${event.chat_id}`);
