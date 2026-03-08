@@ -1149,7 +1149,8 @@
 
 		saveSessionSelectedModels();
 
-		await sendMessage(history, userMessageId, { newChat: true });
+		// newChat triggers initChatHandler + replaceState; skip for existing chats
+		await sendMessage(history, userMessageId, { newChat: $chatId === '' });
 	};
 
 	const sendMessage = async (
