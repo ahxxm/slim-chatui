@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import dayjs from 'dayjs';
-	import { createEventDispatcher, untrack } from 'svelte';
-	import { onMount, getContext } from 'svelte';
+	import { untrack, getContext } from 'svelte';
 
 	import { updateUserById } from '$lib/apis/users';
 
@@ -12,10 +11,19 @@
 	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
 
 	const i18n = getContext('i18n');
-	const dispatch = createEventDispatcher();
 	dayjs.extend(localizedFormat);
 
-	let { show = $bindable(false), selectedUser, sessionUser } = $props();
+	let {
+		show = $bindable(false),
+		selectedUser,
+		sessionUser,
+		onsave
+	}: {
+		show?: boolean;
+		selectedUser: any;
+		sessionUser: any;
+		onsave: () => void;
+	} = $props();
 
 	$effect(() => {
 		if (show) {
@@ -25,8 +33,12 @@
 
 	const init = () => {
 		if (selectedUser) {
-			_user = selectedUser;
-			_user.password = '';
+			_user = {
+				role: selectedUser.role ?? 'pending',
+				name: selectedUser.name ?? '',
+				email: selectedUser.email ?? '',
+				password: ''
+			};
 		}
 	};
 
@@ -43,7 +55,7 @@
 		});
 
 		if (res) {
-			dispatch('save');
+			onsave();
 			show = false;
 		}
 	};
@@ -56,7 +68,7 @@
 			<button
 				class="self-center"
 				aria-label={$i18n.t('Close')}
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -68,7 +80,8 @@
 			<div class=" flex flex-col w-full sm:flex-row sm:justify-center sm:space-x-6">
 				<form
 					class="flex flex-col w-full"
-					on:submit|preventDefault={() => {
+					onsubmit={(e) => {
+						e.preventDefault();
 						submitHandler();
 					}}
 				>
@@ -95,7 +108,7 @@
 												class="w-full text-sm bg-transparent disabled:text-gray-500 dark:disabled:text-gray-500 outline-hidden"
 												bind:value={_user.role}
 												aria-label={$i18n.t('Role')}
-												disabled={_user.id == sessionUser.id}
+												disabled={selectedUser.id === sessionUser.id}
 												required
 											>
 												<option value="admin">{$i18n.t('Admin')}</option>
@@ -141,12 +154,9 @@
 
 										<div class="flex-1">
 											<SensitiveInput
-												class="w-full text-sm bg-transparent outline-hidden"
-												type="password"
-												aria-label={$i18n.t('New Password')}
+												inputClassName="w-full text-sm bg-transparent outline-hidden"
 												placeholder={$i18n.t('Enter New Password')}
 												bind:value={_user.password}
-												autocomplete="new-password"
 												required={false}
 											/>
 										</div>
@@ -169,25 +179,3 @@
 		</div>
 	</div>
 </Modal>
-
-<style>
-	input::-webkit-outer-spin-button,
-	input::-webkit-inner-spin-button {
-		/* display: none; <- Crashes Chrome on hover */
-		-webkit-appearance: none;
-		margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
-	}
-
-	.tabs::-webkit-scrollbar {
-		display: none; /* for Chrome, Safari and Opera */
-	}
-
-	.tabs {
-		-ms-overflow-style: none; /* IE and Edge */
-		scrollbar-width: none; /* Firefox */
-	}
-
-	input[type='number'] {
-		-moz-appearance: textfield; /* Firefox */
-	}
-</style>

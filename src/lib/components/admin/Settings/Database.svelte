@@ -1,10 +1,8 @@
 <script lang="ts">
-	import fileSaver from 'file-saver';
-	const { saveAs } = fileSaver;
+	import { saveAs } from '$lib/utils';
 
 	import { downloadDatabase } from '$lib/apis/utils';
 	import { getContext } from 'svelte';
-	import { config, user } from '$lib/stores';
 	import { toast } from 'svelte-sonner';
 	import { getAllUserChats } from '$lib/apis/chats';
 	import { getAllUsers } from '$lib/apis/users';

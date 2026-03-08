@@ -16,14 +16,12 @@
 
 	import {
 		chatId,
-		chats,
 		config,
 		type Model,
 		models,
 		settings,
 		showSidebar,
 		WEBUI_NAME,
-		user,
 		socket,
 		temporaryChatEnabled,
 		chatTitle,
@@ -47,7 +45,6 @@
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
 	import { generateOpenAIChatCompletion } from '$lib/apis/openai';
-	import { getUserSettings } from '$lib/apis/users';
 	import { chatCompleted, stopTask, getTaskIdsByChatId } from '$lib/apis';
 	import { updateFolderById } from '$lib/apis/folders';
 
@@ -205,7 +202,7 @@
 							messageQueue = restoredQueue;
 						}
 					}
-				} catch (e) {}
+				} catch {}
 			}
 
 			if (storageChatInput) {
@@ -216,7 +213,7 @@
 						messageInput?.setText(input.prompt);
 						files = input.files;
 					}
-				} catch (e) {}
+				} catch {}
 			}
 
 			const chatInput = document.getElementById('chat-input');
@@ -541,13 +538,17 @@
 					messageInput?.setText(input.prompt);
 					files = input.files;
 				}
-			} catch (e) {}
+			} catch {}
 		}
 
 		const chatInput = document.getElementById('chat-input');
 		chatInput?.focus();
 
 		return () => {
+			if (renderTimer) {
+				clearTimeout(renderTimer);
+				renderTimer = null;
+			}
 			if (activeChatEmitter) {
 				clearInterval(activeChatEmitter);
 				activeChatEmitter = null;
@@ -1041,7 +1042,7 @@
 	// Chat functions
 	//////////////////////////
 
-	const submitPrompt = async (userPrompt, { _raw = false } = {}) => {
+	const submitPrompt = async (userPrompt) => {
 		console.log('submitPrompt', userPrompt, $chatId);
 
 		if (userPrompt === '' && files.length === 0) {
@@ -1258,8 +1259,7 @@
 			model,
 			messages && messages.length > 0 ? messages : createMessagesList(_history, responseMessageId),
 			_history,
-			responseMessageId,
-			_chatId
+			responseMessageId
 		);
 
 		if (activeChatEmitter) {
@@ -1274,7 +1274,7 @@
 		await refreshChatList(localStorage.token);
 	};
 
-	const sendMessageSocket = async (model, _messages, _history, responseMessageId, _chatId) => {
+	const sendMessageSocket = async (model, _messages, _history, responseMessageId) => {
 		const responseMessage = _history.messages[responseMessageId];
 		const userMessage = _history.messages[responseMessage.parentId];
 
@@ -1590,8 +1590,7 @@
 					model,
 					createMessagesList(history, responseMessage.id),
 					history,
-					responseMessage.id,
-					_chatId
+					responseMessage.id
 				);
 			}
 		}
@@ -1711,14 +1710,14 @@
 	inputPlaceholder={eventConfirmationInputPlaceholder}
 	inputValue={eventConfirmationInputValue}
 	inputType={eventConfirmationInputType}
-	on:confirm={(e) => {
-		if (e.detail) {
-			eventCallback(e.detail);
+	onConfirm={(value) => {
+		if (value) {
+			eventCallback(value);
 		} else {
 			eventCallback(true);
 		}
 	}}
-	on:cancel={() => {
+	oncancel={() => {
 		eventCallback(false);
 	}}
 />
@@ -1813,7 +1812,7 @@
 							class=" pb-2.5 flex flex-col justify-between w-full flex-auto overflow-auto h-0 max-w-full z-10 scrollbar-hidden"
 							id="messages-container"
 							bind:this={messagesContainerElement}
-							on:scroll={() => {
+							onscroll={() => {
 								autoScroll =
 									messagesContainerElement.scrollHeight - messagesContainerElement.scrollTop <=
 									messagesContainerElement.clientHeight + 5;

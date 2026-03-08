@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { onDestroy, onMount, tick } from 'svelte';
 
 	import Markdown from './Markdown.svelte';
@@ -13,8 +13,8 @@
 	export let messageId;
 
 	export let done = true;
-	export let model = null;
-	export let sources = null;
+	export let model: any = null;
+	export let sources: any[] | null = null;
 
 	export let save = false;
 	export let floatingButtons = true;
@@ -155,7 +155,7 @@
 
 			// remove duplicates
 			return acc.filter((item, index) => acc.indexOf(item) === index);
-		}, [])}
+		}, [] as string[])}
 		{onSourceClick}
 		{onTaskClick}
 		{onSave}

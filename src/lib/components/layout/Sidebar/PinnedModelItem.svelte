@@ -8,7 +8,7 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import PinSlash from '$lib/components/icons/PinSlash.svelte';
 
-	export let model = null;
+	export let model: { id: string; name: string; [key: string]: any } | null = null;
 	export let shiftKey = false;
 	export let onClick = () => {};
 	export let onUnpin = () => {};
@@ -21,10 +21,10 @@
 	<div
 		class=" flex justify-center text-gray-800 dark:text-gray-200 cursor-grab relative group"
 		data-id={model?.id}
-		on:mouseenter={(e) => {
+		on:mouseenter={() => {
 			mouseOver = true;
 		}}
-		on:mouseleave={(e) => {
+		on:mouseleave={() => {
 			mouseOver = false;
 		}}
 	>

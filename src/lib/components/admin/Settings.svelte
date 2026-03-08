@@ -1,7 +1,6 @@
 <script>
 	import { getContext, tick, onMount, untrack } from 'svelte';
 	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 
 	import { config } from '$lib/stores';
@@ -12,9 +11,6 @@
 	import Interface from './Settings/Interface.svelte';
 	import Models from './Settings/Models.svelte';
 	import Connections from './Settings/Connections.svelte';
-
-	import Search from '../icons/Search.svelte';
-	import XMark from '../icons/XMark.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -41,109 +37,34 @@
 		}
 	};
 
-	let search = $state('');
-	let searchDebounceTimeout;
-	let filteredSettings = $state([]);
-
-	const allSettings = [
-		{
-			id: 'general',
-			title: 'General',
-			route: '/admin/settings/general',
-			keywords: [
-				'general',
-				'admin',
-				'settings',
-				'version',
-				'update',
-				'language',
-				'theme',
-				'data',
-				'users',
-				'roles',
-				'authentication',
-				'reverse proxy',
-				'community'
-			]
-		},
-		{
-			id: 'connections',
-			title: 'Connections',
-			route: '/admin/settings/connections',
-			keywords: ['connections', 'openai', 'api', 'base url', 'direct connections', 'proxy', 'key']
-		},
-		{
-			id: 'models',
-			title: 'Models',
-			route: '/admin/settings/models',
-			keywords: [
-				'models',
-				'pull',
-				'delete',
-				'create',
-				'edit',
-				'modelfile',
-				'gguf',
-				'import',
-				'export'
-			]
-		},
-		{
-			id: 'interface',
-			title: 'Interface',
-			route: '/admin/settings/interface',
-			keywords: [
-				'interface',
-				'ui',
-				'appearance',
-				'banners',
-				'tasks',
-				'prompt suggestions',
-				'title generation'
-			]
-		},
-		{
-			id: 'db',
-			title: 'Database',
-			route: '/admin/settings/db',
-			keywords: ['database', 'export', 'import', 'backup', 'chats', 'users']
-		}
+	const settings = [
+		{ id: 'general', title: 'General', route: '/admin/settings/general' },
+		{ id: 'connections', title: 'Connections', route: '/admin/settings/connections' },
+		{ id: 'models', title: 'Models', route: '/admin/settings/models' },
+		{ id: 'interface', title: 'Interface', route: '/admin/settings/interface' },
+		{ id: 'db', title: 'Database', route: '/admin/settings/db' }
 	];
-
-	const setFilteredSettings = () => {
-		filteredSettings = allSettings.filter((tab) => {
-			const searchTerm = search.toLowerCase().trim();
-			return (
-				search === '' ||
-				tab.title.toLowerCase().includes(searchTerm) ||
-				tab.keywords.some((keyword) => keyword.includes(searchTerm))
-			);
-		});
-	};
-
-	const searchDebounceHandler = () => {
-		if (searchDebounceTimeout) {
-			clearTimeout(searchDebounceTimeout);
-		}
-
-		searchDebounceTimeout = setTimeout(() => {
-			setFilteredSettings();
-		}, 100);
-	};
 
 	onMount(() => {
 		const containerElement = document.getElementById('admin-settings-tabs-container');
 
+		const wheelHandler = (event) => {
+			if (event.deltaY !== 0) {
+				containerElement.scrollLeft += event.deltaY;
+			}
+		};
+
 		if (containerElement) {
-			containerElement.addEventListener('wheel', function (event) {
-				if (event.deltaY !== 0) {
-					containerElement.scrollLeft += event.deltaY;
-				}
-			});
+			containerElement.addEventListener('wheel', wheelHandler);
 		}
 
-		setFilteredSettings();
 		scrollToTab(selectedTab);
+
+		return () => {
+			if (containerElement) {
+				containerElement.removeEventListener('wheel', wheelHandler);
+			}
+		};
 	});
 </script>
 
@@ -152,29 +73,7 @@
 		id="admin-settings-tabs-container"
 		class="tabs mx-[16px] lg:mx-0 lg:px-[16px] flex flex-row overflow-x-auto gap-2.5 max-w-full lg:gap-1 lg:flex-col lg:flex-none lg:w-50 dark:text-gray-200 text-sm font-medium text-left scrollbar-none"
 	>
-		<div
-			class="hidden md:flex w-full rounded-full px-2.5 gap-2 bg-gray-100/80 dark:bg-gray-850/80 backdrop-blur-2xl my-1 -mx-1 mt-1.5"
-			id="settings-search"
-		>
-			<div class="self-center rounded-l-xl bg-transparent">
-				<Search className="size-3.5" strokeWidth="1.5" />
-			</div>
-			<label class="sr-only" for="search-input-settings-modal">{$i18n.t('Search')}</label>
-			<input
-				class="w-full py-1 text-sm bg-transparent dark:text-gray-300 outline-hidden"
-				bind:value={search}
-				id="search-input-settings-modal"
-				on:input={searchDebounceHandler}
-				placeholder={$i18n.t('Search')}
-			/>
-		</div>
-
-		<!-- {$i18n.t('General')} -->
-		<!-- {$i18n.t('Connections')} -->
-		<!-- {$i18n.t('Models')} -->
-		<!-- {$i18n.t('Interface')} -->
-		<!-- {$i18n.t('Database')} -->
-		{#each filteredSettings as tab (tab.id)}
+		{#each settings as tab (tab.id)}
 			<a
 				id={tab.id}
 				href={tab.route}
@@ -271,7 +170,7 @@
 			/>
 		{:else if selectedTab === 'connections'}
 			<Connections
-				on:save={() => {
+				onsave={() => {
 					toast.success($i18n.t('Settings saved successfully!'));
 				}}
 			/>
@@ -279,7 +178,7 @@
 			<Models />
 		{:else if selectedTab === 'interface'}
 			<Interface
-				on:save={() => {
+				onsave={() => {
 					toast.success($i18n.t('Settings saved successfully!'));
 				}}
 			/>

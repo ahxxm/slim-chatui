@@ -4,28 +4,34 @@
 	import DOMPurify from 'dompurify';
 
 	import { marked } from 'marked';
-	import { createEventDispatcher, onMount } from 'svelte';
+	import { onMount } from 'svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 
-	const dispatch = createEventDispatcher();
+	let {
+		onClick = () => {},
+		title = 'HI',
+		content,
+		closeToast = () => {}
+	}: {
+		onClick?: () => void;
+		title?: string;
+		content: string;
+		closeToast?: () => void;
+	} = $props();
 
-	export let onClick: Function = () => {};
-	export let title: string = 'HI';
-	export let content: string;
-
-	let startX = 0,
-		startY = 0;
-	let moved = false;
+	let startX = $state(0);
+	let startY = $state(0);
+	let moved = $state(false);
 	let closeButtonElement: HTMLButtonElement;
 	const DRAG_THRESHOLD_PX = 6;
 
 	const clickHandler = () => {
 		onClick();
-		dispatch('closeToast');
+		closeToast();
 	};
 
 	const closeHandler = () => {
-		dispatch('closeToast');
+		closeToast();
 	};
 
 	function onPointerDown(e: PointerEvent) {
@@ -86,12 +92,12 @@
 	role="status"
 	aria-live="polite"
 	class="group relative flex gap-2.5 text-left min-w-[var(--width)] w-full dark:bg-gray-850 dark:text-white bg-white text-black border border-gray-100 dark:border-gray-800 rounded-3xl px-4 py-3.5 cursor-pointer select-none"
-	on:dragstart|preventDefault
-	on:pointerdown={onPointerDown}
-	on:pointermove={onPointerMove}
-	on:pointerup={onPointerUp}
-	on:pointercancel={() => (moved = true)}
-	on:keydown={(e) => {
+	ondragstart={(e) => e.preventDefault()}
+	onpointerdown={onPointerDown}
+	onpointermove={onPointerMove}
+	onpointerup={onPointerUp}
+	onpointercancel={() => (moved = true)}
+	onkeydown={(e) => {
 		if (e.key === 'Enter' || e.key === ' ') {
 			e.preventDefault();
 			clickHandler();
@@ -102,7 +108,10 @@
 	<button
 		bind:this={closeButtonElement}
 		class="absolute -top-0.5 -left-0.5 p-0.5 rounded-full opacity-0 group-hover:opacity-100 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-opacity z-10"
-		on:click|stopPropagation={closeHandler}
+		onclick={(e) => {
+			e.stopPropagation();
+			closeHandler();
+		}}
 		aria-label="Dismiss notification"
 	>
 		<XMark className="size-3" />

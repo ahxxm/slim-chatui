@@ -55,7 +55,7 @@
 	function parseJSONString(str: string) {
 		try {
 			return parseJSONString(JSON.parse(str));
-		} catch (e) {
+		} catch {
 			return str;
 		}
 	}
@@ -68,7 +68,7 @@
 			} else {
 				return String(parsed);
 			}
-		} catch (e) {
+		} catch {
 			return str;
 		}
 	}
@@ -121,7 +121,7 @@
 		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div
 			class="{buttonClassName} cursor-pointer"
-			on:pointerup={() => {
+			onpointerup={() => {
 				open = !open;
 			}}
 		>

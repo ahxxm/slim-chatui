@@ -1,5 +1,4 @@
 import { v4 as uuidv4 } from 'uuid';
-import sha256 from 'js-sha256';
 import { WEBUI_BASE_URL } from '$lib/constants';
 
 import dayjs from 'dayjs';
@@ -18,6 +17,15 @@ dayjs.extend(localizedFormat);
 //////////////////////////
 
 export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export function saveAs(blob: Blob, filename: string) {
+	const url = URL.createObjectURL(blob);
+	const a = document.createElement('a');
+	a.href = url;
+	a.download = filename;
+	a.click();
+	URL.revokeObjectURL(url);
+}
 
 export const formatNumber = (num: number): string => {
 	return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(
@@ -209,19 +217,6 @@ export const convertMessagesToHistory = (messages: any[]) => {
 
 	history.currentId = messageId;
 	return history;
-};
-
-export const getGravatarURL = (email: string) => {
-	// Trim leading and trailing whitespace from
-	// an email address and force all characters
-	// to lower case
-	const address = String(email).trim().toLowerCase();
-
-	// Create a SHA256 hash of the final string
-	const hash = sha256(address);
-
-	// Grab the actual image URL
-	return `https://www.gravatar.com/avatar/${hash}`;
 };
 
 export const compressImage = async (imageUrl: string, maxWidth: number, maxHeight: number) => {
@@ -651,7 +646,7 @@ export const isValidHttpUrl = (string: string) => {
 
 	try {
 		url = new URL(string);
-	} catch (_) {
+	} catch {
 		return false;
 	}
 
@@ -962,18 +957,6 @@ export const extractContentFromFile = async (file: File) => {
 		return await readAsText(file);
 	} catch (err) {
 		throw new Error('Unsupported or non-text file type: ' + (file.name || type));
-	}
-};
-
-export const convertHeicToJpeg = async (file: File) => {
-	const { default: heic2any } = await import('heic2any');
-	try {
-		return await heic2any({ blob: file, toType: 'image/jpeg' });
-	} catch (err: any) {
-		if (err?.message?.includes('already browser readable')) {
-			return file;
-		}
-		throw err;
 	}
 };
 

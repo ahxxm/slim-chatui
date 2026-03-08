@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Fuse from 'fuse.js';
 
-	import { getContext, untrack } from 'svelte';
+	import { getContext } from 'svelte';
 
 	import { models } from '$lib/stores';
 	import { WEBUI_BASE_URL } from '$lib/constants';
@@ -73,13 +73,13 @@
 					? 'bg-gray-50 dark:bg-gray-800 selected-command-option-button'
 					: ''}"
 				type="button"
-				on:click={() => {
+				onclick={() => {
 					onSelect({ type: 'model', data: model });
 				}}
-				on:mousemove={() => {
+				onmousemove={() => {
 					selectedIdx = modelIdx;
 				}}
-				on:focus={() => {}}
+				onfocus={() => {}}
 				data-selected={modelIdx === selectedIdx}
 			>
 				<div class="flex text-black dark:text-gray-100 line-clamp-1">

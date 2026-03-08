@@ -1,9 +1,7 @@
 <script lang="ts">
-	import fileSaver from 'file-saver';
-	const { saveAs } = fileSaver;
+	import { saveAs } from '$lib/utils';
 
 	import {
-		settings,
 		scrollPaginationEnabled,
 		currentChatPage,
 		pinnedChats,
@@ -12,7 +10,7 @@
 
 	import { deleteAllChats, getAllChats, getPinnedChatList, importChats } from '$lib/apis/chats';
 	import { getImportOrigin, convertOpenAIChats } from '$lib/utils';
-	import { onMount, getContext } from 'svelte';
+	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 	import FilesModal from '$lib/components/layout/FilesModal.svelte';
@@ -111,8 +109,8 @@
 	title={$i18n.t('Delete All Chats')}
 	message={$i18n.t('Are you sure you want to delete all chats? This action cannot be undone.')}
 	bind:show={showDeleteConfirmDialog}
-	on:confirm={deleteAllChatsHandler}
-	on:cancel={() => {
+	onConfirm={deleteAllChatsHandler}
+	oncancel={() => {
 		showDeleteConfirmDialog = false;
 	}}
 />
@@ -136,7 +134,7 @@
 					<div class="self-center text-xs">{$i18n.t('Import Chats')}</div>
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
+						onclick={() => {
 							chatImportInputElement.click();
 						}}
 						type="button"
@@ -151,7 +149,7 @@
 					<div class="self-center text-xs">{$i18n.t('Export Chats')}</div>
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
+						onclick={() => {
 							exportChats();
 						}}
 						type="button"
@@ -166,7 +164,7 @@
 					<div class="self-center text-xs">{$i18n.t('Delete All Chats')}</div>
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
+						onclick={() => {
 							showDeleteConfirmDialog = true;
 						}}
 						type="button"
@@ -185,7 +183,7 @@
 					<div class="self-center text-xs">{$i18n.t('Manage Files')}</div>
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
+						onclick={() => {
 							showFilesModal = true;
 						}}
 						type="button"

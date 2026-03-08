@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { goto, invalidate, invalidateAll } from '$app/navigation';
-	import { onMount, getContext, createEventDispatcher, tick, onDestroy, untrack } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { onMount, getContext, tick, onDestroy, untrack } from 'svelte';
 	const i18n = getContext('i18n');
-
-	const dispatch = createEventDispatcher();
 
 	import {
 		cloneChatById,
@@ -27,8 +25,6 @@
 	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import DragGhost from '$lib/components/common/DragGhost.svelte';
-	import Check from '$lib/components/icons/Check.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
 	import Document from '$lib/components/icons/Document.svelte';
 	import Sparkles from '$lib/components/icons/Sparkles.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
@@ -41,7 +37,10 @@
 		createdAt = null,
 		selected = false,
 		shiftKey = false,
-		onDragEnd = () => {}
+		onDragEnd = () => {},
+		onselect = () => {},
+		onunselect = () => {},
+		onchange = () => {}
 	}: {
 		className?: string;
 		id: string;
@@ -50,6 +49,9 @@
 		selected?: boolean;
 		shiftKey?: boolean;
 		onDragEnd?: (event: DragEvent) => void;
+		onselect?: () => void;
+		onunselect?: () => void;
+		onchange?: () => void;
 	} = $props();
 
 	function formatTimeAgo(timestamp: number): string {
@@ -105,7 +107,7 @@
 				_chatTitle.set(title);
 			}
 
-			dispatch('change');
+			onchange();
 		}
 	};
 
@@ -123,7 +125,7 @@
 
 		if (res) {
 			goto(`/c/${res.id}`);
-			dispatch('change');
+			onchange();
 		}
 	};
 
@@ -141,7 +143,7 @@
 				await tick();
 			}
 
-			dispatch('change');
+			onchange();
 		}
 	};
 
@@ -155,7 +157,7 @@
 			);
 
 			if (res) {
-				dispatch('change');
+				onchange();
 				toast.success($i18n.t('Chat moved successfully'));
 			}
 		} else {
@@ -167,7 +169,6 @@
 
 	let generating = $state(false);
 
-	let ignoreBlur = false;
 	let doubleClicked = $state(false);
 
 	let dragged = $state(false);
@@ -321,7 +322,7 @@
 <DeleteConfirmDialog
 	bind:show={showDeleteConfirm}
 	title={$i18n.t('Delete chat?')}
-	on:confirm={() => {
+	onConfirm={() => {
 		deleteChatHandler(id);
 	}}
 >
@@ -367,8 +368,8 @@
 				class=" bg-transparent w-full outline-hidden mr-10"
 				placeholder={generating ? $i18n.t('Generating...') : ''}
 				disabled={generating}
-				on:keydown={chatTitleInputKeydownHandler}
-				on:blur={async (e) => {
+				onkeydown={chatTitleInputKeydownHandler}
+				onblur={async (e) => {
 					if (doubleClicked) {
 						e.preventDefault();
 						e.stopPropagation();
@@ -395,8 +396,8 @@
 					? 'bg-gray-100 dark:bg-gray-950 selected'
 					: ' group-hover:bg-gray-100 dark:group-hover:bg-gray-950'}  whitespace-nowrap text-ellipsis"
 			href="/c/{id}"
-			on:click={() => {
-				dispatch('select');
+			onclick={() => {
+				onselect();
 
 				if ($selectedFolder) {
 					selectedFolder.set(null);
@@ -406,20 +407,20 @@
 					showSidebar.set(false);
 				}
 			}}
-			on:dblclick={async (e) => {
+			ondblclick={async (e) => {
 				e.preventDefault();
 				e.stopPropagation();
 
 				doubleClicked = true;
 				renameHandler();
 			}}
-			on:mouseenter={(e) => {
+			onmouseenter={() => {
 				mouseOver = true;
 			}}
-			on:mouseleave={(e) => {
+			onmouseleave={() => {
 				mouseOver = false;
 			}}
-			on:focus={(e) => {}}
+			onfocus={() => {}}
 			draggable="false"
 		>
 			<!-- Loading spinner for active chat (left side) -->
@@ -458,10 +459,10 @@
 			: 'right-1'} top-[4px] py-1 pr-0.5 mr-1.5 pl-5 bg-linear-to-l from-80%
 
               to-transparent"
-		on:mouseenter={(e) => {
+		onmouseenter={() => {
 			mouseOver = true;
 		}}
-		on:mouseleave={(e) => {
+		onmouseleave={() => {
 			mouseOver = false;
 		}}
 	>
@@ -474,7 +475,7 @@
 						class=" self-center dark:hover:text-white transition disabled:cursor-not-allowed"
 						id="generate-title-button"
 						disabled={generating}
-						on:click={() => {
+						onclick={() => {
 							generateTitleHandler();
 						}}
 					>
@@ -488,7 +489,7 @@
 					<button
 						class=" self-center dark:hover:text-white transition"
 						aria-label="Delete chat"
-						on:click={() => {
+						onclick={() => {
 							deleteChatHandler(id);
 						}}
 						type="button"
@@ -510,17 +511,15 @@
 						showDeleteConfirm = true;
 					}}
 					onClose={() => {
-						dispatch('unselect');
+						onunselect();
 					}}
-					on:change={async () => {
-						dispatch('change');
-					}}
+					{onchange}
 				>
 					<button
 						aria-label="Chat Menu"
 						class=" self-center dark:hover:text-white transition m-0"
-						on:click={() => {
-							dispatch('select');
+						onclick={() => {
+							onselect();
 						}}
 					>
 						<svg
@@ -541,7 +540,7 @@
 					<button
 						id="delete-chat-button"
 						class="hidden"
-						on:click={() => {
+						onclick={() => {
 							showDeleteConfirm = true;
 						}}
 					>

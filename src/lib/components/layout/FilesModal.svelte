@@ -70,7 +70,7 @@
 			const newFiles = await searchFiles(localStorage.token, pattern, 0, PAGE_SIZE);
 			files = sortFiles(newFiles);
 			allFilesLoaded = newFiles.length < PAGE_SIZE;
-		} catch (error) {
+		} catch {
 			// Handle 404 or other errors - show empty state instead of spinner
 			files = [];
 			allFilesLoaded = true;
@@ -92,7 +92,7 @@
 			if (newFiles.length > 0) {
 				files = sortFiles([...(files || []), ...newFiles]);
 			}
-		} catch (error) {
+		} catch {
 			// Handle errors silently for load more
 			allFilesLoaded = true;
 		}
@@ -181,7 +181,7 @@
 
 <ConfirmDialog
 	bind:show={showDeleteConfirmDialog}
-	on:confirm={() => {
+	onConfirm={() => {
 		if (selectedFileId) {
 			deleteHandler(selectedFileId);
 			selectedFileId = null;
@@ -197,7 +197,7 @@
 			<div class="text-lg font-medium self-center">{$i18n.t('Files')}</div>
 			<button
 				class="self-center"
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -245,7 +245,7 @@
 						<div class="self-center pl-1.5 pr-1 translate-y-[0.5px] rounded-l-xl bg-transparent">
 							<button
 								class="p-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition"
-								on:click={() => {
+								onclick={() => {
 									query = '';
 								}}
 							>
@@ -264,7 +264,7 @@
 							<div class="flex text-xs font-medium mb-1.5">
 								<button
 									class="px-1.5 py-1 cursor-pointer select-none basis-3/5"
-									on:click={() => setSortKey('filename')}
+									onclick={() => setSortKey('filename')}
 								>
 									<div class="flex gap-1.5 items-center">
 										{$i18n.t('Filename')}
@@ -285,7 +285,7 @@
 								</button>
 								<button
 									class="px-1.5 py-1 cursor-pointer select-none hidden sm:flex sm:basis-2/5 justify-end"
-									on:click={() => setSortKey('created_at')}
+									onclick={() => setSortKey('created_at')}
 								>
 									<div class="flex gap-1.5 items-center">
 										{$i18n.t('Created at')}
@@ -319,7 +319,7 @@
 							{#each files as file (file.id)}
 								<div
 									class="w-full flex justify-between items-center rounded-lg text-sm py-2 px-3 hover:bg-gray-50 dark:hover:bg-gray-850 cursor-pointer"
-									on:click={() => openFileViewer(file)}
+									onclick={() => openFileViewer(file)}
 								>
 									<div class="basis-3/5 min-w-0">
 										<div class="text-ellipsis line-clamp-1">{file.filename}</div>
@@ -339,7 +339,8 @@
 													class="self-center w-fit px-1 text-sm rounded-xl {shiftKey
 														? 'text-red-500'
 														: ''}"
-													on:click|stopPropagation={() => {
+													onclick={(e) => {
+														e.stopPropagation();
 														if (shiftKey) {
 															deleteHandler(file.id);
 														} else {
@@ -358,7 +359,7 @@
 
 							{#if !allFilesLoaded}
 								<Loader
-									on:visible={() => {
+									onvisible={() => {
 										if (!filesLoading) {
 											loadMoreFiles();
 										}

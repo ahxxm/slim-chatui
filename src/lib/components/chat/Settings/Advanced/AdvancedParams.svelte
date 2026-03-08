@@ -47,7 +47,7 @@
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
 						type="button"
-						on:click={() => {
+						onclick={() => {
 							params.stream_delta_chunk_size =
 								(params?.stream_delta_chunk_size ?? null) === null ? 1 : null;
 						}}
@@ -104,7 +104,7 @@
 				<button
 					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
 					type="button"
-					on:click={() => {
+					onclick={() => {
 						params.seed = (params?.seed ?? null) === null ? 0 : null;
 					}}
 				>
@@ -149,7 +149,7 @@
 				<button
 					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
 					type="button"
-					on:click={() => {
+					onclick={() => {
 						params.stop = (params?.stop ?? null) === null ? '' : null;
 					}}
 				>
@@ -192,7 +192,7 @@
 				<button
 					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
 					type="button"
-					on:click={() => {
+					onclick={() => {
 						params.temperature = (params?.temperature ?? null) === null ? 0.8 : null;
 					}}
 				>
@@ -247,7 +247,7 @@
 				<button
 					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
 					type="button"
-					on:click={() => {
+					onclick={() => {
 						params.reasoning_effort = (params?.reasoning_effort ?? null) === null ? 'medium' : null;
 					}}
 				>
@@ -290,7 +290,7 @@
 				<button
 					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
 					type="button"
-					on:click={() => {
+					onclick={() => {
 						params.logit_bias = (params?.logit_bias ?? null) === null ? '' : null;
 					}}
 				>
@@ -336,7 +336,7 @@
 				<button
 					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
 					type="button"
-					on:click={() => {
+					onclick={() => {
 						params.max_tokens = (params?.max_tokens ?? null) === null ? 128 : null;
 					}}
 				>
@@ -391,7 +391,7 @@
 				<button
 					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
 					type="button"
-					on:click={() => {
+					onclick={() => {
 						params.top_p = (params?.top_p ?? null) === null ? 0.9 : null;
 					}}
 				>
@@ -442,7 +442,7 @@
 								class=" text-xs w-full bg-transparent outline-none"
 								placeholder={$i18n.t('Custom Parameter Name')}
 								value={key}
-								on:change={(e) => {
+								onchange={(e) => {
 									const newKey = e.target.value.trim();
 									if (newKey && newKey !== key) {
 										params.custom_params[newKey] = params.custom_params[key];
@@ -458,7 +458,7 @@
 						<button
 							class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
 							type="button"
-							on:click={() => {
+							onclick={() => {
 								delete params.custom_params[key];
 								params = {
 									...params,
@@ -485,7 +485,7 @@
 			<button
 				class=" flex gap-2 items-center w-full text-center justify-center mt-1 mb-5"
 				type="button"
-				on:click={() => {
+				onclick={() => {
 					params.custom_params = (params?.custom_params ?? {}) || {};
 					params.custom_params['custom_param_name'] = 'custom_param_value';
 				}}

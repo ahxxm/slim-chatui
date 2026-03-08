@@ -1,11 +1,8 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
 	import { marked } from 'marked';
 
-	import { onMount, getContext, tick } from 'svelte';
-	import { blur, fade } from 'svelte/transition';
-
-	import { updateFolderById } from '$lib/apis/folders';
+	import { getContext } from 'svelte';
+	import { fade } from 'svelte/transition';
 
 	import {
 		config,
@@ -65,7 +62,7 @@
 			{#if $selectedFolder}
 				<FolderTitle
 					folder={$selectedFolder}
-					onUpdate={async (folder) => {
+					onUpdate={async () => {
 						await refreshChatList(localStorage.token);
 					}}
 					onDelete={async () => {

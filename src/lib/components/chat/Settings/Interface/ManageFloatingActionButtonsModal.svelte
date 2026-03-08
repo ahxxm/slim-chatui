@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { toast } from 'svelte-sonner';
 	import { getContext, onMount } from 'svelte';
 	const i18n = getContext('i18n');
 
@@ -8,8 +7,6 @@
 	import Minus from '$lib/components/icons/Minus.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
-	import Switch from '$lib/components/common/Switch.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
 
 	let { show = $bindable(false), onSave = () => {}, floatingActionButtons = null } = $props();
 
@@ -35,7 +32,7 @@
 			<button
 				class="self-center"
 				aria-label={$i18n.t('Close modal')}
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -47,7 +44,7 @@
 			<div class=" flex flex-col w-full sm:flex-row sm:justify-center sm:space-x-6">
 				<form
 					class="flex flex-col w-full px-1"
-					on:submit={(e) => {
+					onsubmit={(e) => {
 						e.preventDefault();
 						submitHandler();
 					}}
@@ -59,7 +56,7 @@
 							<div class="flex items-center gap-2 text-gray-700 dark:text-gray-300">
 								<button
 									type="button"
-									on:click={() => {
+									onclick={() => {
 										if (floatingActionButtons === null) {
 											floatingActionButtons = [
 												{
@@ -91,7 +88,7 @@
 									<button
 										class=""
 										type="button"
-										on:click={() => {
+										onclick={() => {
 											let id = `new-button`;
 											let idx = 0;
 
@@ -122,7 +119,7 @@
 								{$i18n.t('Default action buttons will be used.')}
 							</div>
 						{:else}
-							{#each floatingActionButtons as button, buttonIdx}
+							{#each floatingActionButtons as button}
 								<div class=" py-1 flex w-full justify-between items-start">
 									<div class="flex flex-col items-start pr-2">
 										<input
@@ -152,7 +149,7 @@
 									<button
 										class="pl-3 text-xs flex rounded-sm transition"
 										aria-label={$i18n.t('Remove action')}
-										on:click={() => {
+										onclick={() => {
 											floatingActionButtons = floatingActionButtons.filter(
 												(b) => b.id !== button.id
 											);

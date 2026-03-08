@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
-	import { flyAndScale } from '$lib/utils/transitions';
 	import { getContext } from 'svelte';
 
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
@@ -23,7 +22,7 @@
 
 	export let onClose: Function;
 
-	let show = false;
+	let show: boolean = false;
 </script>
 
 <Dropdown
@@ -38,17 +37,16 @@
 		<slot />
 	</Tooltip>
 
-	<div slot="content">
+	{#snippet content()}
 		<DropdownMenu.Content
-			class="w-full max-w-[170px] rounded-xl p-1 border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-sm"
+			class="bits-content w-full max-w-[170px] rounded-xl p-1 border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-sm"
 			sideOffset={-2}
 			side="bottom"
 			align="start"
-			transition={flyAndScale}
 		>
 			<DropdownMenu.Item
 				class="select-none flex  gap-2  items-center px-3 py-1.5 text-sm  font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
-				on:click={() => {
+				onclick={() => {
 					hideHandler();
 				}}
 			>
@@ -100,18 +98,18 @@
 
 			<DropdownMenu.Item
 				class="select-none flex  gap-2  items-center px-3 py-1.5 text-sm  font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
-				on:click={() => {
+				onclick={() => {
 					pinModelHandler(model?.id);
 				}}
 			>
-				{#if ($settings?.pinnedModels ?? []).includes(model?.id)}
+				{#if (($settings?.pinnedModels ?? []) as string[]).includes(model?.id)}
 					<PinSlash />
 				{:else}
 					<Pin />
 				{/if}
 
 				<div class="flex items-center">
-					{#if ($settings?.pinnedModels ?? []).includes(model?.id)}
+					{#if (($settings?.pinnedModels ?? []) as string[]).includes(model?.id)}
 						{$i18n.t('Hide from Sidebar')}
 					{:else}
 						{$i18n.t('Keep in Sidebar')}
@@ -121,7 +119,7 @@
 
 			<DropdownMenu.Item
 				class="select-none flex gap-2 items-center px-3 py-1.5 text-sm  font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
-				on:click={() => {
+				onclick={() => {
 					copyLinkHandler();
 				}}
 			>
@@ -132,7 +130,7 @@
 
 			<DropdownMenu.Item
 				class="select-none flex gap-2 items-center px-3 py-1.5 text-sm  font-medium cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md"
-				on:click={() => {
+				onclick={() => {
 					exportHandler();
 				}}
 			>
@@ -141,5 +139,5 @@
 				<div class="flex items-center">{$i18n.t('Export')}</div>
 			</DropdownMenu.Item>
 		</DropdownMenu.Content>
-	</div>
+	{/snippet}
 </Dropdown>

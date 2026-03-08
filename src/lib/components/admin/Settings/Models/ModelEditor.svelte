@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 
-	import { onMount, getContext, tick, untrack } from 'svelte';
-	import { models, user } from '$lib/stores';
+	import { onMount, getContext, tick } from 'svelte';
+	import { models } from '$lib/stores';
 	import { WEBUI_BASE_URL, DEFAULT_CAPABILITIES } from '$lib/constants';
 
 	import AdvancedParams from '$lib/components/chat/Settings/Advanced/AdvancedParams.svelte';
@@ -17,7 +17,6 @@
 	let { onSubmit, onBack = null, model = null, edit = false, preset = true } = $props();
 
 	let loading = $state(false);
-	let success = $state(false);
 
 	let showAdvanced = $state(false);
 	let showPreview = $state(false);
@@ -48,7 +47,7 @@
 		meta: {
 			description: '',
 			suggestion_prompts: null,
-			tags: []
+			tags: [] as { name: string }[]
 		},
 		params: {
 			system: ''
@@ -102,7 +101,6 @@
 		await onSubmit(info);
 
 		loading = false;
-		success = false;
 	};
 
 	onMount(async () => {
@@ -164,7 +162,7 @@
 	{#if onBack}
 		<button
 			class="flex space-x-1"
-			on:click={() => {
+			onclick={() => {
 				onBack();
 			}}
 		>
@@ -190,7 +188,8 @@
 		{#if !edit || (edit && model)}
 			<form
 				class="flex flex-col md:flex-row w-full gap-3 md:gap-6"
-				on:submit|preventDefault={() => {
+				onsubmit={(e) => {
+					e.preventDefault();
 					submitHandler();
 				}}
 			>
@@ -267,7 +266,7 @@
 										aria-label={enableDescription
 											? $i18n.t('Custom description enabled')
 											: $i18n.t('Default description enabled')}
-										on:click={() => {
+										onclick={() => {
 											enableDescription = !enableDescription;
 										}}
 									>
@@ -340,7 +339,7 @@
 								<button
 									class="p-1 px-3 text-xs flex rounded-sm transition"
 									type="button"
-									on:click={() => {
+									onclick={() => {
 										showAdvanced = !showAdvanced;
 									}}
 								>
@@ -372,7 +371,7 @@
 								<button
 									class="p-1 text-xs flex rounded-sm transition"
 									type="button"
-									on:click={() => {
+									onclick={() => {
 										if ((info?.meta?.suggestion_prompts ?? null) === null) {
 											info.meta.suggestion_prompts = [{ content: '', title: ['', ''] }];
 										} else {
@@ -433,7 +432,7 @@
 							<button
 								class="p-1 px-3 text-xs flex rounded-sm transition"
 								type="button"
-								on:click={() => {
+								onclick={() => {
 									showPreview = !showPreview;
 								}}
 							>

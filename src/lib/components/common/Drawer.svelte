@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onDestroy } from 'svelte';
-	import { flyAndScale } from '$lib/utils/transitions';
-	import { fade, fly, slide } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 
 	let { show = $bindable(false), className = '', onClose = () => {} } = $props();
 
@@ -29,7 +28,7 @@
 			window.removeEventListener('keydown', handleKeyDown);
 
 			if (document.body.contains(modalElement)) {
-				document.body.removeChild(modalElement);
+				modalElement.remove();
 				document.body.style.overflow = 'unset';
 			}
 		}
@@ -39,7 +38,7 @@
 		show = false;
 		if (modalElement) {
 			if (document.body.contains(modalElement)) {
-				document.body.removeChild(modalElement);
+				modalElement.remove();
 				document.body.style.overflow = 'unset';
 			}
 		}
@@ -53,13 +52,13 @@
 		bind:this={modalElement}
 		class="modal fixed right-0 bottom-0 left-0 z-999 flex h-screen max-h-[100dvh] w-full justify-center overflow-hidden overscroll-contain bg-black/60"
 		in:fly={{ y: 100, duration: 100 }}
-		on:mousedown={() => {
+		onmousedown={() => {
 			show = false;
 		}}
 	>
 		<div
 			class=" mt-auto w-full bg-gray-50 dark:bg-gray-900 dark:text-gray-100 {className} scrollbar-hidden max-h-[100dvh] overflow-y-auto"
-			on:mousedown={(e) => {
+			onmousedown={(e) => {
 				e.stopPropagation();
 			}}
 		>

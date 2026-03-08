@@ -58,15 +58,10 @@
 
 	export const showSourceModal = (sourceId) => {
 		let index;
-		let suffix = null;
 
 		if (typeof sourceId === 'string') {
 			const output = sourceId.split('#');
 			index = parseInt(output[0]) - 1;
-
-			if (output.length > 1) {
-				suffix = output[1];
-			}
 		} else {
 			index = sourceId - 1;
 		}
@@ -109,7 +104,7 @@
 	const decodeString = (str: string) => {
 		try {
 			return decodeURIComponent(str);
-		} catch (e) {
+		} catch {
 			return str;
 		}
 	};
@@ -131,13 +126,13 @@
 				? $i18n.t('Toggle 1 source')
 				: $i18n.t('Toggle {{COUNT}} sources', { COUNT: citations.length })}
 			aria-expanded={showCitations}
-			on:click={() => {
+			onclick={() => {
 				showCitations = !showCitations;
 			}}
 		>
 			{#if urlCitations.length > 0}
 				<div class="flex -space-x-1 items-center">
-					{#each urlCitations.slice(0, 3) as citation, idx}
+					{#each urlCitations.slice(0, 3) as citation}
 						<img
 							src="https://www.google.com/s2/favicons?sz=32&domain={citation.source.name}"
 							alt="favicon"
@@ -169,7 +164,7 @@
 						name: decodeString(citation.source.name)
 					})}
 					class="no-toggle outline-hidden flex dark:text-gray-300 bg-transparent text-gray-600 rounded-xl gap-1.5 items-center"
-					on:click={() => {
+					onclick={() => {
 						showCitationModal = true;
 						selectedCitation = citation;
 					}}

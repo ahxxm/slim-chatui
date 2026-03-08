@@ -2,8 +2,7 @@
 	import { getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
-	import fileSaver from 'file-saver';
-	const { saveAs } = fileSaver;
+	import { saveAs } from '$lib/utils';
 
 	import { toast } from 'svelte-sonner';
 
@@ -139,7 +138,7 @@
 	<DeleteConfirmDialog
 		bind:show={showDeleteConfirm}
 		title={$i18n.t('Delete folder?')}
-		on:confirm={() => {
+		onConfirm={() => {
 			deleteHandler();
 		}}
 	>
@@ -204,7 +203,7 @@
 				<button
 					class="p-1.5 dark:hover:bg-gray-850 rounded-full touch-auto"
 					aria-label={$i18n.t('Folder options')}
-					on:click={(e) => {}}
+					on:click={() => {}}
 				>
 					<EllipsisHorizontal className="size-4" strokeWidth="2.5" />
 				</button>

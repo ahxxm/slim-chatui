@@ -42,7 +42,7 @@
 	// Add custom table header rule before using GFM plugin
 	turndownService.addRule('tableHeaders', {
 		filter: 'th',
-		replacement: function (content, node) {
+		replacement: function (content) {
 			return content;
 		}
 	});
@@ -106,22 +106,14 @@
 	});
 
 	import { onMount, onDestroy, tick, getContext, untrack } from 'svelte';
-	import { createEventDispatcher } from 'svelte';
-
 	const i18n = getContext('i18n');
-	const eventDispatch = createEventDispatcher();
 
 	import { Fragment, DOMParser } from 'prosemirror-model';
-	import { EditorState, Plugin, PluginKey, TextSelection, Selection } from 'prosemirror-state';
+	import { Plugin, PluginKey, TextSelection, Selection } from 'prosemirror-state';
 	import { Decoration, DecorationSet } from 'prosemirror-view';
-	import { Editor, Extension, mergeAttributes } from '@tiptap/core';
+	import { Editor, Extension } from '@tiptap/core';
 
 	import StarterKit from '@tiptap/starter-kit';
-
-	// Bubble and Floating menus are currently fixed to v2 due to styling issues in v3
-	// TODO: Update to v3 when styling issues are resolved
-	import BubbleMenu from '@tiptap/extension-bubble-menu';
-	import FloatingMenu from '@tiptap/extension-floating-menu';
 
 	import { TableKit } from '@tiptap/extension-table';
 	import { ListKit } from '@tiptap/extension-list';
@@ -132,7 +124,6 @@
 
 	import FileHandler from '@tiptap/extension-file-handler';
 	import Typography from '@tiptap/extension-typography';
-	import Highlight from '@tiptap/extension-highlight';
 	import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 
 	import Mention from '@tiptap/extension-mention';
@@ -171,7 +162,10 @@
 		shiftEnter = false,
 		largeTextAsFile = false,
 		insertPromptAsRichText = false,
-		floatingMenuPlacement = 'bottom-start'
+		onfocus = (event: FocusEvent) => {},
+		onkeyup = (event: KeyboardEvent) => {},
+		onkeydown = (event: KeyboardEvent) => {},
+		onpaste = (event: ClipboardEvent) => {}
 	}: {
 		oncompositionstart?: (e: any) => void;
 		oncompositionend?: (e: any) => void;
@@ -201,7 +195,10 @@
 		shiftEnter?: boolean;
 		largeTextAsFile?: boolean;
 		insertPromptAsRichText?: boolean;
-		floatingMenuPlacement?: string;
+		onfocus: (event: FocusEvent) => void;
+		onkeyup: (event: KeyboardEvent) => void;
+		onkeydown: (event: KeyboardEvent) => void;
+		onpaste: (event: ClipboardEvent) => void;
 	} = $props();
 
 	// create a lowlight instance with all languages loaded
@@ -285,13 +282,7 @@
 	let jsonValue = $state('');
 	let mdValue = $state('');
 
-	let floatingMenuElement: Element | null = $state(null);
-	let bubbleMenuElement: Element | null = $state(null);
 	let element: Element | null = $state(null);
-
-	const options = {
-		throwOnError: false
-	};
 
 	$effect(() => {
 		if (editor) {
@@ -314,7 +305,6 @@
 		const doc = state.doc;
 		const resolvedPos = doc.resolve(pos);
 		const textBlock = resolvedPos.parent;
-		const paraStart = resolvedPos.start();
 		const text = textBlock.textContent;
 		const offset = resolvedPos.parentOffset;
 
@@ -323,9 +313,7 @@
 		while (wordStart > 0 && !/\s/.test(text[wordStart - 1])) wordStart--;
 		while (wordEnd < text.length && !/\s/.test(text[wordEnd])) wordEnd++;
 
-		const word = text.slice(wordStart, wordEnd);
-
-		return word;
+		return text.slice(wordStart, wordEnd);
 	};
 
 	// Returns {start, end} of the word at pos
@@ -470,8 +458,6 @@
 
 	export const insertContent = (content) => {
 		if (!editor || !editor.view) return;
-		const { state, view } = editor;
-		const { schema, tr } = state;
 
 		// If content is a string, convert it to a ProseMirror node
 		const htmlContent = richTextMarked.parse(content);
@@ -501,10 +487,10 @@
 	};
 
 	// Function to find the next template in the document
-	function findNextTemplate(doc, from = 0) {
+	function findNextTemplate(doc: any, from = 0): { from: number; to: number } | null {
 		const patterns = [{ start: '{{', end: '}}' }];
 
-		let result = null;
+		let result: { from: number; to: number } | null = null;
 
 		doc.nodesBetween(from, doc.content.size, (node, pos) => {
 			if (result) return false; // Stop if we've found a match
@@ -626,7 +612,7 @@
 			if (preserveBreaks) {
 				turndownService.addRule('preserveBreaks', {
 					filter: 'br', // Target <br> elements
-					replacement: function (content) {
+					replacement: function () {
 						return '<br/>';
 					}
 				});
@@ -639,7 +625,7 @@
 						return richTextMarked.parse(value.replaceAll(`\n<br/>`, `<br/>`), {
 							breaks: false
 						});
-					} catch (error) {
+					} catch {
 						// If no attempts remain, fallback to plain text
 						if (attempts <= 1) {
 							return value;
@@ -709,46 +695,6 @@
 							FileHandler.configure({
 								onDrop: onFileDrop,
 								onPaste: onFilePaste
-							})
-						]
-					: []),
-				...(richText && showFormattingToolbar
-					? [
-							BubbleMenu.configure({
-								element: bubbleMenuElement,
-								tippyOptions: {
-									duration: 100,
-									arrow: false,
-									placement: 'top',
-									theme: 'transparent',
-									offset: [0, 2]
-								},
-								shouldShow: ({ editor, view, state, oldState, from, to }) => {
-									// safety check
-									if (!editor || !editor.view || editor.isDestroyed) {
-										return false;
-									}
-									// default logic
-									return from !== to;
-								}
-							}),
-							FloatingMenu.configure({
-								element: floatingMenuElement,
-								tippyOptions: {
-									duration: 100,
-									arrow: false,
-									placement: floatingMenuPlacement,
-									theme: 'transparent',
-									offset: [-12, 4]
-								},
-								shouldShow: ({ editor, view, state, oldState }) => {
-									// safety check
-									if (!editor || !editor.view || editor.isDestroyed) {
-										return false;
-									}
-									// default logic
-									return editor.isActive('paragraph');
-								}
 							})
 						]
 					: [])
@@ -873,11 +819,11 @@
 						return false;
 					},
 					focus: (view, event) => {
-						eventDispatch('focus', { event });
+						onfocus(event);
 						return false;
 					},
 					keyup: (view, event) => {
-						eventDispatch('keyup', { event });
+						onkeyup(event);
 						return false;
 					},
 					keydown: (view, event) => {
@@ -966,7 +912,7 @@
 								}
 							}
 						}
-						eventDispatch('keydown', { event });
+						onkeydown(event);
 						return false;
 					},
 					paste: (view, event) => {
@@ -975,7 +921,7 @@
 							if (plainText) {
 								if (largeTextAsFile && plainText.length > PASTED_TEXT_CHARACTER_LIMIT) {
 									// Delegate handling of large text pastes to the parent component.
-									eventDispatch('paste', { event });
+									onpaste(event);
 									event.preventDefault();
 									return true;
 								}
@@ -1033,7 +979,7 @@
 							const hasFile = Array.from(event.clipboardData.files).length > 0;
 
 							if (hasImageFile || hasImageItem || hasFile) {
-								eventDispatch('paste', { event });
+								onpaste(event);
 								event.preventDefault();
 								return true;
 							}
@@ -1138,12 +1084,8 @@
 	};
 </script>
 
-{#if richText && showFormattingToolbar}
-	<div bind:this={bubbleMenuElement} id="bubble-menu" class="p-0 {editor ? '' : 'hidden'}">
-		<FormattingButtons {editor} />
-	</div>
-
-	<div bind:this={floatingMenuElement} id="floating-menu" class="p-0 {editor ? '' : 'hidden'}">
+{#if richText && showFormattingToolbar && editor}
+	<div class="mb-1">
 		<FormattingButtons {editor} />
 	</div>
 {/if}

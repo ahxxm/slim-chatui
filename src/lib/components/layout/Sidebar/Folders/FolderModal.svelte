@@ -1,14 +1,11 @@
 <script lang="ts">
-	import { getContext, createEventDispatcher, tick, untrack } from 'svelte';
+	import { getContext, tick, untrack } from 'svelte';
 
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 
 	import { toast } from 'svelte-sonner';
-	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
-	import { user } from '$lib/stores';
 
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import { getFolderById } from '$lib/apis/folders';
@@ -31,7 +28,7 @@
 	let meta = $state({
 		background_image_url: null
 	});
-	let data = $state({
+	let data: { system_prompt: string; files: any[] } = $state({
 		system_prompt: '',
 		files: []
 	});
@@ -117,7 +114,7 @@
 			</div>
 			<button
 				class="self-center"
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -129,7 +126,8 @@
 			<div class=" flex flex-col w-full sm:flex-row sm:justify-center sm:space-x-6">
 				<form
 					class="flex flex-col w-full"
-					on:submit|preventDefault={() => {
+					onsubmit={(e) => {
+						e.preventDefault();
 						submitHandler();
 					}}
 				>
@@ -153,7 +151,7 @@
 						type="file"
 						hidden
 						accept="image/*"
-						on:change={(e) => {
+						onchange={(e) => {
 							const inputFiles = e.target.files;
 
 							let reader = new FileReader();
@@ -186,7 +184,7 @@
 							<button
 								aria-labelledby="chat-background-label background-image-url-state"
 								class="p-1 px-3 text-xs flex rounded-sm transition"
-								on:click={() => {
+								onclick={() => {
 									if (meta?.background_image_url !== null) {
 										meta.background_image_url = null;
 									} else {

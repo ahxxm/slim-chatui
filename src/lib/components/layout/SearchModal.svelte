@@ -13,7 +13,7 @@
 	import calendar from 'dayjs/plugin/calendar';
 	import Loader from '../common/Loader.svelte';
 	import { createMessagesList } from '$lib/utils';
-	import { config, user } from '$lib/stores';
+	import { user } from '$lib/stores';
 	import Messages from '../chat/Messages.svelte';
 	import { goto } from '$app/navigation';
 	import PencilSquare from '../icons/PencilSquare.svelte';
@@ -38,7 +38,7 @@
 	let query = $state('');
 	let page = $state(1);
 
-	let chatList = $state(null);
+	let chatList: any[] | null = $state(null);
 
 	let chatListLoading = $state(false);
 	let allChatsLoaded = $state(false);
@@ -46,7 +46,7 @@
 	let searchDebounceTimeout;
 
 	let selectedIdx = $state(null);
-	let selectedChat = $state(null);
+	let selectedChat: { id: string; [key: string]: any } | null = $state(null);
 
 	let selectedModels = $state(['']);
 	let history = $state(null);
@@ -78,9 +78,7 @@
 
 		const chatId = chatList[selectedChatIdx].id;
 
-		const chat = await getChatById(localStorage.token, chatId).catch(async (error) => {
-			return null;
-		});
+		const chat = await getChatById(localStorage.token, chatId).catch(() => null);
 
 		if (chat) {
 			if (chat?.chat?.history) {
@@ -244,7 +242,7 @@
 		<div class="px-4 pb-1.5">
 			<SearchInput
 				bind:value={query}
-				on:input={searchHandler}
+				onSearchInput={searchHandler}
 				placeholder={$i18n.t('Search')}
 				showClearButton={true}
 				onFocus={() => {
@@ -294,10 +292,10 @@
 							: ''}"
 						data-arrow-selected={selectedIdx === idx ? 'true' : undefined}
 						dragabble="false"
-						on:mouseenter={() => {
+						onmouseenter={() => {
 							selectedIdx = idx;
 						}}
-						on:click={async () => {
+						onclick={async () => {
 							await action.onClick();
 						}}
 					>
@@ -358,10 +356,10 @@
 							href="/c/{chat.id}"
 							draggable="false"
 							data-arrow-selected={selectedIdx === idx + actions.length ? 'true' : undefined}
-							on:mouseenter={() => {
+							onmouseenter={() => {
 								selectedIdx = idx + actions.length;
 							}}
-							on:click={async () => {
+							onclick={async () => {
 								await goto(`/c/${chat.id}`);
 								show = false;
 								onClose();
@@ -390,7 +388,7 @@
 
 					{#if !allChatsLoaded}
 						<Loader
-							on:visible={(e) => {
+							onvisible={() => {
 								if (!chatListLoading) {
 									loadMoreChats();
 								}

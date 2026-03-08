@@ -9,7 +9,6 @@
 		user,
 		chats,
 		settings,
-		showSettings,
 		chatId,
 		folders as _folders,
 		showSidebar,
@@ -41,7 +40,7 @@
 		updateChatFolderIdById,
 		importChats
 	} from '$lib/apis/chats';
-	import { createNewFolder, getFolders, updateFolderParentIdById } from '$lib/apis/folders';
+	import { createNewFolder, getFolders } from '$lib/apis/folders';
 	import { checkActiveChats } from '$lib/apis/tasks';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 
@@ -61,8 +60,6 @@
 	import { slide } from 'svelte/transition';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
 
-	const BREAKPOINT = 768;
-
 	let scrollTop = $state(0);
 
 	let navElement = $state<HTMLElement | undefined>();
@@ -81,9 +78,7 @@
 	let folderRegistry = $state<Record<string, any>>({});
 
 	const initFolders = async () => {
-		const folderList = await getFolders(localStorage.token).catch((error) => {
-			return [];
-		});
+		const folderList = await getFolders(localStorage.token).catch(() => []);
 		_folders.set(folderList.sort((a, b) => b.updated_at - a.updated_at));
 
 		folders = {};
@@ -91,23 +86,6 @@
 		// First pass: Initialize all folder entries
 		for (const folder of folderList) {
 			folders[folder.id] = { ...(folders[folder.id] || {}), ...folder };
-		}
-
-		// Second pass: Tie child folders to their parents
-		for (const folder of folderList) {
-			if (folder.parent_id) {
-				if (!folders[folder.parent_id]) {
-					folders[folder.parent_id] = {};
-				}
-
-				folders[folder.parent_id].childrenIds = folders[folder.parent_id].childrenIds
-					? [...folders[folder.parent_id].childrenIds, folder.id]
-					: [folder.id];
-
-				folders[folder.parent_id].childrenIds.sort((a, b) => {
-					return folders[b].updated_at - folders[a].updated_at;
-				});
-			}
 		}
 	};
 
@@ -118,11 +96,11 @@
 			return;
 		}
 
-		const rootFolders = Object.values(folders).filter((folder) => folder.parent_id === null);
-		if (rootFolders.find((folder) => folder.name.toLowerCase() === name.toLowerCase())) {
+		const allFolders = Object.values(folders);
+		if (allFolders.find((folder) => folder.name.toLowerCase() === name.toLowerCase())) {
 			let i = 1;
 			while (
-				rootFolders.find((folder) => folder.name.toLowerCase() === `${name} ${i}`.toLowerCase())
+				allFolders.find((folder) => folder.name.toLowerCase() === `${name} ${i}`.toLowerCase())
 			) {
 				i++;
 			}
@@ -475,17 +453,6 @@
 		}, 0);
 	};
 
-	const itemClickHandler = async () => {
-		selectedChatId = null;
-		chatId.set('');
-
-		if ($mobile) {
-			showSidebar.set(false);
-		}
-
-		await tick();
-	};
-
 	const isWindows = /Windows/i.test(navigator.userAgent);
 </script>
 
@@ -504,7 +471,7 @@
 		class=" {$isApp
 			? ' ml-[4.5rem] md:ml-0'
 			: ''} fixed md:hidden z-40 top-0 right-0 left-0 bottom-0 bg-black/60 w-full min-h-screen h-screen flex justify-center overflow-hidden overscroll-contain"
-		on:mousedown={() => {
+		onmousedown={() => {
 			showSidebar.set(!$showSidebar);
 		}}
 	/>
@@ -522,18 +489,18 @@
 <button
 	id="sidebar-new-chat-button"
 	class="hidden"
-	on:click={() => {
+	onclick={() => {
 		goto('/');
 		newChatHandler();
 	}}
 />
 
 <svelte:window
-	on:mousemove={(e) => {
+	onmousemove={(e) => {
 		if (!isResizing) return;
 		resizeSidebarHandler(e.clientX);
 	}}
-	on:mouseup={() => {
+	onmouseup={() => {
 		resizeEndHandler();
 	}}
 />
@@ -545,7 +512,7 @@
 	>
 		<button
 			class="flex flex-col flex-1 {isWindows ? 'cursor-pointer' : 'cursor-[e-resize]'}"
-			on:click={async () => {
+			onclick={async () => {
 				showSidebar.set(!$showSidebar);
 			}}
 		>
@@ -580,7 +547,7 @@
 							class=" cursor-pointer flex rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition group"
 							href="/"
 							draggable="false"
-							on:click={async (e) => {
+							onclick={async (e) => {
 								e.stopImmediatePropagation();
 								e.preventDefault();
 
@@ -600,7 +567,7 @@
 					<Tooltip content={$i18n.t('Search')} placement="right">
 						<button
 							class=" cursor-pointer flex rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 transition group"
-							on:click={(e) => {
+							onclick={(e) => {
 								e.stopImmediatePropagation();
 								e.preventDefault();
 
@@ -671,7 +638,7 @@
 					class="flex items-center rounded-xl size-8.5 h-full justify-center hover:bg-gray-100/50 dark:hover:bg-gray-850/50 transition no-drag-region"
 					href="/"
 					draggable="false"
-					on:click={newChatHandler}
+					onclick={newChatHandler}
 				>
 					<img
 						crossorigin="anonymous"
@@ -681,7 +648,7 @@
 					/>
 				</a>
 
-				<a href="/" class="flex flex-1 px-1.5" on:click={newChatHandler}>
+				<a href="/" class="flex flex-1 px-1.5" onclick={newChatHandler}>
 					<div
 						id="sidebar-webui-name"
 						class=" self-center font-medium text-gray-850 dark:text-white font-primary"
@@ -697,7 +664,7 @@
 						class="flex rounded-xl size-8.5 justify-center items-center hover:bg-gray-100/50 dark:hover:bg-gray-850/50 transition {isWindows
 							? 'cursor-pointer'
 							: 'cursor-[w-resize]'}"
-						on:click={() => {
+						onclick={() => {
 							showSidebar.set(!$showSidebar);
 						}}
 						aria-label={$showSidebar ? $i18n.t('Close Sidebar') : $i18n.t('Open Sidebar')}
@@ -717,7 +684,7 @@
 
 			<div
 				class="relative flex flex-col flex-1 overflow-y-auto scrollbar-hidden pt-3 pb-3"
-				on:scroll={(e) => {
+				onscroll={(e) => {
 					if (e.target.scrollTop === 0) {
 						scrollTop = 0;
 					} else {
@@ -732,7 +699,7 @@
 							class="group grow flex items-center space-x-3 rounded-2xl px-2.5 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition outline-none"
 							href="/"
 							draggable="false"
-							on:click={newChatHandler}
+							onclick={newChatHandler}
 							aria-label={$i18n.t('New Chat')}
 						>
 							<div class="self-center">
@@ -751,7 +718,7 @@
 						<button
 							id="sidebar-search-button"
 							class="group grow flex items-center space-x-3 rounded-2xl px-2.5 py-2 hover:bg-gray-100 dark:hover:bg-gray-900 transition outline-none"
-							on:click={() => {
+							onclick={() => {
 								showSearch.set(true);
 							}}
 							draggable="false"
@@ -792,45 +759,16 @@
 						showCreateFolderModal = true;
 					}}
 					onAddLabel={$i18n.t('New Folder')}
-					on:drop={async (e) => {
-						const { type, id, item } = e.detail;
-
-						if (type === 'folder') {
-							if (folders[id].parent_id === null) {
-								return;
-							}
-
-							const res = await updateFolderParentIdById(localStorage.token, id, null).catch(
-								(error) => {
-									toast.error(`${error}`);
-									return null;
-								}
-							);
-
-							if (res) {
-								await initFolders();
-							}
-						}
-					}}
 				>
 					<Folders
 						bind:folderRegistry
 						{folders}
 						{shiftKey}
-						onDelete={(folderId) => {
+						onDelete={() => {
 							selectedFolder.set(null);
 							initChatList();
 						}}
-						on:update={() => {
-							initChatList();
-						}}
-						on:import={(e) => {
-							const { folderId, items } = e.detail;
-							importChatHandler(items, false, folderId);
-						}}
-						on:change={async () => {
-							initChatList();
-						}}
+						onchange={() => initChatList()}
 					/>
 				</Folder>
 
@@ -839,19 +777,14 @@
 					className="px-2 mt-0.5"
 					name={$i18n.t('Chats')}
 					chevron={false}
-					on:change={async (e) => {
+					onchange={async () => {
 						selectedFolder.set(null);
 					}}
-					on:import={(e) => {
-						importChatHandler(e.detail);
-					}}
-					on:drop={async (e) => {
-						const { type, id, item } = e.detail;
+					ondrop={async (data) => {
+						const { type, id, item } = data;
 
 						if (type === 'chat') {
-							let chat = await getChatById(localStorage.token, id).catch((error) => {
-								return null;
-							});
+							let chat = await getChatById(localStorage.token, id).catch(() => null);
 							if (!chat && item) {
 								chat = await importChats(localStorage.token, [
 									{
@@ -868,36 +801,19 @@
 							if (chat) {
 								console.log(chat);
 								if (chat.folder_id) {
-									const res = await updateChatFolderIdById(localStorage.token, chat.id, null).catch(
-										(error) => {
-											toast.error(`${error}`);
-											return null;
-										}
-									);
+									await updateChatFolderIdById(localStorage.token, chat.id, null).catch((error) => {
+										toast.error(`${error}`);
+										return null;
+									});
 
 									folderRegistry[chat.folder_id]?.setFolderItems();
 								}
 
 								if (chat.pinned) {
-									const res = await toggleChatPinnedStatusById(localStorage.token, chat.id);
+									await toggleChatPinnedStatusById(localStorage.token, chat.id);
 								}
 
 								initChatList();
-							}
-						} else if (type === 'folder') {
-							if (folders[id].parent_id === null) {
-								return;
-							}
-
-							const res = await updateFolderParentIdById(localStorage.token, id, null).catch(
-								(error) => {
-									toast.error(`${error}`);
-									return null;
-								}
-							);
-
-							if (res) {
-								await initFolders();
 							}
 						}
 					}}
@@ -908,16 +824,11 @@
 								<Folder
 									id="sidebar-pinned-chats"
 									buttonClassName=" text-gray-500"
-									on:import={(e) => {
-										importChatHandler(e.detail, true);
-									}}
-									on:drop={async (e) => {
-										const { type, id, item } = e.detail;
+									ondrop={async (data) => {
+										const { type, id, item } = data;
 
 										if (type === 'chat') {
-											let chat = await getChatById(localStorage.token, id).catch((error) => {
-												return null;
-											});
+											let chat = await getChatById(localStorage.token, id).catch(() => null);
 											if (!chat && item) {
 												chat = await importChats(localStorage.token, [
 													{
@@ -934,18 +845,16 @@
 											if (chat) {
 												console.log(chat);
 												if (chat.folder_id) {
-													const res = await updateChatFolderIdById(
-														localStorage.token,
-														chat.id,
-														null
-													).catch((error) => {
-														toast.error(`${error}`);
-														return null;
-													});
+													await updateChatFolderIdById(localStorage.token, chat.id, null).catch(
+														(error) => {
+															toast.error(`${error}`);
+															return null;
+														}
+													);
 												}
 
 												if (!chat.pinned) {
-													const res = await toggleChatPinnedStatusById(localStorage.token, chat.id);
+													await toggleChatPinnedStatusById(localStorage.token, chat.id);
 												}
 
 												initChatList();
@@ -965,13 +874,13 @@
 												createdAt={chat.created_at}
 												{shiftKey}
 												selected={selectedChatId === chat.id}
-												on:select={() => {
+												onselect={() => {
 													selectedChatId = chat.id;
 												}}
-												on:unselect={() => {
+												onunselect={() => {
 													selectedChatId = null;
 												}}
-												on:change={async () => {
+												onchange={() => {
 													initChatList();
 												}}
 											/>
@@ -1022,13 +931,13 @@
 										createdAt={chat.created_at}
 										{shiftKey}
 										selected={selectedChatId === chat.id}
-										on:select={() => {
+										onselect={() => {
 											selectedChatId = chat.id;
 										}}
-										on:unselect={() => {
+										onunselect={() => {
 											selectedChatId = null;
 										}}
-										on:change={async () => {
+										onchange={() => {
 											initChatList();
 										}}
 									/>
@@ -1036,7 +945,7 @@
 
 								{#if $scrollPaginationEnabled && !allChatsLoaded}
 									<Loader
-										on:visible={(e) => {
+										onvisible={() => {
 											if (!chatListLoading) {
 												loadMoreChats();
 											}
@@ -1094,7 +1003,7 @@
 		<div
 			class="relative flex items-center justify-center group border-l border-gray-50 dark:border-gray-850/30 hover:border-gray-200 dark:hover:border-gray-800 transition z-20"
 			id="sidebar-resizer"
-			on:mousedown={resizeStartHandler}
+			onmousedown={resizeStartHandler}
 			role="separator"
 		>
 			<div

@@ -1,19 +1,13 @@
 <script lang="ts">
 	import DOMPurify from 'dompurify';
-	import { toast } from 'svelte-sonner';
-
 	import type { Token } from 'marked';
-	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
 
-	const i18n = getContext('i18n');
-
 	import { WEBUI_BASE_URL } from '$lib/constants';
-	import { copyToClipboard, unescapeHtml } from '$lib/utils';
+	import { unescapeHtml } from '$lib/utils';
 
 	import Image from '$lib/components/common/Image.svelte';
 	import KatexRenderer from './KatexRenderer.svelte';
-	import Source from './Source.svelte';
 	import HtmlToken from './HTMLToken.svelte';
 	import TextToken from './MarkdownInlineTokens/TextToken.svelte';
 	import CodespanToken from './MarkdownInlineTokens/CodespanToken.svelte';

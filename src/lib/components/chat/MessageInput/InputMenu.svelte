@@ -1,10 +1,7 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
-	import { getContext, onMount, tick } from 'svelte';
+	import { getContext } from 'svelte';
 	import { fly } from 'svelte/transition';
-	import { flyAndScale } from '$lib/utils/transitions';
-
-	import { config, user, mobile } from '$lib/stores';
 
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
@@ -65,7 +62,7 @@
 	type="file"
 	accept="image/*"
 	capture="environment"
-	on:change={handleFileChange}
+	onchange={handleFileChange}
 	style="display: none;"
 />
 
@@ -81,14 +78,13 @@
 		{@render children()}
 	</Tooltip>
 
-	<div slot="content">
+	{#snippet content()}
 		<DropdownMenu.Content
-			class="w-full max-w-70 rounded-2xl px-1 py-1  border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg max-h-72 overflow-y-auto overflow-x-hidden scrollbar-thin transition"
+			class="bits-content w-full max-w-70 rounded-2xl px-1 py-1  border border-gray-100  dark:border-gray-800 z-50 bg-white dark:bg-gray-850 dark:text-white shadow-lg max-h-72 overflow-y-auto overflow-x-hidden scrollbar-thin transition"
 			sideOffset={4}
 			alignOffset={-6}
 			side="bottom"
 			align="start"
-			transition={flyAndScale}
 		>
 			{#if tab === ''}
 				<div in:fly={{ x: -20, duration: 150 }}>
@@ -100,7 +96,7 @@
 							class="flex gap-2 items-center px-3 py-1.5 text-sm select-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl {!fileUploadEnabled
 								? 'opacity-50'
 								: ''}"
-							on:click={() => {
+							onclick={() => {
 								if (fileUploadEnabled) {
 									uploadFilesHandler();
 								}
@@ -120,7 +116,7 @@
 							class="flex gap-2 items-center px-3 py-1.5 text-sm select-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50  rounded-xl {!fileUploadEnabled
 								? 'opacity-50'
 								: ''}"
-							on:click={() => {
+							onclick={() => {
 								if (fileUploadEnabled) {
 									if (!detectMobile()) {
 										screenCaptureHandler();
@@ -147,7 +143,7 @@
 							class="flex gap-2 w-full items-center px-3 py-1.5 text-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50 rounded-xl {!fileUploadEnabled
 								? 'opacity-50'
 								: ''}"
-							on:click={() => {
+							onclick={() => {
 								tab = 'chats';
 							}}
 						>
@@ -169,7 +165,7 @@
 				<div in:fly={{ x: 20, duration: 150 }}>
 					<button
 						class="flex w-full justify-between gap-2 items-center px-3 py-1.5 text-sm select-none cursor-pointer rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800/50"
-						on:click={() => {
+						onclick={() => {
 							tab = '';
 						}}
 					>
@@ -186,5 +182,5 @@
 				</div>
 			{/if}
 		</DropdownMenu.Content>
-	</div>
+	{/snippet}
 </Dropdown>

@@ -1,7 +1,4 @@
 <script lang="ts">
-	import { decode } from 'html-entities';
-	import { v4 as uuidv4 } from 'uuid';
-
 	import { getContext, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
@@ -55,8 +52,6 @@
 	$effect(() => {
 		onChange(open);
 	});
-
-	const collapsibleId = uuidv4();
 </script>
 
 <div {id} class={className}>
@@ -65,7 +60,7 @@
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<div
 			class="{buttonClassName} {disabled ? '' : 'cursor-pointer'}"
-			on:pointerup={() => {
+			onpointerup={() => {
 				if (!disabled) {
 					open = !open;
 				}
@@ -135,10 +130,10 @@
 		<!-- svelte-ignore a11y-click-events-have-key-events -->
 		<div
 			class="{buttonClassName} cursor-pointer"
-			on:click={(e) => {
+			onclick={(e) => {
 				e.stopPropagation();
 			}}
-			on:pointerup={(e) => {
+			onpointerup={() => {
 				if (!disabled) {
 					open = !open;
 				}
@@ -163,7 +158,7 @@
 					{#if open && !hide}
 						<div
 							transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}
-							on:pointerup={(e) => {
+							onpointerup={() => {
 								e.stopPropagation();
 							}}
 						>

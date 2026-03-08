@@ -11,24 +11,10 @@
 
 	import { onMount, tick, getContext, untrack } from 'svelte';
 
-	import {
-		type Model,
-		mobile,
-		settings,
-		models,
-		config,
-		user as _user,
-		temporaryChatEnabled
-	} from '$lib/stores';
+	import { mobile, settings, models, config, temporaryChatEnabled } from '$lib/stores';
 
-	import {
-		convertHeicToJpeg,
-		compressImage,
-		createMessagesList,
-		extractContentFromFile
-	} from '$lib/utils';
+	import { compressImage, extractContentFromFile } from '$lib/utils';
 	import { uploadFile } from '$lib/apis/files';
-	import { deleteFileById } from '$lib/apis/files';
 	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
 
 	import { getSuggestionRenderer } from '../common/RichTextInput/suggestions';
@@ -45,7 +31,6 @@
 	import PlusAlt from '../icons/PlusAlt.svelte';
 
 	import CommandSuggestionList from './MessageInput/CommandSuggestionList.svelte';
-	import { goto } from '$app/navigation';
 	import InputModal from '../common/InputModal.svelte';
 	import Expand from '../icons/Expand.svelte';
 	import QueuedMessageItem from './MessageInput/QueuedMessageItem.svelte';
@@ -163,11 +148,9 @@
 		return false;
 	}
 
-	let chatInputContainerElement = $state();
 	let chatInputElement = $state();
 
 	let filesInputElement = $state();
-	let commandsElement = $state();
 
 	let inputFiles = $state();
 
@@ -175,8 +158,6 @@
 
 	let dragged = $state(false);
 	let shiftKey = $state(false);
-
-	let user = $state(null);
 
 	let activeModel = $derived($models.find((m) => m.id === activeModelId));
 	let visionCapable = $derived(activeModel?.info?.meta?.capabilities?.vision ?? true);
@@ -337,8 +318,7 @@
 					continue;
 				}
 
-				const raw = file.type === 'image/heic' ? await convertHeicToJpeg(file) : file;
-				let imageUrl = await readFileAsDataURL(raw);
+				let imageUrl = await readFileAsDataURL(file);
 				imageUrl = await compressImageIfNeeded(imageUrl, $settings, $config);
 
 				if ($temporaryChatEnabled) {
@@ -502,7 +482,7 @@
 						>
 							<button
 								class=" bg-white border border-gray-100 dark:border-none dark:bg-white/20 p-1.5 rounded-full pointer-events-auto"
-								on:click={() => {
+								onclick={() => {
 									autoScroll = true;
 									scrollToBottom();
 								}}
@@ -539,7 +519,7 @@
 						type="file"
 						hidden
 						multiple
-						on:change={async () => {
+						onchange={async () => {
 							if (inputFiles && inputFiles.length > 0) {
 								const _inputFiles = Array.from(inputFiles);
 								inputFilesHandler(_inputFiles);
@@ -553,14 +533,15 @@
 
 					<form
 						class="w-full flex flex-col gap-1.5"
-						on:submit|preventDefault={() => {
+						onsubmit={(e) => {
+							e.preventDefault();
 							onSubmit(prompt);
 						}}
 					>
 						<button
 							id="generate-message-pair-button"
 							class="hidden"
-							on:click={() => createMessagePair(prompt)}
+							onclick={() => createMessagePair(prompt)}
 						/>
 
 						<!-- Queued messages display -->
@@ -603,7 +584,7 @@
 										<div>
 											<button
 												class="flex items-center dark:text-gray-500"
-												on:click={() => {
+												onclick={() => {
 													atSelectedModel = undefined;
 												}}
 											>
@@ -661,7 +642,7 @@
 															: 'outline-hidden focus:outline-hidden group-hover:visible invisible transition'}"
 														type="button"
 														aria-label={$i18n.t('Remove file')}
-														on:click={() => {
+														onclick={() => {
 															files = files.filter((_, i) => i !== fileIdx);
 														}}
 													>
@@ -719,7 +700,7 @@
 													type="button"
 													class="p-1 rounded-lg hover:bg-gray-100/50 dark:hover:bg-gray-800/50"
 													aria-label="Expand input"
-													on:click={async () => {
+													onclick={async () => {
 														showInputModal = true;
 													}}
 												>
@@ -745,7 +726,6 @@
 													richText={$settings?.richTextInput ?? true}
 													messageInput={true}
 													showFormattingToolbar={$settings?.showFormattingToolbar ?? false}
-													floatingMenuPlacement={'top-start'}
 													insertPromptAsRichText={$settings?.insertPromptAsRichText ?? false}
 													shiftEnter={!($settings?.ctrlEnterToSend ?? false) &&
 														!$mobile &&
@@ -762,9 +742,7 @@
 														compositionEndedAt = e.timeStamp;
 														isComposing = false;
 													}}
-													on:keydown={async (e) => {
-														e = e.detail.event;
-
+													onkeydown={async (e) => {
 														const isCtrlPressed = e.ctrlKey || e.metaKey;
 														const suggestionsContainerElement =
 															document.getElementById('suggestions-container');
@@ -822,10 +800,7 @@
 															atSelectedModel = undefined;
 														}
 													}}
-													on:paste={async (e) => {
-														e = e.detail.event;
-														console.log(e);
-
+													onpaste={async (e) => {
 														const clipboardData = e.clipboardData || window.clipboardData;
 
 														if (clipboardData && clipboardData.items) {
@@ -897,7 +872,7 @@
 											<Tooltip content={$i18n.t('Stop')}>
 												<button
 													class="bg-white hover:bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-800 transition rounded-full p-1.5"
-													on:click={() => {
+													onclick={() => {
 														stopResponse();
 													}}
 												>

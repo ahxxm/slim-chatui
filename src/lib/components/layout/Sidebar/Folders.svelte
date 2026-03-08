@@ -1,34 +1,33 @@
 <script lang="ts">
-	import { createEventDispatcher, untrack } from 'svelte';
-	const dispatch = createEventDispatcher();
+	import { untrack } from 'svelte';
 
-	import RecursiveFolder from './RecursiveFolder.svelte';
+	import FolderItem from './FolderItem.svelte';
 	import { chatId, selectedFolder } from '$lib/stores';
 
 	let {
 		folderRegistry = $bindable({}),
 		folders = {},
 		shiftKey = false,
-		onDelete = (folderId) => {}
+		onDelete = (folderId: string) => {},
+		onchange = () => {}
 	}: {
 		folderRegistry?: Record<string, any>;
 		folders?: Record<string, any>;
 		shiftKey?: boolean;
 		onDelete?: (folderId: string) => void;
+		onchange?: () => void;
 	} = $props();
 
 	let folderList = $derived(
-		Object.keys(folders)
-			.filter((key) => folders[key].parent_id === null)
-			.sort((a, b) =>
-				folders[a].name.localeCompare(folders[b].name, undefined, {
-					numeric: true,
-					sensitivity: 'base'
-				})
-			)
+		Object.keys(folders).sort((a, b) =>
+			folders[a].name.localeCompare(folders[b].name, undefined, {
+				numeric: true,
+				sensitivity: 'base'
+			})
+		)
 	);
 
-	const onItemMove = (e) => {
+	const onItemMove = (e: { originFolderId: string }) => {
 		if (e.originFolderId) {
 			folderRegistry[e.originFolderId]?.setFolderItems();
 		}
@@ -48,7 +47,7 @@
 </script>
 
 {#each folderList as folderId (folderId)}
-	<RecursiveFolder
+	<FolderItem
 		className=""
 		bind:folderRegistry
 		{folders}
@@ -56,14 +55,6 @@
 		{shiftKey}
 		{onDelete}
 		{onItemMove}
-		on:import={(e) => {
-			dispatch('import', e.detail);
-		}}
-		on:update={(e) => {
-			dispatch('update', e.detail);
-		}}
-		on:change={(e) => {
-			dispatch('change', e.detail);
-		}}
+		{onchange}
 	/>
 {/each}

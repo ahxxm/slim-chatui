@@ -35,12 +35,11 @@
 	export let orderBy = 'updated_at';
 	export let direction = 'desc'; // 'asc' or 'desc'
 
-	export let chatList = null;
+	export let chatList: any[] | null = null;
 	export let allChatsLoaded = false;
 	export let chatListLoading = false;
 
 	let selectedChatId = null;
-	let selectedIdx = 0;
 	let showDeleteConfirmDialog = false;
 
 	export let onUpdate = () => {};
@@ -57,7 +56,7 @@
 	};
 
 	const deleteHandler = async (chatId) => {
-		const res = await deleteChatById(localStorage.token, chatId).catch((error) => {
+		await deleteChatById(localStorage.token, chatId).catch((error) => {
 			toast.error(`${error}`);
 		});
 
@@ -67,7 +66,7 @@
 
 <ConfirmDialog
 	bind:show={showDeleteConfirmDialog}
-	on:confirm={() => {
+	onConfirm={() => {
 		if (selectedChatId) {
 			deleteHandler(selectedChatId);
 			selectedChatId = null;
@@ -131,7 +130,6 @@
 									class="p-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition"
 									on:click={() => {
 										query = '';
-										selectedIdx = 0;
 									}}
 								>
 									<XMark className="size-3" strokeWidth="2" />
@@ -143,7 +141,7 @@
 			{/if}
 
 			<div class=" flex flex-col w-full sm:flex-row sm:justify-center sm:space-x-6">
-				{#if chatList}
+				{#if chatList?.length != null}
 					<div class="w-full">
 						{#if chatList.length > 0}
 							<div class="flex text-xs font-medium mb-1.5">
@@ -316,7 +314,7 @@
 
 							{#if !allChatsLoaded && loadHandler}
 								<Loader
-									on:visible={(e) => {
+									onvisible={() => {
 										if (!chatListLoading) {
 											loadHandler();
 										}
