@@ -239,7 +239,7 @@
 				{#if selectedTab === 'general'}
 					<General
 						{saveSettings}
-						on:save={() => {
+						onsave={() => {
 							toast.success($i18n.t('Settings saved successfully!'));
 						}}
 					/>

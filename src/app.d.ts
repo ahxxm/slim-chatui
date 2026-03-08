@@ -10,6 +10,13 @@ declare global {
 		// interface PageData {}
 		// interface Platform {}
 	}
+
+	interface Window {
+		applyTheme?: () => void;
+		electronAPI?: {
+			send(data: Record<string, unknown>): Promise<any>;
+		};
+	}
 }
 
 declare module 'svelte' {
