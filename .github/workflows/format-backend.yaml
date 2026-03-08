@@ -36,7 +36,7 @@ jobs:
         run: uv sync --group dev
 
       - name: Format backend
-        run: uv run black . --check --exclude ".venv/|/venv/"
+        run: uv run black . --check --exclude ".venv/|/venv/|node_modules/"
 
       - name: Check for changes after format
         run: git diff --exit-code
