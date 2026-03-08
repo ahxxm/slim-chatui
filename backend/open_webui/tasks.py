@@ -3,6 +3,13 @@ from typing import Dict, List, Optional
 from uuid import uuid4
 import logging
 
+from sqlalchemy import select
+
+from open_webui.internal.db import get_db_context
+from open_webui.models.chats import ChatFile
+from open_webui.models.files import File
+from open_webui.storage.provider import Storage
+
 log = logging.getLogger(__name__)
 
 # In-memory task tracking
@@ -65,3 +72,42 @@ def has_active_tasks(chat_id: str) -> bool:
 
 def get_active_chat_ids(chat_ids: List[str]) -> List[str]:
     return [cid for cid in chat_ids if has_active_tasks(cid)]
+
+
+# --- Orphan file cleanup ---
+# When a chat is deleted, CASCADE removes chat_file rows but file records
+# and disk blobs remain.  This deletes filesystem first, then DB row.
+
+ORPHAN_CLEANUP_INTERVAL = 30 * 60  # 30 minutes
+
+
+def delete_orphaned_files() -> int:
+    # Collect orphan IDs in a short read
+    referenced = select(ChatFile.file_id).distinct().scalar_subquery()
+    with get_db_context() as db:
+        orphans = db.query(File.id, File.path).filter(File.id.notin_(referenced)).all()
+
+    # TOCTOU: a file re-linked between query and delete would have its
+    # chat_file row cascade-deleted. Acceptable.
+    deleted = 0
+    for file_id, file_path in orphans:
+        try:
+            if file_path and "/" in file_path and ".." not in file_path:
+                Storage.delete_file(file_path)
+            else:
+                log.warning(f"skip file path: {file_path}")
+            with get_db_context() as db:
+                deleted += db.query(File).filter(File.id == file_id).delete()
+        except Exception:
+            log.exception("Failed to delete orphaned file %s", file_id)
+    return deleted
+
+
+async def periodic_orphan_file_cleanup():
+    while True:
+        await asyncio.sleep(ORPHAN_CLEANUP_INTERVAL)
+        try:
+            if deleted := delete_orphaned_files():
+                log.info("Orphan cleanup: removed %d file(s)", deleted)
+        except Exception:
+            log.exception("Orphan cleanup failed")
