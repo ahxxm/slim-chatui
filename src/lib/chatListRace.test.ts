@@ -99,30 +99,37 @@ function seedStores() {
 
 describe('Sidebar: shift-delete race', () => {
 	beforeEach(async () => {
-		// The Loader component uses IntersectionObserver to repeatedly dispatch
-		// on:visible every 100ms while it's in the viewport. This mock assumes
-		// the Loader is always visible (10 chats easily fit on screen).
+		// jsdom lacks IntersectionObserver. Loader uses observe/unobserve/rAF
+		// reobserve loop. This mock fires the callback asynchronously on each
+		// observe(), matching real behavior where the element is always visible.
 		vi.stubGlobal(
 			'IntersectionObserver',
 			class {
 				cb: any;
-				iv: any;
+				timerId: any;
+				active = true;
 				constructor(cb: any) {
 					this.cb = cb;
 				}
 				observe(el: Element) {
-					this.iv = setInterval(() => {
-						this.cb([{ isIntersecting: true, target: el }]);
-					}, 100);
+					if (!this.active) return;
+					this.timerId = setTimeout(() => {
+						if (this.active) this.cb([{ isIntersecting: true, target: el }]);
+					}, 0);
 				}
 				unobserve() {
-					clearInterval(this.iv);
+					clearTimeout(this.timerId);
 				}
 				disconnect() {
-					clearInterval(this.iv);
+					this.active = false;
+					clearTimeout(this.timerId);
 				}
 			}
 		);
+		vi.stubGlobal('requestAnimationFrame', (fn: FrameRequestCallback) => {
+			const id = setTimeout(() => fn(0), 0);
+			return id;
+		});
 
 		// jsdom lacks Web Animations API
 		Element.prototype.animate ??= function () {

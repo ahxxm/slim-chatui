@@ -314,7 +314,7 @@
 
 							{#if !allChatsLoaded && loadHandler}
 								<Loader
-									on:visible={() => {
+									onvisible={() => {
 										if (!chatListLoading) {
 											loadHandler();
 										}

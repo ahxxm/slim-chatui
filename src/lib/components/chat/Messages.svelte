@@ -342,7 +342,7 @@
 					<h2 class="sr-only" id="chat-conversation">{$i18n.t('Chat Conversation')}</h2>
 					{#if messages.at(0)?.parentId !== null}
 						<Loader
-							on:visible={() => {
+							onvisible={() => {
 								console.log('visible');
 								if (!messagesLoading) {
 									loadMoreMessages();

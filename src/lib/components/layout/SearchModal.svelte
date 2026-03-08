@@ -242,7 +242,7 @@
 		<div class="px-4 pb-1.5">
 			<SearchInput
 				bind:value={query}
-				on:input={searchHandler}
+				onSearchInput={searchHandler}
 				placeholder={$i18n.t('Search')}
 				showClearButton={true}
 				onFocus={() => {
@@ -388,7 +388,7 @@
 
 					{#if !allChatsLoaded}
 						<Loader
-							on:visible={() => {
+							onvisible={() => {
 								if (!chatListLoading) {
 									loadMoreChats();
 								}

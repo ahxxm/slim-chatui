@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
-	import { getContext, createEventDispatcher, untrack } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 
 	import { saveAs } from '$lib/utils';
-
-	const dispatch = createEventDispatcher();
 
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
@@ -31,7 +29,8 @@
 		renameHandler,
 		deleteHandler,
 		onClose,
-		chatId = ''
+		chatId = '',
+		onchange = () => {}
 	}: {
 		moveChatHandler: Function;
 		cloneChatHandler: Function;
@@ -39,6 +38,7 @@
 		deleteHandler: Function;
 		onClose: Function;
 		chatId?: string;
+		onchange?: () => void;
 	} = $props();
 
 	let show = $state(false);
@@ -46,7 +46,7 @@
 
 	const pinHandler = async () => {
 		await toggleChatPinnedStatusById(localStorage.token, chatId);
-		dispatch('change');
+		onchange();
 	};
 
 	const checkPinned = async () => {
@@ -91,18 +91,13 @@
 	$effect(() => {
 		if (show) {
 			untrack(() => checkPinned());
+		} else {
+			untrack(() => onClose());
 		}
 	});
 </script>
 
-<Dropdown
-	bind:show
-	on:change={(e) => {
-		if (e.detail === false) {
-			onClose();
-		}
-	}}
->
+<Dropdown bind:show>
 	<Tooltip content={$i18n.t('More')}>
 		<slot />
 	</Tooltip>

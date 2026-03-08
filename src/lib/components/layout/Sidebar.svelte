@@ -874,13 +874,13 @@
 												createdAt={chat.created_at}
 												{shiftKey}
 												selected={selectedChatId === chat.id}
-												on:select={() => {
+												onselect={() => {
 													selectedChatId = chat.id;
 												}}
-												on:unselect={() => {
+												onunselect={() => {
 													selectedChatId = null;
 												}}
-												on:change={async () => {
+												onchange={() => {
 													initChatList();
 												}}
 											/>
@@ -931,13 +931,13 @@
 										createdAt={chat.created_at}
 										{shiftKey}
 										selected={selectedChatId === chat.id}
-										on:select={() => {
+										onselect={() => {
 											selectedChatId = chat.id;
 										}}
-										on:unselect={() => {
+										onunselect={() => {
 											selectedChatId = null;
 										}}
-										on:change={async () => {
+										onchange={() => {
 											initChatList();
 										}}
 									/>
@@ -945,7 +945,7 @@
 
 								{#if $scrollPaginationEnabled && !allChatsLoaded}
 									<Loader
-										on:visible={(e) => {
+										onvisible={() => {
 											if (!chatListLoading) {
 												loadMoreChats();
 											}

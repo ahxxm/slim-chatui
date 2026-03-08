@@ -1,9 +1,8 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
-	import { getContext, createEventDispatcher } from 'svelte';
+	import { getContext } from 'svelte';
 
 	const i18n = getContext('i18n');
-	const dispatch = createEventDispatcher();
 
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
@@ -11,22 +10,22 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Download from '$lib/components/icons/Download.svelte';
 
-	export let align: 'start' | 'end' = 'start';
-	export let onEdit = () => {};
-	export let onExport = () => {};
-	export let onDelete = () => {};
+	let {
+		align = 'start',
+		onEdit = () => {},
+		onExport = () => {},
+		onDelete = () => {}
+	}: {
+		align?: 'start' | 'end';
+		onEdit: () => void;
+		onExport: () => void;
+		onDelete: () => void;
+	} = $props();
 
-	let show = false;
+	let show = $state(false);
 </script>
 
-<Dropdown
-	bind:show
-	on:change={(e) => {
-		if (e.detail === false) {
-			dispatch('close');
-		}
-	}}
->
+<Dropdown bind:show>
 	<Tooltip content={$i18n.t('More')}>
 		<button>
 			<slot />
@@ -42,9 +41,7 @@
 		>
 			<DropdownMenu.Item
 				class="flex gap-2 items-center px-3 py-1.5 text-sm select-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-				onclick={() => {
-					onEdit();
-				}}
+				onclick={() => onEdit()}
 			>
 				<Pencil />
 				<div class="flex items-center">{$i18n.t('Edit')}</div>
@@ -52,20 +49,15 @@
 
 			<DropdownMenu.Item
 				class="flex gap-2 items-center px-3 py-1.5 text-sm select-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-				onclick={() => {
-					onExport();
-				}}
+				onclick={() => onExport()}
 			>
 				<Download />
-
 				<div class="flex items-center">{$i18n.t('Export')}</div>
 			</DropdownMenu.Item>
 
 			<DropdownMenu.Item
 				class="flex gap-2 items-center px-3 py-1.5 text-sm select-none cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl"
-				onclick={() => {
-					onDelete();
-				}}
+				onclick={() => onDelete()}
 			>
 				<GarbageBin />
 				<div class="flex items-center">{$i18n.t('Delete')}</div>

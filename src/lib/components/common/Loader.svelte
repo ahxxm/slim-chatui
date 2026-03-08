@@ -1,48 +1,49 @@
 <script lang="ts">
-	import { createEventDispatcher, onDestroy, onMount } from 'svelte';
-	const dispatch = createEventDispatcher();
+	import { onMount, onDestroy, type Snippet } from 'svelte';
+
+	let {
+		onvisible = () => {},
+		children
+	}: {
+		onvisible?: () => void;
+		children?: Snippet;
+	} = $props();
 
 	let loaderElement: HTMLElement;
+	let observer: IntersectionObserver;
 
-	let observer;
-	let intervalId;
+	let rafId: number;
+
+	const reobserve = () => {
+		if (!loaderElement) return;
+		observer.unobserve(loaderElement);
+		observer.observe(loaderElement);
+	};
 
 	onMount(() => {
 		observer = new IntersectionObserver(
 			(entries) => {
-				entries.forEach((entry) => {
+				for (const entry of entries) {
 					if (entry.isIntersecting) {
-						intervalId = setInterval(() => {
-							dispatch('visible');
-						}, 100);
-						// dispatch('visible');
-						// observer.unobserve(loaderElement); // Stop observing until content is loaded
-					} else {
-						clearInterval(intervalId);
+						onvisible();
+						// Re-observe after a tick so that if the element is still
+						// visible after the consumer loads more content, we fire again.
+						rafId = requestAnimationFrame(reobserve);
 					}
-				});
+				}
 			},
-			{
-				root: null, // viewport
-				rootMargin: '0px',
-				threshold: 0.1 // When 10% of the loader is visible
-			}
+			{ threshold: 0.1 }
 		);
 
 		observer.observe(loaderElement);
 	});
 
 	onDestroy(() => {
-		if (observer) {
-			observer.disconnect();
-		}
-
-		if (intervalId) {
-			clearInterval(intervalId);
-		}
+		cancelAnimationFrame(rafId);
+		observer?.disconnect();
 	});
 </script>
 
 <div bind:this={loaderElement}>
-	<slot />
+	{@render children?.()}
 </div>

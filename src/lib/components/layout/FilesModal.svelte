@@ -359,7 +359,7 @@
 
 							{#if !allFilesLoaded}
 								<Loader
-									on:visible={() => {
+									onvisible={() => {
 										if (!filesLoading) {
 											loadMoreFiles();
 										}

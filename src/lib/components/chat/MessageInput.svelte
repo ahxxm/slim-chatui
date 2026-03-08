@@ -742,9 +742,7 @@
 														compositionEndedAt = e.timeStamp;
 														isComposing = false;
 													}}
-													on:keydown={async (e) => {
-														e = e.detail.event;
-
+													onkeydown={async (e) => {
 														const isCtrlPressed = e.ctrlKey || e.metaKey;
 														const suggestionsContainerElement =
 															document.getElementById('suggestions-container');
@@ -802,10 +800,7 @@
 															atSelectedModel = undefined;
 														}
 													}}
-													on:paste={async (e) => {
-														e = e.detail.event;
-														console.log(e);
-
+													onpaste={async (e) => {
 														const clipboardData = e.clipboardData || window.clipboardData;
 
 														if (clipboardData && clipboardData.items) {

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { DropdownMenu } from 'bits-ui';
-	import { createEventDispatcher, getContext, tick } from 'svelte';
+	import { getContext, tick } from 'svelte';
 
 	import { userSignOut } from '$lib/apis/auths';
 
@@ -15,24 +15,23 @@
 
 	const i18n = getContext('i18n');
 
-	export let show = false;
-	export let role = '';
-
-	export let help = false;
-
-	export let className = 'max-w-[240px]';
-
-	const dispatch = createEventDispatcher();
-
-	const handleDropdownChange = (state: boolean) => {
-		dispatch('change', state);
-	};
+	let {
+		show = $bindable(false),
+		role = '',
+		help = false,
+		className = 'max-w-[240px]'
+	}: {
+		show?: boolean;
+		role?: string;
+		help?: boolean;
+		className?: string;
+	} = $props();
 </script>
 
 <ShortcutsModal bind:show={$showShortcuts} />
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
-<DropdownMenu.Root bind:open={show} onOpenChange={handleDropdownChange}>
+<DropdownMenu.Root bind:open={show}>
 	<DropdownMenu.Trigger>
 		{#snippet child({ props })}
 			<div {...props}>

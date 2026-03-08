@@ -1,11 +1,10 @@
 <script lang="ts">
 	import { folders } from '$lib/stores';
-	import { untrack, getContext, createEventDispatcher, tick } from 'svelte';
+	import { untrack, getContext, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import Search from '$lib/components/icons/Search.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 
-	const dispatch = createEventDispatcher();
 	const i18n = getContext('i18n');
 
 	let {
@@ -13,13 +12,21 @@
 		value = $bindable(''),
 		showClearButton = false,
 		onFocus = () => {},
-		onKeydown = (e) => {}
+		onKeydown = (e: KeyboardEvent) => {},
+		onSearchInput = () => {}
+	}: {
+		placeholder?: string;
+		value?: string;
+		showClearButton?: boolean;
+		onFocus?: () => void;
+		onKeydown?: (e: KeyboardEvent) => void;
+		onSearchInput: () => void;
 	} = $props();
 
 	let selectedIdx = $state(0);
 	let selectedOption = $state(null);
 
-	let lastWord = $derived(value ? value.split(' ').at(-1) : value);
+	let lastWord = $derived(value ? value.split(' ').pop()! : value);
 
 	const options = [
 		{
@@ -103,7 +110,7 @@
 
 	const clearSearchInput = () => {
 		value = '';
-		dispatch('input');
+		onSearchInput();
 	};
 </script>
 
@@ -121,7 +128,7 @@
 			maxlength="500"
 			bind:value
 			oninput={() => {
-				dispatch('input');
+				onSearchInput();
 			}}
 			onclick={() => {
 				if (!focused) {
@@ -243,7 +250,7 @@
 									value = words.join(' ');
 
 									filteredItems = [];
-									dispatch('input');
+									onSearchInput();
 								}}
 							>
 								<div class="dark:text-gray-300 text-gray-700 font-medium line-clamp-1 shrink-0">
@@ -280,7 +287,7 @@
 
 									value = words.join(' ');
 
-									dispatch('input');
+									onSearchInput();
 								}}
 							>
 								<div class="dark:text-gray-300 text-gray-700 font-medium">{option.name}</div>

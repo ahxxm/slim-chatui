@@ -106,10 +106,7 @@
 	});
 
 	import { onMount, onDestroy, tick, getContext, untrack } from 'svelte';
-	import { createEventDispatcher } from 'svelte';
-
 	const i18n = getContext('i18n');
-	const eventDispatch = createEventDispatcher();
 
 	import { Fragment, DOMParser } from 'prosemirror-model';
 	import { Plugin, PluginKey, TextSelection, Selection } from 'prosemirror-state';
@@ -164,7 +161,11 @@
 		messageInput = false,
 		shiftEnter = false,
 		largeTextAsFile = false,
-		insertPromptAsRichText = false
+		insertPromptAsRichText = false,
+		onfocus = (event: FocusEvent) => {},
+		onkeyup = (event: KeyboardEvent) => {},
+		onkeydown = (event: KeyboardEvent) => {},
+		onpaste = (event: ClipboardEvent) => {}
 	}: {
 		oncompositionstart?: (e: any) => void;
 		oncompositionend?: (e: any) => void;
@@ -194,6 +195,10 @@
 		shiftEnter?: boolean;
 		largeTextAsFile?: boolean;
 		insertPromptAsRichText?: boolean;
+		onfocus: (event: FocusEvent) => void;
+		onkeyup: (event: KeyboardEvent) => void;
+		onkeydown: (event: KeyboardEvent) => void;
+		onpaste: (event: ClipboardEvent) => void;
 	} = $props();
 
 	// create a lowlight instance with all languages loaded
@@ -814,11 +819,11 @@
 						return false;
 					},
 					focus: (view, event) => {
-						eventDispatch('focus', { event });
+						onfocus(event);
 						return false;
 					},
 					keyup: (view, event) => {
-						eventDispatch('keyup', { event });
+						onkeyup(event);
 						return false;
 					},
 					keydown: (view, event) => {
@@ -907,7 +912,7 @@
 								}
 							}
 						}
-						eventDispatch('keydown', { event });
+						onkeydown(event);
 						return false;
 					},
 					paste: (view, event) => {
@@ -916,7 +921,7 @@
 							if (plainText) {
 								if (largeTextAsFile && plainText.length > PASTED_TEXT_CHARACTER_LIMIT) {
 									// Delegate handling of large text pastes to the parent component.
-									eventDispatch('paste', { event });
+									onpaste(event);
 									event.preventDefault();
 									return true;
 								}
@@ -974,7 +979,7 @@
 							const hasFile = Array.from(event.clipboardData.files).length > 0;
 
 							if (hasImageFile || hasImageItem || hasFile) {
-								eventDispatch('paste', { event });
+								onpaste(event);
 								event.preventDefault();
 								return true;
 							}

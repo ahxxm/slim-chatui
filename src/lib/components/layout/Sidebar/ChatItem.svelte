@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
-	import { onMount, getContext, createEventDispatcher, tick, onDestroy, untrack } from 'svelte';
+	import { onMount, getContext, tick, onDestroy, untrack } from 'svelte';
 	const i18n = getContext('i18n');
-
-	const dispatch = createEventDispatcher();
 
 	import {
 		cloneChatById,
@@ -39,7 +37,10 @@
 		createdAt = null,
 		selected = false,
 		shiftKey = false,
-		onDragEnd = () => {}
+		onDragEnd = () => {},
+		onselect = () => {},
+		onunselect = () => {},
+		onchange = () => {}
 	}: {
 		className?: string;
 		id: string;
@@ -48,6 +49,9 @@
 		selected?: boolean;
 		shiftKey?: boolean;
 		onDragEnd?: (event: DragEvent) => void;
+		onselect?: () => void;
+		onunselect?: () => void;
+		onchange?: () => void;
 	} = $props();
 
 	function formatTimeAgo(timestamp: number): string {
@@ -103,7 +107,7 @@
 				_chatTitle.set(title);
 			}
 
-			dispatch('change');
+			onchange();
 		}
 	};
 
@@ -121,7 +125,7 @@
 
 		if (res) {
 			goto(`/c/${res.id}`);
-			dispatch('change');
+			onchange();
 		}
 	};
 
@@ -139,7 +143,7 @@
 				await tick();
 			}
 
-			dispatch('change');
+			onchange();
 		}
 	};
 
@@ -153,7 +157,7 @@
 			);
 
 			if (res) {
-				dispatch('change');
+				onchange();
 				toast.success($i18n.t('Chat moved successfully'));
 			}
 		} else {
@@ -393,7 +397,7 @@
 					: ' group-hover:bg-gray-100 dark:group-hover:bg-gray-950'}  whitespace-nowrap text-ellipsis"
 			href="/c/{id}"
 			onclick={() => {
-				dispatch('select');
+				onselect();
 
 				if ($selectedFolder) {
 					selectedFolder.set(null);
@@ -507,17 +511,15 @@
 						showDeleteConfirm = true;
 					}}
 					onClose={() => {
-						dispatch('unselect');
+						onunselect();
 					}}
-					on:change={async () => {
-						dispatch('change');
-					}}
+					{onchange}
 				>
 					<button
 						aria-label="Chat Menu"
 						class=" self-center dark:hover:text-white transition m-0"
 						onclick={() => {
-							dispatch('select');
+							onselect();
 						}}
 					>
 						<svg

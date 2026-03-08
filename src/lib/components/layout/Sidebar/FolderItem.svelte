@@ -459,7 +459,7 @@
 							title={chat.title}
 							createdAt={chat.created_at}
 							{shiftKey}
-							on:change={() => onchange()}
+							{onchange}
 						/>
 					{/each}
 				</div>
