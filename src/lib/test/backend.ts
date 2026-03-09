@@ -15,8 +15,22 @@ export async function signIn(): Promise<string> {
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+let pending = new Set<Promise<unknown>>();
+
+/** Wait for all in-flight proxied fetches (and any they spawn) to settle. */
+export async function flushFetches() {
+	const tick = () => new Promise((r) => setTimeout(r, 0));
+	while (pending.size > 0) {
+		await Promise.allSettled([...pending]);
+		// Fetches completing can trigger new fetches via setTimeout (e.g.
+		// IntersectionObserver → loadMoreChats). Give macrotasks a chance to fire.
+		await tick();
+	}
+}
+
 export function installFetchProxy(token: string, networkDelay = 0) {
 	const realFetch = globalThis.fetch;
+	pending = new Set();
 
 	vi.stubGlobal(
 		'fetch',
@@ -34,9 +48,12 @@ export function installFetchProxy(token: string, networkDelay = 0) {
 			}
 
 			const promise = realFetch(url, { ...init, headers });
-			return networkDelay > 0
-				? promise.then((res) => delay(networkDelay).then(() => res))
-				: promise;
+			const tracked =
+				networkDelay > 0 ? promise.then((res) => delay(networkDelay).then(() => res)) : promise;
+
+			const settled = tracked.finally(() => pending.delete(settled));
+			pending.add(settled);
+			return tracked;
 		})
 	);
 }

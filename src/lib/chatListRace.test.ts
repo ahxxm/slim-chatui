@@ -22,7 +22,7 @@
  */
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { writable, get } from 'svelte/store';
-import { signIn, installFetchProxy } from '$lib/test/backend';
+import { signIn, installFetchProxy, flushFetches } from '$lib/test/backend';
 
 // ── SvelteKit stubs (virtual modules not available in vitest) ────────────────
 
@@ -155,7 +155,8 @@ describe('Sidebar: shift-delete race', () => {
 		seedStores();
 	});
 
-	afterEach(() => {
+	afterEach(async () => {
+		await flushFetches();
 		cleanup();
 		vi.restoreAllMocks();
 	});
