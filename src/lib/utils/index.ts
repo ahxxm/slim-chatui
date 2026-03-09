@@ -311,7 +311,7 @@ export const copyToClipboard = async (
 				import('marked'),
 				import('$lib/utils/marked/katex-extension'),
 				import('$lib/utils/marked/extension'),
-				import('highlight.js')
+				import('$lib/highlight')
 			]);
 
 			const clipboardMarked = new Marked();

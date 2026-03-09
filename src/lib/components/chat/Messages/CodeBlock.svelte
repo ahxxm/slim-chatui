@@ -5,7 +5,7 @@
 	function getHljs(): Promise<typeof HljsType> {
 		if (!hljsPromise) {
 			hljsPromise = Promise.all([
-				import('highlight.js'),
+				import('$lib/highlight'),
 				import('highlight.js/styles/github-dark.min.css')
 			]).then(([m]) => m.default);
 		}
