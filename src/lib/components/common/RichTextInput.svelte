@@ -131,7 +131,7 @@
 
 	import { PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
 	import { createLowlight } from 'lowlight';
-	import hljs from 'highlight.js';
+	import { grammars } from '$lib/highlight';
 
 	let {
 		oncompositionstart = (e) => {},
@@ -201,31 +201,32 @@
 		onpaste: (event: ClipboardEvent) => void;
 	} = $props();
 
-	// create a lowlight instance with all languages loaded
-	const lowlight = createLowlight(
-		hljs.listLanguages().reduce(
-			(obj, lang) => {
-				obj[lang] = () => hljs.getLanguage(lang);
-				return obj;
-			},
-			{} as Record<string, any>
-		)
-	);
+	const lowlight = createLowlight(grammars);
 
-	let _placeholder = $state(placeholder);
+	function textToFragmentWithBreaks(schema: any, text: string) {
+		const lines = text.split('\n');
+		const nodes: any[] = [];
+		lines.forEach((line, index) => {
+			if (index > 0) nodes.push(schema.nodes.hardBreak.create());
+			if (line.length > 0) nodes.push(schema.text(line));
+		});
+		return Fragment.fromArray(nodes);
+	}
+
+	function isInsideNodeType(state: any, nodeTypes: string[]) {
+		let resolved = state.selection.$head;
+		while (resolved) {
+			if (nodeTypes.includes(resolved.parent.type.name)) return true;
+			if (!resolved.depth) break;
+			resolved = state.doc.resolve(resolved.before());
+		}
+		return false;
+	}
 
 	$effect(() => {
-		if (placeholder !== _placeholder) {
-			untrack(() => setPlaceholder());
-		}
+		placeholder;
+		if (editor) editor.view.dispatch(editor.state.tr);
 	});
-
-	const setPlaceholder = () => {
-		_placeholder = placeholder;
-		if (editor) {
-			editor?.view.dispatch(editor.state.tr);
-		}
-	};
 
 	const defaultOnFileDrop = (currentEditor, files, pos) => {
 		files.forEach((file) => {
@@ -274,8 +275,8 @@
 		});
 	};
 
-	const onFileDrop = onFileDropProp ?? defaultOnFileDrop;
-	const onFilePaste = onFilePasteProp ?? defaultOnFilePaste;
+	let onFileDrop = $derived(onFileDropProp ?? defaultOnFileDrop);
+	let onFilePaste = $derived(onFilePasteProp ?? defaultOnFilePaste);
 
 	let content = $state(null);
 	let htmlValue = $state('');
@@ -619,25 +620,13 @@
 			}
 
 			if (!raw) {
-				async function tryParse(value, attempts = 3, interval = 100) {
-					try {
-						// Try parsing the value
-						return richTextMarked.parse(value.replaceAll(`\n<br/>`, `<br/>`), {
-							breaks: false
-						});
-					} catch {
-						// If no attempts remain, fallback to plain text
-						if (attempts <= 1) {
-							return value;
-						}
-						// Wait for the interval, then retry
-						await new Promise((resolve) => setTimeout(resolve, interval));
-						return tryParse(value, attempts - 1, interval); // Recursive call
-					}
+				try {
+					content = richTextMarked.parse(value.replaceAll(`\n<br/>`, `<br/>`), {
+						breaks: false
+					});
+				} catch {
+					content = value;
 				}
-
-				// Usage example
-				content = await tryParse(value);
 			}
 		}
 
@@ -660,7 +649,7 @@
 						: { strike: false })
 				}),
 				...(dragHandle ? [ListItemDragHandle] : []),
-				Placeholder.configure({ placeholder: () => _placeholder, showOnlyWhenEditable: false }),
+				Placeholder.configure({ placeholder: () => placeholder, showOnlyWhenEditable: false }),
 				SelectionDecoration,
 
 				...(richText
@@ -761,19 +750,7 @@
 							'\n'
 						);
 
-						const lines = plainText.split('\n');
-						const nodes = [];
-
-						lines.forEach((line, index) => {
-							if (index > 0) {
-								nodes.push(state.schema.nodes.hardBreak.create());
-							}
-							if (line.length > 0) {
-								nodes.push(state.schema.text(line));
-							}
-						});
-
-						const fragment = Fragment.fromArray(nodes);
+						const fragment = textToFragmentWithBreaks(state.schema, plainText);
 						dispatch(state.tr.replaceSelectionWith(fragment, false).scrollIntoView());
 
 						return true; // handled
@@ -800,19 +777,7 @@
 
 							const { state, dispatch } = view;
 							const { from, to } = state.selection;
-							const lines = event.data.split('\n');
-							const nodes = [];
-
-							lines.forEach((line, index) => {
-								if (index > 0) {
-									nodes.push(state.schema.nodes.hardBreak.create());
-								}
-								if (line.length > 0) {
-									nodes.push(state.schema.text(line));
-								}
-							});
-
-							const fragment = Fragment.fromArray(nodes);
+							const fragment = textToFragmentWithBreaks(state.schema, event.data);
 							dispatch(state.tr.replaceWith(from, to, fragment).scrollIntoView());
 							return true;
 						}
@@ -828,26 +793,10 @@
 					},
 					keydown: (view, event) => {
 						if (messageInput) {
-							// Check if the current selection is inside a structured block (like codeBlock or list)
 							const { state } = view;
-							const head = state.selection.$head;
 
-							// Recursive function to check ancestors for specific node types
-							function isInside(nodeTypes: string[]): boolean {
-								let currentNode = head;
-								while (currentNode) {
-									if (nodeTypes.includes(currentNode.parent.type.name)) {
-										return true;
-									}
-									if (!currentNode.depth) break; // Stop if we reach the top
-									currentNode = state.doc.resolve(currentNode.before()); // Move to the parent node
-								}
-								return false;
-							}
-
-							// Handle Tab Key
 							if (event.key === 'Tab') {
-								const isInCodeBlock = isInside(['codeBlock']);
+								const isInCodeBlock = isInsideNodeType(state, ['codeBlock']);
 
 								if (isInCodeBlock) {
 									// Handle tab in code block - insert tab character or spaces
@@ -865,9 +814,7 @@
 							}
 
 							if (event.key === 'Enter') {
-								const isCtrlPressed = event.ctrlKey || event.metaKey; // metaKey is for Cmd key on Mac
-
-								const { state } = view;
+								const isCtrlPressed = event.ctrlKey || event.metaKey;
 								const fromPos = state.selection.$from;
 								const lineStart = fromPos.before(fromPos.depth);
 								const lineEnd = fromPos.after(fromPos.depth);
@@ -883,9 +830,14 @@
 									event.preventDefault();
 									return true;
 								} else {
-									const isInCodeBlock = isInside(['codeBlock']);
-									const isInList = isInside(['listItem', 'bulletList', 'orderedList', 'taskList']);
-									const isInHeading = isInside(['heading']);
+									const isInCodeBlock = isInsideNodeType(state, ['codeBlock']);
+									const isInList = isInsideNodeType(state, [
+										'listItem',
+										'bulletList',
+										'orderedList',
+										'taskList'
+									]);
+									const isInHeading = isInsideNodeType(state, ['heading']);
 
 									console.log({ isInCodeBlock, isInList, isInHeading });
 
@@ -940,26 +892,10 @@
 											!navigator.userAgent.includes('Version'))); // iOS WebView (in-app browsers)
 
 								if (isMobile && isWebView && plainText.includes('\n')) {
-									// Manually deconstruct the pasted text and insert it with hard breaks
-									// to preserve the multi-line formatting.
 									const { state, dispatch } = view;
 									const { from, to } = state.selection;
-
-									const lines = plainText.split('\n');
-									const nodes = [];
-
-									lines.forEach((line, index) => {
-										if (index > 0) {
-											nodes.push(state.schema.nodes.hardBreak.create());
-										}
-										if (line.length > 0) {
-											nodes.push(state.schema.text(line));
-										}
-									});
-
-									const fragment = Fragment.fromArray(nodes);
-									const tr = state.tr.replaceWith(from, to, fragment);
-									dispatch(tr.scrollIntoView());
+									const fragment = textToFragmentWithBreaks(state.schema, plainText);
+									dispatch(state.tr.replaceWith(from, to, fragment).scrollIntoView());
 									event.preventDefault();
 									return true;
 								}
@@ -1093,5 +1029,6 @@
 <div
 	bind:this={element}
 	dir="auto"
-	class="relative w-full min-w-full {className} {!editable ? 'cursor-not-allowed' : ''}"
-/>
+	class="relative w-full min-w-full {className}
+	{!editable ? 'cursor-not-allowed' : ''}"
+></div>
