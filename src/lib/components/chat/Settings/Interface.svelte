@@ -30,7 +30,7 @@
 	let autoFollowUps = $state($settings?.autoFollowUps ?? true);
 	let responseAutoCopy = $state($settings?.responseAutoCopy ?? false);
 	let widescreenMode = $state($settings?.widescreenMode ?? false);
-	let scrollOnBranchChange = $state($settings?.scrollOnBranchChange ?? true);
+
 	let defaultModelId = $state(
 		$config?.default_models?.split(',')[0] ?? $settings?.models?.at(0) ?? ''
 	);
@@ -766,25 +766,6 @@
 							bind:state={renderMarkdownInPreviews}
 							onchange={() => {
 								saveSettings({ renderMarkdownInPreviews });
-							}}
-						/>
-					</div>
-				</div>
-			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="scroll-on-branch-change-label" class=" self-center text-xs">
-						{$i18n.t('Scroll On Branch Change')}
-					</div>
-
-					<div class="flex items-center gap-2 p-1">
-						<Switch
-							ariaLabelledbyId="scroll-on-branch-change-label"
-							tooltip={true}
-							bind:state={scrollOnBranchChange}
-							onchange={() => {
-								saveSettings({ scrollOnBranchChange });
 							}}
 						/>
 					</div>

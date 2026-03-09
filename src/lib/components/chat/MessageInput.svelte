@@ -54,7 +54,8 @@
 		onQueueEdit = (id) => {},
 		onQueueDelete = (id) => {},
 		onSubmit = (prompt: string) => {},
-		placeholder = ''
+		placeholder = '',
+		scrollToBottom = (_behavior?: ScrollBehavior) => {}
 	} = $props();
 
 	let activeModelId = $derived(atSelectedModel?.id ?? selectedModels[0]);
@@ -168,14 +169,6 @@
 			files = [];
 		}
 	});
-
-	const scrollToBottom = () => {
-		const element = document.getElementById('messages-container');
-		element.scrollTo({
-			top: element.scrollHeight,
-			behavior: 'smooth'
-		});
-	};
 
 	const screenCaptureHandler = async () => {
 		try {
@@ -484,7 +477,7 @@
 								class=" bg-white border border-gray-100 dark:border-none dark:bg-white/20 p-1.5 rounded-full pointer-events-auto"
 								onclick={() => {
 									autoScroll = true;
-									scrollToBottom();
+									scrollToBottom('smooth');
 								}}
 							>
 								<svg

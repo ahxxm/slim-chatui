@@ -17,10 +17,19 @@ export type ChatListItem = {
 	time_range?: string;
 };
 
+// Structural fields every message has; streaming adds arbitrary fields on top.
+export type ChatMessage = {
+	id: string;
+	parentId: string | null;
+	childrenIds: string[];
+	role: 'user' | 'assistant' | 'system';
+	content: string;
+	[key: string]: any;
+};
+
 // Chat blob internals (stored in chat.chat JSON column)
-// Messages are open-ended (streaming adds arbitrary fields), so values are `any`.
 export type ChatHistory = {
-	messages: Record<string, any>;
+	messages: Record<string, ChatMessage>;
 	currentId: string | null;
 };
 

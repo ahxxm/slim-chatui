@@ -34,7 +34,8 @@
 		bottomPadding = false,
 		autoScroll = $bindable(undefined),
 		onSelect = (e) => {},
-		messagesCount = $bindable(20)
+		messagesCount = $bindable(20),
+		scrollToBottom = () => {}
 	} = $props();
 
 	let messages: any[] = $derived.by(() => {
@@ -76,11 +77,6 @@
 		}
 	});
 
-	const scrollToBottom = () => {
-		const element = document.getElementById('messages-container');
-		element.scrollTop = element.scrollHeight;
-	};
-
 	const updateChat = async () => {
 		if (!$temporaryChatEnabled) {
 			await tick();
@@ -90,42 +86,6 @@
 			});
 
 			await refreshChatList(localStorage.token);
-		}
-	};
-
-	const gotoMessage = async (message, idx) => {
-		let siblings;
-		if (message.parentId !== null) {
-			siblings = history.messages[message.parentId].childrenIds;
-		} else {
-			siblings = Object.values(history.messages)
-				.filter((msg) => msg.parentId === null)
-				.map((msg) => msg.id);
-		}
-
-		idx = Math.max(0, Math.min(idx, siblings.length - 1));
-
-		let messageId = siblings[idx];
-
-		if (message.id !== messageId) {
-			let messageChildrenIds = history.messages[messageId].childrenIds;
-			while (messageChildrenIds.length !== 0) {
-				messageId = messageChildrenIds.at(-1);
-				messageChildrenIds = history.messages[messageId].childrenIds;
-			}
-
-			history.currentId = messageId;
-		}
-
-		await tick();
-
-		if ($settings?.scrollOnBranchChange ?? true) {
-			const element = document.getElementById('messages-container');
-			autoScroll = element.scrollHeight - element.scrollTop <= element.clientHeight + 50;
-
-			setTimeout(() => {
-				scrollToBottom();
-			}, 100);
 		}
 	};
 
@@ -162,17 +122,6 @@
 
 				history.currentId = messageId;
 			}
-		}
-
-		await tick();
-
-		if ($settings?.scrollOnBranchChange ?? true) {
-			const element = document.getElementById('messages-container');
-			autoScroll = element.scrollHeight - element.scrollTop <= element.clientHeight + 50;
-
-			setTimeout(() => {
-				scrollToBottom();
-			}, 100);
 		}
 	};
 
@@ -213,17 +162,6 @@
 
 				history.currentId = messageId;
 			}
-		}
-
-		await tick();
-
-		if ($settings?.scrollOnBranchChange ?? true) {
-			const element = document.getElementById('messages-container');
-			autoScroll = element.scrollHeight - element.scrollTop <= element.clientHeight + 50;
-
-			setTimeout(() => {
-				scrollToBottom();
-			}, 100);
 		}
 	};
 
@@ -328,7 +266,7 @@
 			delete history.messages[id];
 		});
 
-		showMessage({ id: parentMessageId }, false);
+		showMessage({ id: parentMessageId });
 	};
 </script>
 
@@ -364,7 +302,6 @@
 								idx={messageIdx}
 								{user}
 								{setInputText}
-								{gotoMessage}
 								{showPreviousMessage}
 								{showNextMessage}
 								{updateChat}
