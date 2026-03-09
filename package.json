@@ -94,7 +94,6 @@
 		"katex": "^0.16.22",
 		"lowlight": "^3.3.0",
 		"marked": "^17.0.0",
-		"mermaid": "^11.10.1",
 		"panzoom": "^9.4.3",
 		"prosemirror-model": "^1.23.0",
 		"prosemirror-state": "^1.4.3",
@@ -104,9 +103,7 @@
 		"svelte-sonner": "^1.0.8",
 		"turndown": "^7.2.0",
 		"turndown-plugin-gfm": "^1.0.2",
-		"uuid": "^9.0.1",
-		"vega": "^6.2.0",
-		"vega-lite": "^6.4.1"
+		"uuid": "^9.0.1"
 	},
 	"engines": {
 		"node": ">=18.13.0 <=22.x.x",

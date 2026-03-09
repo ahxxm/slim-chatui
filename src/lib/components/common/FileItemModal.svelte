@@ -297,7 +297,6 @@
 							<CodeBlock
 								code={item.file.data.content}
 								lang={item.name.split('.').pop()}
-								token={null}
 								edit={false}
 								run={false}
 								save={false}

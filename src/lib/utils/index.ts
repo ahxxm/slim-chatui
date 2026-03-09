@@ -968,38 +968,6 @@ export const decodeString = (str: string) => {
 	}
 };
 
-export const initMermaid = async () => {
-	const { default: mermaid } = await import('mermaid');
-	mermaid.initialize({
-		startOnLoad: false, // Should be false when using render API
-		theme: document.documentElement.classList.contains('dark') ? 'dark' : 'default',
-		securityLevel: 'loose'
-	});
-	return mermaid;
-};
-
-export const renderMermaidDiagram = async (mermaid: any, code: string) => {
-	const parseResult = await mermaid.parse(code, { suppressErrors: false });
-	if (parseResult) {
-		const { svg } = await mermaid.render(`mermaid-${uuidv4()}`, code);
-		return svg;
-	}
-	return '';
-};
-
-export const renderVegaVisualization = async (spec: string, i18n?: any) => {
-	const vega = await import('vega');
-	const parsedSpec = JSON.parse(spec);
-	let vegaSpec = parsedSpec;
-	if (parsedSpec.$schema && parsedSpec.$schema.includes('vega-lite')) {
-		const vegaLite = await import('vega-lite');
-		vegaSpec = vegaLite.compile(parsedSpec).spec;
-	}
-	const view = new vega.View(vega.parse(vegaSpec), { renderer: 'none' });
-	const svg = await view.toSVG();
-	return svg;
-};
-
 export const parseFrontmatter = (content: string) => {
 	const match = content.match(/^---\s*\n([\s\S]*?)\n---/);
 	if (match) {
