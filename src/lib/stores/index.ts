@@ -125,7 +125,6 @@ type Settings = {
 	landingPageMode?: string;
 	iframeSandboxAllowForms?: boolean;
 	iframeSandboxAllowSameOrigin?: boolean;
-	scrollOnBranchChange?: boolean;
 	chatBubble?: boolean;
 	copyFormatted?: boolean;
 	models?: string[];

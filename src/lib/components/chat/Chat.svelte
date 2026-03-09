@@ -251,7 +251,7 @@
 		console.log('saveSessionSelectedModels', selectedModels);
 	};
 
-	const showMessage = async (message: any, scroll = true) => {
+	const showMessage = async (message: any) => {
 		const _chatId = $chatId;
 		let _messageId = message.id;
 
@@ -272,18 +272,6 @@
 		history.currentId = _messageId;
 
 		await tick();
-
-		if (($settings?.scrollOnBranchChange ?? true) && scroll) {
-			const messageElement = document.getElementById(`message-${message.id}`);
-			if (messageElement) {
-				messageElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-			}
-		}
-
-		await tick();
-		await tick();
-		await tick();
-
 		saveChatHandler(_chatId, history);
 	};
 
@@ -747,9 +735,9 @@
 		}
 	};
 
-	const scrollToBottom = async (behavior = 'auto') => {
-		await tick();
+	const scrollToBottom = async (behavior: ScrollBehavior = 'auto') => {
 		if (messagesContainerElement) {
+			await tick();
 			messagesContainerElement.scrollTo({
 				top: messagesContainerElement.scrollHeight,
 				behavior
@@ -1838,6 +1826,7 @@
 									topPadding={true}
 									bottomPadding={files.length > 0}
 									{onSelect}
+									{scrollToBottom}
 								/>
 							</div>
 						</div>
@@ -1855,6 +1844,7 @@
 								{generating}
 								{stopResponse}
 								{createMessagePair}
+								{scrollToBottom}
 								{messageQueue}
 								onQueueSendNow={async (id) => {
 									const item = messageQueue.find((m) => m.id === id);

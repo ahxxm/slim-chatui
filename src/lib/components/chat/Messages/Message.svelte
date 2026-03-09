@@ -1,34 +1,30 @@
 <script lang="ts">
 	import { settings } from '$lib/stores';
+	import type { ChatHistory } from '$lib/types';
 
 	import ResponseMessage from './ResponseMessage.svelte';
 	import UserMessage from './UserMessage.svelte';
 
-	export let chatId;
-	export let idx = 0;
-
-	export let history;
-	export let messageId;
-
-	export let user;
-
-	export let setInputText: Function = () => {};
-	export let gotoMessage;
-	export let showPreviousMessage;
-	export let showNextMessage;
-	export let updateChat;
-
-	export let editMessage;
-	export let deleteMessage;
-	export let submitMessage;
-
-	export let regenerateResponse;
-	export let continueResponse;
-
-	export let addMessages;
-	export let readOnly = false;
-	export let editCodeBlock = true;
-	export let topPadding = false;
+	let {
+		chatId,
+		idx = 0,
+		history = { messages: {}, currentId: null } as ChatHistory,
+		messageId,
+		user,
+		setInputText = () => {},
+		showPreviousMessage,
+		showNextMessage,
+		updateChat,
+		editMessage,
+		deleteMessage,
+		submitMessage,
+		regenerateResponse,
+		continueResponse,
+		addMessages,
+		readOnly = false,
+		editCodeBlock = true,
+		topPadding = false
+	} = $props();
 </script>
 
 <div
@@ -50,7 +46,6 @@
 					: (Object.values(history.messages)
 							.filter((message) => message.parentId === null)
 							.map((message) => message.id) ?? [])}
-				{gotoMessage}
 				{showPreviousMessage}
 				{showNextMessage}
 				{editMessage}
@@ -65,9 +60,9 @@
 				{history}
 				{messageId}
 				isLastMessage={messageId === history.currentId}
-				siblings={history.messages[history.messages[messageId].parentId]?.childrenIds ?? []}
+				// always children of a user message
+				siblings={history.messages[history.messages[messageId].parentId!]?.childrenIds ?? []}
 				{setInputText}
-				{gotoMessage}
 				{showPreviousMessage}
 				{showNextMessage}
 				{updateChat}

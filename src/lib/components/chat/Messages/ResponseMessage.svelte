@@ -42,7 +42,6 @@
 		messageId,
 		siblings,
 		setInputText = () => {},
-		gotoMessage = () => {},
 		showPreviousMessage,
 		showNextMessage,
 		updateChat,
@@ -72,8 +71,6 @@
 	let edit = $state(false);
 	let editedContent = $state('');
 	let editTextAreaElement = $state();
-
-	let messageIndexEdit = $state(false);
 
 	const copyToClipboard = async (text) => {
 		text = removeAllDetails(text);
@@ -465,49 +462,11 @@
 										</svg>
 									</button>
 
-									{#if messageIndexEdit}
-										<div
-											class="text-sm flex justify-center font-semibold self-center dark:text-gray-100 min-w-fit"
-										>
-											<input
-												id="message-index-input-{message.id}"
-												type="number"
-												value={siblings.indexOf(message.id) + 1}
-												min="1"
-												max={siblings.length}
-												onfocus={(e) => {
-													e.target.select();
-												}}
-												onblur={(e) => {
-													gotoMessage(message, e.target.value - 1);
-													messageIndexEdit = false;
-												}}
-												onkeydown={(e) => {
-													if (e.key === 'Enter') {
-														gotoMessage(message, e.target.value - 1);
-														messageIndexEdit = false;
-													}
-												}}
-												class="bg-transparent font-semibold self-center dark:text-gray-100 min-w-fit outline-hidden"
-											/>/{siblings.length}
-										</div>
-									{:else}
-										<!-- svelte-ignore a11y-no-static-element-interactions -->
-										<div
-											class="text-sm tracking-widest font-semibold self-center dark:text-gray-100 min-w-fit"
-											ondblclick={async () => {
-												messageIndexEdit = true;
-												await tick();
-												const input = document.getElementById(`message-index-input-${message.id}`);
-												if (input) {
-													input.focus();
-													input.select();
-												}
-											}}
-										>
-											{siblings.indexOf(message.id) + 1}/{siblings.length}
-										</div>
-									{/if}
+									<div
+										class="text-sm tracking-widest font-semibold self-center dark:text-gray-100 min-w-fit"
+									>
+										{siblings.indexOf(message.id) + 1}/{siblings.length}
+									</div>
 
 									<button
 										class="self-center p-1 hover:bg-black/5 dark:hover:bg-white/5 dark:hover:text-white hover:text-black rounded-md transition"
