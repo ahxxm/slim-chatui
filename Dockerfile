@@ -2,7 +2,7 @@
 ARG BUILD_HASH=dev-build
 
 ######## Frontend (arch-independent, run natively on build host) ########
-FROM --platform=$BUILDPLATFORM node:22-alpine3.20 AS build
+FROM --platform=$BUILDPLATFORM node:24-alpine AS build
 ARG BUILD_HASH
 
 WORKDIR /app

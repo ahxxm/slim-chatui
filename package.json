@@ -16,7 +16,7 @@
 		"lint:backend": "pylint backend/",
 		"format": "prettier --plugin-search-dir --write \"**/*.{js,ts,svelte,css,md,html,json}\"",
 		"format:backend": "uv run black . --exclude \".venv/|/venv/|node_modules/\"",
-		"i18n:parse": "i18next --config i18next-parser.config.ts && prettier --write \"src/lib/i18n/**/*.{js,json}\"",
+		"i18n:parse": "i18next-cli extract && prettier --write \"src/lib/i18n/**/*.{js,json}\"",
 		"cy:open": "cypress open",
 		"test:frontend": "vitest run --passWithNoTests"
 	},
@@ -37,7 +37,7 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-cypress": "^6.1.0",
 		"eslint-plugin-svelte": "^3.15.0",
-		"i18next-parser": "^9.0.1",
+		"i18next-cli": "^1.49.6",
 		"jsdom": "^28.1.0",
 		"postcss": "^8.4.31",
 		"prettier": "^3.3.3",
@@ -106,7 +106,7 @@
 		"uuid": "^9.0.1"
 	},
 	"engines": {
-		"node": ">=18.13.0 <=22.x.x",
+		"node": ">=22.0.0 <=24.x.x",
 		"npm": ">=6.0.0"
 	}
 }
