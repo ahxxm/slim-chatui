@@ -391,13 +391,6 @@
 		return () => abortChatList();
 	});
 
-	// Folder refresh on selectedFolder change
-	$effect(() => {
-		if ($selectedFolder) {
-			initFolders();
-		}
-	});
-
 	// Socket events
 	$effect(() => {
 		const s = $socket;

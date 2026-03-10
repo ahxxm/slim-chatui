@@ -4,6 +4,7 @@
 	import ChatList from './ChatList.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { getChatListByFolderId } from '$lib/apis/chats';
+	import { PAGE_SIZE } from '$lib/stores';
 
 	let { folder = null } = $props();
 
@@ -27,7 +28,7 @@
 			}
 		);
 
-		allChatsLoaded = newChatList.length === 0;
+		allChatsLoaded = newChatList.length < PAGE_SIZE;
 		chats = [...(chats || []), ...(newChatList || [])];
 
 		chatListLoading = false;
@@ -44,11 +45,14 @@
 
 			if (res) {
 				chats = res;
+				allChatsLoaded = res.length < PAGE_SIZE;
 			} else {
 				chats = [];
+				allChatsLoaded = true;
 			}
 		} else {
 			chats = [];
+			allChatsLoaded = true;
 		}
 	};
 
