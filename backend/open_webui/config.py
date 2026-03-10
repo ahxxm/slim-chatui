@@ -607,10 +607,6 @@ ENABLE_TITLE_GENERATION = PersistentConfig(
 )
 
 
-DEFAULT_EMOJI_GENERATION_PROMPT_TEMPLATE = """Your task is to reflect the speaker's likely facial expression through a fitting emoji. Interpret emotions from the message and reflect their facial expression using fitting, diverse emojis (e.g., 😊, 😢, 😡, 😱).
-
-Message: ```{{prompt}}```"""
-
 ####################################
 # File Image Compression
 ####################################

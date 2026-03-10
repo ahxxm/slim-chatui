@@ -12,7 +12,6 @@
 		temperature: null,
 		reasoning_effort: null,
 		logit_bias: null,
-		max_tokens: null,
 		top_p: null
 	};
 
@@ -314,61 +313,6 @@
 						)}
 						bind:value={params.logit_bias}
 						autocomplete="off"
-					/>
-				</div>
-			</div>
-		{/if}
-	</div>
-
-	<div class=" py-0.5 w-full justify-between">
-		<Tooltip
-			content={$i18n.t(
-				'This option sets the maximum number of tokens the model can generate in its response. Increasing this limit allows the model to provide longer answers, but it may also increase the likelihood of unhelpful or irrelevant content being generated.'
-			)}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{'max_tokens'}
-				</div>
-
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-					type="button"
-					onclick={() => {
-						params.max_tokens = (params?.max_tokens ?? null) === null ? 128 : null;
-					}}
-				>
-					{#if (params?.max_tokens ?? null) === null}
-						<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-					{:else}
-						<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
-
-		{#if (params?.max_tokens ?? null) !== null}
-			<div class="flex mt-0.5 space-x-2">
-				<div class=" flex-1">
-					<input
-						id="steps-range"
-						type="range"
-						min="-2"
-						max="131072"
-						step="1"
-						bind:value={params.max_tokens}
-						class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-					/>
-				</div>
-				<div>
-					<input
-						bind:value={params.max_tokens}
-						type="number"
-						class=" bg-transparent text-center w-14"
-						min="-2"
-						step="1"
 					/>
 				</div>
 			</div>

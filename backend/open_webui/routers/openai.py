@@ -74,14 +74,12 @@ async def send_get_request(url, key=None):
         return None
 
 
-def openai_reasoning_model_handler(payload):
-    """
-    Handle reasoning model specific parameters
-    """
-    if "max_tokens" in payload:
-        # Convert "max_tokens" to "max_completion_tokens" for all reasoning models
-        payload["max_completion_tokens"] = payload["max_tokens"]
-        del payload["max_tokens"]
+def fix_openai_system_role(model: str, payload):
+    if not model.lower().startswith(("o1", "o3", "o4", "gpt-5")):
+        return payload
+
+    if model.lower().startswith("o1"):
+        log.warning(f"{model}, seriously? ")
 
     # Handle system role conversion based on model type
     if payload["messages"][0]["role"] == "system":
@@ -605,9 +603,6 @@ def convert_to_responses_payload(payload: dict) -> dict:
     if system_content:
         responses_payload["instructions"] = system_content
 
-    if "max_tokens" in responses_payload:
-        responses_payload["max_output_tokens"] = responses_payload.pop("max_tokens")
-
     # Remove Chat Completions-only parameters not supported by the Responses API
     for unsupported_key in (
         "stream_options",
@@ -716,17 +711,7 @@ async def generate_chat_completion(
     url = request.app.state.config.OPENAI_API_BASE_URLS[idx]
     key = request.app.state.config.OPENAI_API_KEYS[idx]
 
-    # Check if model is a reasoning model that needs special handling
-    if is_openai_reasoning_model(payload["model"]):
-        payload = openai_reasoning_model_handler(payload)
-    elif "api.openai.com" not in url:
-        # Remove "max_completion_tokens" from the payload for backward compatibility
-        if "max_completion_tokens" in payload:
-            payload["max_tokens"] = payload["max_completion_tokens"]
-            del payload["max_completion_tokens"]
-
-    if "max_tokens" in payload and "max_completion_tokens" in payload:
-        del payload["max_tokens"]
+    payload = fix_openai_system_role(payload["model"], payload)
 
     # Convert the modified body back to JSON
     if "logit_bias" in payload and payload["logit_bias"]:

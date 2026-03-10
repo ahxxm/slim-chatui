@@ -10,7 +10,6 @@ from open_webui.utils.task import (
     get_task_model_id,
     title_generation_template,
     follow_up_generation_template,
-    emoji_generation_template,
 )
 from open_webui.utils.auth import get_admin_user, get_verified_user
 from open_webui.constants import TASKS
@@ -18,7 +17,6 @@ from open_webui.constants import TASKS
 from open_webui.config import (
     DEFAULT_TITLE_GENERATION_PROMPT_TEMPLATE,
     DEFAULT_FOLLOW_UP_GENERATION_PROMPT_TEMPLATE,
-    DEFAULT_EMOJI_GENERATION_PROMPT_TEMPLATE,
 )
 
 log = logging.getLogger(__name__)
@@ -42,7 +40,6 @@ async def _run_task(
     *,
     task_type: TASKS,
     content: str,
-    max_completion_tokens: Optional[int] = None,
 ):
     models = request.app.state.MODELS
 
@@ -70,9 +67,6 @@ async def _run_task(
             "chat_id": form_data.get("chat_id", None),
         },
     }
-
-    if max_completion_tokens is not None:
-        payload["max_completion_tokens"] = max_completion_tokens
 
     try:
         return await generate_chat_completion(request, form_data=payload, user=user)
@@ -177,20 +171,3 @@ async def generate_follow_ups(
         content=content,
     )
 
-
-@router.post("/emoji/completions")
-async def generate_emoji(
-    request: Request, form_data: dict, user=Depends(get_verified_user)
-):
-    content = emoji_generation_template(
-        DEFAULT_EMOJI_GENERATION_PROMPT_TEMPLATE, form_data["prompt"]
-    )
-
-    return await _run_task(
-        request,
-        form_data,
-        user,
-        task_type=TASKS.EMOJI_GENERATION,
-        content=content,
-        max_completion_tokens=4,
-    )

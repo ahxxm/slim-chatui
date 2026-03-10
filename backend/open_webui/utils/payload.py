@@ -37,7 +37,6 @@ OPEN_WEBUI_PARAMS = {
 OPENAI_PARAM_CASTS = {
     "temperature": float,
     "top_p": float,
-    "max_tokens": int,
     "reasoning_effort": str,
     "seed": lambda x: x,
     "stop": lambda x: [bytes(s, "utf-8").decode("unicode_escape") for s in x],
