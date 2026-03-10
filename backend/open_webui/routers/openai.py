@@ -782,7 +782,6 @@ class ResponsesForm(BaseModel):
     input: Optional[list | str] = None
     instructions: Optional[str] = None
     stream: Optional[bool] = None
-    top_p: Optional[float] = None
     tools: Optional[list] = None
     tool_choice: Optional[str | dict] = None
     text: Optional[dict] = None

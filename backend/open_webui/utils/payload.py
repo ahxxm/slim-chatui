@@ -35,8 +35,6 @@ OPEN_WEBUI_PARAMS = {
 }
 
 OPENAI_PARAM_CASTS = {
-    "top_p": float,
-    "reasoning_effort": str,
     "response_format": dict,
 }
 

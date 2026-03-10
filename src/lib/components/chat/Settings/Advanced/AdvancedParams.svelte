@@ -6,9 +6,7 @@
 	const i18n = getContext('i18n');
 
 	const defaultParams = {
-		stream_delta_chunk_size: null,
-		reasoning_effort: null,
-		top_p: null
+		stream_delta_chunk_size: null
 	};
 
 	let {
@@ -82,105 +80,6 @@
 			{/if}
 		</div>
 	{/if}
-
-	<div class=" py-0.5 w-full justify-between">
-		<Tooltip
-			content={$i18n.t(
-				'Constrains effort on reasoning for reasoning models. Only applicable to reasoning models from specific providers that support reasoning effort.'
-			)}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Reasoning Effort')}
-				</div>
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-					type="button"
-					onclick={() => {
-						params.reasoning_effort = (params?.reasoning_effort ?? null) === null ? 'medium' : null;
-					}}
-				>
-					{#if (params?.reasoning_effort ?? null) === null}
-						<span class="ml-2 self-center"> {$i18n.t('Default')} </span>
-					{:else}
-						<span class="ml-2 self-center"> {$i18n.t('Custom')} </span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
-
-		{#if (params?.reasoning_effort ?? null) !== null}
-			<div class="flex mt-0.5 space-x-2">
-				<div class=" flex-1">
-					<input
-						class="text-sm w-full bg-transparent outline-hidden outline-none"
-						type="text"
-						placeholder={$i18n.t('Enter reasoning effort')}
-						bind:value={params.reasoning_effort}
-						autocomplete="off"
-					/>
-				</div>
-			</div>
-		{/if}
-	</div>
-
-	<div class=" py-0.5 w-full justify-between">
-		<Tooltip
-			content={$i18n.t(
-				'A higher value (e.g., 0.95) will lead to more diverse text, while a lower value (e.g., 0.5) will generate more focused and conservative text.'
-			)}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{'top_p'}
-				</div>
-
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-					type="button"
-					onclick={() => {
-						params.top_p = (params?.top_p ?? null) === null ? 0.9 : null;
-					}}
-				>
-					{#if (params?.top_p ?? null) === null}
-						<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-					{:else}
-						<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
-
-		{#if (params?.top_p ?? null) !== null}
-			<div class="flex mt-0.5 space-x-2">
-				<div class=" flex-1">
-					<input
-						id="steps-range"
-						type="range"
-						min="0"
-						max="1"
-						step="0.05"
-						bind:value={params.top_p}
-						class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-					/>
-				</div>
-				<div>
-					<input
-						bind:value={params.top_p}
-						type="number"
-						class=" bg-transparent text-center w-14"
-						min="0"
-						max="1"
-						step="any"
-					/>
-				</div>
-			</div>
-		{/if}
-	</div>
 
 	{#if custom && admin}
 		<div class="flex flex-col justify-center">
