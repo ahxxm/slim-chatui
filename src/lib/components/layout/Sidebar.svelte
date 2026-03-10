@@ -26,7 +26,8 @@
 		WEBUI_NAME,
 		sidebarWidth,
 		activeChatIds,
-		refreshChatList
+		refreshChatList,
+		PAGE_SIZE
 	} from '$lib/stores';
 	import { onMount, getContext, tick, untrack } from 'svelte';
 
@@ -171,7 +172,7 @@
 
 		const newChatList = await getChatList(localStorage.token, nextPage);
 
-		allChatsLoaded = newChatList.length === 0;
+		allChatsLoaded = newChatList.length < PAGE_SIZE;
 		await chats.set([...$chats, ...newChatList]);
 
 		chatListLoading = false;
