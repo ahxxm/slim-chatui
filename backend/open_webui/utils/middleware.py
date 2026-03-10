@@ -28,7 +28,6 @@ from open_webui.utils.files import (
 
 
 from open_webui.utils.misc import (
-    deep_update,
     get_message_list,
     get_last_user_message,
     get_last_user_message_item,
@@ -569,36 +568,6 @@ def get_image_urls(delta_images, request, metadata, user) -> list[str]:
     return image_urls
 
 
-def apply_params_to_form_data(form_data):
-    params = form_data.pop("params", {})
-    custom_params = params.pop("custom_params", {})
-
-    open_webui_only_keys = {"system"}
-    for key in open_webui_only_keys:
-        params.pop(key, None)
-
-    if custom_params:
-        # Attempt to parse custom_params if they are strings
-        for key, value in custom_params.items():
-            if isinstance(value, str):
-                try:
-                    # Attempt to parse the string as JSON
-                    custom_params[key] = json.loads(value)
-                except json.JSONDecodeError:
-                    # If it fails, keep the original string
-                    pass
-
-        # If custom_params are provided, merge them into params
-        params = deep_update(params, custom_params)
-
-    if isinstance(params, dict):
-        for key, value in params.items():
-            if value is not None:
-                form_data[key] = value
-
-    return form_data
-
-
 async def convert_url_images_to_base64(form_data):
     messages = form_data.get("messages", [])
 
@@ -682,7 +651,8 @@ def process_messages_with_output(messages: list[dict]) -> list[dict]:
 
 
 async def process_chat_payload(request, form_data, user, metadata, model):
-    form_data = apply_params_to_form_data(form_data)
+    # Non-streaming chat is not supported; tasks.py sets stream=False for its own calls
+    form_data.setdefault("stream", True)
     log.debug(f"form_data: {form_data}")
 
     # Load messages from DB when available — DB preserves structured 'output' items

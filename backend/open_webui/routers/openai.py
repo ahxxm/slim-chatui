@@ -18,7 +18,6 @@ from fastapi.responses import (
 )
 from pydantic import BaseModel, ConfigDict
 
-from open_webui.models.models import Models
 from open_webui.config import (
     CACHE_DIR,
 )
@@ -32,10 +31,6 @@ from open_webui.models.users import UserModel
 from open_webui.constants import ERROR_MESSAGES
 
 
-from open_webui.utils.payload import (
-    apply_model_params_to_body_openai,
-    apply_system_prompt_to_body,
-)
 from open_webui.utils.misc import (
     cleanup_response,
     stream_chunks_handler,
@@ -643,35 +638,32 @@ async def generate_chat_completion(
     request: Request,
     form_data: dict,
     user=Depends(get_verified_user),
-    bypass_system_prompt: bool = False,
 ):
     idx = 0
 
     payload = {**form_data}
-    metadata = payload.pop("metadata", None)
+    metadata = payload.pop("metadata", {})
 
     model_id = form_data.get("model")
-    model_info = Models.get_model_by_id(model_id)
 
-    # Check model info and override the payload
-    if model_info:
-        if model_info.base_model_id:
-            base_model_id = (
-                request.base_model_id
-                if hasattr(request, "base_model_id")
-                else model_info.base_model_id
-            )  # Use request's base_model_id if available
-            payload["model"] = base_model_id
-            model_id = base_model_id
+    # metadata["model"] is from app.state.MODELS (set in main.py chat_completion)
+    model_info = metadata.get("model", {}).get("info", {})
+    base_model_id = model_info.get("base_model_id")
+    if base_model_id:
+        base_model_id = (
+            request.base_model_id
+            if hasattr(request, "base_model_id")
+            else base_model_id
+        )
+        payload["model"] = base_model_id
+        model_id = base_model_id
 
-        params = model_info.params.model_dump()
-
-        if params:
-            system = params.pop("system", None)
-
-            payload = apply_model_params_to_body_openai(params, payload)
-            if not bypass_system_prompt:
-                payload = apply_system_prompt_to_body(system, payload)
+    # User system prompt (injected by middleware) wins; model's is fallback
+    messages = payload.get("messages", [])
+    has_system = messages and messages[0].get("role") == "system"
+    model_system = model_info.get("params", {}).get("system")
+    if model_system and not has_system:
+        messages.insert(0, {"role": "system", "content": model_system})
 
     # Check if model is already in app state cache to avoid expensive get_all_models() call
     models = request.app.state.OPENAI_MODELS

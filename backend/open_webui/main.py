@@ -55,7 +55,6 @@ from open_webui.routers import (
 
 from open_webui.internal.db import get_db
 
-from open_webui.models.models import Models
 from open_webui.models.users import Users
 from open_webui.models.chats import Chats
 
@@ -101,7 +100,6 @@ from open_webui.config import (
 )
 from open_webui.env import (
     ENV,
-    ENABLE_CUSTOM_MODEL_FALLBACK,
     ENABLE_GZIP_MIDDLEWARE,
     GLOBAL_LOG_LEVEL,
     VERSION,
@@ -466,39 +464,6 @@ async def chat_completion(
             raise Exception("Model not found")
 
         model = request.app.state.MODELS[model_id]
-        model_info = Models.get_model_by_id(model_id)
-
-        model_info_params = (
-            model_info.params.model_dump() if model_info and model_info.params else {}
-        )
-
-        # Check base model existence for custom models
-        if model_info_params.get("base_model_id"):
-            base_model_id = model_info_params.get("base_model_id")
-            if base_model_id not in request.app.state.MODELS:
-                if ENABLE_CUSTOM_MODEL_FALLBACK:
-                    default_models = (
-                        request.app.state.config.DEFAULT_MODELS or ""
-                    ).split(",")
-
-                    fallback_model_id = (
-                        default_models[0].strip() if default_models[0] else None
-                    )
-
-                    if (
-                        fallback_model_id
-                        and fallback_model_id in request.app.state.MODELS
-                    ):
-                        # Update model and form_data so routing uses the fallback model's type
-                        model = request.app.state.MODELS[fallback_model_id]
-                        form_data["model"] = fallback_model_id
-                    else:
-                        raise Exception("Model not found")
-                else:
-                    raise Exception("Model not found")
-
-        if model_info_params.get("stream_response") is not None:
-            form_data["stream"] = model_info_params.get("stream_response")
 
         metadata = {
             "user_id": user.id,
