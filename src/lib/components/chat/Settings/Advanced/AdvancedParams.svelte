@@ -7,7 +7,6 @@
 
 	const defaultParams = {
 		stream_delta_chunk_size: null,
-		seed: null,
 		stop: null,
 		temperature: null,
 		reasoning_effort: null,
@@ -85,51 +84,6 @@
 			{/if}
 		</div>
 	{/if}
-
-	<div class=" py-0.5 w-full justify-between">
-		<Tooltip
-			content={$i18n.t(
-				'Sets the random number seed to use for generation. Setting this to a specific number will make the model generate the same text for the same prompt.'
-			)}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Seed')}
-				</div>
-
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-					type="button"
-					onclick={() => {
-						params.seed = (params?.seed ?? null) === null ? 0 : null;
-					}}
-				>
-					{#if (params?.seed ?? null) === null}
-						<span class="ml-2 self-center"> {$i18n.t('Default')} </span>
-					{:else}
-						<span class="ml-2 self-center"> {$i18n.t('Custom')} </span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
-
-		{#if (params?.seed ?? null) !== null}
-			<div class="flex mt-0.5 space-x-2">
-				<div class=" flex-1">
-					<input
-						class="text-sm w-full bg-transparent outline-hidden outline-none"
-						type="number"
-						placeholder={$i18n.t('Enter Seed')}
-						bind:value={params.seed}
-						autocomplete="off"
-						min="0"
-					/>
-				</div>
-			</div>
-		{/if}
-	</div>
 
 	<div class=" py-0.5 w-full justify-between">
 		<Tooltip
