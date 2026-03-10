@@ -170,4 +170,3 @@ async def generate_follow_ups(
         task_type=TASKS.FOLLOW_UP_GENERATION,
         content=content,
     )
-

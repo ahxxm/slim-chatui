@@ -53,6 +53,7 @@ log = logging.getLogger(__name__)
 #
 ##########################################
 
+
 async def send_get_request(url, key=None):
     timeout = aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST)
     try:
@@ -313,9 +314,7 @@ async def get_all_models_responses(request: Request) -> list:
 
             if enable:
                 if len(model_ids) == 0:
-                    request_tasks.append(
-                        send_get_request(model_url, api_keys[idx])
-                    )
+                    request_tasks.append(send_get_request(model_url, api_keys[idx]))
                 else:
                     model_list = {
                         "object": "list",
@@ -514,9 +513,7 @@ async def verify_connection(
 
                 if r.status != 200:
                     if isinstance(response_data, (dict, list)):
-                        return JSONResponse(
-                            status_code=r.status, content=response_data
-                        )
+                        return JSONResponse(status_code=r.status, content=response_data)
                     else:
                         return PlainTextResponse(
                             status_code=r.status, content=response_data
@@ -603,9 +600,7 @@ def convert_to_responses_payload(payload: dict) -> dict:
         responses_payload["instructions"] = system_content
 
     # Remove Chat Completions-only parameters not supported by the Responses API
-    for unsupported_key in (
-        "stream_options",
-    ):
+    for unsupported_key in ("stream_options",):
         responses_payload.pop(unsupported_key, None)
 
     # Convert Chat Completions tools format to Responses API format
@@ -787,7 +782,6 @@ class ResponsesForm(BaseModel):
     input: Optional[list | str] = None
     instructions: Optional[str] = None
     stream: Optional[bool] = None
-    temperature: Optional[float] = None
     top_p: Optional[float] = None
     tools: Optional[list] = None
     tool_choice: Optional[str | dict] = None
