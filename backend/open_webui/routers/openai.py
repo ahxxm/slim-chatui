@@ -605,7 +605,6 @@ def convert_to_responses_payload(payload: dict) -> dict:
     # Remove Chat Completions-only parameters not supported by the Responses API
     for unsupported_key in (
         "stream_options",
-        "stop",
     ):
         responses_payload.pop(unsupported_key, None)
 

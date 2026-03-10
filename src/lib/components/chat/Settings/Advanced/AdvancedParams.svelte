@@ -7,7 +7,6 @@
 
 	const defaultParams = {
 		stream_delta_chunk_size: null,
-		stop: null,
 		temperature: null,
 		reasoning_effort: null,
 		top_p: null
@@ -84,50 +83,6 @@
 			{/if}
 		</div>
 	{/if}
-
-	<div class=" py-0.5 w-full justify-between">
-		<Tooltip
-			content={$i18n.t(
-				'Sets the stop sequences to use. When this pattern is encountered, the LLM will stop generating text and return. Multiple stop patterns may be set by specifying multiple separate stop parameters in a modelfile.'
-			)}
-			placement="top-start"
-			className="inline-tooltip"
-		>
-			<div class="flex w-full justify-between">
-				<div class=" self-center text-xs font-medium">
-					{$i18n.t('Stop Sequence')}
-				</div>
-
-				<button
-					class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-					type="button"
-					onclick={() => {
-						params.stop = (params?.stop ?? null) === null ? '' : null;
-					}}
-				>
-					{#if (params?.stop ?? null) === null}
-						<span class="ml-2 self-center"> {$i18n.t('Default')} </span>
-					{:else}
-						<span class="ml-2 self-center"> {$i18n.t('Custom')} </span>
-					{/if}
-				</button>
-			</div>
-		</Tooltip>
-
-		{#if (params?.stop ?? null) !== null}
-			<div class="flex mt-0.5 space-x-2">
-				<div class=" flex-1">
-					<input
-						class="text-sm w-full bg-transparent outline-hidden outline-none"
-						type="text"
-						placeholder={$i18n.t('Enter stop sequence')}
-						bind:value={params.stop}
-						autocomplete="off"
-					/>
-				</div>
-			</div>
-		{/if}
-	</div>
 
 	<div class=" py-0.5 w-full justify-between">
 		<Tooltip
