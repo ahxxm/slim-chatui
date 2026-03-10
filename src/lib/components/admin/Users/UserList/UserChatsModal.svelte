@@ -7,6 +7,7 @@
 	dayjs.extend(localizedFormat);
 
 	import { getChatListByUserId } from '$lib/apis/chats';
+	import { PAGE_SIZE } from '$lib/stores';
 
 	import ChatsModal from '$lib/components/layout/ChatsModal.svelte';
 
@@ -33,12 +34,17 @@
 	});
 
 	$effect(() => {
+		show;
 		filter;
-		untrack(() => searchHandler());
+		untrack(() => loadFirstPage());
 	});
 
-	const searchHandler = async () => {
+	const loadFirstPage = async () => {
 		if (!show) {
+			page = 1;
+			chatList = null;
+			allChatsLoaded = false;
+			chatListLoading = false;
 			return;
 		}
 
@@ -50,7 +56,7 @@
 
 		const fetchChats = async () => {
 			chatList = await getChatListByUserId(localStorage.token, user.id, page, filter);
-			allChatsLoaded = (chatList ?? []).length === 0;
+			allChatsLoaded = (chatList ?? []).length < PAGE_SIZE;
 		};
 
 		if (query === '') {
@@ -64,12 +70,9 @@
 		chatListLoading = true;
 		page += 1;
 
-		let newChatList = [];
+		const newChatList = await getChatListByUserId(localStorage.token, user.id, page, filter);
 
-		newChatList = await getChatListByUserId(localStorage.token, user.id, page, filter);
-
-		// once the bottom of the list has been reached (no results) there is no need to continue querying
-		allChatsLoaded = newChatList.length === 0;
+		allChatsLoaded = newChatList.length < PAGE_SIZE;
 
 		if (newChatList.length > 0) {
 			chatList = [...chatList, ...newChatList];
@@ -77,20 +80,6 @@
 
 		chatListLoading = false;
 	};
-
-	const init = async () => {
-		chatList = await getChatListByUserId(localStorage.token, user.id, page, filter);
-	};
-
-	$effect(() => {
-		if (show) {
-			untrack(() => init());
-		} else {
-			page = 1;
-			allChatsLoaded = false;
-			chatListLoading = false;
-		}
-	});
 </script>
 
 <ChatsModal
@@ -105,7 +94,7 @@
 	{allChatsLoaded}
 	{chatListLoading}
 	onUpdate={() => {
-		init();
+		loadFirstPage();
 	}}
 	loadHandler={loadMoreChats}
 ></ChatsModal>

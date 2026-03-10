@@ -68,7 +68,7 @@ export const temporaryChatEnabled = writable(false);
 export const scrollPaginationEnabled = writable(false);
 export const currentChatPage = writable(1);
 
-const PAGE_SIZE = 60;
+export const PAGE_SIZE = 60;
 
 /** Refetch pages 1..currentChatPage, stopping early on a short page.
  *  Deflates currentChatPage to the actual last page with data.

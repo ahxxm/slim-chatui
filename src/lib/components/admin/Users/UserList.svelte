@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { user } from '$lib/stores';
-	import { getContext, onDestroy, untrack } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 
 	import dayjs from 'dayjs';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
@@ -34,8 +34,6 @@
 	let users = $state(null);
 	let total = $state(null);
 
-	let query = $state('');
-	let searchDebounceTimer: ReturnType<typeof setTimeout>;
 	let orderBy = $state('created_at');
 	let direction = $state('asc');
 
@@ -74,12 +72,10 @@
 
 	const getUserList = async () => {
 		try {
-			const res = await getUsers(localStorage.token, query, orderBy, direction, page).catch(
-				(error) => {
-					toast.error(`${error}`);
-					return null;
-				}
-			);
+			const res = await getUsers(localStorage.token, orderBy, direction, page).catch((error) => {
+				toast.error(`${error}`);
+				return null;
+			});
 
 			if (res) {
 				users = res.users;
@@ -91,24 +87,10 @@
 	};
 
 	$effect(() => {
-		query;
-		untrack(() => {
-			clearTimeout(searchDebounceTimer);
-			searchDebounceTimer = setTimeout(() => {
-				page = 1;
-				getUserList();
-			}, 300);
-		});
-	});
-
-	$effect(() => {
-		if (page !== null && orderBy !== null && direction !== null) {
-			untrack(() => getUserList());
-		}
-	});
-
-	onDestroy(() => {
-		clearTimeout(searchDebounceTimer);
+		page;
+		orderBy;
+		direction;
+		untrack(() => getUserList());
 	});
 </script>
 
@@ -157,44 +139,17 @@
 			</div>
 		</div>
 
-		<div class="flex gap-1">
-			<div class=" flex w-full space-x-2">
-				<div class="flex flex-1">
-					<div class=" self-center ml-1 mr-3">
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-							class="w-4 h-4"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"
-								clip-rule="evenodd"
-							/>
-						</svg>
-					</div>
-					<input
-						class=" w-full text-sm pr-4 py-1 rounded-r-xl outline-hidden bg-transparent"
-						bind:value={query}
-						aria-label={$i18n.t('Search')}
-						placeholder={$i18n.t('Search')}
-					/>
-				</div>
-
-				<div>
-					<Tooltip content={$i18n.t('Add User')}>
-						<button
-							class=" p-2 rounded-xl hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-850 transition font-medium text-sm flex items-center space-x-1"
-							onclick={() => {
-								showAddUserModal = !showAddUserModal;
-							}}
-						>
-							<Plus className="size-3.5" />
-						</button>
-					</Tooltip>
-				</div>
-			</div>
+		<div>
+			<Tooltip content={$i18n.t('Add User')}>
+				<button
+					class=" p-2 rounded-xl hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-850 transition font-medium text-sm flex items-center space-x-1"
+					onclick={() => {
+						showAddUserModal = !showAddUserModal;
+					}}
+				>
+					<Plus className="size-3.5" />
+				</button>
+			</Tooltip>
 		</div>
 	</div>
 
