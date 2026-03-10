@@ -84,7 +84,6 @@ from open_webui.config import (
     DEFAULT_MODELS,
     DEFAULT_PINNED_MODELS,
     DEFAULT_MODEL_METADATA,
-    DEFAULT_MODEL_PARAMS,
     # Misc
     CACHE_DIR,
     STATIC_DIR,
@@ -259,7 +258,6 @@ app.state.config.ADMIN_EMAIL = ADMIN_EMAIL
 app.state.config.DEFAULT_MODELS = DEFAULT_MODELS
 app.state.config.DEFAULT_PINNED_MODELS = DEFAULT_PINNED_MODELS
 app.state.config.DEFAULT_MODEL_METADATA = DEFAULT_MODEL_METADATA
-app.state.config.DEFAULT_MODEL_PARAMS = DEFAULT_MODEL_PARAMS
 
 
 app.state.config.DEFAULT_PROMPT_SUGGESTIONS = DEFAULT_PROMPT_SUGGESTIONS
@@ -470,18 +468,9 @@ async def chat_completion(
         model = request.app.state.MODELS[model_id]
         model_info = Models.get_model_by_id(model_id)
 
-        # Model params: global defaults as base, per-model overrides win
-        default_model_params = (
-            getattr(request.app.state.config, "DEFAULT_MODEL_PARAMS", None) or {}
+        model_info_params = (
+            model_info.params.model_dump() if model_info and model_info.params else {}
         )
-        model_info_params = {
-            **default_model_params,
-            **(
-                model_info.params.model_dump()
-                if model_info and model_info.params
-                else {}
-            ),
-        }
 
         # Check base model existence for custom models
         if model_info_params.get("base_model_id"):
@@ -508,16 +497,8 @@ async def chat_completion(
                 else:
                     raise Exception("Model not found")
 
-        # Chat Params
-        stream_delta_chunk_size = form_data.get("params", {}).get(
-            "stream_delta_chunk_size"
-        )
-        # Model Params
         if model_info_params.get("stream_response") is not None:
             form_data["stream"] = model_info_params.get("stream_response")
-
-        if model_info_params.get("stream_delta_chunk_size"):
-            stream_delta_chunk_size = model_info_params.get("stream_delta_chunk_size")
 
         metadata = {
             "user_id": user.id,
@@ -530,9 +511,6 @@ async def chat_completion(
             "features": form_data.get("features", {}),
             "variables": form_data.get("variables", {}),
             "model": model,
-            "params": {
-                "stream_delta_chunk_size": stream_delta_chunk_size,
-            },
         }
 
         if metadata.get("chat_id") and user:

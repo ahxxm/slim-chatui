@@ -424,11 +424,6 @@ DEFAULT_MODEL_METADATA = PersistentConfig(
     {},
 )
 
-DEFAULT_MODEL_PARAMS = PersistentConfig(
-    "DEFAULT_MODEL_PARAMS",
-    "models.default_params",
-    {},
-)
 
 DEFAULT_USER_ROLE = PersistentConfig(
     "DEFAULT_USER_ROLE",

@@ -573,7 +573,7 @@ def apply_params_to_form_data(form_data):
     params = form_data.pop("params", {})
     custom_params = params.pop("custom_params", {})
 
-    open_webui_only_keys = {"stream_delta_chunk_size", "system"}
+    open_webui_only_keys = {"system"}
     for key in open_webui_only_keys:
         params.pop(key, None)
 
@@ -1134,13 +1134,7 @@ async def streaming_chat_response_handler(response, ctx):
                     nonlocal output
 
                     delta_count = 0
-                    delta_chunk_size = max(
-                        CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE,
-                        int(
-                            metadata.get("params", {}).get("stream_delta_chunk_size")
-                            or 1
-                        ),
-                    )
+                    delta_chunk_size = CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE
                     last_delta_data = None
 
                     async def flush_pending_delta_data(threshold: int = 0):

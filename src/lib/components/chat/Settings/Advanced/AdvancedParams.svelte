@@ -1,13 +1,10 @@
 <script lang="ts">
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Plus from '$lib/components/icons/Plus.svelte';
 	import { getContext } from 'svelte';
 
 	const i18n = getContext('i18n');
 
-	const defaultParams = {
-		stream_delta_chunk_size: null
-	};
+	const defaultParams = {};
 
 	let {
 		onChange = (params: any) => {},
@@ -24,63 +21,6 @@
 </script>
 
 <div class=" space-y-1 text-xs pb-safe-bottom">
-	{#if admin}
-		<div>
-			<Tooltip
-				content={$i18n.t(
-					'The stream delta chunk size for the model. Increasing the chunk size will make the model respond with larger pieces of text at once.'
-				)}
-				placement="top-start"
-				className="inline-tooltip"
-			>
-				<div class="flex w-full justify-between">
-					<div class=" self-center text-xs font-medium">
-						{$i18n.t('Stream Delta Chunk Size')}
-					</div>
-					<button
-						class="p-1 px-3 text-xs flex rounded-sm transition shrink-0 outline-hidden"
-						type="button"
-						onclick={() => {
-							params.stream_delta_chunk_size =
-								(params?.stream_delta_chunk_size ?? null) === null ? 1 : null;
-						}}
-					>
-						{#if (params?.stream_delta_chunk_size ?? null) === null}
-							<span class="ml-2 self-center"> {$i18n.t('Default')} </span>
-						{:else}
-							<span class="ml-2 self-center"> {$i18n.t('Custom')} </span>
-						{/if}
-					</button>
-				</div>
-			</Tooltip>
-
-			{#if (params?.stream_delta_chunk_size ?? null) !== null}
-				<div class="flex mt-0.5 space-x-2">
-					<div class=" flex-1">
-						<input
-							id="steps-range"
-							type="range"
-							min="1"
-							max="128"
-							step="1"
-							bind:value={params.stream_delta_chunk_size}
-							class="w-full h-2 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-						/>
-					</div>
-					<div>
-						<input
-							bind:value={params.stream_delta_chunk_size}
-							type="number"
-							class=" bg-transparent text-center w-14"
-							min="1"
-							step="any"
-						/>
-					</div>
-				</div>
-			{/if}
-		</div>
-	{/if}
-
 	{#if custom && admin}
 		<div class="flex flex-col justify-center">
 			{#each Object.keys(params?.custom_params ?? {}) as key}
