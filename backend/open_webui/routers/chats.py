@@ -249,7 +249,10 @@ async def get_all_user_chats_in_db(
 
 @router.get("/{id}", response_model=Optional[ChatResponse])
 async def get_chat_by_id(id: str, user=Depends(get_verified_user)):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
+    if user.role == "admin":
+        chat = Chats.get_chat_by_id(id)
+    else:
+        chat = Chats.get_chat_by_id_and_user_id(id, user.id)
 
     if chat:
         return ChatResponse(**chat.model_dump())

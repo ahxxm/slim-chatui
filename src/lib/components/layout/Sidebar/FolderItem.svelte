@@ -92,12 +92,6 @@
 		}
 	};
 
-	$effect(() => {
-		if (open) {
-			untrack(() => setFolderItems());
-		}
-	});
-
 	// Drag-and-drop: accept chats dragged onto this folder
 	const onDragOver = (e: DragEvent) => {
 		e.preventDefault();
@@ -376,6 +370,7 @@
 						e.stopImmediatePropagation();
 						open = !open;
 						isExpandedUpdateDebounced();
+						setFolderItems();
 					}}
 				>
 					{#if folders[folderId]?.meta?.icon}

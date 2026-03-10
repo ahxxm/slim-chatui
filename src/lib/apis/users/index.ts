@@ -1,22 +1,12 @@
 import { WEBUI_API_BASE_URL } from '$lib/constants';
 
-export const getUsers = async (
-	token: string,
-	query?: string,
-	orderBy?: string,
-	direction?: string,
-	page = 1
-) => {
+export const getUsers = async (token: string, orderBy?: string, direction?: string, page = 1) => {
 	let error = null;
 	let res = null;
 
 	const searchParams = new URLSearchParams();
 
 	searchParams.set('page', `${page}`);
-
-	if (query) {
-		searchParams.set('query', query);
-	}
 
 	if (orderBy) {
 		searchParams.set('order_by', orderBy);

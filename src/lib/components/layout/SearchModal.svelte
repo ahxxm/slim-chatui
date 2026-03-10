@@ -13,7 +13,7 @@
 	import calendar from 'dayjs/plugin/calendar';
 	import Loader from '../common/Loader.svelte';
 	import { createMessagesList } from '$lib/utils';
-	import { user } from '$lib/stores';
+	import { user, PAGE_SIZE } from '$lib/stores';
 	import Messages from '../chat/Messages.svelte';
 	import { goto } from '$app/navigation';
 	import PencilSquare from '../icons/PencilSquare.svelte';
@@ -126,11 +126,7 @@
 			searchDebounceTimeout = setTimeout(async () => {
 				chatList = await getChatListBySearchText(localStorage.token, query, page);
 
-				if ((chatList ?? []).length === 0) {
-					allChatsLoaded = true;
-				} else {
-					allChatsLoaded = false;
-				}
+				allChatsLoaded = (chatList ?? []).length < PAGE_SIZE;
 			}, 500);
 		}
 
@@ -139,11 +135,7 @@
 		history = null;
 		selectedModels = [''];
 
-		if ((chatList ?? []).length === 0) {
-			allChatsLoaded = true;
-		} else {
-			allChatsLoaded = false;
-		}
+		allChatsLoaded = (chatList ?? []).length < PAGE_SIZE;
 	};
 
 	const loadMoreChats = async () => {
@@ -158,8 +150,7 @@
 			newChatList = await getChatList(localStorage.token, page);
 		}
 
-		// once the bottom of the list has been reached (no results) there is no need to continue querying
-		allChatsLoaded = newChatList.length === 0;
+		allChatsLoaded = newChatList.length < PAGE_SIZE;
 
 		if (newChatList.length > 0) {
 			chatList = [...chatList, ...newChatList];
