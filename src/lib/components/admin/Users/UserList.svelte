@@ -72,12 +72,10 @@
 
 	const getUserList = async () => {
 		try {
-			const res = await getUsers(localStorage.token, '', orderBy, direction, page).catch(
-				(error) => {
-					toast.error(`${error}`);
-					return null;
-				}
-			);
+			const res = await getUsers(localStorage.token, orderBy, direction, page).catch((error) => {
+				toast.error(`${error}`);
+				return null;
+			});
 
 			if (res) {
 				users = res.users;
