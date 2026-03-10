@@ -34,7 +34,6 @@ from open_webui.utils.misc import (
     get_last_user_message_item,
     get_last_assistant_message,
     get_system_message,
-    convert_logit_bias_input_to_json,
     convert_output_to_messages,
 )
 from open_webui.utils.payload import apply_system_prompt_to_body
@@ -596,15 +595,6 @@ def apply_params_to_form_data(form_data):
         for key, value in params.items():
             if value is not None:
                 form_data[key] = value
-
-    if "logit_bias" in params and params["logit_bias"] is not None:
-        try:
-            logit_bias = convert_logit_bias_input_to_json(params["logit_bias"])
-
-            if logit_bias:
-                form_data["logit_bias"] = json.loads(logit_bias)
-        except Exception as e:
-            log.exception(f"Error parsing logit_bias: {e}")
 
     return form_data
 

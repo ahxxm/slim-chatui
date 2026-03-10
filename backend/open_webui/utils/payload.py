@@ -40,7 +40,6 @@ OPENAI_PARAM_CASTS = {
     "reasoning_effort": str,
     "seed": lambda x: x,
     "stop": lambda x: [bytes(s, "utf-8").decode("unicode_escape") for s in x],
-    "logit_bias": lambda x: x,
     "response_format": dict,
 }
 

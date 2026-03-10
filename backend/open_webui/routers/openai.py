@@ -38,7 +38,6 @@ from open_webui.utils.payload import (
 )
 from open_webui.utils.misc import (
     cleanup_response,
-    convert_logit_bias_input_to_json,
     stream_chunks_handler,
     stream_wrapper,
 )
@@ -606,7 +605,6 @@ def convert_to_responses_payload(payload: dict) -> dict:
     # Remove Chat Completions-only parameters not supported by the Responses API
     for unsupported_key in (
         "stream_options",
-        "logit_bias",
         "stop",
     ):
         responses_payload.pop(unsupported_key, None)
@@ -712,14 +710,6 @@ async def generate_chat_completion(
     key = request.app.state.config.OPENAI_API_KEYS[idx]
 
     payload = fix_openai_system_role(payload["model"], payload)
-
-    # Convert the modified body back to JSON
-    if "logit_bias" in payload and payload["logit_bias"]:
-        logit_bias = convert_logit_bias_input_to_json(payload["logit_bias"])
-
-        if logit_bias:
-            payload["logit_bias"] = json.loads(logit_bias)
-
     headers, cookies = await get_headers_and_cookies(
         request, url, key, api_config, metadata, user=user
     )
