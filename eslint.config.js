@@ -2,7 +2,6 @@ import js from '@eslint/js';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import tsParser from '@typescript-eslint/parser';
 import sveltePlugin from 'eslint-plugin-svelte';
-import cypressPlugin from 'eslint-plugin-cypress';
 import prettier from 'eslint-config-prettier';
 import svelteParser from 'svelte-eslint-parser';
 import globals from 'globals';
@@ -39,6 +38,5 @@ export default [
 		},
 		rules: tsRules
 	},
-	cypressPlugin.configs.recommended,
 	prettier
 ];

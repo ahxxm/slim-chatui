@@ -788,7 +788,6 @@ class ResponsesForm(BaseModel):
     instructions: Optional[str] = None
     stream: Optional[bool] = None
     temperature: Optional[float] = None
-    max_output_tokens: Optional[int] = None
     top_p: Optional[float] = None
     tools: Optional[list] = None
     tool_choice: Optional[str | dict] = None
