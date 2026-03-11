@@ -7,7 +7,6 @@ import sys
 import time
 
 from contextlib import asynccontextmanager
-from urllib.parse import urlencode, parse_qs, urlparse
 from pydantic import BaseModel
 from sqlalchemy import text
 
@@ -21,12 +20,11 @@ from fastapi import (
 )
 
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.gzip import GZipMiddleware
 from starlette.responses import Response, StreamingResponse
 
@@ -298,31 +296,6 @@ app.state.config.FOLLOW_UP_GENERATION_PROMPT_TEMPLATE = (
 app.state.MODELS = MODELS
 
 
-class RedirectMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        # Check if the request is a GET request
-        if request.method == "GET":
-            path = request.url.path
-            query_params = dict(parse_qs(urlparse(str(request.url)).query))
-
-            redirect_params = {}
-
-            # Check for the specific watch path and the presence of 'v' parameter
-            if path.endswith("/watch") and "v" in query_params:
-                # Extract the first 'v' parameter
-                youtube_video_id = query_params["v"][0]
-                redirect_params["youtube"] = youtube_video_id
-
-            if redirect_params:
-                redirect_url = f"/?{urlencode(redirect_params)}"
-                return RedirectResponse(url=redirect_url)
-
-        # Proceed with the normal flow of other requests
-        response = await call_next(request)
-        return response
-
-
-app.add_middleware(RedirectMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 if ENABLE_GZIP_MIDDLEWARE:
     app.add_middleware(GZipMiddleware, minimum_size=500)
