@@ -690,10 +690,6 @@ input[type='number'] {
 	@apply bg-white dark:bg-gray-900 dark:border-gray-850 text-xs;
 }
 
-.tippy-box[data-theme~='transparent'] {
-	@apply bg-transparent p-0 m-0;
-}
-
 body {
 	background: #fff;
 	color: #000;
