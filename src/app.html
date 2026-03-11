@@ -62,9 +62,6 @@
 				} else if (localStorage.theme === 'light') {
 					document.documentElement.classList.add('light');
 					metaThemeColorTag.setAttribute('content', '#ffffff');
-				} else if (localStorage.theme === 'her') {
-					document.documentElement.classList.add('her');
-					metaThemeColorTag.setAttribute('content', '#983724');
 				} else {
 					document.documentElement.classList.add('dark');
 					metaThemeColorTag.setAttribute('content', '#171717');
@@ -93,10 +90,6 @@
 
 				document.addEventListener('DOMContentLoaded', function () {
 					const splash = document.getElementById('splash-screen');
-					if (document.documentElement.classList.contains('her')) {
-						return;
-					}
-
 					if (splash) splash.prepend(logo);
 				});
 			})();
@@ -119,58 +112,6 @@
 					overflow-y: scroll !important;
 				}
 			</style>
-
-			<div
-				style="
-					position: absolute;
-					top: 33%;
-					left: 50%;
-
-					width: 24rem;
-					transform: translateX(-50%);
-
-					display: flex;
-					flex-direction: column;
-					align-items: center;
-				"
-			>
-				<img
-					id="logo-her"
-					style="width: auto; height: 13rem"
-					src="/static/splash.png"
-					class="animate-pulse-fast"
-				/>
-
-				<div style="position: relative; width: 24rem; margin-top: 0.5rem">
-					<div
-						id="progress-background"
-						style="
-							position: absolute;
-							width: 100%;
-							height: 0.75rem;
-
-							border-radius: 9999px;
-							background-color: #fafafa9a;
-						"
-					></div>
-
-					<div
-						id="progress-bar"
-						style="
-							position: absolute;
-							width: 0%;
-							height: 0.75rem;
-							border-radius: 9999px;
-							background-color: #fff;
-						"
-						class="bg-white"
-					></div>
-				</div>
-			</div>
-
-			<!-- <span style="position: absolute; bottom: 32px; left: 50%; margin: -36px 0 0 -36px">
-				Footer content
-			</span> -->
 		</div>
 	</body>
 
@@ -186,59 +127,6 @@
 
 		html.dark #splash-screen {
 			background: #000;
-		}
-
-		html.her #splash-screen {
-			background: #983724;
-		}
-
-		#logo-her {
-			display: none;
-		}
-
-		#progress-background {
-			display: none;
-		}
-
-		#progress-bar {
-			display: none;
-		}
-
-		html.her #logo {
-			display: none;
-		}
-
-		html.her #logo-her {
-			display: block;
-			filter: invert(1);
-		}
-
-		html.her #progress-background {
-			display: block;
-		}
-
-		html.her #progress-bar {
-			display: block;
-		}
-
-		@media (max-width: 24rem) {
-			html.her #progress-background {
-				display: none;
-			}
-
-			html.her #progress-bar {
-				display: none;
-			}
-		}
-
-		@keyframes pulse {
-			50% {
-				opacity: 0.65;
-			}
-		}
-
-		.animate-pulse-fast {
-			animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 		}
 	</style>
 </html>

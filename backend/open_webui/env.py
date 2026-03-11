@@ -114,9 +114,6 @@ else:
 
 VERSION = PACKAGE_DATA["version"]
 
-
-ENABLE_EASTER_EGGS = os.environ.get("ENABLE_EASTER_EGGS", "True").lower() == "true"
-
 ####################################
 # WEBUI_BUILD_HASH
 ####################################

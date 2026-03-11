@@ -104,7 +104,6 @@ from open_webui.env import (
     WEBUI_ADMIN_EMAIL,
     WEBUI_ADMIN_PASSWORD,
     WEBUI_ADMIN_NAME,
-    ENABLE_EASTER_EGGS,
     LOG_FORMAT,
 )
 
@@ -667,7 +666,6 @@ async def get_app_config(request: Request):
             "enable_signup_password_confirmation": ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
             "enable_signup": app.state.config.ENABLE_SIGNUP,
             "enable_websocket": ENABLE_WEBSOCKET_SUPPORT,
-            "enable_easter_eggs": ENABLE_EASTER_EGGS,
         },
         **(
             {

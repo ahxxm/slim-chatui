@@ -165,7 +165,6 @@ type Config = {
 		enable_signup: boolean;
 		enable_signup_password_confirmation?: boolean;
 		enable_websocket?: boolean;
-		enable_easter_eggs?: boolean;
 	};
 	metadata?: {
 		auth_logo_position?: string;

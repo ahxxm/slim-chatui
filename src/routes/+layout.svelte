@@ -1,11 +1,6 @@
 <script lang="ts">
 	import { io } from 'socket.io-client';
-	import { spring } from 'svelte/motion';
 	import { Toaster, toast } from 'svelte-sonner';
-
-	let loadingProgress = spring(0, {
-		stiffness: 0.05
-	});
 
 	import { onMount, tick, setContext, onDestroy } from 'svelte';
 	import {
@@ -248,7 +243,7 @@
 			}
 		}
 
-			// Listen for messages on the BroadcastChannel
+		// Listen for messages on the BroadcastChannel
 		bc.onmessage = (event) => {
 			if (event.data === 'active') {
 				isLastActiveTab.set(false); // Another tab became active
@@ -374,35 +369,8 @@
 
 		await tick();
 
-		if (
-			document.documentElement.classList.contains('her') &&
-			document.getElementById('progress-bar')
-		) {
-			loadingProgress.subscribe((value) => {
-				const progressBar = document.getElementById('progress-bar');
-
-				if (progressBar) {
-					progressBar.style.width = `${value}%`;
-				}
-			});
-
-			await loadingProgress.set(100);
-
-			document.getElementById('splash-screen')?.remove();
-
-			const audio = new Audio(`/audio/greeting.mp3`);
-			const playAudio = () => {
-				audio.play();
-				document.removeEventListener('click', playAudio);
-			};
-
-			document.addEventListener('click', playAudio);
-
-			loaded = true;
-		} else {
-			document.getElementById('splash-screen')?.remove();
-			loaded = true;
-		}
+		document.getElementById('splash-screen')?.remove();
+		loaded = true;
 
 		onMountCleanup = () => {
 			window.removeEventListener('resize', onResize);
