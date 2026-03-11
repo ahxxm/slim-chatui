@@ -5,12 +5,6 @@ from typing import Optional
 from open_webui.utils.misc import get_last_user_message, get_messages_content
 
 
-def get_task_model_id(default_model_id: str, task_model: str, models) -> str:
-    if task_model and task_model in models:
-        return task_model
-    return default_model_id
-
-
 def replace_prompt_variable(template: str, prompt: str) -> str:
     def replacement_function(match):
         full_match = match.group(

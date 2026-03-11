@@ -85,7 +85,6 @@ from open_webui.config import (
     DEFAULT_LOCALE,
     WEBUI_URL,
     # Tasks
-    TASK_MODEL,
     ENABLE_TITLE_GENERATION,
     ENABLE_FOLLOW_UP_GENERATION,
     TITLE_GENERATION_PROMPT_TEMPLATE,
@@ -271,9 +270,6 @@ app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT = FILE_IMAGE_COMPRESSION_HEIGHT
 # TASKS
 #
 ########################################
-
-
-app.state.config.TASK_MODEL = TASK_MODEL
 
 
 app.state.config.ENABLE_TITLE_GENERATION = ENABLE_TITLE_GENERATION
