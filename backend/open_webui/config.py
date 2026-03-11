@@ -14,8 +14,6 @@ from open_webui.env import (
     FRONTEND_BUILD_DIR,
     OPEN_WEBUI_DIR,
     WEBUI_AUTH,
-    WEBUI_FAVICON_URL,
-    WEBUI_NAME,
     log,
 )
 from open_webui.internal.db import get_db
@@ -357,12 +355,6 @@ ENABLE_SIGNUP = PersistentConfig(
     ),
 )
 
-
-DEFAULT_LOCALE = PersistentConfig(
-    "DEFAULT_LOCALE",
-    "ui.default_locale",
-    os.environ.get("DEFAULT_LOCALE", ""),
-)
 
 DEFAULT_MODELS = PersistentConfig(
     "DEFAULT_MODELS", "ui.default_models", os.environ.get("DEFAULT_MODELS", None)

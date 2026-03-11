@@ -78,7 +78,6 @@ from open_webui.config import (
     STATIC_DIR,
     FRONTEND_BUILD_DIR,
     CORS_ALLOW_ORIGIN,
-    DEFAULT_LOCALE,
     WEBUI_URL,
     # Tasks
     ENABLE_TITLE_GENERATION,
@@ -647,7 +646,6 @@ async def get_app_config(request: Request):
         "status": True,
         "name": app.state.WEBUI_NAME,
         "version": VERSION,
-        "default_locale": str(DEFAULT_LOCALE),
         "features": {
             "auth": WEBUI_AUTH,
             "enable_signup_password_confirmation": ENABLE_SIGNUP_PASSWORD_CONFIRMATION,

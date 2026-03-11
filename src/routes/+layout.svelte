@@ -322,9 +322,7 @@
 			const browserLanguages = navigator.languages
 				? navigator.languages
 				: [navigator.language || navigator.userLanguage];
-			const lang = backendConfig?.default_locale
-				? backendConfig.default_locale
-				: bestMatchingLanguage(languages, browserLanguages, 'en-US');
+			const lang = bestMatchingLanguage(languages, browserLanguages, 'en-US');
 			changeLanguage(lang);
 			dayjs.locale(lang);
 		}
