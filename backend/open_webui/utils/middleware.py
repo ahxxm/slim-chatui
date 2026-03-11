@@ -28,13 +28,11 @@ from open_webui.utils.files import (
 
 
 from open_webui.utils.misc import (
-    deep_update,
     get_message_list,
     get_last_user_message,
     get_last_user_message_item,
     get_last_assistant_message,
     get_system_message,
-    convert_logit_bias_input_to_json,
     convert_output_to_messages,
 )
 from open_webui.utils.payload import apply_system_prompt_to_body
@@ -570,45 +568,6 @@ def get_image_urls(delta_images, request, metadata, user) -> list[str]:
     return image_urls
 
 
-def apply_params_to_form_data(form_data):
-    params = form_data.pop("params", {})
-    custom_params = params.pop("custom_params", {})
-
-    open_webui_only_keys = {"stream_delta_chunk_size", "system"}
-    for key in open_webui_only_keys:
-        params.pop(key, None)
-
-    if custom_params:
-        # Attempt to parse custom_params if they are strings
-        for key, value in custom_params.items():
-            if isinstance(value, str):
-                try:
-                    # Attempt to parse the string as JSON
-                    custom_params[key] = json.loads(value)
-                except json.JSONDecodeError:
-                    # If it fails, keep the original string
-                    pass
-
-        # If custom_params are provided, merge them into params
-        params = deep_update(params, custom_params)
-
-    if isinstance(params, dict):
-        for key, value in params.items():
-            if value is not None:
-                form_data[key] = value
-
-    if "logit_bias" in params and params["logit_bias"] is not None:
-        try:
-            logit_bias = convert_logit_bias_input_to_json(params["logit_bias"])
-
-            if logit_bias:
-                form_data["logit_bias"] = json.loads(logit_bias)
-        except Exception as e:
-            log.exception(f"Error parsing logit_bias: {e}")
-
-    return form_data
-
-
 async def convert_url_images_to_base64(form_data):
     messages = form_data.get("messages", [])
 
@@ -692,7 +651,8 @@ def process_messages_with_output(messages: list[dict]) -> list[dict]:
 
 
 async def process_chat_payload(request, form_data, user, metadata, model):
-    form_data = apply_params_to_form_data(form_data)
+    # Non-streaming chat is not supported; tasks.py sets stream=False for its own calls
+    form_data.setdefault("stream", True)
     log.debug(f"form_data: {form_data}")
 
     # Load messages from DB when available — DB preserves structured 'output' items
@@ -1144,13 +1104,7 @@ async def streaming_chat_response_handler(response, ctx):
                     nonlocal output
 
                     delta_count = 0
-                    delta_chunk_size = max(
-                        CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE,
-                        int(
-                            metadata.get("params", {}).get("stream_delta_chunk_size")
-                            or 1
-                        ),
-                    )
+                    delta_chunk_size = CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE
                     last_delta_data = None
 
                     async def flush_pending_delta_data(threshold: int = 0):

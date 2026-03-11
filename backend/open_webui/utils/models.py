@@ -40,10 +40,6 @@ async def get_all_models(request, user: UserModel = None):
                     if custom_model.is_active:
                         model["name"] = custom_model.name
                         model["info"] = custom_model.model_dump()
-
-                        if "info" in model:
-                            if "params" in model["info"]:
-                                del model["info"]["params"]
                     else:
                         models.remove(model)
 
@@ -60,11 +56,7 @@ async def get_all_models(request, user: UserModel = None):
                 "preset": True,
             }
 
-            info = custom_model.model_dump()
-            if "params" in info:
-                del info["params"]
-
-            model["info"] = info
+            model["info"] = custom_model.model_dump()
 
             models.append(model)
 
