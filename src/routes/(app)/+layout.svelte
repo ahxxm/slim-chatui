@@ -4,14 +4,13 @@
 	import { page } from '$app/stores';
 
 	import { getModels } from '$lib/apis';
-	import { getBanners } from '$lib/apis/configs';
+
 	import { getUserSettings } from '$lib/apis/users';
 
 	import {
 		user,
 		settings,
 		models,
-		banners,
 		showSettings,
 		showShortcuts,
 		temporaryChatEnabled,
@@ -64,11 +63,6 @@
 		models.set(await getModels(localStorage.token));
 	};
 
-	const setBanners = async () => {
-		const bannersData = await getBanners(localStorage.token);
-		banners.set(bannersData);
-	};
-
 	onMount(async () => {
 		if ($user === undefined || $user === null) {
 			await goto('/auth');
@@ -79,12 +73,9 @@
 		}
 
 		clearChatInputStorage();
-		await Promise.all([
-			setBanners().catch((e) => console.error('Failed to load banners:', e)),
-			setUserSettings(async () => {
-				await setModels().catch((e) => console.error('Failed to load models:', e));
-			}).catch((e) => console.error('Failed to load user settings:', e))
-		]);
+		await setUserSettings(async () => {
+			await setModels().catch((e) => console.error('Failed to load models:', e));
+		}).catch((e) => console.error('Failed to load user settings:', e));
 
 		// Helper function to check if the pressed keys match the shortcut definition
 		const isShortcutMatch = (event: KeyboardEvent, shortcut): boolean => {

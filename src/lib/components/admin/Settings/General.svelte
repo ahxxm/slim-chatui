@@ -1,35 +1,23 @@
 <script lang="ts">
-	import { v4 as uuidv4 } from 'uuid';
-
 	import { getBackendConfig } from '$lib/apis';
 	import { getAdminConfig, updateAdminConfig } from '$lib/apis/auths';
-	import { getBanners, setBanners } from '$lib/apis/configs';
 	import Switch from '$lib/components/common/Switch.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
-	import { banners as _banners, config } from '$lib/stores';
-	import type { Banner } from '$lib/types';
+	import { config } from '$lib/stores';
 
 	import { onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Textarea from '$lib/components/common/Textarea.svelte';
-	import Banners from './Interface/Banners.svelte';
 
 	const i18n = getContext('i18n');
 
 	export let saveHandler: Function;
 
 	let adminConfig = null;
-	let banners: Banner[] = [];
-
-	const updateBanners = async () => {
-		_banners.set(await setBanners(localStorage.token, banners));
-	};
 
 	const updateHandler = async () => {
 		const res = await updateAdminConfig(localStorage.token, adminConfig);
-
-		await updateBanners();
 
 		await config.set(await getBackendConfig());
 
@@ -42,7 +30,6 @@
 
 	onMount(async () => {
 		adminConfig = await getAdminConfig(localStorage.token);
-		banners = await getBanners(localStorage.token);
 	});
 </script>
 
@@ -219,53 +206,6 @@
 								'Enter the public URL of your WebUI. This URL will be used to generate links in the notifications.'
 							)}
 						</div>
-					</div>
-				</div>
-
-				<div class="mb-3.5">
-					<div class=" mt-0.5 mb-2.5 text-base font-medium">{$i18n.t('UI')}</div>
-
-					<hr class=" border-gray-100/30 dark:border-gray-850/30 my-2" />
-
-					<div class="mb-2.5">
-						<div class="flex w-full justify-between">
-							<div class=" self-center text-xs">
-								{$i18n.t('Banners')}
-							</div>
-
-							<button
-								class="p-1 px-3 text-xs flex rounded-sm transition"
-								type="button"
-								on:click={() => {
-									if (banners.length === 0 || banners.at(-1).content !== '') {
-										banners = [
-											...banners,
-											{
-												id: uuidv4(),
-												type: '',
-												title: '',
-												content: '',
-												dismissible: true,
-												timestamp: Math.floor(Date.now() / 1000)
-											}
-										];
-									}
-								}}
-							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 20 20"
-									fill="currentColor"
-									class="w-4 h-4"
-								>
-									<path
-										d="M10.75 4.75a.75.75 0 00-1.5 0v4.5h-4.5a.75.75 0 000 1.5h4.5v4.5a.75.75 0 001.5 0v-4.5h4.5a.75.75 0 000-1.5h-4.5v-4.5z"
-									/>
-								</svg>
-							</button>
-						</div>
-
-						<Banners bind:banners />
 					</div>
 				</div>
 			</div>

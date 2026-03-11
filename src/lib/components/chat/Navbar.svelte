@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import {
-		banners,
 		chatId,
 		mobile,
 		settings,
@@ -18,7 +17,6 @@
 	import Menu from '$lib/components/layout/Navbar/Menu.svelte';
 	import UserMenu from '$lib/components/layout/Sidebar/UserMenu.svelte';
 
-	import Banner from '../common/Banner.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
 
 	import ChatBubbleDotted from '../icons/ChatBubbleDotted.svelte';
@@ -34,13 +32,12 @@
 	export let initNewChat: Function;
 
 	export let chat;
-	export let history;
-	export let selectedModels;
+	export let selectedModels: string[];
 
 	export let onSaveTempChat: () => {};
 	export let moveChatHandler: (id: string, folderId: string) => void;
 
-	let closedBannerIds = [];
+
 </script>
 
 <button
@@ -206,34 +203,4 @@
 		</div>
 	{/if}
 
-	<div class="absolute top-[100%] left-0 right-0 h-fit">
-		{#if !history.currentId && !$chatId && $banners.length > 0}
-			<div class=" w-full z-30">
-				<div class=" flex flex-col gap-1 w-full">
-					{#each $banners.filter((b) => ![...JSON.parse(localStorage.getItem('dismissedBannerIds') ?? '[]'), ...closedBannerIds].includes(b.id)) as banner (banner.id)}
-						<Banner
-							{banner}
-							on:dismiss={(e) => {
-								const bannerId = e.detail;
-
-								if (banner.dismissible) {
-									localStorage.setItem(
-										'dismissedBannerIds',
-										JSON.stringify(
-											[
-												bannerId,
-												...JSON.parse(localStorage.getItem('dismissedBannerIds') ?? '[]')
-											].filter((id) => $banners.find((b) => b.id === id))
-										)
-									);
-								} else {
-									closedBannerIds = [...closedBannerIds, bannerId];
-								}
-							}}
-						/>
-					{/each}
-				</div>
-			</div>
-		{/if}
-	</div>
 </nav>

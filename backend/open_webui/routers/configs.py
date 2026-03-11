@@ -1,16 +1,13 @@
-import logging
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
 from typing import Optional
 
-from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.auth import get_admin_user
 from open_webui.config import get_config, save_config
-from open_webui.config import BannerModel
+
 
 router = APIRouter()
-
-log = logging.getLogger(__name__)
 
 
 ############################
@@ -94,30 +91,3 @@ async def set_default_suggestions(
     return request.app.state.config.DEFAULT_PROMPT_SUGGESTIONS
 
 
-############################
-# SetBanners
-############################
-
-
-class SetBannersForm(BaseModel):
-    banners: list[BannerModel]
-
-
-@router.post("/banners", response_model=list[BannerModel])
-async def set_banners(
-    request: Request,
-    form_data: SetBannersForm,
-    user=Depends(get_admin_user),
-):
-    data = form_data.model_dump()
-    request.app.state.config.BANNERS = data["banners"]
-    request.app.state.config.persist()
-    return request.app.state.config.BANNERS
-
-
-@router.get("/banners", response_model=list[BannerModel])
-async def get_banners(
-    request: Request,
-    user=Depends(get_verified_user),
-):
-    return request.app.state.config.BANNERS
