@@ -255,21 +255,6 @@ class UsersTable:
         except Exception:
             return None
 
-    def update_user_role_by_id(
-        self, id: str, role: str, db: Optional[Session] = None
-    ) -> Optional[UserModel]:
-        try:
-            with get_db_context(db) as db:
-                user = db.query(User).filter_by(id=id).first()
-                if not user:
-                    return None
-                user.role = role
-                db.flush()
-                db.refresh(user)
-                return UserModel.model_validate(user)
-        except Exception:
-            return None
-
     def update_user_by_id(
         self, id: str, updated: dict, db: Optional[Session] = None
     ) -> Optional[UserModel]:
@@ -325,21 +310,6 @@ class UsersTable:
                 return False
         except Exception:
             return False
-
-    def get_valid_user_ids(
-        self, user_ids: list[str], db: Optional[Session] = None
-    ) -> list[str]:
-        with get_db_context(db) as db:
-            users = db.query(User).filter(User.id.in_(user_ids)).all()
-            return [user.id for user in users]
-
-    def get_super_admin_user(self, db: Optional[Session] = None) -> Optional[UserModel]:
-        with get_db_context(db) as db:
-            user = db.query(User).filter_by(role="admin").first()
-            if user:
-                return UserModel.model_validate(user)
-            else:
-                return None
 
 
 Users = UsersTable()
