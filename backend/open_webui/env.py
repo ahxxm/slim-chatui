@@ -329,8 +329,6 @@ except ValueError:
     WEBSOCKET_SERVER_PING_INTERVAL = 25
 
 
-REQUESTS_VERIFY = os.environ.get("REQUESTS_VERIFY", "True").lower() == "true"
-
 AIOHTTP_CLIENT_TIMEOUT = os.environ.get("AIOHTTP_CLIENT_TIMEOUT", "")
 
 if AIOHTTP_CLIENT_TIMEOUT == "":
