@@ -370,14 +370,11 @@ async def send_chat_message_event_by_id(
         }
     )
 
-    try:
-        if event_emitter:
-            await event_emitter(form_data.model_dump())
-        else:
-            return False
-        return True
-    except:
+    if not event_emitter:
         return False
+
+    await event_emitter(form_data.model_dump())
+    return True
 
 
 ############################

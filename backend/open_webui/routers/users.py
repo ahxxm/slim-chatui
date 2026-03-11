@@ -233,11 +233,7 @@ async def update_user_by_id(
                 )
 
         if form_data.password:
-            try:
-                validate_password(form_data.password)
-            except Exception as e:
-                raise HTTPException(400, detail=str(e))
-
+            validate_password(form_data.password)
             hashed = get_password_hash(form_data.password)
             Auths.update_user_password_by_id(user_id, hashed, db=db)
 

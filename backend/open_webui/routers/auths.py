@@ -206,10 +206,7 @@ async def update_password(
         )
 
         if user:
-            try:
-                validate_password(form_data.password)
-            except Exception as e:
-                raise HTTPException(400, detail=str(e))
+            validate_password(form_data.password)
             hashed = get_password_hash(form_data.new_password)
             return Auths.update_user_password_by_id(user.id, hashed)
         else:
@@ -347,10 +344,7 @@ async def signup(
     if Users.get_user_by_email(form_data.email.lower(), db=db):
         raise HTTPException(400, detail=ERROR_MESSAGES.EMAIL_TAKEN)
 
-    try:
-        validate_password(form_data.password)
-    except Exception as e:
-        raise HTTPException(400, detail=str(e))
+    validate_password(form_data.password)
 
     user = signup_handler(
         request,
@@ -404,10 +398,7 @@ async def add_user(
     if Users.get_user_by_email(form_data.email.lower(), db=db):
         raise HTTPException(400, detail=ERROR_MESSAGES.EMAIL_TAKEN)
 
-    try:
-        validate_password(form_data.password)
-    except Exception as e:
-        raise HTTPException(400, detail=str(e))
+    validate_password(form_data.password)
 
     hashed = get_password_hash(form_data.password)
     user = Auths.insert_new_auth(
