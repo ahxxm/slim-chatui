@@ -5,11 +5,8 @@
 
 	import { getModels } from '$lib/apis';
 
-	import { getUserSettings } from '$lib/apis/users';
-
 	import {
 		user,
-		settings,
 		models,
 		showSettings,
 		showShortcuts,
@@ -35,30 +32,6 @@
 		}
 	};
 
-	const setUserSettings = async (cb: () => Promise<void>) => {
-		let userSettings = await getUserSettings(localStorage.token).catch((error) => {
-			console.error(error);
-			return null;
-		});
-
-		if (!userSettings) {
-			try {
-				userSettings = JSON.parse(localStorage.getItem('settings') ?? '{}');
-			} catch (e: unknown) {
-				console.error('Failed to parse settings from localStorage', e);
-				userSettings = {};
-			}
-		}
-
-		if (userSettings?.ui) {
-			settings.set(userSettings.ui);
-		}
-
-		if (cb) {
-			await cb();
-		}
-	};
-
 	const setModels = async () => {
 		models.set(await getModels(localStorage.token));
 	};
@@ -73,9 +46,7 @@
 		}
 
 		clearChatInputStorage();
-		await setUserSettings(async () => {
-			await setModels().catch((e) => console.error('Failed to load models:', e));
-		}).catch((e) => console.error('Failed to load user settings:', e));
+		await setModels().catch((e) => console.error('Failed to load models:', e));
 
 		// Helper function to check if the pressed keys match the shortcut definition
 		const isShortcutMatch = (event: KeyboardEvent, shortcut): boolean => {

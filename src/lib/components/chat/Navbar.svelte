@@ -1,13 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import {
-		chatId,
-		mobile,
-		settings,
-		showSidebar,
-		temporaryChatEnabled,
-		user
-	} from '$lib/stores';
+	import { chatId, mobile, settings, showSidebar, temporaryChatEnabled, user } from '$lib/stores';
 
 	import { page } from '$app/stores';
 	import { goto, replaceState } from '$app/navigation';
@@ -36,8 +29,6 @@
 
 	export let onSaveTempChat: () => {};
 	export let moveChatHandler: (id: string, folderId: string) => void;
-
-
 </script>
 
 <button
@@ -202,5 +193,4 @@
 			<div class="text-xs text-gray-500">{$i18n.t('Temporary Chat')}</div>
 		</div>
 	{/if}
-
 </nav>

@@ -143,4 +143,3 @@ export const setDefaultPromptSuggestions = async (token: string, promptSuggestio
 
 	return res;
 };
-

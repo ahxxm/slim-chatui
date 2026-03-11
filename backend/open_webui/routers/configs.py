@@ -6,7 +6,6 @@ from typing import Optional
 from open_webui.utils.auth import get_admin_user
 from open_webui.config import get_config, save_config
 
-
 router = APIRouter()
 
 
@@ -89,5 +88,3 @@ async def set_default_suggestions(
     request.app.state.config.DEFAULT_PROMPT_SUGGESTIONS = data["suggestions"]
     request.app.state.config.persist()
     return request.app.state.config.DEFAULT_PROMPT_SUGGESTIONS
-
-

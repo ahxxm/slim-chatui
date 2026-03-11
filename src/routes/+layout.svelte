@@ -356,6 +356,7 @@
 			}
 		});
 
+		// Pre-auth fetch: returns slim config (no model defaults, no UI settings)
 		let backendConfig = null;
 		try {
 			backendConfig = await getBackendConfig();
@@ -399,11 +400,8 @@
 
 					if (sessionUser) {
 						await user.set(sessionUser);
-						try {
-							await config.set(await getBackendConfig());
-						} catch (error) {
-							console.error('Error refreshing backend config:', error);
-						}
+						// Re-fetch with auth: server returns full config (model defaults, UI settings)
+						await config.set(await getBackendConfig());
 					} else {
 						// Redirect Invalid Session User to /auth Page
 						localStorage.removeItem('token');

@@ -494,7 +494,6 @@ else:
         validate_cors_origin(origin)
 
 
-
 SHOW_ADMIN_DETAILS = PersistentConfig(
     "SHOW_ADMIN_DETAILS",
     "auth.admin.show",
