@@ -3,7 +3,6 @@ import hashlib
 import json
 import logging
 from typing import Optional
-from urllib.parse import urlparse
 
 import aiohttp
 from aiocache import cached
@@ -64,9 +63,75 @@ async def send_get_request(url, key=None):
             ) as response:
                 return await response.json()
     except Exception as e:
-        # Handle connection error here
         log.error(f"Connection error: {e}")
         return None
+
+
+async def _proxy_request(
+    *,
+    method: str,
+    url: str,
+    data: str | bytes | None = None,
+    headers: dict,
+    cookies: dict,
+    stream_handler=None,
+    timeout: int = AIOHTTP_CLIENT_TIMEOUT,
+):
+    """Make an aiohttp request with streaming support and automatic cleanup.
+
+    For SSE responses, returns StreamingResponse (session stays open for streaming).
+    For non-streaming success, returns the parsed response (dict/list/str).
+    For upstream errors (status >= 400), returns JSONResponse or PlainTextResponse.
+    """
+    r = None
+    session = None
+    streaming = False
+
+    try:
+        session = aiohttp.ClientSession(
+            trust_env=True, timeout=aiohttp.ClientTimeout(total=timeout)
+        )
+        r = await session.request(
+            method=method,
+            url=url,
+            data=data,
+            headers=headers,
+            cookies=cookies,
+            ssl=AIOHTTP_CLIENT_SESSION_SSL,
+        )
+
+        if "text/event-stream" in r.headers.get("Content-Type", ""):
+            streaming = True
+            wrapper_args = (
+                (r, session, stream_handler) if stream_handler else (r, session)
+            )
+            return StreamingResponse(
+                stream_wrapper(*wrapper_args),
+                status_code=r.status,
+                headers=dict(r.headers),
+            )
+
+        try:
+            response_data = await r.json()
+        except Exception:
+            response_data = await r.text()
+
+        if r.status >= 400:
+            if isinstance(response_data, (dict, list)):
+                return JSONResponse(status_code=r.status, content=response_data)
+            return PlainTextResponse(status_code=r.status, content=response_data)
+
+        return response_data
+
+    except Exception as e:
+        log.exception(e)
+        raise HTTPException(
+            status_code=r.status if r else 500,
+            detail="Open WebUI: Server Connection Error",
+        )
+    finally:
+        if not streaming:
+            await cleanup_response(r, session)
 
 
 def fix_openai_system_role(model: str, payload):
@@ -486,47 +551,17 @@ async def verify_connection(
 
     api_config = form_data.config or {}
 
-    async with aiohttp.ClientSession(
-        trust_env=True,
-        timeout=aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST),
-    ) as session:
-        try:
-            headers, cookies = await get_headers_and_cookies(
-                request, url, key, api_config, user=user
-            )
+    headers, cookies = await get_headers_and_cookies(
+        request, url, key, api_config, user=user
+    )
 
-            async with session.get(
-                f"{url}/models",
-                headers=headers,
-                cookies=cookies,
-                ssl=AIOHTTP_CLIENT_SESSION_SSL,
-            ) as r:
-                try:
-                    response_data = await r.json()
-                except Exception:
-                    response_data = await r.text()
-
-                if r.status != 200:
-                    if isinstance(response_data, (dict, list)):
-                        return JSONResponse(status_code=r.status, content=response_data)
-                    else:
-                        return PlainTextResponse(
-                            status_code=r.status, content=response_data
-                        )
-
-                return response_data
-
-        except aiohttp.ClientError as e:
-            # ClientError covers all aiohttp requests issues
-            log.exception(f"Client error: {str(e)}")
-            raise HTTPException(
-                status_code=500, detail="Open WebUI: Server Connection Error"
-            )
-        except Exception as e:
-            log.exception(f"Unexpected error: {e}")
-            raise HTTPException(
-                status_code=500, detail="Open WebUI: Server Connection Error"
-            )
+    return await _proxy_request(
+        method="GET",
+        url=f"{url}/models",
+        headers=headers,
+        cookies=cookies,
+        timeout=AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST,
+    )
 
 
 def is_openai_reasoning_model(model: str) -> bool:
@@ -710,61 +745,19 @@ async def generate_chat_completion(
 
     payload = json.dumps(payload)
 
-    r = None
-    session = None
-    streaming = False
-    response = None
+    response = await _proxy_request(
+        method="POST",
+        url=request_url,
+        data=payload,
+        headers=headers,
+        cookies=cookies,
+        stream_handler=stream_chunks_handler,
+    )
 
-    try:
-        session = aiohttp.ClientSession(
-            trust_env=True, timeout=aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT)
-        )
+    if is_responses and isinstance(response, dict):
+        response = convert_responses_result(response)
 
-        r = await session.request(
-            method="POST",
-            url=request_url,
-            data=payload,
-            headers=headers,
-            cookies=cookies,
-            ssl=AIOHTTP_CLIENT_SESSION_SSL,
-        )
-
-        # Check if response is SSE
-        if "text/event-stream" in r.headers.get("Content-Type", ""):
-            streaming = True
-            return StreamingResponse(
-                stream_wrapper(r, session, stream_chunks_handler),
-                status_code=r.status,
-                headers=dict(r.headers),
-            )
-        else:
-            try:
-                response = await r.json()
-            except Exception as e:
-                log.error(e)
-                response = await r.text()
-
-            if r.status >= 400:
-                if isinstance(response, (dict, list)):
-                    return JSONResponse(status_code=r.status, content=response)
-                else:
-                    return PlainTextResponse(status_code=r.status, content=response)
-
-            # Convert Responses API result to simple format
-            if is_responses and isinstance(response, dict):
-                response = convert_responses_result(response)
-
-            return response
-    except Exception as e:
-        log.exception(e)
-
-        raise HTTPException(
-            status_code=r.status if r else 500,
-            detail="Open WebUI: Server Connection Error",
-        )
-    finally:
-        if not streaming:
-            await cleanup_response(r, session)
+    return response
 
 
 class ResponsesForm(BaseModel):
@@ -814,154 +807,14 @@ async def responses(
         request.app.state.config.OPENAI_API_CONFIGS.get(url, {}),  # Legacy support
     )
 
-    r = None
-    session = None
-    streaming = False
-
-    try:
-        headers, cookies = await get_headers_and_cookies(
-            request, url, key, api_config, user=user
-        )
-
-        request_url = f"{url}/responses"
-
-        session = aiohttp.ClientSession(
-            trust_env=True,
-            timeout=aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT),
-        )
-        r = await session.request(
-            method="POST",
-            url=request_url,
-            data=body,
-            headers=headers,
-            cookies=cookies,
-            ssl=AIOHTTP_CLIENT_SESSION_SSL,
-        )
-
-        # Check if response is SSE
-        if "text/event-stream" in r.headers.get("Content-Type", ""):
-            streaming = True
-            return StreamingResponse(
-                stream_wrapper(r, session),
-                status_code=r.status,
-                headers=dict(r.headers),
-            )
-        else:
-            try:
-                response_data = await r.json()
-            except Exception:
-                response_data = await r.text()
-
-            if r.status >= 400:
-                if isinstance(response_data, (dict, list)):
-                    return JSONResponse(status_code=r.status, content=response_data)
-                else:
-                    return PlainTextResponse(
-                        status_code=r.status, content=response_data
-                    )
-
-            return response_data
-
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(
-            status_code=r.status if r else 500,
-            detail="Open WebUI: Server Connection Error",
-        )
-    finally:
-        if not streaming:
-            await cleanup_response(r, session)
-
-
-@router.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
-async def proxy(path: str, request: Request, user=Depends(get_verified_user)):
-    """
-    Deprecated: proxy all requests to OpenAI API
-    """
-
-    body = await request.body()
-
-    # Parse JSON body to resolve model-based routing
-    payload = None
-    if body:
-        try:
-            payload = json.loads(body)
-        except (json.JSONDecodeError, ValueError):
-            payload = None
-
-    idx = 0
-    model_id = payload.get("model") if isinstance(payload, dict) else None
-    if model_id:
-        models = request.app.state.OPENAI_MODELS
-        if not models or model_id not in models:
-            await get_all_models(request, user=user)
-            models = request.app.state.OPENAI_MODELS
-        if model_id in models:
-            idx = models[model_id]["urlIdx"]
-
-    url = request.app.state.config.OPENAI_API_BASE_URLS[idx]
-    key = request.app.state.config.OPENAI_API_KEYS[idx]
-    api_config = request.app.state.config.OPENAI_API_CONFIGS.get(
-        str(idx),
-        request.app.state.config.OPENAI_API_CONFIGS.get(
-            request.app.state.config.OPENAI_API_BASE_URLS[idx], {}
-        ),  # Legacy support
+    headers, cookies = await get_headers_and_cookies(
+        request, url, key, api_config, user=user
     )
 
-    r = None
-    session = None
-    streaming = False
-
-    try:
-        headers, cookies = await get_headers_and_cookies(
-            request, url, key, api_config, user=user
-        )
-
-        request_url = f"{url}/{path}"
-
-        session = aiohttp.ClientSession(
-            trust_env=True,
-            timeout=aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT),
-        )
-        r = await session.request(
-            method=request.method,
-            url=request_url,
-            data=body,
-            headers=headers,
-            cookies=cookies,
-            ssl=AIOHTTP_CLIENT_SESSION_SSL,
-        )
-
-        # Check if response is SSE
-        if "text/event-stream" in r.headers.get("Content-Type", ""):
-            streaming = True
-            return StreamingResponse(
-                stream_wrapper(r, session),
-                status_code=r.status,
-                headers=dict(r.headers),
-            )
-        else:
-            try:
-                response_data = await r.json()
-            except Exception:
-                response_data = await r.text()
-
-            if r.status >= 400:
-                if isinstance(response_data, (dict, list)):
-                    return JSONResponse(status_code=r.status, content=response_data)
-                else:
-                    return PlainTextResponse(
-                        status_code=r.status, content=response_data
-                    )
-
-            return response_data
-
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(
-            status_code=r.status if r else 500,
-            detail="Open WebUI: Server Connection Error",
-        )
-    finally:
-        if not streaming:
-            await cleanup_response(r, session)
+    return await _proxy_request(
+        method="POST",
+        url=f"{url}/responses",
+        data=body,
+        headers=headers,
+        cookies=cookies,
+    )
