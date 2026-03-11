@@ -65,7 +65,7 @@
 
 		<div class="relative bg-transparent w-full h-screen max-h-[100dvh] flex z-10">
 			<div class="flex flex-col justify-end w-full items-center pb-10 text-center">
-				<div class="text-5xl lg:text-7xl font-secondary">
+				<div class="text-5xl lg:text-7xl font-primary">
 					<Marquee
 						duration={5000}
 						words={[
