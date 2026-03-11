@@ -168,7 +168,7 @@ https://github.com/open-webui/open-webui
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Store reference to main event loop for sync->async calls (e.g., embedding generation)
+    # Store reference to main event loop for sync->async calls
     # This allows sync functions to schedule work on the main loop without blocking health checks
     app.state.main_loop = asyncio.get_running_loop()
     configure_logging()
@@ -433,9 +433,10 @@ async def chat_completion(
                             metadata["chat_id"],
                             parent_message.get("id"),
                             [
-                                file_item.get("id")
+                                fid
                                 for file_item in parent_message_files
                                 if file_item.get("type") == "file"
+                                and (fid := file_item.get("id"))
                             ],
                             user.id,
                         )

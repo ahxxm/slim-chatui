@@ -313,17 +313,6 @@
 					message.content = data.content;
 				} else if (type === 'chat:message:files' || type === 'files') {
 					history.messages[event.message_id].files = data.files;
-				} else if (type === 'chat:message:embeds' || type === 'embeds') {
-					history.messages[event.message_id].embeds = data.embeds;
-
-					// Auto-scroll to the embed once it's rendered in the DOM
-					await tick();
-					setTimeout(() => {
-						const embedEl = document.getElementById(`${event.message_id}-embeds-container`);
-						if (embedEl) {
-							embedEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-						}
-					}, 100);
 				} else if (type === 'chat:message:error') {
 					history.messages[event.message_id].error = data.error;
 				} else if (type === 'chat:message:follow_ups') {

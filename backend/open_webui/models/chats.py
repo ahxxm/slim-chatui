@@ -529,22 +529,6 @@ class ChatTable:
                 for chat in all_chats
             ]
 
-    def get_chat_list_by_chat_ids(
-        self,
-        chat_ids: list[str],
-        skip: int = 0,
-        limit: int = 50,
-        db: Optional[Session] = None,
-    ) -> list[ChatModel]:
-        with get_db_context(db) as db:
-            all_chats = (
-                db.query(Chat)
-                .filter(Chat.id.in_(chat_ids))
-                .order_by(Chat.updated_at.desc())
-                .all()
-            )
-            return [ChatModel.model_validate(chat) for chat in all_chats]
-
     def get_chat_by_id(
         self, id: str, db: Optional[Session] = None
     ) -> Optional[ChatModel]:
@@ -810,18 +794,6 @@ class ChatTable:
         except Exception:
             return None
 
-    def count_chats_by_folder_id_and_user_id(
-        self, folder_id: str, user_id: str, db: Optional[Session] = None
-    ) -> int:
-        with get_db_context(db) as db:
-            query = db.query(Chat).filter_by(user_id=user_id)
-
-            query = query.filter_by(folder_id=folder_id)
-            count = query.count()
-
-            log.info(f"Count of chats for folder '{folder_id}': {count}")
-            return count
-
     def delete_chat_by_id(self, id: str, db: Optional[Session] = None) -> bool:
         try:
             with get_db_context(db) as db:
@@ -905,34 +877,26 @@ class ChatTable:
         message_id: str,
         file_ids: list[str],
         user_id: str,
-        db: Optional[Session] = None,
     ) -> Optional[list[ChatFileModel]]:
         if not file_ids:
             return None
 
-        chat_message_file_ids = [
-            item.id
-            for item in self.get_chat_files_by_chat_id_and_message_id(
-                chat_id, message_id, db=db
-            )
-        ]
-        # Remove duplicates and existing file_ids
-        file_ids = list(
-            set(
-                [
-                    file_id
-                    for file_id in file_ids
-                    if file_id and file_id not in chat_message_file_ids
-                ]
-            )
-        )
-        if not file_ids:
+        # best effort dedup
+        with get_db_context() as db:
+            existing = {
+                row.file_id
+                for row in db.query(ChatFile.file_id)
+                .filter_by(chat_id=chat_id, message_id=message_id)
+                .all()
+            }
+
+        new_file_ids = set(file_ids) - existing
+        if not new_file_ids:
             return None
 
         try:
-            with get_db_context(db) as db:
+            with get_db_context() as db:
                 now = int(time.time())
-
                 chat_files = [
                     ChatFileModel(
                         id=str(uuid.uuid4()),
@@ -943,44 +907,16 @@ class ChatTable:
                         created_at=now,
                         updated_at=now,
                     )
-                    for file_id in file_ids
+                    for file_id in new_file_ids
                 ]
-
-                results = [
-                    ChatFile(**chat_file.model_dump()) for chat_file in chat_files
-                ]
-
-                db.add_all(results)
+                db.add_all([ChatFile(**cf.model_dump()) for cf in chat_files])
                 db.flush()
-
                 return chat_files
         except Exception:
-            return None
-
-    def get_chat_files_by_chat_id_and_message_id(
-        self, chat_id: str, message_id: str, db: Optional[Session] = None
-    ) -> list[ChatFileModel]:
-        with get_db_context(db) as db:
-            all_chat_files = (
-                db.query(ChatFile)
-                .filter_by(chat_id=chat_id, message_id=message_id)
-                .order_by(ChatFile.created_at.asc())
-                .all()
+            log.warning(
+                "Failed to insert chat files for chat %s", chat_id, exc_info=True
             )
-            return [
-                ChatFileModel.model_validate(chat_file) for chat_file in all_chat_files
-            ]
-
-    def delete_chat_file(
-        self, chat_id: str, file_id: str, db: Optional[Session] = None
-    ) -> bool:
-        try:
-            with get_db_context(db) as db:
-                db.query(ChatFile).filter_by(chat_id=chat_id, file_id=file_id).delete()
-                db.flush()
-                return True
-        except Exception:
-            return False
+            return None
 
 
 Chats = ChatTable()

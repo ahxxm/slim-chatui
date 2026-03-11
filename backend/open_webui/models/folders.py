@@ -269,21 +269,5 @@ class FolderTable:
             results = list(results.values())
             return results
 
-    def search_folders_by_name_contains(
-        self, user_id: str, query: str, db: Optional[Session] = None
-    ) -> list[FolderModel]:
-        """
-        Partial match: normalized name contains (as substring) the normalized query.
-        """
-        normalized_query = self.normalize_folder_name(query)
-        results = []
-        with get_db_context(db) as db:
-            folders = db.query(Folder).filter_by(user_id=user_id).all()
-            for folder in folders:
-                norm_name = self.normalize_folder_name(folder.name)
-                if normalized_query in norm_name:
-                    results.append(FolderModel.model_validate(folder))
-        return results
-
 
 Folders = FolderTable()
