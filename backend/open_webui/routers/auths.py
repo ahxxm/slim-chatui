@@ -47,6 +47,7 @@ from open_webui.utils.auth import (
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
 from open_webui.utils.rate_limit import RateLimiter
+from open_webui.utils.route import route_error_handler
 
 
 from typing import Optional
@@ -315,6 +316,9 @@ def signup_handler(
 
 
 @router.post("/signup", response_model=SessionUserResponse)
+@route_error_handler(
+    detail="An internal error occurred during signup.", status_code=500
+)
 async def signup(
     request: Request,
     response: Response,
@@ -344,24 +348,18 @@ async def signup(
         raise HTTPException(400, detail=ERROR_MESSAGES.EMAIL_TAKEN)
 
     try:
-        try:
-            validate_password(form_data.password)
-        except Exception as e:
-            raise HTTPException(400, detail=str(e))
+        validate_password(form_data.password)
+    except Exception as e:
+        raise HTTPException(400, detail=str(e))
 
-        user = signup_handler(
-            request,
-            form_data.email,
-            form_data.password,
-            form_data.name,
-            db=db,
-        )
-        return create_session_response(request, user, db, response, set_cookie=True)
-    except HTTPException:
-        raise
-    except Exception as err:
-        log.error(f"Signup error: {str(err)}")
-        raise HTTPException(500, detail="An internal error occurred during signup.")
+    user = signup_handler(
+        request,
+        form_data.email,
+        form_data.password,
+        form_data.name,
+        db=db,
+    )
+    return create_session_response(request, user, db, response, set_cookie=True)
 
 
 @router.get("/signout")
@@ -389,6 +387,9 @@ async def signout(request: Request, response: Response):
 
 
 @router.post("/add", response_model=SigninResponse)
+@route_error_handler(
+    detail="An internal error occurred while adding the user.", status_code=500
+)
 async def add_user(
     request: Request,
     form_data: AddUserForm,
@@ -404,39 +405,31 @@ async def add_user(
         raise HTTPException(400, detail=ERROR_MESSAGES.EMAIL_TAKEN)
 
     try:
-        try:
-            validate_password(form_data.password)
-        except Exception as e:
-            raise HTTPException(400, detail=str(e))
+        validate_password(form_data.password)
+    except Exception as e:
+        raise HTTPException(400, detail=str(e))
 
-        hashed = get_password_hash(form_data.password)
-        user = Auths.insert_new_auth(
-            form_data.email.lower(),
-            hashed,
-            form_data.name,
-            form_data.role,
-            db=db,
-        )
+    hashed = get_password_hash(form_data.password)
+    user = Auths.insert_new_auth(
+        form_data.email.lower(),
+        hashed,
+        form_data.name,
+        form_data.role,
+        db=db,
+    )
 
-        if user:
-            token = create_token(data={"id": user.id})
-            return {
-                "token": token,
-                "token_type": "Bearer",
-                "id": user.id,
-                "email": user.email,
-                "name": user.name,
-                "role": user.role,
-            }
-        else:
-            raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
-    except HTTPException:
-        raise
-    except Exception as err:
-        log.error(f"Add user error: {str(err)}")
-        raise HTTPException(
-            500, detail="An internal error occurred while adding the user."
-        )
+    if user:
+        token = create_token(data={"id": user.id})
+        return {
+            "token": token,
+            "token_type": "Bearer",
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "role": user.role,
+        }
+
+    raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
 
 
 ############################

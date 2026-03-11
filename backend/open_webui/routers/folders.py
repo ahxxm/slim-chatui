@@ -19,6 +19,7 @@ from sqlalchemy.orm import Session
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from open_webui.utils.auth import get_verified_user
+from open_webui.utils.route import route_error_handler
 
 log = logging.getLogger(__name__)
 
@@ -69,28 +70,19 @@ async def get_folders(
 
 
 @router.post("/")
+@route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error creating folder"))
 def create_folder(
     form_data: FolderForm,
     user=Depends(get_verified_user),
 ):
     folder = Folders.get_folder_by_user_id_and_name(user.id, form_data.name)
-
     if folder:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.DEFAULT("Folder already exists"),
         )
 
-    try:
-        folder = Folders.insert_new_folder(user.id, form_data)
-        return folder
-    except Exception as e:
-        log.exception(e)
-        log.error("Error creating folder")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.DEFAULT("Error creating folder"),
-        )
+    return Folders.insert_new_folder(user.id, form_data)
 
 
 ############################
@@ -116,40 +108,30 @@ async def get_folder_by_id(id: str, user=Depends(get_verified_user)):
 
 
 @router.post("/{id}/update")
+@route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error updating folder"))
 async def update_folder_name_by_id(
     id: str,
     form_data: FolderUpdateForm,
     user=Depends(get_verified_user),
 ):
     folder = Folders.get_folder_by_id_and_user_id(id, user.id)
-    if folder:
-
-        if form_data.name is not None:
-            # Check if folder with same name exists
-            existing_folder = Folders.get_folder_by_user_id_and_name(
-                user.id, form_data.name
-            )
-            if existing_folder and existing_folder.id != id:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=ERROR_MESSAGES.DEFAULT("Folder already exists"),
-                )
-
-        try:
-            folder = Folders.update_folder_by_id_and_user_id(id, user.id, form_data)
-            return folder
-        except Exception as e:
-            log.exception(e)
-            log.error(f"Error updating folder: {id}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.DEFAULT("Error updating folder"),
-            )
-    else:
+    if not folder:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
+
+    if form_data.name is not None:
+        existing_folder = Folders.get_folder_by_user_id_and_name(
+            user.id, form_data.name
+        )
+        if existing_folder and existing_folder.id != id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MESSAGES.DEFAULT("Folder already exists"),
+            )
+
+    return Folders.update_folder_by_id_and_user_id(id, user.id, form_data)
 
 
 ############################
@@ -162,30 +144,22 @@ class FolderIsExpandedForm(BaseModel):
 
 
 @router.post("/{id}/update/expanded")
+@route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error updating folder"))
 async def update_folder_is_expanded_by_id(
     id: str,
     form_data: FolderIsExpandedForm,
     user=Depends(get_verified_user),
 ):
     folder = Folders.get_folder_by_id_and_user_id(id, user.id)
-    if folder:
-        try:
-            folder = Folders.update_folder_is_expanded_by_id_and_user_id(
-                id, user.id, form_data.is_expanded
-            )
-            return folder
-        except Exception as e:
-            log.exception(e)
-            log.error(f"Error updating folder: {id}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.DEFAULT("Error updating folder"),
-            )
-    else:
+    if not folder:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
+
+    return Folders.update_folder_is_expanded_by_id_and_user_id(
+        id, user.id, form_data.is_expanded
+    )
 
 
 ############################
@@ -194,6 +168,7 @@ async def update_folder_is_expanded_by_id(
 
 
 @router.delete("/{id}")
+@route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error deleting folder"))
 async def delete_folder_by_id(
     id: str,
     delete_contents: Optional[bool] = True,
@@ -207,22 +182,12 @@ async def delete_folder_by_id(
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    try:
-        folder_ids = Folders.delete_folder_by_id_and_user_id(id, user.id, db=db)
+    folder_ids = Folders.delete_folder_by_id_and_user_id(id, user.id, db=db)
 
-        for folder_id in folder_ids:
-            if delete_contents:
-                Chats.delete_chats_by_user_id_and_folder_id(user.id, folder_id, db=db)
-            else:
-                Chats.move_chats_by_user_id_and_folder_id(
-                    user.id, folder_id, None, db=db
-                )
+    for folder_id in folder_ids:
+        if delete_contents:
+            Chats.delete_chats_by_user_id_and_folder_id(user.id, folder_id, db=db)
+        else:
+            Chats.move_chats_by_user_id_and_folder_id(user.id, folder_id, None, db=db)
 
-        return True
-    except Exception as e:
-        log.exception(e)
-        log.error(f"Error deleting folder: {id}")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.DEFAULT("Error deleting folder"),
-        )
+    return True

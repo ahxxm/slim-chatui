@@ -31,6 +31,7 @@ from open_webui.models.files import (
 from open_webui.storage.provider import Storage
 
 from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.route import route_error_handler
 
 log = logging.getLogger(__name__)
 
@@ -75,53 +76,42 @@ def upload_file_handler(
             )
     file_metadata = metadata if metadata else {}
 
-    try:
-        unsanitized_filename = file.filename
-        filename = os.path.basename(unsanitized_filename)
+    unsanitized_filename = file.filename
+    filename = os.path.basename(unsanitized_filename)
 
-        # replace filename with uuid
-        id = str(uuid.uuid4())
-        name = filename
-        filename = f"{id}_{filename}"
-        contents, file_path = Storage.upload_file(file.file, filename)
+    id = str(uuid.uuid4())
+    name = filename
+    filename = f"{id}_{filename}"
+    contents, file_path = Storage.upload_file(file.file, filename)
 
-        file_item = Files.insert_new_file(
-            user.id,
-            FileForm(
-                **{
-                    "id": id,
-                    "filename": name,
-                    "path": file_path,
-                    "meta": {
-                        "name": name,
-                        "content_type": (
-                            file.content_type
-                            if isinstance(file.content_type, str)
-                            else None
-                        ),
-                        "size": len(contents),
-                        "data": file_metadata,
-                    },
-                }
-            ),
-        )
+    file_item = Files.insert_new_file(
+        user.id,
+        FileForm(
+            **{
+                "id": id,
+                "filename": name,
+                "path": file_path,
+                "meta": {
+                    "name": name,
+                    "content_type": (
+                        file.content_type
+                        if isinstance(file.content_type, str)
+                        else None
+                    ),
+                    "size": len(contents),
+                    "data": file_metadata,
+                },
+            }
+        ),
+    )
 
-        if file_item:
-            return file_item
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.DEFAULT("Error uploading file"),
-            )
+    if file_item:
+        return file_item
 
-    except HTTPException as e:
-        raise e
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.DEFAULT("Error uploading file"),
-        )
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail=ERROR_MESSAGES.DEFAULT("Error uploading file"),
+    )
 
 
 ############################
@@ -184,22 +174,14 @@ async def delete_all_files(
     user=Depends(get_admin_user),
 ):
     result = Files.delete_all_files()
-    if result:
-        try:
-            Storage.delete_all_files()
-        except Exception as e:
-            log.exception(e)
-            log.error("Error deleting files")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.DEFAULT("Error deleting files"),
-            )
-        return {"message": "All files deleted successfully"}
-    else:
+    if not result:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.DEFAULT("Error deleting files"),
         )
+
+    Storage.delete_all_files()
+    return {"message": "All files deleted successfully"}
 
 
 ############################
@@ -232,73 +214,56 @@ async def get_file_by_id(id: str, user=Depends(get_verified_user)):
 
 
 @router.get("/{id}/content")
+@route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error getting file content"))
 async def get_file_content_by_id(
     id: str,
     user=Depends(get_verified_user),
     attachment: bool = Query(False),
 ):
     file = Files.get_file_by_id(id)
-
     if not file:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if file.user_id == user.id or user.role == "admin":
-        try:
-            file_path = Path(file.path)
-
-            if file_path.is_file():
-                content_type = file.meta.get("content_type")
-                filename = file.meta.get("name", file.filename)
-                encoded_filename = quote(filename)
-                headers = {}
-
-                if attachment:
-                    headers["Content-Disposition"] = (
-                        f"attachment; filename*=UTF-8''{encoded_filename}"
-                    )
-                else:
-                    if content_type == "application/pdf" or filename.lower().endswith(
-                        ".pdf"
-                    ):
-                        headers["Content-Disposition"] = (
-                            f"inline; filename*=UTF-8''{encoded_filename}"
-                        )
-                        content_type = "application/pdf"
-                    elif content_type != "text/plain":
-                        headers["Content-Disposition"] = (
-                            f"attachment; filename*=UTF-8''{encoded_filename}"
-                        )
-
-                return FileResponse(file_path, headers=headers, media_type=content_type)
-
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=ERROR_MESSAGES.NOT_FOUND,
-                )
-        except HTTPException as e:
-            raise e
-        except Exception as e:
-            log.exception(e)
-            log.error("Error getting file content")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.DEFAULT("Error getting file content"),
-            )
-    else:
+    if file.user_id != user.id and user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
+    file_path = Path(file.path)
+    if not file_path.is_file():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+
+    content_type = file.meta.get("content_type")
+    filename = file.meta.get("name", file.filename)
+    encoded_filename = quote(filename)
+    headers = {}
+
+    if attachment:
+        headers["Content-Disposition"] = (
+            f"attachment; filename*=UTF-8''{encoded_filename}"
+        )
+    elif content_type == "application/pdf" or filename.lower().endswith(".pdf"):
+        headers["Content-Disposition"] = f"inline; filename*=UTF-8''{encoded_filename}"
+        content_type = "application/pdf"
+    elif content_type != "text/plain":
+        headers["Content-Disposition"] = (
+            f"attachment; filename*=UTF-8''{encoded_filename}"
+        )
+
+    return FileResponse(file_path, headers=headers, media_type=content_type)
+
 
 @router.get("/{id}/content/html")
+@route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error getting file content"))
 async def get_html_file_content_by_id(id: str, user=Depends(get_verified_user)):
     file = Files.get_file_by_id(id)
-
     if not file:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -312,32 +277,21 @@ async def get_html_file_content_by_id(id: str, user=Depends(get_verified_user)):
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if file.user_id == user.id or user.role == "admin":
-        try:
-            file_path = Path(file.path)
-
-            if file_path.is_file():
-                log.info(f"file_path: {file_path}")
-                return FileResponse(file_path)
-            else:
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail=ERROR_MESSAGES.NOT_FOUND,
-                )
-        except HTTPException as e:
-            raise e
-        except Exception as e:
-            log.exception(e)
-            log.error("Error getting file content")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.DEFAULT("Error getting file content"),
-            )
-    else:
+    if file.user_id != user.id and user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
+
+    file_path = Path(file.path)
+    if not file_path.is_file():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+
+    log.info(f"file_path: {file_path}")
+    return FileResponse(file_path)
 
 
 @router.get("/{id}/content/{file_name}")
@@ -380,33 +334,24 @@ async def get_file_content_by_id_and_name(id: str, user=Depends(get_verified_use
 @router.delete("/{id}")
 async def delete_file_by_id(id: str, user=Depends(get_verified_user)):
     file = Files.get_file_by_id(id)
-
     if not file:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if file.user_id == user.id or user.role == "admin":
-        result = Files.delete_file_by_id(id)
-        if result:
-            try:
-                Storage.delete_file(file.path)
-            except Exception as e:
-                log.exception(e)
-                log.error("Error deleting files")
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=ERROR_MESSAGES.DEFAULT("Error deleting files"),
-                )
-            return {"message": "File deleted successfully"}
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.DEFAULT("Error deleting file"),
-            )
-    else:
+    if file.user_id != user.id and user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
+
+    result = Files.delete_file_by_id(id)
+    if not result:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.DEFAULT("Error deleting file"),
+        )
+
+    Storage.delete_file(file.path)
+    return {"message": "File deleted successfully"}

@@ -20,6 +20,7 @@ from fastapi import (
     status,
 )
 from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.route import route_error_handler
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
 
@@ -160,6 +161,7 @@ class ModelsImportForm(BaseModel):
 
 
 @router.post("/import", response_model=bool)
+@route_error_handler(detail="Error importing models", status_code=500)
 async def import_models(
     request: Request,
     user=Depends(get_verified_user),
@@ -171,51 +173,36 @@ async def import_models(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ERROR_MESSAGES.UNAUTHORIZED,
         )
-    try:
-        data = form_data.models
-        if isinstance(data, list):
-            # Batch-fetch all existing models in one query to avoid N+1
-            model_ids = [
-                model_data.get("id")
-                for model_data in data
-                if model_data.get("id") and is_valid_model_id(model_data.get("id"))
-            ]
-            existing_models = {
-                model.id: model
-                for model in (
-                    Models.get_models_by_ids(model_ids, db=db) if model_ids else []
+
+    # Batch-fetch all existing models in one query to avoid N+1
+    model_ids = [
+        model_data.get("id")
+        for model_data in form_data.models
+        if model_data.get("id") and is_valid_model_id(model_data.get("id"))
+    ]
+    existing_models = {
+        model.id: model
+        for model in (Models.get_models_by_ids(model_ids, db=db) if model_ids else [])
+    }
+
+    for model_data in form_data.models:
+        model_id = model_data.get("id")
+
+        if model_id and is_valid_model_id(model_id):
+            model_data["meta"] = model_data.get("meta", {})
+            model_data["params"] = model_data.get("params", {})
+
+            existing_model = existing_models.get(model_id)
+            if existing_model:
+                updated_model = ModelForm(
+                    **{**existing_model.model_dump(), **model_data}
                 )
-            }
+                Models.update_model_by_id(model_id, updated_model, db=db)
+            else:
+                new_model = ModelForm(**model_data)
+                Models.insert_new_model(user_id=user.id, form_data=new_model, db=db)
 
-            for model_data in data:
-                # Here, you can add logic to validate model_data if needed
-                model_id = model_data.get("id")
-
-                if model_id and is_valid_model_id(model_id):
-                    existing_model = existing_models.get(model_id)
-                    if existing_model:
-                        # Update existing model
-                        model_data["meta"] = model_data.get("meta", {})
-                        model_data["params"] = model_data.get("params", {})
-
-                        updated_model = ModelForm(
-                            **{**existing_model.model_dump(), **model_data}
-                        )
-                        Models.update_model_by_id(model_id, updated_model, db=db)
-                    else:
-                        # Insert new model
-                        model_data["meta"] = model_data.get("meta", {})
-                        model_data["params"] = model_data.get("params", {})
-                        new_model = ModelForm(**model_data)
-                        Models.insert_new_model(
-                            user_id=user.id, form_data=new_model, db=db
-                        )
-            return True
-        else:
-            raise HTTPException(status_code=400, detail="Invalid JSON format")
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(status_code=500, detail=str(e))
+    return True
 
 
 ############################

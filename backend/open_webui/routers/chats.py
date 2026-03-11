@@ -20,6 +20,7 @@ from pydantic import BaseModel
 
 
 from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.route import route_error_handler
 
 log = logging.getLogger(__name__)
 
@@ -32,34 +33,29 @@ router = APIRouter()
 
 @router.get("/", response_model=list[ChatTitleIdResponse])
 @router.get("/list", response_model=list[ChatTitleIdResponse])
+@route_error_handler(detail=ERROR_MESSAGES.DEFAULT())
 def get_session_user_chat_list(
     user=Depends(get_verified_user),
     page: Optional[int] = None,
     include_pinned: Optional[bool] = False,
     include_folders: Optional[bool] = False,
 ):
-    try:
-        if page is not None:
-            limit = 60
-            skip = (page - 1) * limit
+    if page is not None:
+        limit = 60
+        skip = (page - 1) * limit
 
-            return Chats.get_chat_title_id_list_by_user_id(
-                user.id,
-                include_folders=include_folders,
-                include_pinned=include_pinned,
-                skip=skip,
-                limit=limit,
-            )
-        else:
-            return Chats.get_chat_title_id_list_by_user_id(
-                user.id,
-                include_folders=include_folders,
-                include_pinned=include_pinned,
-            )
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=ERROR_MESSAGES.DEFAULT()
+        return Chats.get_chat_title_id_list_by_user_id(
+            user.id,
+            include_folders=include_folders,
+            include_pinned=include_pinned,
+            skip=skip,
+            limit=limit,
+        )
+    else:
+        return Chats.get_chat_title_id_list_by_user_id(
+            user.id,
+            include_folders=include_folders,
+            include_pinned=include_pinned,
         )
 
 
@@ -111,18 +107,13 @@ async def get_user_chat_list_by_user_id(
 
 
 @router.post("/new", response_model=Optional[ChatResponse])
+@route_error_handler(detail=ERROR_MESSAGES.DEFAULT())
 async def create_new_chat(
     form_data: ChatForm,
     user=Depends(get_verified_user),
 ):
-    try:
-        chat = Chats.insert_new_chat(user.id, form_data)
-        return ChatResponse(**chat.model_dump())
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=ERROR_MESSAGES.DEFAULT()
-        )
+    chat = Chats.insert_new_chat(user.id, form_data)
+    return ChatResponse(**chat.model_dump())
 
 
 ############################
@@ -131,18 +122,12 @@ async def create_new_chat(
 
 
 @router.post("/import", response_model=list[ChatResponse])
+@route_error_handler(detail=ERROR_MESSAGES.DEFAULT())
 async def import_chats(
     form_data: ChatsImportForm,
     user=Depends(get_verified_user),
 ):
-    try:
-        chats = Chats.import_chats(user.id, form_data.chats)
-        return chats
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=ERROR_MESSAGES.DEFAULT()
-        )
+    return Chats.import_chats(user.id, form_data.chats)
 
 
 ############################
@@ -186,27 +171,21 @@ async def get_chats_by_folder_id(folder_id: str, user=Depends(get_verified_user)
 
 
 @router.get("/folder/{folder_id}/list")
+@route_error_handler(detail=ERROR_MESSAGES.DEFAULT())
 async def get_chat_list_by_folder_id(
     folder_id: str,
     page: Optional[int] = 1,
     user=Depends(get_verified_user),
 ):
-    try:
-        limit = 10
-        skip = (page - 1) * limit
+    limit = 10
+    skip = (page - 1) * limit
 
-        return [
-            {"title": chat.title, "id": chat.id, "updated_at": chat.updated_at}
-            for chat in Chats.get_chats_by_folder_id_and_user_id(
-                folder_id, user.id, skip=skip, limit=limit
-            )
-        ]
-
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=ERROR_MESSAGES.DEFAULT()
+    return [
+        {"title": chat.title, "id": chat.id, "updated_at": chat.updated_at}
+        for chat in Chats.get_chats_by_folder_id_and_user_id(
+            folder_id, user.id, skip=skip, limit=limit
         )
+    ]
 
 
 ############################
