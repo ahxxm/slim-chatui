@@ -19,7 +19,6 @@
 		currentChatPage,
 		temporaryChatEnabled,
 		socket,
-		config,
 		models,
 		selectedFolder,
 		WEBUI_NAME,
@@ -725,7 +724,7 @@
 					</div>
 				</div>
 
-				{#if ($models ?? []).length > 0 && (($settings?.pinnedModels ?? []).length > 0 || $config?.default_pinned_models)}
+				{#if ($models ?? []).length > 0 && ($settings?.pinnedModels ?? []).length > 0}
 					<Folder
 						id="sidebar-models"
 						bind:open={showPinnedModels}

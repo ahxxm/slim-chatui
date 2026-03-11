@@ -39,7 +39,6 @@ async def export_config(user=Depends(get_admin_user)):
 ############################
 class ModelsConfigForm(BaseModel):
     DEFAULT_MODELS: Optional[str]
-    DEFAULT_PINNED_MODELS: Optional[str]
     DEFAULT_MODEL_METADATA: Optional[dict] = None
 
 
@@ -47,7 +46,6 @@ class ModelsConfigForm(BaseModel):
 async def get_models_config(request: Request, user=Depends(get_admin_user)):
     return {
         "DEFAULT_MODELS": request.app.state.config.DEFAULT_MODELS,
-        "DEFAULT_PINNED_MODELS": request.app.state.config.DEFAULT_PINNED_MODELS,
         "DEFAULT_MODEL_METADATA": request.app.state.config.DEFAULT_MODEL_METADATA,
     }
 
@@ -59,12 +57,10 @@ async def set_models_config(
     user=Depends(get_admin_user),
 ):
     request.app.state.config.DEFAULT_MODELS = form_data.DEFAULT_MODELS
-    request.app.state.config.DEFAULT_PINNED_MODELS = form_data.DEFAULT_PINNED_MODELS
     request.app.state.config.DEFAULT_MODEL_METADATA = form_data.DEFAULT_MODEL_METADATA
     request.app.state.config.persist()
     return {
         "DEFAULT_MODELS": request.app.state.config.DEFAULT_MODELS,
-        "DEFAULT_PINNED_MODELS": request.app.state.config.DEFAULT_PINNED_MODELS,
         "DEFAULT_MODEL_METADATA": request.app.state.config.DEFAULT_MODEL_METADATA,
     }
 
