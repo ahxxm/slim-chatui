@@ -433,9 +433,10 @@ async def chat_completion(
                             metadata["chat_id"],
                             parent_message.get("id"),
                             [
-                                file_item.get("id")
+                                fid
                                 for file_item in parent_message_files
                                 if file_item.get("type") == "file"
+                                and (fid := file_item.get("id"))
                             ],
                             user.id,
                         )
