@@ -431,18 +431,6 @@ DEFAULT_USER_ROLE = PersistentConfig(
     os.getenv("DEFAULT_USER_ROLE", "pending"),
 )
 
-PENDING_USER_OVERLAY_TITLE = PersistentConfig(
-    "PENDING_USER_OVERLAY_TITLE",
-    "ui.pending_user_overlay_title",
-    os.environ.get("PENDING_USER_OVERLAY_TITLE", ""),
-)
-
-PENDING_USER_OVERLAY_CONTENT = PersistentConfig(
-    "PENDING_USER_OVERLAY_CONTENT",
-    "ui.pending_user_overlay_content",
-    os.environ.get("PENDING_USER_OVERLAY_CONTENT", ""),
-)
-
 # FastAPI / AnyIO settings
 # 40 by default as of this comment, dynamically allocated.
 THREAD_POOL_SIZE = os.getenv("THREAD_POOL_SIZE", None)

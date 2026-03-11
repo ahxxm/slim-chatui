@@ -8,8 +8,6 @@
 
 	import { onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import Textarea from '$lib/components/common/Textarea.svelte';
-
 	const i18n = getContext('i18n');
 
 	export let saveHandler: Function;
@@ -103,30 +101,6 @@
 								bind:value={adminConfig.ADMIN_EMAIL}
 							/>
 						</div>
-					</div>
-
-					<div class="mb-2.5">
-						<div class=" self-center text-xs font-medium mb-2">
-							{$i18n.t('Pending User Overlay Title')}
-						</div>
-						<Textarea
-							placeholder={$i18n.t(
-								'Enter a title for the pending user info overlay. Leave empty for default.'
-							)}
-							bind:value={adminConfig.PENDING_USER_OVERLAY_TITLE}
-						/>
-					</div>
-
-					<div class="mb-2.5">
-						<div class=" self-center text-xs font-medium mb-2">
-							{$i18n.t('Pending User Overlay Content')}
-						</div>
-						<Textarea
-							placeholder={$i18n.t(
-								'Enter content for the pending user info overlay. Leave empty for default.'
-							)}
-							bind:value={adminConfig.PENDING_USER_OVERLAY_CONTENT}
-						/>
 					</div>
 
 					<div class=" mb-2.5 w-full justify-between">

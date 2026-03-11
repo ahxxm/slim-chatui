@@ -70,8 +70,6 @@ from open_webui.config import (
     JWT_EXPIRES_IN,
     ENABLE_SIGNUP,
     DEFAULT_USER_ROLE,
-    PENDING_USER_OVERLAY_CONTENT,
-    PENDING_USER_OVERLAY_TITLE,
     DEFAULT_PROMPT_SUGGESTIONS,
     DEFAULT_MODELS,
     DEFAULT_PINNED_MODELS,
@@ -249,9 +247,6 @@ app.state.config.DEFAULT_MODEL_METADATA = DEFAULT_MODEL_METADATA
 
 app.state.config.DEFAULT_PROMPT_SUGGESTIONS = DEFAULT_PROMPT_SUGGESTIONS
 app.state.config.DEFAULT_USER_ROLE = DEFAULT_USER_ROLE
-
-app.state.config.PENDING_USER_OVERLAY_CONTENT = PENDING_USER_OVERLAY_CONTENT
-app.state.config.PENDING_USER_OVERLAY_TITLE = PENDING_USER_OVERLAY_TITLE
 
 
 ########################################
@@ -673,24 +668,9 @@ async def get_app_config(request: Request):
                         "height": app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT,
                     },
                 },
-                "ui": {
-                    "pending_user_overlay_title": app.state.config.PENDING_USER_OVERLAY_TITLE,
-                    "pending_user_overlay_content": app.state.config.PENDING_USER_OVERLAY_CONTENT,
-                },
             }
-            if user is not None and (user.role in ["admin", "user"])
-            else {
-                **(
-                    {
-                        "ui": {
-                            "pending_user_overlay_title": app.state.config.PENDING_USER_OVERLAY_TITLE,
-                            "pending_user_overlay_content": app.state.config.PENDING_USER_OVERLAY_CONTENT,
-                        }
-                    }
-                    if user and user.role == "pending"
-                    else {}
-                ),
-            }
+            if user and user.role in ("admin", "user")
+            else {}
         ),
     }
 

@@ -170,10 +170,6 @@ type Config = {
 		auth_logo_position?: string;
 		login_footer?: string;
 	};
-	ui?: {
-		pending_user_overlay_title?: string;
-		pending_user_overlay_content?: string;
-	};
 	file?: {
 		image_compression?: {
 			width?: number;
