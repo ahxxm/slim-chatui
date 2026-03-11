@@ -4,10 +4,8 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Generic, Optional, TypeVar
+from typing import Generic, TypeVar
 from urllib.parse import urlparse
-
-from pydantic import BaseModel
 
 from open_webui.env import (
     DATA_DIR,
@@ -227,7 +225,7 @@ if JWT_EXPIRES_IN.value == "-1":
 ####################################
 # Static DIR
 ####################################
-
+WEBUI_NAME = "Open WebUI"
 STATIC_DIR = Path(os.getenv("STATIC_DIR", OPEN_WEBUI_DIR / "static")).resolve()
 
 try:

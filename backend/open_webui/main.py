@@ -7,7 +7,6 @@ import sys
 import time
 
 from contextlib import asynccontextmanager
-from pydantic import BaseModel
 from sqlalchemy import text
 
 import anyio.to_thread
@@ -26,7 +25,6 @@ from fastapi.staticfiles import StaticFiles
 
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.gzip import GZipMiddleware
-from starlette.responses import Response, StreamingResponse
 
 from open_webui.utils.logger import configure_logging
 from open_webui.socket.main import (
