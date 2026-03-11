@@ -1741,8 +1741,6 @@
 							timestamp: Date.now()
 						}
 					}}
-					{history}
-					title={$chatTitle}
 					bind:selectedModels
 					{initNewChat}
 					{moveChatHandler}

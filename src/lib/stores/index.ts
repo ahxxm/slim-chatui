@@ -1,7 +1,7 @@
 import { APP_NAME } from '$lib/constants';
 import { type Writable, writable, get } from 'svelte/store';
 import type { ModelConfig } from '$lib/apis';
-import type { Banner, ChatListItem, FolderItem } from '$lib/types';
+import type { ChatListItem, FolderItem } from '$lib/types';
 import type { Socket } from 'socket.io-client';
 import { getChatList } from '$lib/apis/chats';
 
@@ -14,11 +14,6 @@ export const WEBUI_VERSION: Writable<string | null> = writable(null);
 
 export const config: Writable<Config | undefined> = writable(undefined);
 export const user: Writable<SessionUser | undefined> = writable(undefined);
-
-// Electron App
-export const isApp = writable(false);
-export const appInfo: Writable<Record<string, any> | null> = writable(null);
-export const appData: Writable<Record<string, any> | null> = writable(null);
 
 // Frontend
 export const mobile = writable(false);
@@ -53,8 +48,6 @@ export const folders: Writable<FolderItem[]> = writable([]);
 export const selectedFolder: Writable<FolderItem | null> = writable(null);
 
 export const models: Writable<Model[]> = writable([]);
-
-export const banners: Writable<Banner[]> = writable([]);
 
 export const settings: Writable<Settings> = writable({});
 
@@ -162,9 +155,7 @@ type Config = {
 	status: boolean;
 	name: string;
 	version: string;
-	default_locale: string;
 	default_models: string;
-	default_pinned_models?: string;
 	default_prompt_suggestions: PromptSuggestion[];
 	onboarding?: boolean;
 	features: {
@@ -172,15 +163,10 @@ type Config = {
 		enable_signup: boolean;
 		enable_signup_password_confirmation?: boolean;
 		enable_websocket?: boolean;
-		enable_easter_eggs?: boolean;
 	};
 	metadata?: {
 		auth_logo_position?: string;
 		login_footer?: string;
-	};
-	ui?: {
-		pending_user_overlay_title?: string;
-		pending_user_overlay_content?: string;
 	};
 	file?: {
 		image_compression?: {

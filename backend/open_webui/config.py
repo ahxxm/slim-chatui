@@ -4,18 +4,14 @@ import os
 import shutil
 from datetime import datetime
 from pathlib import Path
-from typing import Generic, Optional, TypeVar
+from typing import Generic, TypeVar
 from urllib.parse import urlparse
-
-from pydantic import BaseModel
 
 from open_webui.env import (
     DATA_DIR,
     FRONTEND_BUILD_DIR,
     OPEN_WEBUI_DIR,
     WEBUI_AUTH,
-    WEBUI_FAVICON_URL,
-    WEBUI_NAME,
     log,
 )
 from open_webui.internal.db import get_db
@@ -229,7 +225,7 @@ if JWT_EXPIRES_IN.value == "-1":
 ####################################
 # Static DIR
 ####################################
-
+WEBUI_NAME = "Open WebUI"
 STATIC_DIR = Path(os.getenv("STATIC_DIR", OPEN_WEBUI_DIR / "static")).resolve()
 
 try:
@@ -358,20 +354,8 @@ ENABLE_SIGNUP = PersistentConfig(
 )
 
 
-DEFAULT_LOCALE = PersistentConfig(
-    "DEFAULT_LOCALE",
-    "ui.default_locale",
-    os.environ.get("DEFAULT_LOCALE", ""),
-)
-
 DEFAULT_MODELS = PersistentConfig(
     "DEFAULT_MODELS", "ui.default_models", os.environ.get("DEFAULT_MODELS", None)
-)
-
-DEFAULT_PINNED_MODELS = PersistentConfig(
-    "DEFAULT_PINNED_MODELS",
-    "ui.default_pinned_models",
-    os.environ.get("DEFAULT_PINNED_MODELS", None),
 )
 
 try:
@@ -431,18 +415,6 @@ DEFAULT_USER_ROLE = PersistentConfig(
     os.getenv("DEFAULT_USER_ROLE", "pending"),
 )
 
-PENDING_USER_OVERLAY_TITLE = PersistentConfig(
-    "PENDING_USER_OVERLAY_TITLE",
-    "ui.pending_user_overlay_title",
-    os.environ.get("PENDING_USER_OVERLAY_TITLE", ""),
-)
-
-PENDING_USER_OVERLAY_CONTENT = PersistentConfig(
-    "PENDING_USER_OVERLAY_CONTENT",
-    "ui.pending_user_overlay_content",
-    os.environ.get("PENDING_USER_OVERLAY_CONTENT", ""),
-)
-
 # FastAPI / AnyIO settings
 # 40 by default as of this comment, dynamically allocated.
 THREAD_POOL_SIZE = os.getenv("THREAD_POOL_SIZE", None)
@@ -494,31 +466,6 @@ else:
         validate_cors_origin(origin)
 
 
-class BannerModel(BaseModel):
-    id: str
-    type: str
-    title: Optional[str] = None
-    content: str
-    dismissible: bool
-    timestamp: int
-
-
-try:
-    banners = json.loads(os.environ.get("WEBUI_BANNERS", "[]"))
-    banners = [BannerModel(**banner) for banner in banners]
-except Exception as e:
-    log.exception(f"Error loading WEBUI_BANNERS: {e}")
-    banners = []
-
-WEBUI_BANNERS = PersistentConfig("WEBUI_BANNERS", "ui.banners", banners)
-
-
-SHOW_ADMIN_DETAILS = PersistentConfig(
-    "SHOW_ADMIN_DETAILS",
-    "auth.admin.show",
-    os.environ.get("SHOW_ADMIN_DETAILS", "true").lower() == "true",
-)
-
 ADMIN_EMAIL = PersistentConfig(
     "ADMIN_EMAIL",
     "auth.admin.email",
@@ -530,12 +477,6 @@ ADMIN_EMAIL = PersistentConfig(
 # TASKS
 ####################################
 
-
-TASK_MODEL = PersistentConfig(
-    "TASK_MODEL",
-    "task.model.external",
-    os.environ.get("TASK_MODEL", os.environ.get("TASK_MODEL_EXTERNAL", "")),
-)
 
 TITLE_GENERATION_PROMPT_TEMPLATE = PersistentConfig(
     "TITLE_GENERATION_PROMPT_TEMPLATE",

@@ -3,7 +3,7 @@
 
 	import { onMount, tick } from 'svelte';
 
-	import { chatId, config, mobile, models, settings, showSidebar } from '$lib/stores';
+	import { chatId, mobile, models, settings, showSidebar } from '$lib/stores';
 	import { updateUserSettings } from '$lib/apis/users';
 	import PinnedModelItem from './PinnedModelItem.svelte';
 
@@ -38,16 +38,6 @@
 	});
 
 	onMount(async () => {
-		if (pinnedModels.length === 0 && $config?.default_pinned_models) {
-			const defaultPinnedModels = ($config?.default_pinned_models).split(',').filter((id) => id);
-			pinnedModels = defaultPinnedModels.filter((id: string) =>
-				$models.find((model) => model.id === id)
-			);
-
-			settings.set({ ...$settings, pinnedModels });
-			await updateUserSettings(localStorage.token, { ui: $settings });
-		}
-
 		await tick();
 		initPinnedModelsSortable();
 	});

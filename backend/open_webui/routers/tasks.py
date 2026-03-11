@@ -2,12 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import JSONResponse
 
 from pydantic import BaseModel
-from typing import Optional
 import logging
 
 from open_webui.routers.openai import generate_chat_completion
 from open_webui.utils.task import (
-    get_task_model_id,
     title_generation_template,
     follow_up_generation_template,
 )
@@ -25,7 +23,6 @@ router = APIRouter()
 
 
 TASK_CONFIG_FIELDS = (
-    "TASK_MODEL",
     "ENABLE_TITLE_GENERATION",
     "TITLE_GENERATION_PROMPT_TEMPLATE",
     "ENABLE_FOLLOW_UP_GENERATION",
@@ -50,14 +47,10 @@ async def _run_task(
             detail="Model not found",
         )
 
-    task_model_id = get_task_model_id(
-        model_id, request.app.state.config.TASK_MODEL, models
-    )
-
-    log.debug(f"generating {task_type} using model {task_model_id} for {user.email}")
+    log.debug(f"generating {task_type} using model {model_id} for {user.email}")
 
     payload = {
-        "model": task_model_id,
+        "model": model_id,
         "messages": [{"role": "user", "content": content}],
         "stream": False,
         "metadata": {
@@ -101,7 +94,6 @@ async def get_task_config(request: Request, user=Depends(get_verified_user)):
 
 
 class TaskConfigForm(BaseModel):
-    TASK_MODEL: Optional[str]
     ENABLE_TITLE_GENERATION: bool
     TITLE_GENERATION_PROMPT_TEMPLATE: str
     FOLLOW_UP_GENERATION_PROMPT_TEMPLATE: str

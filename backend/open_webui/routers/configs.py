@@ -1,16 +1,12 @@
-import logging
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel
 
 from typing import Optional
 
-from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.auth import get_admin_user
 from open_webui.config import get_config, save_config
-from open_webui.config import BannerModel
 
 router = APIRouter()
-
-log = logging.getLogger(__name__)
 
 
 ############################
@@ -43,7 +39,6 @@ async def export_config(user=Depends(get_admin_user)):
 ############################
 class ModelsConfigForm(BaseModel):
     DEFAULT_MODELS: Optional[str]
-    DEFAULT_PINNED_MODELS: Optional[str]
     DEFAULT_MODEL_METADATA: Optional[dict] = None
 
 
@@ -51,7 +46,6 @@ class ModelsConfigForm(BaseModel):
 async def get_models_config(request: Request, user=Depends(get_admin_user)):
     return {
         "DEFAULT_MODELS": request.app.state.config.DEFAULT_MODELS,
-        "DEFAULT_PINNED_MODELS": request.app.state.config.DEFAULT_PINNED_MODELS,
         "DEFAULT_MODEL_METADATA": request.app.state.config.DEFAULT_MODEL_METADATA,
     }
 
@@ -63,12 +57,10 @@ async def set_models_config(
     user=Depends(get_admin_user),
 ):
     request.app.state.config.DEFAULT_MODELS = form_data.DEFAULT_MODELS
-    request.app.state.config.DEFAULT_PINNED_MODELS = form_data.DEFAULT_PINNED_MODELS
     request.app.state.config.DEFAULT_MODEL_METADATA = form_data.DEFAULT_MODEL_METADATA
     request.app.state.config.persist()
     return {
         "DEFAULT_MODELS": request.app.state.config.DEFAULT_MODELS,
-        "DEFAULT_PINNED_MODELS": request.app.state.config.DEFAULT_PINNED_MODELS,
         "DEFAULT_MODEL_METADATA": request.app.state.config.DEFAULT_MODEL_METADATA,
     }
 
@@ -92,32 +84,3 @@ async def set_default_suggestions(
     request.app.state.config.DEFAULT_PROMPT_SUGGESTIONS = data["suggestions"]
     request.app.state.config.persist()
     return request.app.state.config.DEFAULT_PROMPT_SUGGESTIONS
-
-
-############################
-# SetBanners
-############################
-
-
-class SetBannersForm(BaseModel):
-    banners: list[BannerModel]
-
-
-@router.post("/banners", response_model=list[BannerModel])
-async def set_banners(
-    request: Request,
-    form_data: SetBannersForm,
-    user=Depends(get_admin_user),
-):
-    data = form_data.model_dump()
-    request.app.state.config.BANNERS = data["banners"]
-    request.app.state.config.persist()
-    return request.app.state.config.BANNERS
-
-
-@router.get("/banners", response_model=list[BannerModel])
-async def get_banners(
-    request: Request,
-    user=Depends(get_verified_user),
-):
-    return request.app.state.config.BANNERS
