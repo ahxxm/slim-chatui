@@ -20,7 +20,6 @@ class TestConfigPersistence(IntegrationTest):
 
         updated = {
             **defaults,
-            "SHOW_ADMIN_DETAILS": not defaults["SHOW_ADMIN_DETAILS"],
             "WEBUI_URL": "https://changed.example.com",
             "DEFAULT_USER_ROLE": "user",
         }
@@ -30,9 +29,6 @@ class TestConfigPersistence(IntegrationTest):
         assert resp.status_code == 200, f"update failed: {resp.text}"
 
         db_config = self.get_config()
-        assert db_config["auth"]["admin"]["show"] == (
-            not defaults["SHOW_ADMIN_DETAILS"]
-        ), "SHOW_ADMIN_DETAILS not persisted to DB"
         assert (
             db_config["webui"]["url"] == "https://changed.example.com"
         ), "WEBUI_URL not persisted to DB"

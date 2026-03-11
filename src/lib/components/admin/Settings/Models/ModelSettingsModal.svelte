@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 
-	import { getContext, onMount, untrack } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import { models, config as _config } from '$lib/stores';
@@ -27,7 +27,6 @@
 	let config: Record<string, any> | null = $state(null);
 
 	let defaultModelIds: string[] = $state([]);
-	let defaultPinnedModelIds: string[] = $state([]);
 
 	let loading = $state(false);
 	let showResetModal = $state(false);
@@ -53,12 +52,6 @@
 			defaultModelIds = [];
 		}
 
-		if (config?.DEFAULT_PINNED_MODELS) {
-			defaultPinnedModelIds = (config?.DEFAULT_PINNED_MODELS).split(',').filter((id) => id);
-		} else {
-			defaultPinnedModelIds = [];
-		}
-
 		const savedMeta = config?.DEFAULT_MODEL_METADATA;
 		if (savedMeta && Object.keys(savedMeta).length > 0) {
 			defaultCapabilities = savedMeta.capabilities ?? { ...DEFAULT_CAPABILITIES };
@@ -76,7 +69,6 @@
 
 		const res = await setModelsConfig(localStorage.token, {
 			DEFAULT_MODELS: defaultModelIds.join(','),
-			DEFAULT_PINNED_MODELS: defaultPinnedModelIds.join(','),
 			DEFAULT_MODEL_METADATA: metadata
 		});
 
@@ -94,10 +86,6 @@
 
 		loading = false;
 	};
-
-	onMount(async () => {
-		init();
-	});
 </script>
 
 <ConfirmDialog
@@ -149,17 +137,6 @@
 										)}
 										models={$models}
 										bind:modelIds={defaultModelIds}
-									/>
-
-									<hr class=" border-gray-50 dark:border-gray-800/10 my-2.5 w-full" />
-
-									<ModelSelector
-										title={$i18n.t('Pinned Models')}
-										tooltip={$i18n.t(
-											'Set the models that are automatically pinned to the sidebar for all users.'
-										)}
-										models={$models}
-										bind:modelIds={defaultPinnedModelIds}
 									/>
 
 									<hr class=" border-gray-50 dark:border-gray-800/10 my-2.5 w-full" />

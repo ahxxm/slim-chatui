@@ -13,9 +13,6 @@ declare global {
 
 	interface Window {
 		applyTheme?: () => void;
-		electronAPI?: {
-			send(data: Record<string, unknown>): Promise<any>;
-		};
 	}
 }
 

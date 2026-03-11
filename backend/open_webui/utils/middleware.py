@@ -1193,7 +1193,7 @@ async def streaming_chat_response_handler(response, ctx):
                                         and data.get("item", {}).get("type")
                                         == "web_search_call"
                                     ):
-                                        log.info(
+                                        log.debug(
                                             "[stream] web_search_call done: %s",
                                             data.get("item"),
                                         )

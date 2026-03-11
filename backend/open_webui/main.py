@@ -5,16 +5,11 @@ import mimetypes
 import os
 import sys
 import time
-import re
-
 
 from contextlib import asynccontextmanager
-from urllib.parse import urlencode, parse_qs, urlparse
-from pydantic import BaseModel
 from sqlalchemy import text
 
 import anyio.to_thread
-import requests
 from fastapi import (
     Depends,
     FastAPI,
@@ -24,14 +19,12 @@ from fastapi import (
 )
 
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.gzip import GZipMiddleware
-from starlette.responses import Response, StreamingResponse
 
 from open_webui.utils.logger import configure_logging
 from open_webui.socket.main import (
@@ -71,27 +64,20 @@ from open_webui.config import (
     # WebUI
     WEBUI_AUTH,
     WEBUI_NAME,
-    WEBUI_BANNERS,
     ADMIN_EMAIL,
-    SHOW_ADMIN_DETAILS,
     JWT_EXPIRES_IN,
     ENABLE_SIGNUP,
     DEFAULT_USER_ROLE,
-    PENDING_USER_OVERLAY_CONTENT,
-    PENDING_USER_OVERLAY_TITLE,
     DEFAULT_PROMPT_SUGGESTIONS,
     DEFAULT_MODELS,
-    DEFAULT_PINNED_MODELS,
     DEFAULT_MODEL_METADATA,
     # Misc
     CACHE_DIR,
     STATIC_DIR,
     FRONTEND_BUILD_DIR,
     CORS_ALLOW_ORIGIN,
-    DEFAULT_LOCALE,
     WEBUI_URL,
     # Tasks
-    TASK_MODEL,
     ENABLE_TITLE_GENERATION,
     ENABLE_FOLLOW_UP_GENERATION,
     TITLE_GENERATION_PROMPT_TEMPLATE,
@@ -106,12 +92,10 @@ from open_webui.env import (
     WEBUI_BUILD_HASH,
     ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
     ENABLE_WEBSOCKET_SUPPORT,
-    EXTERNAL_PWA_MANIFEST_URL,
     # Admin Account Runtime Creation
     WEBUI_ADMIN_EMAIL,
     WEBUI_ADMIN_PASSWORD,
     WEBUI_ADMIN_NAME,
-    ENABLE_EASTER_EGGS,
     LOG_FORMAT,
 )
 
@@ -249,24 +233,15 @@ app.state.config.ENABLE_SIGNUP = ENABLE_SIGNUP
 
 app.state.config.JWT_EXPIRES_IN = JWT_EXPIRES_IN
 
-app.state.config.SHOW_ADMIN_DETAILS = SHOW_ADMIN_DETAILS
 app.state.config.ADMIN_EMAIL = ADMIN_EMAIL
 
 
 app.state.config.DEFAULT_MODELS = DEFAULT_MODELS
-app.state.config.DEFAULT_PINNED_MODELS = DEFAULT_PINNED_MODELS
 app.state.config.DEFAULT_MODEL_METADATA = DEFAULT_MODEL_METADATA
 
 
 app.state.config.DEFAULT_PROMPT_SUGGESTIONS = DEFAULT_PROMPT_SUGGESTIONS
 app.state.config.DEFAULT_USER_ROLE = DEFAULT_USER_ROLE
-
-app.state.config.PENDING_USER_OVERLAY_CONTENT = PENDING_USER_OVERLAY_CONTENT
-app.state.config.PENDING_USER_OVERLAY_TITLE = PENDING_USER_OVERLAY_TITLE
-
-app.state.config.BANNERS = WEBUI_BANNERS
-
-app.state.EXTERNAL_PWA_MANIFEST_URL = EXTERNAL_PWA_MANIFEST_URL
 
 
 ########################################
@@ -283,9 +258,6 @@ app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT = FILE_IMAGE_COMPRESSION_HEIGHT
 # TASKS
 #
 ########################################
-
-
-app.state.config.TASK_MODEL = TASK_MODEL
 
 
 app.state.config.ENABLE_TITLE_GENERATION = ENABLE_TITLE_GENERATION
@@ -307,48 +279,6 @@ app.state.config.FOLLOW_UP_GENERATION_PROMPT_TEMPLATE = (
 app.state.MODELS = MODELS
 
 
-class RedirectMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        # Check if the request is a GET request
-        if request.method == "GET":
-            path = request.url.path
-            query_params = dict(parse_qs(urlparse(str(request.url)).query))
-
-            redirect_params = {}
-
-            # Check for the specific watch path and the presence of 'v' parameter
-            if path.endswith("/watch") and "v" in query_params:
-                # Extract the first 'v' parameter
-                youtube_video_id = query_params["v"][0]
-                redirect_params["youtube"] = youtube_video_id
-
-            if "shared" in query_params and len(query_params["shared"]) > 0:
-                # PWA share_target support
-
-                text = query_params["shared"][0]
-                if text:
-                    urls = re.match(r"https://\S+", text)
-                    if urls:
-                        yt_match = re.search(
-                            r"(?:v=|youtu\.be/)([a-zA-Z0-9_-]{11})", urls[0]
-                        )
-                        if yt_match:
-                            redirect_params["youtube"] = yt_match.group(1)
-                        else:
-                            redirect_params["load-url"] = urls[0]
-                    else:
-                        redirect_params["q"] = text
-
-            if redirect_params:
-                redirect_url = f"/?{urlencode(redirect_params)}"
-                return RedirectResponse(url=redirect_url)
-
-        # Proceed with the normal flow of other requests
-        response = await call_next(request)
-        return response
-
-
-app.add_middleware(RedirectMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 if ENABLE_GZIP_MIDDLEWARE:
     app.add_middleware(GZipMiddleware, minimum_size=500)
@@ -714,18 +644,15 @@ async def get_app_config(request: Request):
         "status": True,
         "name": app.state.WEBUI_NAME,
         "version": VERSION,
-        "default_locale": str(DEFAULT_LOCALE),
         "features": {
             "auth": WEBUI_AUTH,
             "enable_signup_password_confirmation": ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
             "enable_signup": app.state.config.ENABLE_SIGNUP,
             "enable_websocket": ENABLE_WEBSOCKET_SUPPORT,
-            "enable_easter_eggs": ENABLE_EASTER_EGGS,
         },
         **(
             {
                 "default_models": app.state.config.DEFAULT_MODELS,
-                "default_pinned_models": app.state.config.DEFAULT_PINNED_MODELS,
                 "default_prompt_suggestions": app.state.config.DEFAULT_PROMPT_SUGGESTIONS,
                 "user_count": user_count,
                 "file": {
@@ -734,24 +661,9 @@ async def get_app_config(request: Request):
                         "height": app.state.config.FILE_IMAGE_COMPRESSION_HEIGHT,
                     },
                 },
-                "ui": {
-                    "pending_user_overlay_title": app.state.config.PENDING_USER_OVERLAY_TITLE,
-                    "pending_user_overlay_content": app.state.config.PENDING_USER_OVERLAY_CONTENT,
-                },
             }
-            if user is not None and (user.role in ["admin", "user"])
-            else {
-                **(
-                    {
-                        "ui": {
-                            "pending_user_overlay_title": app.state.config.PENDING_USER_OVERLAY_TITLE,
-                            "pending_user_overlay_content": app.state.config.PENDING_USER_OVERLAY_CONTENT,
-                        }
-                    }
-                    if user and user.role == "pending"
-                    else {}
-                ),
-            }
+            if user and user.role in ("admin", "user")
+            else {}
         ),
     }
 
@@ -761,40 +673,6 @@ async def get_app_version():
     return {
         "version": VERSION,
     }
-
-
-@app.get("/manifest.json")
-async def get_manifest_json():
-    if app.state.EXTERNAL_PWA_MANIFEST_URL:
-        return requests.get(app.state.EXTERNAL_PWA_MANIFEST_URL).json()
-    else:
-        return {
-            "name": app.state.WEBUI_NAME,
-            "short_name": app.state.WEBUI_NAME,
-            "description": f"{app.state.WEBUI_NAME} is an open, extensible, user-friendly interface for AI that adapts to your workflow.",
-            "start_url": "/",
-            "display": "standalone",
-            "background_color": "#343541",
-            "icons": [
-                {
-                    "src": "/static/logo.png",
-                    "type": "image/png",
-                    "sizes": "500x500",
-                    "purpose": "any",
-                },
-                {
-                    "src": "/static/logo.png",
-                    "type": "image/png",
-                    "sizes": "500x500",
-                    "purpose": "maskable",
-                },
-            ],
-            "share_target": {
-                "action": "/",
-                "method": "GET",
-                "params": {"text": "shared"},
-            },
-        }
 
 
 @app.get("/health")

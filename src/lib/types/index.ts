@@ -1,13 +1,3 @@
-export type Banner = {
-	id: string;
-	type: string;
-	title?: string;
-	content: string;
-	url?: string;
-	dismissible?: boolean;
-	timestamp: number;
-};
-
 // Mirrors backend ChatTitleIdResponse + frontend time_range augmentation
 export type ChatListItem = {
 	id: string;
