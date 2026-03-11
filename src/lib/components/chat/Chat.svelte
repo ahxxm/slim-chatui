@@ -15,6 +15,7 @@
 	import type { ChatHistory } from '$lib/types';
 
 	import {
+		activeChatIds,
 		chatId,
 		config,
 		type Model,
@@ -1485,6 +1486,14 @@
 			generating = false;
 			generationController?.abort();
 			generationController = null;
+		}
+
+		if ($chatId) {
+			activeChatIds.update((ids) => {
+				const next = new Set(ids);
+				next.delete($chatId);
+				return next;
+			});
 		}
 	};
 

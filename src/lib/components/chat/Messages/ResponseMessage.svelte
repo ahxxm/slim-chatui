@@ -68,6 +68,16 @@
 
 	let model = $derived($models.find((m) => m.id === message?.model) ?? null);
 
+	let awaitingResponse: boolean = $derived(
+		(() => {
+			if (messageContent !== '' || message.error) return false;
+			const supportsStatus = model?.info?.meta?.capabilities?.status_updates ?? true;
+			if (!supportsStatus) return true;
+			const statuses = message?.statusHistory ?? [...(message?.status ? [message.status] : [])];
+			return statuses.length === 0 || (statuses.at(-1)?.hidden ?? false);
+		})()
+	);
+
 	let edit = $state(false);
 	let editedContent = $state('');
 	let editTextAreaElement = $state();
@@ -377,8 +387,8 @@
 							class="w-full flex flex-col relative {edit ? 'hidden' : ''}"
 							id="response-content-container"
 						>
-							{#if messageContent === '' && !message.error && ((model?.info?.meta?.capabilities?.status_updates ?? true) ? (message?.statusHistory ?? [...(message?.status ? [message?.status] : [])]).length === 0 || (message?.statusHistory?.at(-1)?.hidden ?? false) : true)}
-								<Skeleton />
+							{#if awaitingResponse}
+								<Skeleton animate={!messageDone} />
 							{:else if messageContent && message.error !== true}
 								<ContentRenderer
 									id={`${chatId}-${message.id}`}
