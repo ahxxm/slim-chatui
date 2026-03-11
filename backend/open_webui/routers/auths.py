@@ -423,9 +423,6 @@ async def add_user(
 
 @router.get("/admin/details")
 async def get_admin_details(request: Request, user=Depends(get_current_user)):
-    if not request.app.state.config.SHOW_ADMIN_DETAILS:
-        raise HTTPException(400, detail=ERROR_MESSAGES.ACTION_PROHIBITED)
-
     admin_email = request.app.state.config.ADMIN_EMAIL
     admin_name = None
 
@@ -455,7 +452,6 @@ async def get_admin_details(request: Request, user=Depends(get_current_user)):
 @router.get("/admin/config")
 async def get_admin_config(request: Request, user=Depends(get_admin_user)):
     return {
-        "SHOW_ADMIN_DETAILS": request.app.state.config.SHOW_ADMIN_DETAILS,
         "ADMIN_EMAIL": request.app.state.config.ADMIN_EMAIL,
         "WEBUI_URL": request.app.state.config.WEBUI_URL,
         "ENABLE_SIGNUP": request.app.state.config.ENABLE_SIGNUP,
@@ -467,7 +463,6 @@ async def get_admin_config(request: Request, user=Depends(get_admin_user)):
 
 
 class AdminConfig(BaseModel):
-    SHOW_ADMIN_DETAILS: bool
     ADMIN_EMAIL: Optional[str] = None
     WEBUI_URL: str
     ENABLE_SIGNUP: bool
@@ -483,7 +478,6 @@ async def update_admin_config(
     form_data: AdminConfig,
     user=Depends(get_admin_user),
 ):
-    request.app.state.config.SHOW_ADMIN_DETAILS = form_data.SHOW_ADMIN_DETAILS
     request.app.state.config.ADMIN_EMAIL = form_data.ADMIN_EMAIL
     request.app.state.config.WEBUI_URL = form_data.WEBUI_URL
     request.app.state.config.ENABLE_SIGNUP = form_data.ENABLE_SIGNUP
@@ -506,7 +500,6 @@ async def update_admin_config(
     request.app.state.config.persist()
 
     return {
-        "SHOW_ADMIN_DETAILS": request.app.state.config.SHOW_ADMIN_DETAILS,
         "ADMIN_EMAIL": request.app.state.config.ADMIN_EMAIL,
         "WEBUI_URL": request.app.state.config.WEBUI_URL,
         "ENABLE_SIGNUP": request.app.state.config.ENABLE_SIGNUP,

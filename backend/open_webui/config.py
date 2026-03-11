@@ -494,12 +494,6 @@ else:
         validate_cors_origin(origin)
 
 
-SHOW_ADMIN_DETAILS = PersistentConfig(
-    "SHOW_ADMIN_DETAILS",
-    "auth.admin.show",
-    os.environ.get("SHOW_ADMIN_DETAILS", "true").lower() == "true",
-)
-
 ADMIN_EMAIL = PersistentConfig(
     "ADMIN_EMAIL",
     "auth.admin.email",

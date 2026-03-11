@@ -477,7 +477,6 @@
 	"Settings": "设置",
 	"Settings saved successfully!": "设置已成功保存！",
 	"Show": "显示",
-	"Show Admin Details in Account Pending Overlay": "在待激活用户的界面中显示管理员邮箱等详细信息",
 	"Show all ({{COUNT}} characters)": "显示全部（共 {{COUNT}} 字符）",
 	"Show Formatting Toolbar": "显示文本格式工具栏",
 	"Show image preview": "显示图像预览",

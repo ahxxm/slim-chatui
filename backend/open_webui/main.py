@@ -67,7 +67,6 @@ from open_webui.config import (
     WEBUI_AUTH,
     WEBUI_NAME,
     ADMIN_EMAIL,
-    SHOW_ADMIN_DETAILS,
     JWT_EXPIRES_IN,
     ENABLE_SIGNUP,
     DEFAULT_USER_ROLE,
@@ -240,7 +239,6 @@ app.state.config.ENABLE_SIGNUP = ENABLE_SIGNUP
 
 app.state.config.JWT_EXPIRES_IN = JWT_EXPIRES_IN
 
-app.state.config.SHOW_ADMIN_DETAILS = SHOW_ADMIN_DETAILS
 app.state.config.ADMIN_EMAIL = ADMIN_EMAIL
 
 
