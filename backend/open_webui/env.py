@@ -350,10 +350,3 @@ AIOHTTP_CLIENT_SESSION_SSL = (
 )
 
 AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST = 10
-
-
-####################################
-# PROGRESSIVE WEB APP OPTIONS
-####################################
-
-EXTERNAL_PWA_MANIFEST_URL = os.environ.get("EXTERNAL_PWA_MANIFEST_URL")

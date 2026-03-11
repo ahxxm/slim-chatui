@@ -47,24 +47,9 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { getUserSettings } from '$lib/apis/users';
 	import dayjs from 'dayjs';
-	const unregisterServiceWorkers = async () => {
-		if ('serviceWorker' in navigator) {
-			try {
-				const registrations = await navigator.serviceWorker.getRegistrations();
-				await Promise.all(registrations.map((r) => r.unregister()));
-				return true;
-			} catch (error) {
-				console.error('Error unregistering service workers:', error);
-				return false;
-			}
-		}
-		return false;
-	};
-
 	// handle frontend updates (https://svelte.dev/docs/kit/configuration#version)
 	beforeNavigate(async ({ willUnload, to }) => {
 		if (updated.current && !willUnload && to?.url) {
-			await unregisterServiceWorkers();
 			location.href = to.url.href;
 		}
 	});
@@ -107,7 +92,6 @@
 			const version = res?.version ?? null;
 
 			if (version !== null && $WEBUI_VERSION !== null && version !== $WEBUI_VERSION) {
-				await unregisterServiceWorkers();
 				location.href = location.href;
 				return;
 			}

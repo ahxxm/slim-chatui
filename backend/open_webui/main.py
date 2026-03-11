@@ -5,8 +5,6 @@ import mimetypes
 import os
 import sys
 import time
-import re
-
 
 from contextlib import asynccontextmanager
 from urllib.parse import urlencode, parse_qs, urlparse
@@ -14,7 +12,6 @@ from pydantic import BaseModel
 from sqlalchemy import text
 
 import anyio.to_thread
-import requests
 from fastapi import (
     Depends,
     FastAPI,
@@ -105,7 +102,6 @@ from open_webui.env import (
     WEBUI_BUILD_HASH,
     ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
     ENABLE_WEBSOCKET_SUPPORT,
-    EXTERNAL_PWA_MANIFEST_URL,
     # Admin Account Runtime Creation
     WEBUI_ADMIN_EMAIL,
     WEBUI_ADMIN_PASSWORD,
@@ -263,8 +259,6 @@ app.state.config.DEFAULT_USER_ROLE = DEFAULT_USER_ROLE
 app.state.config.PENDING_USER_OVERLAY_CONTENT = PENDING_USER_OVERLAY_CONTENT
 app.state.config.PENDING_USER_OVERLAY_TITLE = PENDING_USER_OVERLAY_TITLE
 
-app.state.EXTERNAL_PWA_MANIFEST_URL = EXTERNAL_PWA_MANIFEST_URL
-
 
 ########################################
 #
@@ -318,23 +312,6 @@ class RedirectMiddleware(BaseHTTPMiddleware):
                 # Extract the first 'v' parameter
                 youtube_video_id = query_params["v"][0]
                 redirect_params["youtube"] = youtube_video_id
-
-            if "shared" in query_params and len(query_params["shared"]) > 0:
-                # PWA share_target support
-
-                text = query_params["shared"][0]
-                if text:
-                    urls = re.match(r"https://\S+", text)
-                    if urls:
-                        yt_match = re.search(
-                            r"(?:v=|youtu\.be/)([a-zA-Z0-9_-]{11})", urls[0]
-                        )
-                        if yt_match:
-                            redirect_params["youtube"] = yt_match.group(1)
-                        else:
-                            redirect_params["load-url"] = urls[0]
-                    else:
-                        redirect_params["q"] = text
 
             if redirect_params:
                 redirect_url = f"/?{urlencode(redirect_params)}"
@@ -758,40 +735,6 @@ async def get_app_version():
     return {
         "version": VERSION,
     }
-
-
-@app.get("/manifest.json")
-async def get_manifest_json():
-    if app.state.EXTERNAL_PWA_MANIFEST_URL:
-        return requests.get(app.state.EXTERNAL_PWA_MANIFEST_URL).json()
-    else:
-        return {
-            "name": app.state.WEBUI_NAME,
-            "short_name": app.state.WEBUI_NAME,
-            "description": f"{app.state.WEBUI_NAME} is an open, extensible, user-friendly interface for AI that adapts to your workflow.",
-            "start_url": "/",
-            "display": "standalone",
-            "background_color": "#343541",
-            "icons": [
-                {
-                    "src": "/static/logo.png",
-                    "type": "image/png",
-                    "sizes": "500x500",
-                    "purpose": "any",
-                },
-                {
-                    "src": "/static/logo.png",
-                    "type": "image/png",
-                    "sizes": "500x500",
-                    "purpose": "maskable",
-                },
-            ],
-            "share_target": {
-                "action": "/",
-                "method": "GET",
-                "params": {"text": "shared"},
-            },
-        }
 
 
 @app.get("/health")
