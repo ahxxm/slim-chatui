@@ -20,10 +20,7 @@
 		chatId,
 		temporaryChatEnabled,
 		isLastActiveTab,
-		isApp,
-		appInfo,
 		playingNotificationSound,
-		appData,
 		refreshChatList
 	} from '$lib/stores';
 	import { goto } from '$app/navigation';
@@ -43,7 +40,6 @@
 	import { setTextScale } from '$lib/utils/text-scale';
 
 	import NotificationToast from '$lib/components/NotificationToast.svelte';
-	import AppSidebar from '$lib/components/app/AppSidebar.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { getUserSettings } from '$lib/apis/users';
 	import dayjs from 'dayjs';
@@ -150,14 +146,6 @@
 		}
 
 		let isFocused = document.visibilityState !== 'visible';
-		if (window.electronAPI) {
-			const res = await window.electronAPI.send({
-				type: 'window:isFocused'
-			});
-			if (res) {
-				isFocused = res.isFocused;
-			}
-		}
 
 		await tick();
 		const type = event?.data?.type ?? null;
@@ -260,26 +248,7 @@
 			}
 		}
 
-		if (window?.electronAPI) {
-			const info = await window.electronAPI.send({
-				type: 'app:info'
-			});
-
-			if (info) {
-				isApp.set(true);
-				appInfo.set(info);
-
-				const data = await window.electronAPI.send({
-					type: 'app:data'
-				});
-
-				if (data) {
-					appData.set(data);
-				}
-			}
-		}
-
-		// Listen for messages on the BroadcastChannel
+			// Listen for messages on the BroadcastChannel
 		bc.onmessage = (event) => {
 			if (event.data === 'active') {
 				isLastActiveTab.set(false); // Another tab became active
@@ -465,17 +434,7 @@
 {/if}
 
 {#if loaded}
-	{#if $isApp}
-		<div class="flex flex-row h-screen">
-			<AppSidebar />
-
-			<div class="w-full flex-1 max-w-[calc(100%-4.5rem)]">
-				<slot />
-			</div>
-		</div>
-	{:else}
-		<slot />
-	{/if}
+	<slot />
 {/if}
 
 <Toaster

@@ -15,11 +15,6 @@ export const WEBUI_VERSION: Writable<string | null> = writable(null);
 export const config: Writable<Config | undefined> = writable(undefined);
 export const user: Writable<SessionUser | undefined> = writable(undefined);
 
-// Electron App
-export const isApp = writable(false);
-export const appInfo: Writable<Record<string, any> | null> = writable(null);
-export const appData: Writable<Record<string, any> | null> = writable(null);
-
 // Frontend
 export const mobile = writable(false);
 
