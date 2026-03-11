@@ -95,8 +95,3 @@ def follow_up_generation_template(template: str, messages: list[dict]) -> str:
     template = replace_prompt_variable(template, prompt)
     template = replace_messages_variable(template, messages)
     return template
-
-
-def emoji_generation_template(template: str, prompt: str) -> str:
-    template = replace_prompt_variable(template, prompt)
-    return template

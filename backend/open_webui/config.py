@@ -424,11 +424,6 @@ DEFAULT_MODEL_METADATA = PersistentConfig(
     {},
 )
 
-DEFAULT_MODEL_PARAMS = PersistentConfig(
-    "DEFAULT_MODEL_PARAMS",
-    "models.default_params",
-    {},
-)
 
 DEFAULT_USER_ROLE = PersistentConfig(
     "DEFAULT_USER_ROLE",
@@ -606,10 +601,6 @@ ENABLE_TITLE_GENERATION = PersistentConfig(
     os.environ.get("ENABLE_TITLE_GENERATION", "True").lower() == "true",
 )
 
-
-DEFAULT_EMOJI_GENERATION_PROMPT_TEMPLATE = """Your task is to reflect the speaker's likely facial expression through a fitting emoji. Interpret emotions from the message and reflect their facial expression using fitting, diverse emojis (e.g., 😊, 😢, 😡, 😱).
-
-Message: ```{{prompt}}```"""
 
 ####################################
 # File Image Compression

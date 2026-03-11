@@ -40,18 +40,19 @@ def get_password_hash(password: str) -> str:
     return bcrypt.hashpw(password.encode("utf-8"), bcrypt.gensalt()).decode("utf-8")
 
 
-def validate_password(password: str) -> bool:
-    # The password passed to bcrypt must be 72 bytes or fewer. If it is longer, it will be truncated before hashing.
+def validate_password(password: str) -> None:
     if len(password.encode("utf-8")) > 72:
-        raise Exception(
-            ERROR_MESSAGES.PASSWORD_TOO_LONG,
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.PASSWORD_TOO_LONG,
         )
 
     if ENABLE_PASSWORD_VALIDATION:
         if not PASSWORD_VALIDATION_REGEX_PATTERN.match(password):
-            raise Exception(ERROR_MESSAGES.INVALID_PASSWORD(PASSWORD_VALIDATION_HINT))
-
-    return True
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MESSAGES.INVALID_PASSWORD(PASSWORD_VALIDATION_HINT),
+            )
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:

@@ -5,7 +5,6 @@
 	import { models } from '$lib/stores';
 	import { WEBUI_BASE_URL, DEFAULT_CAPABILITIES } from '$lib/constants';
 
-	import AdvancedParams from '$lib/components/chat/Settings/Advanced/AdvancedParams.svelte';
 	import Tags from '$lib/components/common/Tags.svelte';
 	import Capabilities from './Capabilities.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
@@ -18,7 +17,6 @@
 
 	let loading = $state(false);
 
-	let showAdvanced = $state(false);
 	let showPreview = $state(false);
 
 	let loaded = $state(false);
@@ -54,10 +52,6 @@
 		}
 	});
 
-	let params = $state({
-		system: ''
-	});
-
 	let capabilities = $state({ ...DEFAULT_CAPABILITIES });
 
 	const submitHandler = async () => {
@@ -80,8 +74,6 @@
 			return;
 		}
 
-		info.params = { ...info.params, ...params };
-
 		info.meta.capabilities = capabilities;
 
 		if (enableDescription) {
@@ -91,7 +83,6 @@
 		}
 
 		info.params.system = system.trim() === '' ? null : system;
-		info.params.stop = params.stop ? params.stop.split(',').filter((s) => s.trim()) : null;
 		Object.keys(info.params).forEach((key) => {
 			if (info.params[key] === '' || info.params[key] === null) {
 				delete info.params[key];
@@ -127,13 +118,6 @@
 			}
 
 			system = model?.params?.system ?? '';
-
-			params = { ...params, ...model?.params };
-			params.stop = params?.stop
-				? (typeof params.stop === 'string' ? params.stop.split(',') : (params?.stop ?? [])).join(
-						','
-					)
-				: null;
 
 			capabilities = { ...capabilities, ...(model?.meta?.capabilities ?? {}) };
 
@@ -330,32 +314,6 @@
 									/>
 								</div>
 							</div>
-
-							<div class="flex w-full justify-between">
-								<div class=" self-center text-xs font-medium">
-									{$i18n.t('Advanced Params')}
-								</div>
-
-								<button
-									class="p-1 px-3 text-xs flex rounded-sm transition"
-									type="button"
-									onclick={() => {
-										showAdvanced = !showAdvanced;
-									}}
-								>
-									{#if showAdvanced}
-										<span class="ml-2 self-center">{$i18n.t('Hide')}</span>
-									{:else}
-										<span class="ml-2 self-center">{$i18n.t('Show')}</span>
-									{/if}
-								</button>
-							</div>
-
-							{#if showAdvanced}
-								<div class="my-2">
-									<AdvancedParams admin={true} custom={true} bind:params />
-								</div>
-							{/if}
 						</div>
 					</div>
 

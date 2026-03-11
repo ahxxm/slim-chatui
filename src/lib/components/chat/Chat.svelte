@@ -140,7 +140,6 @@
 	let prompt = $state('');
 	let chatFiles: any[] = [];
 	let files = $state<any[]>([]);
-	let params = $state<Record<string, any>>({});
 
 	// Message queue for storing messages while generating
 	let messageQueue = $state<{ id: string; prompt: string; files: any[] }[]>([]);
@@ -655,7 +654,6 @@
 		};
 
 		chatFiles = [];
-		params = {};
 		taskIds = null;
 		messageQueue = [];
 
@@ -704,7 +702,6 @@
 
 				chatTitle.set(chatContent.title);
 
-				params = chatContent?.params ?? {};
 				chatFiles = chatContent?.files ?? [];
 
 				autoScroll = true;
@@ -787,7 +784,6 @@
 					models: selectedModels,
 					messages: messages,
 					history: history,
-					params: params,
 					files: chatFiles
 				});
 
@@ -1301,13 +1297,11 @@
 		);
 		await tick();
 
-		const stream = model?.info?.params?.stream_response ?? true;
-
 		let messages = [
-			params?.system !== undefined || $settings?.system !== undefined
+			$settings?.system
 				? {
 						role: 'system',
-						content: params?.system ?? $settings?.system ?? ''
+						content: $settings.system
 					}
 				: undefined,
 			..._messages.map((message) => ({
@@ -1351,11 +1345,8 @@
 		const res = await generateOpenAIChatCompletion(
 			localStorage.token,
 			{
-				stream: stream,
 				model: model.id,
 				messages: messages,
-				params: {},
-
 				files: (files?.length ?? 0) > 0 ? files : undefined,
 
 				session_id: $socket?.id,
@@ -1379,7 +1370,7 @@
 					follow_up_generation: $settings?.autoFollowUps ?? true
 				},
 
-				...(stream && (model.info?.meta?.capabilities?.usage ?? true)
+				...((model.info?.meta?.capabilities?.usage ?? true)
 					? {
 							stream_options: {
 								include_usage: true
@@ -1596,7 +1587,6 @@
 					title: $i18n.t('New Chat'),
 					models: selectedModels,
 					system: $settings.system ?? undefined,
-					params: params,
 					history: history,
 					messages: createMessagesList(history, history.currentId),
 					timestamp: Date.now()
@@ -1627,7 +1617,6 @@
 					models: selectedModels,
 					history: history,
 					messages: createMessagesList(history, history.currentId),
-					params: params,
 					files: chatFiles
 				});
 				await refreshChatList(localStorage.token);
@@ -1748,7 +1737,6 @@
 							title: $chatTitle,
 							models: selectedModels,
 							system: $settings.system ?? undefined,
-							params: params,
 							history: history,
 							timestamp: Date.now()
 						}

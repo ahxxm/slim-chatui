@@ -86,8 +86,12 @@
 	const loadChat = async () => {
 		if (!chat) {
 			draggable = false;
-			chat = await getChatById(localStorage.token, id);
-			draggable = true;
+			// Chat may be deleted between mouseEnter and response arriving
+			const result = await getChatById(localStorage.token, id).catch(() => null);
+			if (result) {
+				chat = result;
+				draggable = true;
+			}
 		}
 	};
 

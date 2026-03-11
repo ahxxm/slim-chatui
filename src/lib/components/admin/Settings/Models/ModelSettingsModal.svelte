@@ -16,8 +16,6 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import ModelSelector from './ModelSelector.svelte';
-	import AdvancedParams from '$lib/components/chat/Settings/Advanced/AdvancedParams.svelte';
-
 	import Capabilities from './Capabilities.svelte';
 	import PromptSuggestions from './PromptSuggestions.svelte';
 
@@ -34,11 +32,9 @@
 	let loading = $state(false);
 	let showResetModal = $state(false);
 	let showDefaultCapabilities = $state(false);
-	let showDefaultParams = $state(false);
 	let showDefaultPromptSuggestions = $state(false);
 
 	let defaultCapabilities = $state({});
-	let defaultParams = $state({});
 
 	let promptSuggestions: { content: string; title: string[] }[] = $state([]);
 
@@ -69,8 +65,6 @@
 		} else {
 			defaultCapabilities = { ...DEFAULT_CAPABILITIES };
 		}
-		defaultParams = config?.DEFAULT_MODEL_PARAMS ?? {};
-
 		promptSuggestions = $_config?.default_prompt_suggestions ?? [];
 	};
 	const submitHandler = async () => {
@@ -83,10 +77,7 @@
 		const res = await setModelsConfig(localStorage.token, {
 			DEFAULT_MODELS: defaultModelIds.join(','),
 			DEFAULT_PINNED_MODELS: defaultPinnedModelIds.join(','),
-			DEFAULT_MODEL_METADATA: metadata,
-			DEFAULT_MODEL_PARAMS: Object.fromEntries(
-				Object.entries(defaultParams).filter(([_, v]) => v !== null && v !== '' && v !== undefined)
-			)
+			DEFAULT_MODEL_METADATA: metadata
 		});
 
 		if (res) {
@@ -233,35 +224,6 @@
 										{#if showDefaultCapabilities}
 											<div class="mt-2">
 												<Capabilities bind:capabilities={defaultCapabilities} />
-											</div>
-										{/if}
-									</div>
-
-									<hr class=" border-gray-50 dark:border-gray-800/10 my-2.5 w-full" />
-
-									<div>
-										<button
-											class="flex w-full justify-between items-center"
-											type="button"
-											onclick={() => {
-												showDefaultParams = !showDefaultParams;
-											}}
-										>
-											<div class="text-xs text-gray-500 font-medium">
-												{$i18n.t('Model Parameters')}
-											</div>
-											<div>
-												{#if showDefaultParams}
-													<ChevronUp className="size-3" />
-												{:else}
-													<ChevronDown className="size-3" />
-												{/if}
-											</div>
-										</button>
-
-										{#if showDefaultParams}
-											<div class="mt-2">
-												<AdvancedParams admin={true} bind:params={defaultParams} />
 											</div>
 										{/if}
 									</div>

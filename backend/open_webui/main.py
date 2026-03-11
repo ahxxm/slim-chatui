@@ -55,7 +55,6 @@ from open_webui.routers import (
 
 from open_webui.internal.db import get_db
 
-from open_webui.models.models import Models
 from open_webui.models.users import Users
 from open_webui.models.chats import Chats
 
@@ -84,7 +83,6 @@ from open_webui.config import (
     DEFAULT_MODELS,
     DEFAULT_PINNED_MODELS,
     DEFAULT_MODEL_METADATA,
-    DEFAULT_MODEL_PARAMS,
     # Misc
     CACHE_DIR,
     STATIC_DIR,
@@ -102,7 +100,6 @@ from open_webui.config import (
 )
 from open_webui.env import (
     ENV,
-    ENABLE_CUSTOM_MODEL_FALLBACK,
     ENABLE_GZIP_MIDDLEWARE,
     GLOBAL_LOG_LEVEL,
     VERSION,
@@ -259,7 +256,6 @@ app.state.config.ADMIN_EMAIL = ADMIN_EMAIL
 app.state.config.DEFAULT_MODELS = DEFAULT_MODELS
 app.state.config.DEFAULT_PINNED_MODELS = DEFAULT_PINNED_MODELS
 app.state.config.DEFAULT_MODEL_METADATA = DEFAULT_MODEL_METADATA
-app.state.config.DEFAULT_MODEL_PARAMS = DEFAULT_MODEL_PARAMS
 
 
 app.state.config.DEFAULT_PROMPT_SUGGESTIONS = DEFAULT_PROMPT_SUGGESTIONS
@@ -372,16 +368,6 @@ async def check_url(request: Request, call_next):
             scheme="Bearer", credentials=request.cookies.get("token")
         )
 
-    # Fallback to x-api-key header for Anthropic Messages API routes
-    if request.state.token is None and request.headers.get("x-api-key"):
-        request_path = request.url.path
-        if request_path in ("/api/message", "/api/v1/messages"):
-            from fastapi.security import HTTPAuthorizationCredentials
-
-            request.state.token = HTTPAuthorizationCredentials(
-                scheme="Bearer", credentials=request.headers.get("x-api-key")
-            )
-
     response = await call_next(request)
     process_time = int(time.time()) - start_time
     response.headers["X-Process-Time"] = str(process_time)
@@ -478,56 +464,6 @@ async def chat_completion(
             raise Exception("Model not found")
 
         model = request.app.state.MODELS[model_id]
-        model_info = Models.get_model_by_id(model_id)
-
-        # Model params: global defaults as base, per-model overrides win
-        default_model_params = (
-            getattr(request.app.state.config, "DEFAULT_MODEL_PARAMS", None) or {}
-        )
-        model_info_params = {
-            **default_model_params,
-            **(
-                model_info.params.model_dump()
-                if model_info and model_info.params
-                else {}
-            ),
-        }
-
-        # Check base model existence for custom models
-        if model_info_params.get("base_model_id"):
-            base_model_id = model_info_params.get("base_model_id")
-            if base_model_id not in request.app.state.MODELS:
-                if ENABLE_CUSTOM_MODEL_FALLBACK:
-                    default_models = (
-                        request.app.state.config.DEFAULT_MODELS or ""
-                    ).split(",")
-
-                    fallback_model_id = (
-                        default_models[0].strip() if default_models[0] else None
-                    )
-
-                    if (
-                        fallback_model_id
-                        and fallback_model_id in request.app.state.MODELS
-                    ):
-                        # Update model and form_data so routing uses the fallback model's type
-                        model = request.app.state.MODELS[fallback_model_id]
-                        form_data["model"] = fallback_model_id
-                    else:
-                        raise Exception("Model not found")
-                else:
-                    raise Exception("Model not found")
-
-        # Chat Params
-        stream_delta_chunk_size = form_data.get("params", {}).get(
-            "stream_delta_chunk_size"
-        )
-        # Model Params
-        if model_info_params.get("stream_response") is not None:
-            form_data["stream"] = model_info_params.get("stream_response")
-
-        if model_info_params.get("stream_delta_chunk_size"):
-            stream_delta_chunk_size = model_info_params.get("stream_delta_chunk_size")
 
         metadata = {
             "user_id": user.id,
@@ -540,9 +476,6 @@ async def chat_completion(
             "features": form_data.get("features", {}),
             "variables": form_data.get("variables", {}),
             "model": model,
-            "params": {
-                "stream_delta_chunk_size": stream_delta_chunk_size,
-            },
         }
 
         if metadata.get("chat_id") and user:
@@ -686,68 +619,6 @@ async def chat_completion(
         return {"status": True, "task_id": task_id}
     else:
         return await process_chat(request, form_data, user, metadata, model)
-
-
-##################################
-#
-# Anthropic Messages API Compatible Endpoint
-#
-##################################
-
-
-from open_webui.utils.anthropic import (
-    convert_anthropic_to_openai_payload,
-    convert_openai_to_anthropic_response,
-    openai_stream_to_anthropic_stream,
-)
-
-
-@app.post("/api/message")
-@app.post("/api/v1/messages")  # Anthropic Messages API compatible endpoint
-async def generate_messages(
-    request: Request,
-    form_data: dict,
-    user=Depends(get_verified_user),
-):
-    """
-    Anthropic Messages API compatible endpoint.
-
-    Accepts the Anthropic Messages API format, converts internally to OpenAI
-    Chat Completions format, routes through the existing chat completion
-    handler, then converts the response back to Anthropic Messages format.
-
-    Supports both streaming and non-streaming requests.
-    All models configured in Open WebUI are accessible via this endpoint.
-
-    Authentication: Supports both standard Authorization header and
-    Anthropic's x-api-key header (via middleware translation).
-    """
-    # Convert Anthropic payload to OpenAI format
-    requested_model = form_data.get("model", "")
-
-    openai_payload = convert_anthropic_to_openai_payload(form_data)
-
-    # Route through the existing chat_completion handler
-    response = await chat_completion(request, openai_payload, user)
-
-    # Convert response back to Anthropic format
-    if isinstance(response, StreamingResponse):
-        # Streaming response: wrap the generator to convert SSE format
-        return StreamingResponse(
-            openai_stream_to_anthropic_stream(
-                response.body_iterator, model=requested_model
-            ),
-            media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-            },
-        )
-    elif isinstance(response, dict):
-        return convert_openai_to_anthropic_response(response, model=requested_model)
-    else:
-        # Passthrough for error responses (JSONResponse, PlainTextResponse, etc.)
-        return response
 
 
 @app.post("/api/chat/completed")

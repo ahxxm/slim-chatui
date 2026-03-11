@@ -47,6 +47,7 @@ from open_webui.utils.auth import (
 from open_webui.internal.db import get_session
 from sqlalchemy.orm import Session
 from open_webui.utils.rate_limit import RateLimiter
+from open_webui.utils.route import route_error_handler
 
 
 from typing import Optional
@@ -175,17 +176,14 @@ async def update_profile(
     form_data: UpdateProfileForm,
     session_user=Depends(get_verified_user),
 ):
-    if session_user:
-        user = Users.update_user_by_id(
-            session_user.id,
-            form_data.model_dump(),
-        )
-        if user:
-            return user
-        else:
-            raise HTTPException(400, detail=ERROR_MESSAGES.DEFAULT())
-    else:
-        raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+    user = Users.update_user_by_id(
+        session_user.id,
+        form_data.model_dump(),
+    )
+    if not user:
+        raise HTTPException(400, detail=ERROR_MESSAGES.DEFAULT())
+
+    return user
 
 
 ############################
@@ -198,23 +196,16 @@ async def update_password(
     form_data: UpdatePasswordForm,
     session_user=Depends(get_current_user),
 ):
-    if session_user:
-        user = Auths.authenticate_user(
-            session_user.email,
-            lambda pw: verify_password(form_data.password, pw),
-        )
+    user = Auths.authenticate_user(
+        session_user.email,
+        lambda pw: verify_password(form_data.password, pw),
+    )
+    if not user:
+        raise HTTPException(400, detail=ERROR_MESSAGES.INCORRECT_PASSWORD)
 
-        if user:
-            try:
-                validate_password(form_data.password)
-            except Exception as e:
-                raise HTTPException(400, detail=str(e))
-            hashed = get_password_hash(form_data.new_password)
-            return Auths.update_user_password_by_id(user.id, hashed)
-        else:
-            raise HTTPException(400, detail=ERROR_MESSAGES.INCORRECT_PASSWORD)
-    else:
-        raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+    validate_password(form_data.password)
+    hashed = get_password_hash(form_data.new_password)
+    return Auths.update_user_password_by_id(user.id, hashed)
 
 
 ############################
@@ -272,10 +263,10 @@ async def signin(
             db=db,
         )
 
-    if user:
-        return create_session_response(request, user, db, response, set_cookie=True)
-    else:
+    if not user:
         raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+
+    return create_session_response(request, user, db, response, set_cookie=True)
 
 
 ############################
@@ -315,6 +306,9 @@ def signup_handler(
 
 
 @router.post("/signup", response_model=SessionUserResponse)
+@route_error_handler(
+    detail="An internal error occurred during signup.", status_code=500
+)
 async def signup(
     request: Request,
     response: Response,
@@ -343,25 +337,16 @@ async def signup(
     if Users.get_user_by_email(form_data.email.lower(), db=db):
         raise HTTPException(400, detail=ERROR_MESSAGES.EMAIL_TAKEN)
 
-    try:
-        try:
-            validate_password(form_data.password)
-        except Exception as e:
-            raise HTTPException(400, detail=str(e))
+    validate_password(form_data.password)
 
-        user = signup_handler(
-            request,
-            form_data.email,
-            form_data.password,
-            form_data.name,
-            db=db,
-        )
-        return create_session_response(request, user, db, response, set_cookie=True)
-    except HTTPException:
-        raise
-    except Exception as err:
-        log.error(f"Signup error: {str(err)}")
-        raise HTTPException(500, detail="An internal error occurred during signup.")
+    user = signup_handler(
+        request,
+        form_data.email,
+        form_data.password,
+        form_data.name,
+        db=db,
+    )
+    return create_session_response(request, user, db, response, set_cookie=True)
 
 
 @router.get("/signout")
@@ -389,6 +374,9 @@ async def signout(request: Request, response: Response):
 
 
 @router.post("/add", response_model=SigninResponse)
+@route_error_handler(
+    detail="An internal error occurred while adding the user.", status_code=500
+)
 async def add_user(
     request: Request,
     form_data: AddUserForm,
@@ -403,40 +391,29 @@ async def add_user(
     if Users.get_user_by_email(form_data.email.lower(), db=db):
         raise HTTPException(400, detail=ERROR_MESSAGES.EMAIL_TAKEN)
 
-    try:
-        try:
-            validate_password(form_data.password)
-        except Exception as e:
-            raise HTTPException(400, detail=str(e))
+    validate_password(form_data.password)
 
-        hashed = get_password_hash(form_data.password)
-        user = Auths.insert_new_auth(
-            form_data.email.lower(),
-            hashed,
-            form_data.name,
-            form_data.role,
-            db=db,
-        )
+    hashed = get_password_hash(form_data.password)
+    user = Auths.insert_new_auth(
+        form_data.email.lower(),
+        hashed,
+        form_data.name,
+        form_data.role,
+        db=db,
+    )
 
-        if user:
-            token = create_token(data={"id": user.id})
-            return {
-                "token": token,
-                "token_type": "Bearer",
-                "id": user.id,
-                "email": user.email,
-                "name": user.name,
-                "role": user.role,
-            }
-        else:
-            raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
-    except HTTPException:
-        raise
-    except Exception as err:
-        log.error(f"Add user error: {str(err)}")
-        raise HTTPException(
-            500, detail="An internal error occurred while adding the user."
-        )
+    if user:
+        token = create_token(data={"id": user.id})
+        return {
+            "token": token,
+            "token_type": "Bearer",
+            "id": user.id,
+            "email": user.email,
+            "name": user.name,
+            "role": user.role,
+        }
+
+    raise HTTPException(500, detail=ERROR_MESSAGES.CREATE_USER_ERROR)
 
 
 ############################
@@ -446,28 +423,28 @@ async def add_user(
 
 @router.get("/admin/details")
 async def get_admin_details(request: Request, user=Depends(get_current_user)):
-    if request.app.state.config.SHOW_ADMIN_DETAILS:
-        admin_email = request.app.state.config.ADMIN_EMAIL
-        admin_name = None
-
-        log.info(f"Admin details - Email: {admin_email}, Name: {admin_name}")
-
-        if admin_email:
-            admin = Users.get_user_by_email(admin_email)
-            if admin:
-                admin_name = admin.name
-        else:
-            admin = Users.get_first_user()
-            if admin:
-                admin_email = admin.email
-                admin_name = admin.name
-
-        return {
-            "name": admin_name,
-            "email": admin_email,
-        }
-    else:
+    if not request.app.state.config.SHOW_ADMIN_DETAILS:
         raise HTTPException(400, detail=ERROR_MESSAGES.ACTION_PROHIBITED)
+
+    admin_email = request.app.state.config.ADMIN_EMAIL
+    admin_name = None
+
+    log.info(f"Admin details - Email: {admin_email}, Name: {admin_name}")
+
+    if admin_email:
+        admin = Users.get_user_by_email(admin_email)
+        if admin:
+            admin_name = admin.name
+    else:
+        admin = Users.get_first_user()
+        if admin:
+            admin_email = admin.email
+            admin_name = admin.name
+
+    return {
+        "name": admin_name,
+        "email": admin_email,
+    }
 
 
 ############################
