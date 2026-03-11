@@ -93,13 +93,13 @@ def create_folder(
 @router.get("/{id}", response_model=Optional[FolderModel])
 async def get_folder_by_id(id: str, user=Depends(get_verified_user)):
     folder = Folders.get_folder_by_id_and_user_id(id, user.id)
-    if folder:
-        return folder
-    else:
+    if not folder:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
+
+    return folder
 
 
 ############################

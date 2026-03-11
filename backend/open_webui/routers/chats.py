@@ -233,13 +233,12 @@ async def get_chat_by_id(id: str, user=Depends(get_verified_user)):
     else:
         chat = Chats.get_chat_by_id_and_user_id(id, user.id)
 
-    if chat:
-        return ChatResponse(**chat.model_dump())
-
-    else:
+    if not chat:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.NOT_FOUND
         )
+
+    return ChatResponse(**chat.model_dump())
 
 
 ############################
@@ -256,21 +255,21 @@ async def update_chat_by_id(
     from open_webui.utils.middleware import serialize_output
 
     chat = Chats.get_chat_by_id_and_user_id(id, user.id)
-    if chat:
-        updated_chat = {**chat.chat, **form_data.chat}
-        # Re-serialize content from output for messages that have it,
-        # since the frontend may send stale content from intermediate
-        # streaming states (e.g. web_search queries only arrive at end)
-        for msg in updated_chat.get("history", {}).get("messages", {}).values():
-            if msg.get("output"):
-                msg["content"] = serialize_output(msg["output"])
-        chat = Chats.update_chat_by_id(id, updated_chat)
-        return ChatResponse(**chat.model_dump())
-    else:
+    if not chat:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
         )
+
+    updated_chat = {**chat.chat, **form_data.chat}
+    # Re-serialize content from output for messages that have it,
+    # since the frontend may send stale content from intermediate
+    # streaming states (e.g. web_search queries only arrive at end)
+    for msg in updated_chat.get("history", {}).get("messages", {}).values():
+        if msg.get("output"):
+            msg["content"] = serialize_output(msg["output"])
+    chat = Chats.update_chat_by_id(id, updated_chat)
+    return ChatResponse(**chat.model_dump())
 
 
 ############################
@@ -418,12 +417,12 @@ async def delete_chat_by_id(
 @router.get("/{id}/pinned", response_model=Optional[bool])
 async def get_pinned_status_by_id(id: str, user=Depends(get_verified_user)):
     chat = Chats.get_chat_by_id_and_user_id(id, user.id)
-    if chat:
-        return chat.pinned
-    else:
+    if not chat:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.DEFAULT()
         )
+
+    return chat.pinned
 
 
 ############################
@@ -434,13 +433,12 @@ async def get_pinned_status_by_id(id: str, user=Depends(get_verified_user)):
 @router.post("/{id}/pin", response_model=Optional[ChatResponse])
 async def pin_chat_by_id(id: str, user=Depends(get_verified_user)):
     chat = Chats.get_chat_by_id_and_user_id(id, user.id)
-    if chat:
-        chat = Chats.toggle_chat_pinned_by_id(id)
-        return chat
-    else:
+    if not chat:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.DEFAULT()
         )
+
+    return Chats.toggle_chat_pinned_by_id(id)
 
 
 ############################
@@ -459,40 +457,39 @@ async def clone_chat_by_id(
     user=Depends(get_verified_user),
 ):
     chat = Chats.get_chat_by_id_and_user_id(id, user.id)
-    if chat:
-        updated_chat = {
-            **chat.chat,
-            "originalChatId": chat.id,
-            "branchPointMessageId": chat.chat["history"]["currentId"],
-            "title": form_data.title if form_data.title else f"Clone of {chat.title}",
-        }
-
-        chats = Chats.import_chats(
-            user.id,
-            [
-                ChatImportForm(
-                    **{
-                        "chat": updated_chat,
-                        "meta": chat.meta,
-                        "pinned": chat.pinned,
-                        "folder_id": chat.folder_id,
-                    }
-                )
-            ],
-        )
-
-        if chats:
-            chat = chats[0]
-            return ChatResponse(**chat.model_dump())
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=ERROR_MESSAGES.DEFAULT(),
-            )
-    else:
+    if not chat:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.DEFAULT()
         )
+
+    updated_chat = {
+        **chat.chat,
+        "originalChatId": chat.id,
+        "branchPointMessageId": chat.chat["history"]["currentId"],
+        "title": form_data.title if form_data.title else f"Clone of {chat.title}",
+    }
+
+    cloned = Chats.import_chats(
+        user.id,
+        [
+            ChatImportForm(
+                **{
+                    "chat": updated_chat,
+                    "meta": chat.meta,
+                    "pinned": chat.pinned,
+                    "folder_id": chat.folder_id,
+                }
+            )
+        ],
+    )
+
+    if not cloned:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=ERROR_MESSAGES.DEFAULT(),
+        )
+
+    return ChatResponse(**cloned[0].model_dump())
 
 
 ############################
@@ -511,12 +508,12 @@ async def update_chat_folder_id_by_id(
     user=Depends(get_verified_user),
 ):
     chat = Chats.get_chat_by_id_and_user_id(id, user.id)
-    if chat:
-        chat = Chats.update_chat_folder_id_by_id_and_user_id(
-            id, user.id, form_data.folder_id
-        )
-        return ChatResponse(**chat.model_dump())
-    else:
+    if not chat:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.DEFAULT()
         )
+
+    chat = Chats.update_chat_folder_id_by_id_and_user_id(
+        id, user.id, form_data.folder_id
+    )
+    return ChatResponse(**chat.model_dump())

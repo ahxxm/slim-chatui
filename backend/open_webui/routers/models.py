@@ -121,15 +121,14 @@ async def create_new_model(
             detail=ERROR_MESSAGES.MODEL_ID_TOO_LONG,
         )
 
-    else:
-        model = Models.insert_new_model(form_data, user.id)
-        if model:
-            return model
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=ERROR_MESSAGES.DEFAULT(),
-            )
+    model = Models.insert_new_model(form_data, user.id)
+    if not model:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=ERROR_MESSAGES.DEFAULT(),
+        )
+
+    return model
 
 
 ############################
@@ -236,13 +235,13 @@ class ModelIdForm(BaseModel):
 @router.get("/model", response_model=Optional[ModelResponse])
 async def get_model_by_id(id: str, user=Depends(get_verified_user)):
     model = Models.get_model_by_id(id)
-    if model:
-        return model
-    else:
+    if not model:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
+
+    return model
 
 
 ############################
@@ -266,13 +265,13 @@ async def toggle_model_by_id(id: str, user=Depends(get_verified_user)):
         )
 
     model = Models.toggle_model_by_id(id)
-    if model:
-        return model
-    else:
+    if not model:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.DEFAULT("Error toggling model"),
         )
+
+    return model
 
 
 ############################

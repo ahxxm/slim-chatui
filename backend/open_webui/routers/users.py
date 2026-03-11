@@ -108,13 +108,13 @@ async def get_user_settings_by_session_user(
     user=Depends(get_verified_user),
 ):
     user = Users.get_user_by_id(user.id)
-    if user:
-        return user.settings
-    else:
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.USER_NOT_FOUND,
         )
+
+    return user.settings
 
 
 ############################
@@ -130,13 +130,13 @@ async def update_user_settings_by_session_user(
 ):
     updated_user_settings = form_data.model_dump()
     user = Users.update_user_settings_by_id(user.id, updated_user_settings)
-    if user:
-        return user.settings
-    else:
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.USER_NOT_FOUND,
         )
+
+    return user.settings
 
 
 ############################
@@ -151,34 +151,33 @@ async def get_user_by_id(user_id: str, user=Depends(get_admin_user)):
     if user_id.startswith("shared-"):
         chat_id = user_id.replace("shared-", "")
         chat = Chats.get_chat_by_id(chat_id)
-        if chat:
-            user_id = chat.user_id
-        else:
+        if not chat:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=ERROR_MESSAGES.USER_NOT_FOUND,
             )
+        user_id = chat.user_id
 
     user = Users.get_user_by_id(user_id)
-    if user:
-        return user
-    else:
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.USER_NOT_FOUND,
         )
+
+    return user
 
 
 @router.get("/{user_id}/info", response_model=UserInfoResponse)
 async def get_user_info_by_id(user_id: str, user=Depends(get_verified_user)):
     user = Users.get_user_by_id(user_id)
-    if user:
-        return UserInfoResponse(**user.model_dump())
-    else:
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.USER_NOT_FOUND,
         )
+
+    return UserInfoResponse(**user.model_dump())
 
 
 ############################
@@ -223,43 +222,43 @@ async def update_user_by_id(
 
     user = Users.get_user_by_id(user_id, db=db)
 
-    if user:
-        if form_data.email.lower() != user.email:
-            email_user = Users.get_user_by_email(form_data.email.lower(), db=db)
-            if email_user:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail=ERROR_MESSAGES.EMAIL_TAKEN,
-                )
-
-        if form_data.password:
-            validate_password(form_data.password)
-            hashed = get_password_hash(form_data.password)
-            Auths.update_user_password_by_id(user_id, hashed, db=db)
-
-        Auths.update_email_by_id(user_id, form_data.email.lower(), db=db)
-        updated_user = Users.update_user_by_id(
-            user_id,
-            {
-                "role": form_data.role,
-                "name": form_data.name,
-                "email": form_data.email.lower(),
-            },
-            db=db,
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=ERROR_MESSAGES.USER_NOT_FOUND,
         )
 
-        if updated_user:
-            return updated_user
+    if form_data.email.lower() != user.email:
+        email_user = Users.get_user_by_email(form_data.email.lower(), db=db)
+        if email_user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=ERROR_MESSAGES.EMAIL_TAKEN,
+            )
 
+    if form_data.password:
+        validate_password(form_data.password)
+        hashed = get_password_hash(form_data.password)
+        Auths.update_user_password_by_id(user_id, hashed, db=db)
+
+    Auths.update_email_by_id(user_id, form_data.email.lower(), db=db)
+    updated_user = Users.update_user_by_id(
+        user_id,
+        {
+            "role": form_data.role,
+            "name": form_data.name,
+            "email": form_data.email.lower(),
+        },
+        db=db,
+    )
+
+    if not updated_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.DEFAULT(),
         )
 
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail=ERROR_MESSAGES.USER_NOT_FOUND,
-    )
+    return updated_user
 
 
 ############################

@@ -199,13 +199,13 @@ async def get_file_by_id(id: str, user=Depends(get_verified_user)):
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if file.user_id == user.id or user.role == "admin":
-        return file
-    else:
+    if file.user_id != user.id and user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
+
+    return file
 
 
 ############################
@@ -304,26 +304,26 @@ async def get_file_content_by_id_and_name(id: str, user=Depends(get_verified_use
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
 
-    if file.user_id == user.id or user.role == "admin":
-        filename = file.meta.get("name", file.filename)
-        encoded_filename = quote(filename)
-        headers = {
-            "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
-        }
-
-        file_path = Path(file.path)
-        if file_path.is_file():
-            return FileResponse(file_path, headers=headers)
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=ERROR_MESSAGES.NOT_FOUND,
-            )
-    else:
+    if file.user_id != user.id and user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
         )
+
+    filename = file.meta.get("name", file.filename)
+    encoded_filename = quote(filename)
+    headers = {
+        "Content-Disposition": f"attachment; filename*=UTF-8''{encoded_filename}"
+    }
+
+    file_path = Path(file.path)
+    if not file_path.is_file():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+
+    return FileResponse(file_path, headers=headers)
 
 
 ############################

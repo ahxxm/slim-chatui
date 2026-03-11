@@ -176,17 +176,14 @@ async def update_profile(
     form_data: UpdateProfileForm,
     session_user=Depends(get_verified_user),
 ):
-    if session_user:
-        user = Users.update_user_by_id(
-            session_user.id,
-            form_data.model_dump(),
-        )
-        if user:
-            return user
-        else:
-            raise HTTPException(400, detail=ERROR_MESSAGES.DEFAULT())
-    else:
-        raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+    user = Users.update_user_by_id(
+        session_user.id,
+        form_data.model_dump(),
+    )
+    if not user:
+        raise HTTPException(400, detail=ERROR_MESSAGES.DEFAULT())
+
+    return user
 
 
 ############################
@@ -199,20 +196,16 @@ async def update_password(
     form_data: UpdatePasswordForm,
     session_user=Depends(get_current_user),
 ):
-    if session_user:
-        user = Auths.authenticate_user(
-            session_user.email,
-            lambda pw: verify_password(form_data.password, pw),
-        )
+    user = Auths.authenticate_user(
+        session_user.email,
+        lambda pw: verify_password(form_data.password, pw),
+    )
+    if not user:
+        raise HTTPException(400, detail=ERROR_MESSAGES.INCORRECT_PASSWORD)
 
-        if user:
-            validate_password(form_data.password)
-            hashed = get_password_hash(form_data.new_password)
-            return Auths.update_user_password_by_id(user.id, hashed)
-        else:
-            raise HTTPException(400, detail=ERROR_MESSAGES.INCORRECT_PASSWORD)
-    else:
-        raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+    validate_password(form_data.password)
+    hashed = get_password_hash(form_data.new_password)
+    return Auths.update_user_password_by_id(user.id, hashed)
 
 
 ############################
@@ -270,10 +263,10 @@ async def signin(
             db=db,
         )
 
-    if user:
-        return create_session_response(request, user, db, response, set_cookie=True)
-    else:
+    if not user:
         raise HTTPException(400, detail=ERROR_MESSAGES.INVALID_CRED)
+
+    return create_session_response(request, user, db, response, set_cookie=True)
 
 
 ############################
@@ -430,28 +423,28 @@ async def add_user(
 
 @router.get("/admin/details")
 async def get_admin_details(request: Request, user=Depends(get_current_user)):
-    if request.app.state.config.SHOW_ADMIN_DETAILS:
-        admin_email = request.app.state.config.ADMIN_EMAIL
-        admin_name = None
-
-        log.info(f"Admin details - Email: {admin_email}, Name: {admin_name}")
-
-        if admin_email:
-            admin = Users.get_user_by_email(admin_email)
-            if admin:
-                admin_name = admin.name
-        else:
-            admin = Users.get_first_user()
-            if admin:
-                admin_email = admin.email
-                admin_name = admin.name
-
-        return {
-            "name": admin_name,
-            "email": admin_email,
-        }
-    else:
+    if not request.app.state.config.SHOW_ADMIN_DETAILS:
         raise HTTPException(400, detail=ERROR_MESSAGES.ACTION_PROHIBITED)
+
+    admin_email = request.app.state.config.ADMIN_EMAIL
+    admin_name = None
+
+    log.info(f"Admin details - Email: {admin_email}, Name: {admin_name}")
+
+    if admin_email:
+        admin = Users.get_user_by_email(admin_email)
+        if admin:
+            admin_name = admin.name
+    else:
+        admin = Users.get_first_user()
+        if admin:
+            admin_email = admin.email
+            admin_name = admin.name
+
+    return {
+        "name": admin_name,
+        "email": admin_email,
+    }
 
 
 ############################
