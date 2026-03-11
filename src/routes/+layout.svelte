@@ -87,7 +87,8 @@
 				return;
 			}
 
-			// Send heartbeat every 30 seconds
+			// Reconnect may fire without a prior disconnect event
+			clearInterval(heartbeatInterval);
 			heartbeatInterval = setInterval(() => {
 				if (_socket.connected) {
 					console.log('Sending heartbeat');
