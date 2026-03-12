@@ -16,8 +16,6 @@ dayjs.extend(localizedFormat);
 // Helper functions
 //////////////////////////
 
-export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export function saveAs(blob: Blob, filename: string) {
 	const url = URL.createObjectURL(blob);
 	const a = document.createElement('a');
@@ -27,18 +25,12 @@ export function saveAs(blob: Blob, filename: string) {
 	URL.revokeObjectURL(url);
 }
 
-export const formatNumber = (num: number): string => {
-	return new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 1 }).format(
-		num
-	);
-};
-
 function escapeRegExp(string: string): string {
 	return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 // Replace tokens outside code blocks only
-export const replaceOutsideCode = (content: string, replacer: (str: string) => string) => {
+const replaceOutsideCode = (content: string, replacer: (str: string) => string) => {
 	return content
 		.split(/(```[\s\S]*?```|`[\s\S]*?`)/)
 		.map((segment) => {
@@ -166,25 +158,6 @@ export function unescapeHtml(html: string) {
 	const doc = new DOMParser().parseFromString(html, 'text/html');
 	return doc.documentElement.textContent;
 }
-
-export const capitalizeFirstLetter = (string: string) => {
-	return string.charAt(0).toUpperCase() + string.slice(1);
-};
-
-export const splitStream = (splitOn: string) => {
-	let buffer = '';
-	return new TransformStream({
-		transform(chunk, controller) {
-			buffer += chunk;
-			const parts = buffer.split(splitOn);
-			parts.slice(0, -1).forEach((part) => controller.enqueue(part));
-			buffer = parts[parts.length - 1];
-		},
-		flush(controller) {
-			if (buffer) controller.enqueue(buffer);
-		}
-	});
-};
 
 export const convertMessagesToHistory = (messages: any[]) => {
 	const history: { messages: Record<string, any>; currentId: string | null } = {
@@ -443,84 +416,6 @@ export const copyToClipboard = async (
 	}
 };
 
-export const compareVersion = (latest: string, current: string) => {
-	return current === '0.0.0'
-		? false
-		: current.localeCompare(latest, undefined, {
-				numeric: true,
-				sensitivity: 'case',
-				caseFirst: 'upper'
-			}) < 0;
-};
-
-export const removeFirstHashWord = (inputString: string) => {
-	// Split the string into an array of words
-	const words = inputString.split(' ');
-
-	// Find the index of the first word that starts with #
-	const index = words.findIndex((word) => word.startsWith('#'));
-
-	// Remove the first word with #
-	if (index !== -1) {
-		words.splice(index, 1);
-	}
-
-	// Join the remaining words back into a string
-	const resultString = words.join(' ');
-
-	return resultString;
-};
-
-export const transformFileName = (fileName: string) => {
-	// Convert to lowercase
-	const lowerCaseFileName = fileName.toLowerCase();
-
-	// Remove special characters using regular expression
-	const sanitizedFileName = lowerCaseFileName.replace(/[^\w\s]/g, '');
-
-	// Replace spaces with dashes
-	const finalFileName = sanitizedFileName.replace(/\s+/g, '-');
-
-	return finalFileName;
-};
-
-export const calculateSHA256 = async (file: File) => {
-	// Create a FileReader to read the file asynchronously
-	const reader = new FileReader();
-
-	// Define a promise to handle the file reading
-	const readFile = new Promise<ArrayBuffer>((resolve, reject) => {
-		reader.onload = () => {
-			if (reader.result instanceof ArrayBuffer) resolve(reader.result);
-			else reject(new Error('Expected ArrayBuffer from FileReader'));
-		};
-		reader.onerror = reject;
-	});
-
-	// Read the file as an ArrayBuffer
-	reader.readAsArrayBuffer(file);
-
-	try {
-		// Wait for the FileReader to finish reading the file
-		const buffer = await readFile;
-
-		// Convert the ArrayBuffer to a Uint8Array
-		const uint8Array = new Uint8Array(buffer);
-
-		// Calculate the SHA-256 hash using Web Crypto API
-		const hashBuffer = await crypto.subtle.digest('SHA-256', uint8Array);
-
-		// Convert the hash to a hexadecimal string
-		const hashArray = Array.from(new Uint8Array(hashBuffer));
-		const hashHex = hashArray.map((byte) => byte.toString(16).padStart(2, '0')).join('');
-
-		return `${hashHex}`;
-	} catch (error) {
-		console.error('Error calculating SHA-256 hash:', error);
-		throw error;
-	}
-};
-
 export const getImportOrigin = (_chats: any[]) => {
 	// Check what external service chat imports are from
 	if ('mapping' in _chats[0]) {
@@ -641,56 +536,7 @@ export const convertOpenAIChats = (_chats: any[]) => {
 	return chats;
 };
 
-export const isValidHttpUrl = (string: string) => {
-	let url;
-
-	try {
-		url = new URL(string);
-	} catch {
-		return false;
-	}
-
-	return url.protocol === 'http:' || url.protocol === 'https:';
-};
-
-export const removeEmojis = (str: string) => {
-	// Regular expression to match emojis
-	const emojiRegex = /[\uD800-\uDBFF][\uDC00-\uDFFF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDE4F]/g;
-
-	// Replace emojis with an empty string
-	return str.replace(emojiRegex, '');
-};
-
-export const removeFormattings = (str: string) => {
-	return (
-		str
-			// Block elements (remove completely)
-			.replace(/(```[\s\S]*?```)/g, '') // Code blocks
-			.replace(/^\|.*\|$/gm, '') // Tables
-			// Inline elements (preserve content)
-			.replace(/(?:\*\*|__)(.*?)(?:\*\*|__)/g, '$1') // Bold
-			.replace(/(?:[*_])(.*?)(?:[*_])/g, '$1') // Italic
-			.replace(/~~(.*?)~~/g, '$1') // Strikethrough
-			.replace(/`([^`]+)`/g, '$1') // Inline code
-
-			// Links and images
-			.replace(/!?\[([^\]]*)\](?:\([^)]+\)|\[[^\]]*\])/g, '$1') // Links & images
-			.replace(/^\[[^\]]+\]:\s*.*$/gm, '') // Reference definitions
-
-			// Block formatting
-			.replace(/^#{1,6}\s+/gm, '') // Headers
-			.replace(/^\s*[-*+]\s+/gm, '') // Lists
-			.replace(/^\s*(?:\d+\.)\s+/gm, '') // Numbered lists
-			.replace(/^\s*>[> ]*/gm, '') // Blockquotes
-			.replace(/^\s*:\s+/gm, '') // Definition lists
-
-			// Cleanup
-			.replace(/\[\^[^\]]*\]/g, '') // Footnotes
-			.replace(/\n{2,}/g, '\n')
-	); // Multiple newlines
-};
-
-export const removeDetails = (content: string, types: string[]) => {
+const removeDetails = (content: string, types: string[]) => {
 	return replaceOutsideCode(content, (segment) => {
 		for (const type of types) {
 			segment = segment.replace(
@@ -730,34 +576,6 @@ export const processDetails = (content: string) => {
 	}
 
 	return content;
-};
-
-export const blobToFile = (blob: Blob, fileName: string) => {
-	// Create a new File object from the Blob
-	const file = new File([blob], fileName, { type: blob.type });
-	return file;
-};
-
-export const approximateToHumanReadable = (nanoseconds: number) => {
-	const seconds = Math.floor((nanoseconds / 1e9) % 60);
-	const minutes = Math.floor((nanoseconds / 6e10) % 60);
-	const hours = Math.floor((nanoseconds / 3.6e12) % 24);
-
-	const results: string[] = [];
-
-	if (seconds >= 0) {
-		results.push(`${seconds}s`);
-	}
-
-	if (minutes > 0) {
-		results.push(`${minutes}m`);
-	}
-
-	if (hours > 0) {
-		results.push(`${hours}h`);
-	}
-
-	return results.reverse().join(' ');
 };
 
 export const getTimeRange = (timestamp: number) => {
@@ -887,22 +705,6 @@ export const getLineCount = (text: string) => {
 	return text ? text.split('\n').length : 0;
 };
 
-export const slugify = (str: string): string => {
-	return (
-		str
-			// 1. Normalize: separate accented letters into base + combining marks
-			.normalize('NFD')
-			// 2. Remove all combining marks (the accents)
-			.replace(/[\u0300-\u036f]/g, '')
-			// 3. Replace any sequence of whitespace with a single hyphen
-			.replace(/\s+/g, '-')
-			// 4. Remove all characters except alphanumeric characters, hyphens, and underscores
-			.replace(/[^a-zA-Z0-9-_]/g, '')
-			// 5. Convert to lowercase
-			.toLowerCase()
-	);
-};
-
 export const extractContentFromFile = async (file: File) => {
 	// Known text file extensions for extra fallback
 	const textExtensions = [
@@ -957,26 +759,4 @@ export const decodeString = (str: string) => {
 	} catch (e) {
 		return str;
 	}
-};
-
-export const parseFrontmatter = (content: string) => {
-	const match = content.match(/^---\s*\n([\s\S]*?)\n---/);
-	if (match) {
-		const frontmatter: Record<string, string> = {};
-		match[1].split('\n').forEach((line) => {
-			const [key, ...value] = line.split(':');
-			if (key && value) {
-				frontmatter[key.trim()] = value
-					.join(':')
-					.trim()
-					.replace(/^["']|["']$/g, '');
-			}
-		});
-		return frontmatter;
-	}
-	return {};
-};
-
-export const formatSkillName = (name: string) => {
-	return name.replace(/[-_]/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
 };
