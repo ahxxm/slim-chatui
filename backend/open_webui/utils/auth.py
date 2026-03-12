@@ -13,9 +13,6 @@ from open_webui.models.auths import Auths
 from open_webui.constants import ERROR_MESSAGES
 
 from open_webui.env import (
-    ENABLE_PASSWORD_VALIDATION,
-    PASSWORD_VALIDATION_HINT,
-    PASSWORD_VALIDATION_REGEX_PATTERN,
     WEBUI_SECRET_KEY,
 )
 
@@ -46,13 +43,6 @@ def validate_password(password: str) -> None:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.PASSWORD_TOO_LONG,
         )
-
-    if ENABLE_PASSWORD_VALIDATION:
-        if not PASSWORD_VALIDATION_REGEX_PATTERN.match(password):
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.INVALID_PASSWORD(PASSWORD_VALIDATION_HINT),
-            )
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:

@@ -48,6 +48,5 @@ HEALTHCHECK CMD python3 -c "import urllib.request,json,sys;r=urllib.request.urlo
 
 ARG BUILD_HASH
 ENV WEBUI_BUILD_VERSION=${BUILD_HASH}
-ENV DOCKER=true
 
 CMD ["bash", "start.sh"]
