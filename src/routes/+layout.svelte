@@ -33,6 +33,7 @@
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { bestMatchingLanguage } from '$lib/utils';
 	import { setTextScale } from '$lib/utils/text-scale';
+	import { applyCjkFont } from '$lib/utils/cjk-font';
 
 	import NotificationToast from '$lib/components/NotificationToast.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
@@ -294,6 +295,7 @@
 					settings.set(JSON.parse(localStorage.getItem('settings') ?? '{}'));
 				}
 				setTextScale($settings?.textScale ?? 1);
+				applyCjkFont($settings?.cjkFont ?? 'default');
 
 				// Set up the token expiry check
 				if (tokenTimer) {

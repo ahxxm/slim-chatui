@@ -244,12 +244,7 @@
 						}}
 					/>
 				{:else if selectedTab === 'interface'}
-					<Interface
-						{saveSettings}
-						onsave={() => {
-							toast.success($i18n.t('Settings saved successfully!'));
-						}}
-					/>
+					<Interface {saveSettings} />
 				{:else if selectedTab === 'data_controls'}
 					<DataControls />
 				{:else if selectedTab === 'account'}
