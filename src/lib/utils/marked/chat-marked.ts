@@ -4,7 +4,6 @@ import markedExtension from './extension';
 import citationExtension from './citation-extension';
 import footnoteExtension from './footnote-extension';
 import { disableSingleTilde } from './strikethrough-extension';
-import { mentionExtension } from './mention-extension';
 
 const chatMarked = new Marked();
 
@@ -12,16 +11,9 @@ const options = { throwOnError: false };
 
 chatMarked.use(markedKatexExtension(options));
 chatMarked.use(markedExtension(options));
-chatMarked.use(citationExtension(options));
-chatMarked.use(footnoteExtension(options));
+chatMarked.use(citationExtension());
+chatMarked.use(footnoteExtension());
 chatMarked.use(disableSingleTilde);
-chatMarked.use({
-	breaks: true,
-	extensions: [
-		mentionExtension({ triggerChar: '@' }),
-		mentionExtension({ triggerChar: '#' }),
-		mentionExtension({ triggerChar: '$' })
-	]
-});
+chatMarked.use({ breaks: true });
 
 export { chatMarked };

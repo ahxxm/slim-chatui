@@ -109,12 +109,9 @@ type Settings = {
 	textScale?: number;
 	widescreenMode?: null;
 	largeTextAsFile?: boolean;
-	hapticFeedback?: boolean;
-	responseAutoCopy?: any;
 	richTextInput?: boolean;
 	autoFollowUps?: boolean;
 	splitLargeChunks?: boolean;
-	backgroundImageUrl?: null;
 	landingPageMode?: string;
 	iframeSandboxAllowForms?: boolean;
 	iframeSandboxAllowSameOrigin?: boolean;

@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { config, settings } from '$lib/stores';
+	import { settings } from '$lib/stores';
 	import { getContext } from 'svelte';
-	import { toast } from 'svelte-sonner';
 	import { setTextScale } from '$lib/utils/text-scale';
 
 	import Switch from '$lib/components/common/Switch.svelte';
@@ -16,20 +15,14 @@
 		saveSettings: (settings: Record<string, unknown>) => void;
 	} = $props();
 
-	let inputFiles = $state(null);
-	let filesInputElement: HTMLInputElement;
 	let showManageFloatingActionButtonsModal = $state(false);
 	let showManageImageCompressionModal = $state(false);
 
 	// Settings state — initialized from $settings store, defaults match store schema
 	let titleAutoGenerate = $state($settings?.title?.auto ?? true);
 	let autoFollowUps = $state($settings?.autoFollowUps ?? true);
-	let responseAutoCopy = $state($settings?.responseAutoCopy ?? false);
 	let widescreenMode = $state($settings?.widescreenMode ?? false);
 
-	let defaultModelId = $state(
-		$config?.default_models?.split(',')[0] ?? $settings?.models?.at(0) ?? ''
-	);
 	let showUsername = $state($settings?.showUsername ?? false);
 	let notificationSound = $state($settings?.notificationSound ?? true);
 	let notificationSoundAlways = $state($settings?.notificationSoundAlways ?? false);
@@ -58,10 +51,8 @@
 	let floatingActionButtons = $state($settings?.floatingActionButtons ?? null);
 	let imageCompression = $state($settings?.imageCompression ?? false);
 	let imageCompressionSize = $state($settings?.imageCompressionSize ?? { width: '', height: '' });
-	let hapticFeedback = $state($settings?.hapticFeedback ?? false);
 	let iframeSandboxAllowSameOrigin = $state($settings?.iframeSandboxAllowSameOrigin ?? false);
 	let iframeSandboxAllowForms = $state($settings?.iframeSandboxAllowForms ?? false);
-	let backgroundImageUrl = $state($settings?.backgroundImageUrl ?? null);
 	let textScale: number | null = $state($settings?.textScale ?? null);
 
 	const toggleLandingPageMode = async () => {
@@ -76,28 +67,6 @@
 				auto: titleAutoGenerate
 			}
 		});
-	};
-
-	const toggleResponseAutoCopy = async () => {
-		const permission = await navigator.clipboard
-			.readText()
-			.then(() => {
-				return 'granted';
-			})
-			.catch(() => {
-				return '';
-			});
-
-		if (permission === 'granted') {
-			saveSettings({ responseAutoCopy: responseAutoCopy });
-		} else {
-			responseAutoCopy = false;
-			toast.error(
-				$i18n.t(
-					'Clipboard write permission denied. Please check your browser settings to grant the necessary access.'
-				)
-			);
-		}
 	};
 
 	const toggleChangeChatDirection = async () => {
@@ -145,34 +114,6 @@
 />
 
 <div id="tab-interface" class="flex flex-col h-full justify-between space-y-3 text-sm">
-	<input
-		bind:this={filesInputElement}
-		bind:files={inputFiles}
-		type="file"
-		hidden
-		accept="image/*"
-		onchange={() => {
-			let reader = new FileReader();
-			reader.onload = (event) => {
-				let originalImageUrl = `${event.target.result}`;
-
-				backgroundImageUrl = originalImageUrl;
-				saveSettings({ backgroundImageUrl });
-			};
-
-			if (
-				inputFiles &&
-				inputFiles.length > 0 &&
-				['image/gif', 'image/webp', 'image/jpeg', 'image/png'].includes(inputFiles[0]['type'])
-			) {
-				reader.readAsDataURL(inputFiles[0]);
-			} else {
-				console.log(`Unsupported File Type '${inputFiles[0]['type']}'.`);
-				inputFiles = null;
-			}
-		}}
-	/>
-
 	<div class=" space-y-3 overflow-y-scroll max-h-[28rem] md:max-h-full">
 		<div>
 			<h1 class=" mb-2 text-sm font-medium">{$i18n.t('UI')}</h1>
@@ -279,25 +220,6 @@
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
-					<div id="haptic-feedback-label" class=" self-center text-xs">
-						{$i18n.t('Haptic Feedback')} ({$i18n.t('Android')})
-					</div>
-
-					<div class="flex items-center gap-2 p-1">
-						<Switch
-							ariaLabelledbyId="haptic-feedback-label"
-							tooltip={true}
-							bind:state={hapticFeedback}
-							onchange={() => {
-								saveSettings({ hapticFeedback });
-							}}
-						/>
-					</div>
-				</div>
-			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
 					<div id="copy-formatted-label" class=" self-center text-xs">
 						{$i18n.t('Copy Formatted Text')}
 					</div>
@@ -375,32 +297,6 @@
 					>
 						<span class="ml-2 self-center" id="notification-sound-state"
 							>{landingPageMode === '' ? $i18n.t('Default') : $i18n.t('Chat')}</span
-						>
-					</button>
-				</div>
-			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="chat-background-label" class=" self-center text-xs">
-						{$i18n.t('Chat Background Image')}
-					</div>
-
-					<button
-						aria-labelledby="chat-background-label background-image-url-state"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
-						onclick={() => {
-							if (backgroundImageUrl !== null) {
-								backgroundImageUrl = null;
-								saveSettings({ backgroundImageUrl });
-							} else {
-								filesInputElement.click();
-							}
-						}}
-						type="button"
-					>
-						<span class="ml-2 self-center" id="background-image-url-state"
-							>{backgroundImageUrl !== null ? $i18n.t('Reset') : $i18n.t('Upload')}</span
 						>
 					</button>
 				</div>
@@ -535,25 +431,6 @@
 							bind:state={autoFollowUps}
 							onchange={() => {
 								saveSettings({ autoFollowUps });
-							}}
-						/>
-					</div>
-				</div>
-			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="auto-copy-label" class=" self-center text-xs">
-						{$i18n.t('Auto-Copy Response to Clipboard')}
-					</div>
-
-					<div class="flex items-center gap-2 p-1">
-						<Switch
-							ariaLabelledbyId="auto-copy-label"
-							tooltip={true}
-							bind:state={responseAutoCopy}
-							onchange={() => {
-								toggleResponseAutoCopy();
 							}}
 						/>
 					</div>

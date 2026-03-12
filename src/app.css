@@ -466,33 +466,6 @@ input[type='number'] {
 	}
 }
 
-.mention {
-	border-radius: 0.4rem;
-	box-decoration-break: clone;
-	padding: 0.1rem 0.3rem;
-	@apply text-sky-800 dark:text-sky-200 bg-sky-300/15 dark:bg-sky-500/15;
-}
-
-.mention::after {
-	content: '\200B';
-}
-
-.tiptap .suggestion {
-	border-radius: 0.4rem;
-	box-decoration-break: clone;
-	padding: 0.1rem 0.3rem;
-	@apply text-sky-800 dark:text-sky-200 bg-sky-300/15 dark:bg-sky-500/15;
-}
-
-.tiptap .suggestion::after {
-	content: '\200B';
-}
-
-.tiptap .suggestion.is-empty::after {
-	content: '\00A0';
-	border-bottom: 1px dotted rgba(31, 41, 55, 0.12);
-}
-
 .input-prose .tiptap ul[data-type='taskList'] {
 	list-style: none;
 	margin-left: 0;

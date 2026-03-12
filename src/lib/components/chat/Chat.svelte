@@ -31,12 +31,7 @@
 		refreshChatList
 	} from '$lib/stores';
 
-	import {
-		convertMessagesToHistory,
-		copyToClipboard,
-		createMessagesList,
-		processDetails
-	} from '$lib/utils';
+	import { convertMessagesToHistory, createMessagesList, processDetails } from '$lib/utils';
 
 	import {
 		createNewChat,
@@ -46,7 +41,7 @@
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
 	import { generateOpenAIChatCompletion } from '$lib/apis/openai';
-	import { chatCompleted, stopTask, getTaskIdsByChatId } from '$lib/apis';
+	import { stopTask, getTaskIdsByChatId } from '$lib/apis';
 	import { updateFolderById } from '$lib/apis/folders';
 
 	import MessageInput from '$lib/components/chat/MessageInput.svelte';
@@ -79,7 +74,6 @@
 	let eventCallback = $state<((value?: any) => void) | null>(null);
 
 	let selectedModels = $state(['']);
-	let atSelectedModel = $state<Model | undefined>();
 
 	let generating = $state(false);
 	let generationController: AbortController | null = null;
@@ -198,7 +192,6 @@
 							const combinedPrompt = restoredQueue.map((m) => m.prompt).join('\n\n');
 							await submitPrompt(combinedPrompt);
 						} else {
-							// Has pending tasks - show as queued (chatCompletedHandler will process)
 							messageQueue = restoredQueue;
 						}
 					}
@@ -731,65 +724,26 @@
 			});
 		}
 	};
-	const chatCompletedHandler = async (_chatId, modelId, messages) => {
-		const res = await chatCompleted(localStorage.token, {
-			model: modelId,
-			messages: messages.map((m) => ({
-				id: m.id,
-				role: m.role,
-				content: m.content,
-				info: m.info ? m.info : undefined,
-				timestamp: m.timestamp,
-				...(m.usage ? { usage: m.usage } : {}),
-				...(m.sources ? { sources: m.sources } : {})
-			}))
-		}).catch((error) => {
-			toast.error(`${error}`);
-			messages.at(-1).error = { content: error };
 
-			return null;
-		});
-
-		if (res !== null && res.messages) {
-			// Update chat history with the new messages
-			for (const message of res.messages) {
-				if (message?.id) {
-					// Add null check for message and message.id
-					history.messages[message.id] = {
-						...history.messages[message.id],
-						...(history.messages[message.id].content !== message.content
-							? { originalContent: history.messages[message.id].content }
-							: {}),
-						...message
-					};
-				}
-			}
-		}
-
+	const saveAndProcessQueue = async (_chatId: string, messages: any[]) => {
 		await tick();
 
-		if ($chatId == _chatId) {
-			if (!$temporaryChatEnabled) {
-				chat = await updateChatById(localStorage.token, _chatId, {
-					models: selectedModels,
-					messages: messages,
-					history: history,
-					files: chatFiles
-				});
-
-				await refreshChatList(localStorage.token);
-			}
+		if ($chatId == _chatId && !$temporaryChatEnabled) {
+			chat = await updateChatById(localStorage.token, _chatId, {
+				models: selectedModels,
+				messages: messages,
+				history: history,
+				files: chatFiles
+			});
 		}
 
 		taskIds = null;
 
-		// Process message queue - combine all queued messages and submit at once
 		if (messageQueue.length > 0) {
 			const combinedPrompt = messageQueue.map((m) => m.prompt).join('\n\n');
 			const combinedFiles = messageQueue.flatMap((m) => m.files);
 			messageQueue = [];
 
-			// Set the files and submit
 			files = combinedFiles;
 			await tick();
 			await submitPrompt(combinedPrompt);
@@ -956,10 +910,6 @@
 					console.log('Empty response');
 				} else {
 					message.content += value;
-
-					if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
-						navigator.vibrate(5);
-					}
 				}
 			}
 		}
@@ -967,10 +917,6 @@
 		if (content) {
 			// REALTIME_CHAT_SAVE is disabled
 			message.content = content;
-
-			if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
-				navigator.vibrate(5);
-			}
 		}
 
 		if (selected_model_id) {
@@ -981,12 +927,10 @@
 			message.usage = usage;
 		}
 
-		if (done) {
+		// Guard: Responses API emits done:true twice per stream (see middleware.py).
+		// Content/output fields above update on both, but save+queue runs only on first.
+		if (done && !message.done) {
 			message.done = true;
-
-			if ($settings.responseAutoCopy) {
-				copyToClipboard(message.content);
-			}
 
 			eventTarget.dispatchEvent(
 				new CustomEvent('chat:finish', {
@@ -1004,7 +948,7 @@
 				scrollToBottom();
 			}
 
-			await chatCompletedHandler(chatId, message.model, createMessagesList(history, message.id));
+			await saveAndProcessQueue(chatId, createMessagesList(history, message.id));
 		} else {
 			scheduleRender();
 		}
@@ -1147,11 +1091,7 @@
 		let _chatId = $chatId;
 		_history = $state.snapshot(_history);
 
-		const resolvedModelId = modelId
-			? modelId
-			: atSelectedModel !== undefined
-				? atSelectedModel.id
-				: selectedModels[0];
+		const resolvedModelId = modelId ?? selectedModels[0];
 
 		const model = $models.find((m) => m.id === resolvedModelId);
 
@@ -1245,8 +1185,6 @@
 		if (newChat && _chatId) {
 			replaceState(`/c/${_chatId}`, {});
 		}
-
-		await refreshChatList(localStorage.token);
 	};
 
 	const sendMessageSocket = async (model, _messages, _history, responseMessageId) => {
@@ -1352,7 +1290,7 @@
 						(messages.length == 2 &&
 							messages.at(0)?.role === 'system' &&
 							messages.at(1)?.role === 'user')) &&
-					(selectedModels[0] === model.id || atSelectedModel !== undefined)
+					selectedModels[0] === model.id
 						? {
 								title_generation: $settings?.title?.auto ?? true
 							}
@@ -1617,7 +1555,6 @@
 					messages: createMessagesList(history, history.currentId),
 					files: chatFiles
 				});
-				await refreshChatList(localStorage.token);
 			}
 		}
 	};
@@ -1706,26 +1643,6 @@
 >
 	{#if !loading}
 		<div in:fade={{ duration: 50 }} class="w-full h-full flex flex-col">
-			{#if $selectedFolder && $selectedFolder?.meta?.background_image_url}
-				<div
-					class="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
-					style="background-image: url({$selectedFolder?.meta?.background_image_url})  "
-				/>
-
-				<div
-					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"
-				/>
-			{:else if $settings?.backgroundImageUrl}
-				<div
-					class="absolute top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat"
-					style="background-image: url({$settings?.backgroundImageUrl})  "
-				/>
-
-				<div
-					class="absolute top-0 left-0 w-full h-full bg-linear-to-t from-white to-white/85 dark:from-gray-900 dark:to-gray-900/90 z-0"
-				/>
-			{/if}
-
 			<div class="w-full h-full flex relative max-w-full flex-col">
 				<Navbar
 					bind:this={navbarElement}
@@ -1800,7 +1717,6 @@
 										messageInput?.setText(text);
 									}}
 									{selectedModels}
-									{atSelectedModel}
 									{sendMessage}
 									{showMessage}
 									{submitMessage}
@@ -1824,7 +1740,6 @@
 								bind:files
 								bind:prompt
 								bind:autoScroll
-								bind:atSelectedModel
 								{generating}
 								{stopResponse}
 								{createMessagePair}
@@ -1886,7 +1801,6 @@
 								bind:files
 								bind:prompt
 								bind:autoScroll
-								bind:atSelectedModel
 								{stopResponse}
 								{createMessagePair}
 								{onSelect}

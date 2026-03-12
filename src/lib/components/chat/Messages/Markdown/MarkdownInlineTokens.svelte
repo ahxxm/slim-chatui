@@ -11,7 +11,6 @@
 	import HtmlToken from './HTMLToken.svelte';
 	import TextToken from './MarkdownInlineTokens/TextToken.svelte';
 	import CodespanToken from './MarkdownInlineTokens/CodespanToken.svelte';
-	import MentionToken from './MarkdownInlineTokens/MentionToken.svelte';
 	import SourceToken from './SourceToken.svelte';
 
 	export let id: string;
@@ -91,8 +90,6 @@
 				} catch {}
 			}}
 		></iframe>
-	{:else if token.type === 'mention'}
-		<MentionToken {token} />
 	{:else if token.type === 'footnote'}
 		{@html DOMPurify.sanitize(
 			`<sup class="footnote-ref footnote-ref-text">${token.escapedText}</sup>`
