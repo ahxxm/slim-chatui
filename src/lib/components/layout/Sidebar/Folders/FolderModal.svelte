@@ -4,6 +4,9 @@
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import Modal from '$lib/components/common/Modal.svelte';
 	import XMark from '$lib/components/icons/XMark.svelte';
+	import EmojiPicker from '$lib/components/common/EmojiPicker.svelte';
+	import Emoji from '$lib/components/common/Emoji.svelte';
+	import Folder from '$lib/components/icons/Folder.svelte';
 
 	import { toast } from 'svelte-sonner';
 
@@ -134,7 +137,32 @@
 					<div class="flex flex-col w-full mt-1">
 						<div class=" mb-1 text-xs text-gray-500">{$i18n.t('Folder Name')}</div>
 
-						<div class="flex-1">
+						<div class="flex items-center gap-2">
+							<EmojiPicker
+								side="bottom"
+								onSubmit={(iconName) => {
+									meta = { ...meta, icon: iconName };
+								}}
+							>
+								<button
+									type="button"
+									class="relative rounded-full bg-gray-50 dark:bg-gray-800 size-9 flex justify-center items-center shrink-0 hover:brightness-95 dark:hover:brightness-110 transition"
+									aria-label={$i18n.t('Change folder icon')}
+								>
+									{#if meta?.icon}
+										<Emoji className="size-5" shortCode={meta.icon} />
+									{:else}
+										<Folder className="size-4" strokeWidth="2" />
+									{/if}
+									<div class="absolute -bottom-0.5 -right-0.5 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 size-4 flex items-center justify-center">
+										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-2.5 text-gray-500 dark:text-gray-300">
+											<path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L6.75 6.774a2.75 2.75 0 0 0-.596.892l-.848 2.047a.75.75 0 0 0 .98.98l2.047-.848a2.75 2.75 0 0 0 .892-.596l4.261-4.262a1.75 1.75 0 0 0 0-2.474Z" />
+											<path d="M4.75 3.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h6.5c.69 0 1.25-.56 1.25-1.25V9A.75.75 0 0 1 14 9v2.25A2.75 2.75 0 0 1 11.25 14h-6.5A2.75 2.75 0 0 1 2 11.25v-6.5A2.75 2.75 0 0 1 4.75 2H7a.75.75 0 0 1 0 1.5H4.75Z" />
+										</svg>
+									</div>
+								</button>
+							</EmojiPicker>
+
 							<input
 								id="folder-name"
 								class="w-full text-sm bg-transparent placeholder:text-gray-300 dark:placeholder:text-gray-700 outline-hidden"
