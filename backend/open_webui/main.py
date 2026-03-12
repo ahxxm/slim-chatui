@@ -552,25 +552,6 @@ async def chat_completion(
         return await process_chat(request, form_data, user, metadata, model)
 
 
-@app.post("/api/chat/completed")
-async def chat_completed(
-    request: Request, form_data: dict, user=Depends(get_verified_user)
-):
-    try:
-        if not request.app.state.MODELS:
-            await get_all_models(request, user=user)
-
-        if form_data.get("model") not in request.app.state.MODELS:
-            raise Exception("Model not found")
-
-        return form_data
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
-        )
-
-
 @app.post("/api/tasks/stop/{task_id}")
 async def stop_task_endpoint(
     request: Request, task_id: str, user=Depends(get_verified_user)

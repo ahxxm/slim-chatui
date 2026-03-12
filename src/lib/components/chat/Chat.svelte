@@ -46,7 +46,7 @@
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
 	import { generateOpenAIChatCompletion } from '$lib/apis/openai';
-	import { chatCompleted, stopTask, getTaskIdsByChatId } from '$lib/apis';
+	import { stopTask, getTaskIdsByChatId } from '$lib/apis';
 	import { updateFolderById } from '$lib/apis/folders';
 
 	import MessageInput from '$lib/components/chat/MessageInput.svelte';
@@ -197,7 +197,6 @@
 							const combinedPrompt = restoredQueue.map((m) => m.prompt).join('\n\n');
 							await submitPrompt(combinedPrompt);
 						} else {
-							// Has pending tasks - show as queued (chatCompletedHandler will process)
 							messageQueue = restoredQueue;
 						}
 					}
@@ -730,65 +729,26 @@
 			});
 		}
 	};
-	const chatCompletedHandler = async (_chatId, modelId, messages) => {
-		const res = await chatCompleted(localStorage.token, {
-			model: modelId,
-			messages: messages.map((m) => ({
-				id: m.id,
-				role: m.role,
-				content: m.content,
-				info: m.info ? m.info : undefined,
-				timestamp: m.timestamp,
-				...(m.usage ? { usage: m.usage } : {}),
-				...(m.sources ? { sources: m.sources } : {})
-			}))
-		}).catch((error) => {
-			toast.error(`${error}`);
-			messages.at(-1).error = { content: error };
 
-			return null;
-		});
-
-		if (res !== null && res.messages) {
-			// Update chat history with the new messages
-			for (const message of res.messages) {
-				if (message?.id) {
-					// Add null check for message and message.id
-					history.messages[message.id] = {
-						...history.messages[message.id],
-						...(history.messages[message.id].content !== message.content
-							? { originalContent: history.messages[message.id].content }
-							: {}),
-						...message
-					};
-				}
-			}
-		}
-
+	const saveAndProcessQueue = async (_chatId: string, messages: any[]) => {
 		await tick();
 
-		if ($chatId == _chatId) {
-			if (!$temporaryChatEnabled) {
-				chat = await updateChatById(localStorage.token, _chatId, {
-					models: selectedModels,
-					messages: messages,
-					history: history,
-					files: chatFiles
-				});
-
-				await refreshChatList(localStorage.token);
-			}
+		if ($chatId == _chatId && !$temporaryChatEnabled) {
+			chat = await updateChatById(localStorage.token, _chatId, {
+				models: selectedModels,
+				messages: messages,
+				history: history,
+				files: chatFiles
+			});
 		}
 
 		taskIds = null;
 
-		// Process message queue - combine all queued messages and submit at once
 		if (messageQueue.length > 0) {
 			const combinedPrompt = messageQueue.map((m) => m.prompt).join('\n\n');
 			const combinedFiles = messageQueue.flatMap((m) => m.files);
 			messageQueue = [];
 
-			// Set the files and submit
 			files = combinedFiles;
 			await tick();
 			await submitPrompt(combinedPrompt);
@@ -1003,7 +963,7 @@
 				scrollToBottom();
 			}
 
-			await chatCompletedHandler(chatId, message.model, createMessagesList(history, message.id));
+			await saveAndProcessQueue(chatId, createMessagesList(history, message.id));
 		} else {
 			scheduleRender();
 		}
@@ -1240,8 +1200,6 @@
 		if (newChat && _chatId) {
 			replaceState(`/c/${_chatId}`, {});
 		}
-
-		await refreshChatList(localStorage.token);
 	};
 
 	const sendMessageSocket = async (model, _messages, _history, responseMessageId) => {
@@ -1612,7 +1570,6 @@
 					messages: createMessagesList(history, history.currentId),
 					files: chatFiles
 				});
-				await refreshChatList(localStorage.token);
 			}
 		}
 	};
