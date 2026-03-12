@@ -79,7 +79,6 @@
 	let eventCallback = $state<((value?: any) => void) | null>(null);
 
 	let selectedModels = $state(['']);
-	let atSelectedModel = $state<Model | undefined>();
 
 	let generating = $state(false);
 	let generationController: AbortController | null = null;
@@ -1147,11 +1146,7 @@
 		let _chatId = $chatId;
 		_history = $state.snapshot(_history);
 
-		const resolvedModelId = modelId
-			? modelId
-			: atSelectedModel !== undefined
-				? atSelectedModel.id
-				: selectedModels[0];
+		const resolvedModelId = modelId ?? selectedModels[0];
 
 		const model = $models.find((m) => m.id === resolvedModelId);
 
@@ -1352,7 +1347,7 @@
 						(messages.length == 2 &&
 							messages.at(0)?.role === 'system' &&
 							messages.at(1)?.role === 'user')) &&
-					(selectedModels[0] === model.id || atSelectedModel !== undefined)
+					selectedModels[0] === model.id
 						? {
 								title_generation: $settings?.title?.auto ?? true
 							}
@@ -1780,7 +1775,6 @@
 										messageInput?.setText(text);
 									}}
 									{selectedModels}
-									{atSelectedModel}
 									{sendMessage}
 									{showMessage}
 									{submitMessage}
@@ -1804,7 +1798,6 @@
 								bind:files
 								bind:prompt
 								bind:autoScroll
-								bind:atSelectedModel
 								{generating}
 								{stopResponse}
 								{createMessagePair}
@@ -1866,7 +1859,6 @@
 								bind:files
 								bind:prompt
 								bind:autoScroll
-								bind:atSelectedModel
 								{stopResponse}
 								{createMessagePair}
 								{onSelect}

@@ -20,7 +20,6 @@
 		user = $_user,
 		history = $bindable({ messages: {}, currentId: null }),
 		selectedModels = [],
-		atSelectedModel = undefined,
 		setInputText = () => {},
 		sendMessage,
 		continueResponse,
@@ -272,7 +271,7 @@
 
 <div class={className}>
 	{#if Object.keys(history?.messages ?? {}).length == 0}
-		<ChatPlaceholder modelIds={selectedModels} {atSelectedModel} {onSelect} />
+		<ChatPlaceholder modelIds={selectedModels} {onSelect} />
 	{:else}
 		<div class="w-full pt-2">
 			{#key chatId}
