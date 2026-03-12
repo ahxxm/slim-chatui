@@ -128,6 +128,7 @@ type Settings = {
 	showChatTitleInTab?: boolean;
 	splitLargeDeltas?: boolean;
 	chatDirection?: 'LTR' | 'RTL' | 'auto';
+	cjkFont?: string;
 	ctrlEnterToSend?: boolean;
 	renderMarkdownInPreviews?: boolean;
 
