@@ -3,6 +3,7 @@
 	import { getLanguages, changeLanguage } from '$lib/i18n';
 
 	import { settings, theme } from '$lib/stores';
+	import { applyCjkFont } from '$lib/utils/cjk-font';
 
 	const i18n = getContext('i18n');
 
@@ -21,6 +22,7 @@
 	let languages: Awaited<ReturnType<typeof getLanguages>> = $state([]);
 	let lang = $state($i18n.language);
 	let notificationEnabled = $state(false);
+	let cjkFont = $state('default');
 	let system = $state('');
 
 	const toggleNotification = () => {
@@ -41,6 +43,8 @@
 		languages = await getLanguages();
 
 		notificationEnabled = $settings.notificationEnabled ?? false;
+		cjkFont = $settings.cjkFont ?? 'default';
+		applyCjkFont(cjkFont);
 		system = $settings.system ?? '';
 	});
 
@@ -144,6 +148,11 @@
 						placeholder={$i18n.t('Select a language')}
 						onchange={() => {
 							changeLanguage(lang);
+							if (!lang.startsWith('zh') && cjkFont !== 'default') {
+								cjkFont = 'default';
+								applyCjkFont(cjkFont);
+								saveSettings({ cjkFont });
+							}
 						}}
 					>
 						{#each languages as language}
@@ -152,6 +161,28 @@
 					</select>
 				</div>
 			</div>
+
+			{#if lang.startsWith('zh')}
+				<div class="flex w-full justify-between">
+					<div class="self-center text-xs font-medium">字体</div>
+					<div class="flex items-center relative">
+						<select
+							class="w-fit pr-8 rounded-sm py-2 px-2 text-xs bg-transparent text-right {$settings.highContrastMode
+								? ''
+								: 'outline-hidden'}"
+							bind:value={cjkFont}
+							onchange={() => {
+								applyCjkFont(cjkFont);
+								saveSettings({ cjkFont });
+							}}
+						>
+							<option value="default">默认</option>
+							<option value="noto">思源黑体</option>
+							<option value="lxgw">霞鹜文楷</option>
+						</select>
+					</div>
+				</div>
+			{/if}
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
