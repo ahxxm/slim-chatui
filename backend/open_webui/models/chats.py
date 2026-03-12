@@ -136,10 +136,6 @@ class ChatsImportForm(BaseModel):
     chats: list[ChatImportForm]
 
 
-class ChatTitleForm(BaseModel):
-    title: str
-
-
 class ChatResponse(BaseModel):
     id: str
     user_id: str

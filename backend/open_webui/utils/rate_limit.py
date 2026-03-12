@@ -39,23 +39,3 @@ class RateLimiter:
             del store[b]
 
         return sum(store.values()) > self.limit
-
-    def get_count(self, key: str) -> int:
-        if not self.enabled:
-            return 0
-
-        now_bucket = self._current_bucket()
-        if key not in self._memory_store:
-            return 0
-
-        store = self._memory_store[key]
-        min_bucket = now_bucket - self.num_buckets
-
-        expired = [b for b in store if b < min_bucket]
-        for b in expired:
-            del store[b]
-
-        return sum(store.values())
-
-    def remaining(self, key: str) -> int:
-        return max(0, self.limit - self.get_count(key))

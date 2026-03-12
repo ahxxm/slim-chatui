@@ -86,10 +86,6 @@ def decode_token(token: str) -> Optional[dict]:
         return None
 
 
-def extract_token_from_auth_header(auth_header: str):
-    return auth_header[len("Bearer ") :]
-
-
 def get_http_authorization_cred(auth_header: Optional[str]):
     if not auth_header:
         return None
