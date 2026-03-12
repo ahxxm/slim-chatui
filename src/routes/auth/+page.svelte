@@ -259,7 +259,6 @@
 											placeholder={$i18n.t('Enter Your Password')}
 											autocomplete={mode === 'signup' ? 'new-password' : 'current-password'}
 											name="password"
-											screenReader={true}
 											required
 											aria-required="true"
 										/>

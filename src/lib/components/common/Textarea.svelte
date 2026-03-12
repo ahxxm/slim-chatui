@@ -12,9 +12,6 @@
 		'w-full rounded-lg px-3.5 py-2 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden  h-full';
 	export let ariaLabel = null;
 
-	export let onInput = () => {};
-	export let onBlur = () => {};
-
 	let textareaElement;
 
 	onMount(() => {
@@ -67,13 +64,10 @@
 	{rows}
 	{required}
 	{readonly}
-	on:input={(e) => {
+	on:input={() => {
 		resize();
-
-		onInput(e);
 	}}
 	on:focus={() => {
 		resize();
 	}}
-	on:blur={onBlur}
 />
