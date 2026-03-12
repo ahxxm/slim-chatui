@@ -28,9 +28,7 @@
 
 	let folder = $state(null);
 	let name = $state('');
-	let meta = $state({
-		background_image_url: null
-	});
+	let meta = $state({});
 	let data: { system_prompt: string; files: any[] } = $state({
 		system_prompt: '',
 		files: []
@@ -64,9 +62,7 @@
 			});
 
 			name = folder.name;
-			meta = folder.meta || {
-				background_image_url: null
-			};
+			meta = folder.meta || {};
 			data = folder.data || {
 				system_prompt: '',
 				files: []
@@ -94,9 +90,7 @@
 	$effect(() => {
 		if (!show && !edit) {
 			name = '';
-			meta = {
-				background_image_url: null
-			};
+			meta = {};
 			data = {
 				system_prompt: '',
 				files: []
@@ -154,10 +148,21 @@
 									{:else}
 										<Folder className="size-4" strokeWidth="2" />
 									{/if}
-									<div class="absolute -bottom-0.5 -right-0.5 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 size-4 flex items-center justify-center">
-										<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-2.5 text-gray-500 dark:text-gray-300">
-											<path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L6.75 6.774a2.75 2.75 0 0 0-.596.892l-.848 2.047a.75.75 0 0 0 .98.98l2.047-.848a2.75 2.75 0 0 0 .892-.596l4.261-4.262a1.75 1.75 0 0 0 0-2.474Z" />
-											<path d="M4.75 3.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h6.5c.69 0 1.25-.56 1.25-1.25V9A.75.75 0 0 1 14 9v2.25A2.75 2.75 0 0 1 11.25 14h-6.5A2.75 2.75 0 0 1 2 11.25v-6.5A2.75 2.75 0 0 1 4.75 2H7a.75.75 0 0 1 0 1.5H4.75Z" />
+									<div
+										class="absolute -bottom-0.5 -right-0.5 rounded-full bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 size-4 flex items-center justify-center"
+									>
+										<svg
+											xmlns="http://www.w3.org/2000/svg"
+											viewBox="0 0 16 16"
+											fill="currentColor"
+											class="size-2.5 text-gray-500 dark:text-gray-300"
+										>
+											<path
+												d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L6.75 6.774a2.75 2.75 0 0 0-.596.892l-.848 2.047a.75.75 0 0 0 .98.98l2.047-.848a2.75 2.75 0 0 0 .892-.596l4.261-4.262a1.75 1.75 0 0 0 0-2.474Z"
+											/>
+											<path
+												d="M4.75 3.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h6.5c.69 0 1.25-.56 1.25-1.25V9A.75.75 0 0 1 14 9v2.25A2.75 2.75 0 0 1 11.25 14h-6.5A2.75 2.75 0 0 1 2 11.25v-6.5A2.75 2.75 0 0 1 4.75 2H7a.75.75 0 0 1 0 1.5H4.75Z"
+											/>
 										</svg>
 									</div>
 								</button>
@@ -171,65 +176,6 @@
 								placeholder={$i18n.t('Enter folder name')}
 								autocomplete="off"
 							/>
-						</div>
-					</div>
-
-					<input
-						id="folder-background-image-input"
-						type="file"
-						hidden
-						accept="image/*"
-						onchange={(e) => {
-							const inputFiles = e.target.files;
-
-							let reader = new FileReader();
-							reader.onload = (event) => {
-								let originalImageUrl = `${event.target.result}`;
-								meta.background_image_url = originalImageUrl;
-							};
-
-							if (
-								inputFiles &&
-								inputFiles.length > 0 &&
-								['image/gif', 'image/webp', 'image/jpeg', 'image/png'].includes(
-									inputFiles[0]['type']
-								)
-							) {
-								reader.readAsDataURL(inputFiles[0]);
-							} else {
-								console.log(`Unsupported File Type '${inputFiles[0]['type']}'.`);
-
-								// clear the input
-								e.target.value = '';
-							}
-						}}
-					/>
-
-					<div class="flex justify-between w-full mt-1 items-center">
-						<div class="text-xs text-gray-500">{$i18n.t('Folder Background Image')}</div>
-
-						<div class="">
-							<button
-								aria-labelledby="chat-background-label background-image-url-state"
-								class="p-1 px-3 text-xs flex rounded-sm transition"
-								onclick={() => {
-									if (meta?.background_image_url !== null) {
-										meta.background_image_url = null;
-									} else {
-										const input = document.getElementById('folder-background-image-input');
-										if (input) {
-											input.click();
-										}
-									}
-								}}
-								type="button"
-							>
-								<span class="ml-2 self-center" id="background-image-url-state"
-									>{(meta?.background_image_url ?? null) === null
-										? $i18n.t('Upload')
-										: $i18n.t('Reset')}</span
-								>
-							</button>
 						</div>
 					</div>
 

@@ -114,7 +114,6 @@ type Settings = {
 	richTextInput?: boolean;
 	autoFollowUps?: boolean;
 	splitLargeChunks?: boolean;
-	backgroundImageUrl?: null;
 	landingPageMode?: string;
 	iframeSandboxAllowForms?: boolean;
 	iframeSandboxAllowSameOrigin?: boolean;

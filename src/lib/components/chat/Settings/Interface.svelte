@@ -16,8 +16,6 @@
 		saveSettings: (settings: Record<string, unknown>) => void;
 	} = $props();
 
-	let inputFiles = $state(null);
-	let filesInputElement: HTMLInputElement;
 	let showManageFloatingActionButtonsModal = $state(false);
 	let showManageImageCompressionModal = $state(false);
 
@@ -61,7 +59,6 @@
 	let hapticFeedback = $state($settings?.hapticFeedback ?? false);
 	let iframeSandboxAllowSameOrigin = $state($settings?.iframeSandboxAllowSameOrigin ?? false);
 	let iframeSandboxAllowForms = $state($settings?.iframeSandboxAllowForms ?? false);
-	let backgroundImageUrl = $state($settings?.backgroundImageUrl ?? null);
 	let textScale: number | null = $state($settings?.textScale ?? null);
 
 	const toggleLandingPageMode = async () => {
@@ -145,34 +142,6 @@
 />
 
 <div id="tab-interface" class="flex flex-col h-full justify-between space-y-3 text-sm">
-	<input
-		bind:this={filesInputElement}
-		bind:files={inputFiles}
-		type="file"
-		hidden
-		accept="image/*"
-		onchange={() => {
-			let reader = new FileReader();
-			reader.onload = (event) => {
-				let originalImageUrl = `${event.target.result}`;
-
-				backgroundImageUrl = originalImageUrl;
-				saveSettings({ backgroundImageUrl });
-			};
-
-			if (
-				inputFiles &&
-				inputFiles.length > 0 &&
-				['image/gif', 'image/webp', 'image/jpeg', 'image/png'].includes(inputFiles[0]['type'])
-			) {
-				reader.readAsDataURL(inputFiles[0]);
-			} else {
-				console.log(`Unsupported File Type '${inputFiles[0]['type']}'.`);
-				inputFiles = null;
-			}
-		}}
-	/>
-
 	<div class=" space-y-3 overflow-y-scroll max-h-[28rem] md:max-h-full">
 		<div>
 			<h1 class=" mb-2 text-sm font-medium">{$i18n.t('UI')}</h1>
@@ -375,32 +344,6 @@
 					>
 						<span class="ml-2 self-center" id="notification-sound-state"
 							>{landingPageMode === '' ? $i18n.t('Default') : $i18n.t('Chat')}</span
-						>
-					</button>
-				</div>
-			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="chat-background-label" class=" self-center text-xs">
-						{$i18n.t('Chat Background Image')}
-					</div>
-
-					<button
-						aria-labelledby="chat-background-label background-image-url-state"
-						class="p-1 px-3 text-xs flex rounded-sm transition"
-						onclick={() => {
-							if (backgroundImageUrl !== null) {
-								backgroundImageUrl = null;
-								saveSettings({ backgroundImageUrl });
-							} else {
-								filesInputElement.click();
-							}
-						}}
-						type="button"
-					>
-						<span class="ml-2 self-center" id="background-image-url-state"
-							>{backgroundImageUrl !== null ? $i18n.t('Reset') : $i18n.t('Upload')}</span
 						>
 					</button>
 				</div>
