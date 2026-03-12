@@ -172,6 +172,7 @@
 							}}
 						>
 							<option value="default">默认</option>
+							<option value="noto">思源黑体</option>
 							<option value="lxgw">霞鹜文楷</option>
 						</select>
 					</div>
