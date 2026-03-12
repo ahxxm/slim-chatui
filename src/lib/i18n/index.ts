@@ -3,6 +3,8 @@ import resourcesToBackend from 'i18next-resources-to-backend';
 import LanguageDetector from 'i18next-browser-languagedetector';
 import type { i18n as i18nType } from 'i18next';
 import { writable } from 'svelte/store';
+import { applyCjkFont } from '$lib/utils/cjk-font';
+import { settings } from '$lib/stores';
 
 const createI18nStore = (i18n: i18nType) => {
 	const i18nWritable = writable(i18n);
@@ -82,6 +84,10 @@ export const getLanguages = async () => {
 export const changeLanguage = (lang: string) => {
 	document.documentElement.setAttribute('lang', lang);
 	i18next.changeLanguage(lang);
+	if (!lang.startsWith('zh')) {
+		applyCjkFont('default');
+		settings.update((s) => ({ ...s, cjkFont: 'default' }));
+	}
 };
 
 export default i18n;
