@@ -148,6 +148,11 @@
 						placeholder={$i18n.t('Select a language')}
 						onchange={() => {
 							changeLanguage(lang);
+							if (!lang.startsWith('zh') && cjkFont !== 'default') {
+								cjkFont = 'default';
+								applyCjkFont(cjkFont);
+								saveSettings({ cjkFont });
+							}
 						}}
 					>
 						{#each languages as language}
