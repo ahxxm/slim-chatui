@@ -18,7 +18,6 @@
 	import EllipsisHorizontal from '$lib/components/icons/EllipsisHorizontal.svelte';
 	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import Emoji from '$lib/components/common/Emoji.svelte';
-	import EmojiPicker from '$lib/components/common/EmojiPicker.svelte';
 
 	import type { FolderItem } from '$lib/types';
 
@@ -55,34 +54,12 @@
 
 		if (res) {
 			folder.name = name;
+			if (meta) {
+				folder.meta = meta;
+			}
 			if (data) {
 				folder.data = data;
 			}
-
-			toast.success($i18n.t('Folder updated successfully'));
-
-			const _folder = await getFolderById(localStorage.token, folder.id).catch((error) => {
-				toast.error(`${error}`);
-				return null;
-			});
-
-			await selectedFolder.set(_folder);
-			onUpdate(_folder);
-		}
-	};
-
-	const updateIconHandler = async (iconName) => {
-		const res = await updateFolderById(localStorage.token, folder.id, {
-			meta: {
-				icon: iconName
-			}
-		}).catch((error) => {
-			toast.error(`${error}`);
-			return null;
-		});
-
-		if (res) {
-			folder.meta = { ...folder.meta, icon: iconName };
 
 			toast.success($i18n.t('Folder updated successfully'));
 
@@ -143,10 +120,6 @@
 		}}
 	>
 		<div class=" text-sm text-gray-700 dark:text-gray-300 flex-1 line-clamp-3 mb-2">
-			<!-- {$i18n.t('This will delete <strong>{{NAME}}</strong> and <strong>all its contents</strong>.', {
-				NAME: folder?.name
-			})} -->
-
 			{$i18n.t(`Are you sure you want to delete "{{NAME}}"?`, {
 				NAME: folder?.name
 			})}
@@ -163,24 +136,15 @@
 
 	<div class="mb-3 px-6 @md:max-w-3xl justify-between w-full flex relative group items-center">
 		<div class="text-center flex gap-3.5 items-center">
-			<EmojiPicker
-				onClose={() => {}}
-				onSubmit={(name) => {
-					console.log(name);
-					updateIconHandler(name);
-				}}
+			<div
+				class="rounded-full bg-gray-50 dark:bg-gray-800 size-11 flex justify-center items-center"
 			>
-				<button
-					aria-label={$i18n.t('Change folder icon')}
-					class=" rounded-full bg-gray-50 dark:bg-gray-800 size-11 flex justify-center items-center"
-				>
-					{#if folder?.meta?.icon}
-						<Emoji className="size-6" shortCode={folder.meta.icon} />
-					{:else}
-						<Folder className="size-4.5" strokeWidth="2" />
-					{/if}
-				</button>
-			</EmojiPicker>
+				{#if folder?.meta?.icon}
+					<Emoji className="size-6" shortCode={folder.meta.icon} />
+				{:else}
+					<Folder className="size-4.5" strokeWidth="2" />
+				{/if}
+			</div>
 
 			<div class="text-3xl line-clamp-1">
 				{folder.name}

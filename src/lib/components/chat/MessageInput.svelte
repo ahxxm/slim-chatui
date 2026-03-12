@@ -15,9 +15,7 @@
 
 	import { compressImage, extractContentFromFile } from '$lib/utils';
 	import { uploadFile } from '$lib/apis/files';
-	import { WEBUI_BASE_URL, WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
-
-	import { getSuggestionRenderer } from '../common/RichTextInput/suggestions';
+	import { WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
 
 	import InputMenu from './MessageInput/InputMenu.svelte';
 	import FilesOverlay from './MessageInput/FilesOverlay.svelte';
@@ -25,12 +23,7 @@
 	import Tooltip from '../common/Tooltip.svelte';
 	import FileItem from '../common/FileItem.svelte';
 	import Image from '../common/Image.svelte';
-
-	import XMark from '../icons/XMark.svelte';
-
 	import PlusAlt from '../icons/PlusAlt.svelte';
-
-	import CommandSuggestionList from './MessageInput/CommandSuggestionList.svelte';
 	import InputModal from '../common/InputModal.svelte';
 	import Expand from '../icons/Expand.svelte';
 	import QueuedMessageItem from './MessageInput/QueuedMessageItem.svelte';
@@ -43,7 +36,6 @@
 		stopResponse,
 		autoScroll = $bindable(false),
 		generating = false,
-		atSelectedModel = $bindable(undefined),
 		selectedModels,
 		history,
 		taskIds = null,
@@ -58,7 +50,7 @@
 		scrollToBottom = (_behavior?: ScrollBehavior) => {}
 	} = $props();
 
-	let activeModelId = $derived(atSelectedModel?.id ?? selectedModels[0]);
+	let activeModelId = $derived(selectedModels[0]);
 
 	let inputContent = $state(null);
 
@@ -132,7 +124,6 @@
 	};
 
 	let command = $state('');
-	let suggestions = $state(null);
 
 	let loaded = $state(false);
 	let isComposing = $state(false);
@@ -386,25 +377,6 @@
 		let isDestroyed = false;
 		let dropzoneElement: HTMLElement | null = null;
 
-		suggestions = [
-			{
-				char: '@',
-				render: getSuggestionRenderer(CommandSuggestionList, {
-					i18n,
-					onSelect: (e) => {
-						const { type, data } = e;
-
-						if (type === 'model') {
-							atSelectedModel = data;
-						}
-
-						document.getElementById('chat-input')?.focus();
-					},
-
-					insertTextHandler: insertTextAtCursor
-				})
-			}
-		];
 		loaded = true;
 
 		window.setTimeout(() => {
@@ -561,33 +533,6 @@
 								: ' border-gray-100/30 dark:border-gray-850/30 hover:border-gray-200 focus-within:border-gray-100 hover:dark:border-gray-800 focus-within:dark:border-gray-800'}  transition px-1 bg-white/5 dark:bg-gray-500/5 backdrop-blur-sm dark:text-gray-100"
 							dir={$settings?.chatDirection ?? 'auto'}
 						>
-							{#if atSelectedModel !== undefined}
-								<div class="px-3 pt-3 text-left w-full flex flex-col z-10">
-									<div class="flex items-center justify-between w-full">
-										<div class="pl-[1px] flex items-center gap-2 text-sm dark:text-gray-500">
-											<img
-												alt="model profile"
-												class="size-3.5 max-w-[28px] object-cover rounded-full"
-												src={`${WEBUI_BASE_URL}/static/favicon.png`}
-											/>
-											<div class="translate-y-[0.5px]">
-												<span class="">{atSelectedModel.name}</span>
-											</div>
-										</div>
-										<div>
-											<button
-												class="flex items-center dark:text-gray-500"
-												onclick={() => {
-													atSelectedModel = undefined;
-												}}
-											>
-												<XMark />
-											</button>
-										</div>
-									</div>
-								</div>
-							{/if}
-
 							{#if files.length > 0}
 								<div
 									class="mx-2 mt-2.5 pb-1.5 flex items-center flex-wrap gap-2"
@@ -680,9 +625,7 @@
 								<div
 									class="scrollbar-hidden rtl:text-right ltr:text-left bg-transparent dark:text-gray-100 outline-hidden w-full pb-1 px-1 resize-none h-fit max-h-96 overflow-auto {files.length ===
 									0
-										? atSelectedModel !== undefined
-											? 'pt-1.5'
-											: 'pt-2.5'
+										? 'pt-2.5'
 										: ''}"
 									id="chat-input-container"
 								>
@@ -703,7 +646,7 @@
 										</div>
 									{/if}
 
-									{#if suggestions}
+									{#if loaded}
 										{#key $settings?.richTextInput ?? true}
 											{#key $settings?.showFormattingToolbar ?? false}
 												<RichTextInput
@@ -729,7 +672,6 @@
 														)}
 													placeholder={placeholder ? placeholder : $i18n.t('Send a Message')}
 													largeTextAsFile={($settings?.largeTextAsFile ?? false) && !shiftKey}
-													{suggestions}
 													oncompositionstart={() => (isComposing = true)}
 													oncompositionend={(e) => {
 														compositionEndedAt = e.timeStamp;
@@ -737,9 +679,6 @@
 													}}
 													onkeydown={async (e) => {
 														const isCtrlPressed = e.ctrlKey || e.metaKey;
-														const suggestionsContainerElement =
-															document.getElementById('suggestions-container');
-
 														if (e.key === 'Escape') {
 															stopResponse();
 														}
@@ -761,36 +700,29 @@
 															}
 														}
 
-														if (!suggestionsContainerElement) {
-															if (
-																!$mobile ||
-																!(
-																	'ontouchstart' in window ||
-																	navigator.maxTouchPoints > 0 ||
-																	navigator.msMaxTouchPoints > 0
-																)
-															) {
-																if (inOrNearComposition(e)) {
-																	return;
-																}
+														if (
+															!$mobile ||
+															!(
+																'ontouchstart' in window ||
+																navigator.maxTouchPoints > 0 ||
+																navigator.msMaxTouchPoints > 0
+															)
+														) {
+															if (inOrNearComposition(e)) {
+																return;
+															}
 
-																const enterPressed =
-																	($settings?.ctrlEnterToSend ?? false)
-																		? (e.key === 'Enter' || e.keyCode === 13) && isCtrlPressed
-																		: (e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey;
+															const enterPressed =
+																($settings?.ctrlEnterToSend ?? false)
+																	? (e.key === 'Enter' || e.keyCode === 13) && isCtrlPressed
+																	: (e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey;
 
-																if (enterPressed) {
-																	e.preventDefault();
-																	if (prompt !== '' || files.length > 0) {
-																		onSubmit(prompt);
-																	}
+															if (enterPressed) {
+																e.preventDefault();
+																if (prompt !== '' || files.length > 0) {
+																	onSubmit(prompt);
 																}
 															}
-														}
-
-														if (e.key === 'Escape') {
-															console.log('Escape');
-															atSelectedModel = undefined;
 														}
 													}}
 													onpaste={async (e) => {

@@ -28,7 +28,6 @@
 		createMessagePair,
 		stopResponse,
 		autoScroll = $bindable(false),
-		atSelectedModel = $bindable(undefined),
 		selectedModels,
 		history,
 		prompt = $bindable(''),
@@ -137,7 +136,7 @@
 				</div>
 			{/if}
 
-			<div class="text-base font-normal @md:max-w-3xl w-full py-3 {atSelectedModel ? 'mt-2' : ''}">
+			<div class="text-base font-normal @md:max-w-3xl w-full py-3">
 				<MessageInput
 					bind:this={messageInput}
 					{history}
@@ -145,7 +144,6 @@
 					bind:files
 					bind:prompt
 					bind:autoScroll
-					bind:atSelectedModel
 					{stopResponse}
 					{createMessagePair}
 					placeholder={$i18n.t('How can I help you today?')}
@@ -167,8 +165,7 @@
 		<div class="mx-auto max-w-2xl font-primary mt-2" in:fade={{ duration: 200, delay: 200 }}>
 			<div class="mx-5">
 				<Suggestions
-					suggestionPrompts={atSelectedModel?.info?.meta?.suggestion_prompts ??
-						model?.info?.meta?.suggestion_prompts ??
+					suggestionPrompts={model?.info?.meta?.suggestion_prompts ??
 						$config?.default_prompt_suggestions ??
 						[]}
 					inputValue={prompt}

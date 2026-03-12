@@ -14,7 +14,7 @@
 
 	const i18n = getContext('i18n');
 
-	let { modelIds = [], atSelectedModel, onSelect = (e) => {} } = $props();
+	let { modelIds = [], onSelect = (e) => {} } = $props();
 
 	let mounted = $state(false);
 
@@ -98,8 +98,7 @@
 		<div class=" w-full font-primary" in:fade={{ duration: 200, delay: 300 }}>
 			<Suggestions
 				className="grid grid-cols-2"
-				suggestionPrompts={atSelectedModel?.info?.meta?.suggestion_prompts ??
-					model?.info?.meta?.suggestion_prompts ??
+				suggestionPrompts={model?.info?.meta?.suggestion_prompts ??
 					$config?.default_prompt_suggestions ??
 					[]}
 				{onSelect}

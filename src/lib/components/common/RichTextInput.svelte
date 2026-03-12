@@ -93,18 +93,6 @@
 		}
 	});
 
-	// Convert TipTap mention spans -> <@id>
-	turndownService.addRule('mentions', {
-		filter: (node) => node.nodeName === 'SPAN' && node.getAttribute('data-type') === 'mention',
-		replacement: (_content, node: HTMLElement) => {
-			const id = node.getAttribute('data-id') || '';
-			// TipTap stores the trigger char in data-mention-suggestion-char (usually "@")
-			const ch = node.getAttribute('data-mention-suggestion-char') || '@';
-			// Emit <@id> style, e.g. <@llama3.2:latest>
-			return `<${ch}${id}>`;
-		}
-	});
-
 	import { onMount, onDestroy, tick, getContext, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
@@ -126,7 +114,6 @@
 	import Typography from '@tiptap/extension-typography';
 	import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 
-	import Mention from '@tiptap/extension-mention';
 	import FormattingButtons from './RichTextInput/FormattingButtons.svelte';
 
 	import { PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
@@ -146,7 +133,6 @@
 		link = false,
 		image = false,
 		fileHandler = false,
-		suggestions = null,
 		onFileDrop: onFileDropProp = undefined,
 		onFilePaste: onFilePasteProp = undefined,
 		onSelectionUpdate = (e) => {},
@@ -179,7 +165,6 @@
 		link?: boolean;
 		image?: boolean;
 		fileHandler?: boolean;
-		suggestions?: any;
 		onFileDrop?: (currentEditor: any, files: any[], pos: number) => void;
 		onFilePaste?: (currentEditor: any, files: any[], htmlContent: string) => void;
 		onSelectionUpdate?: (e: any) => void;
@@ -668,15 +653,6 @@
 							})
 						]
 					: []),
-				...(suggestions
-					? [
-							Mention.configure({
-								HTMLAttributes: { class: 'mention' },
-								suggestions: suggestions
-							})
-						]
-					: []),
-
 				CharacterCount.configure({}),
 				...(image ? [Image] : []),
 				...(fileHandler
@@ -844,12 +820,6 @@
 									if (isInCodeBlock || isInList || isInHeading) {
 										// Let ProseMirror handle the normal Enter behavior
 										return false;
-									}
-
-									const suggestionsElement = document.getElementById('suggestions-container');
-									if (lineText.startsWith('#') && suggestionsElement) {
-										console.log('Letting heading suggestion handle Enter key');
-										return true;
 									}
 								}
 							}
