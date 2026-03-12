@@ -31,12 +31,7 @@
 		refreshChatList
 	} from '$lib/stores';
 
-	import {
-		convertMessagesToHistory,
-		copyToClipboard,
-		createMessagesList,
-		processDetails
-	} from '$lib/utils';
+	import { convertMessagesToHistory, createMessagesList, processDetails } from '$lib/utils';
 
 	import {
 		createNewChat,
@@ -915,10 +910,6 @@
 					console.log('Empty response');
 				} else {
 					message.content += value;
-
-					if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
-						navigator.vibrate(5);
-					}
 				}
 			}
 		}
@@ -926,10 +917,6 @@
 		if (content) {
 			// REALTIME_CHAT_SAVE is disabled
 			message.content = content;
-
-			if (navigator.vibrate && ($settings?.hapticFeedback ?? false)) {
-				navigator.vibrate(5);
-			}
 		}
 
 		if (selected_model_id) {
@@ -944,10 +931,6 @@
 		// Content/output fields above update on both, but save+queue runs only on first.
 		if (done && !message.done) {
 			message.done = true;
-
-			if ($settings.responseAutoCopy) {
-				copyToClipboard(message.content);
-			}
 
 			eventTarget.dispatchEvent(
 				new CustomEvent('chat:finish', {
