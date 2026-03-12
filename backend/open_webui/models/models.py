@@ -3,7 +3,7 @@ import time
 from typing import Optional
 
 from sqlalchemy.orm import Session
-from open_webui.internal.db import Base, JSONField, get_db, get_db_context
+from open_webui.internal.db import Base, JSONField, get_db_context
 
 from open_webui.models.users import User, UserModel, Users, UserResponse
 

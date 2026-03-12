@@ -3,7 +3,7 @@ import uuid
 from typing import Optional
 
 from sqlalchemy.orm import Session
-from open_webui.internal.db import Base, get_db, get_db_context
+from open_webui.internal.db import Base, get_db_context
 from open_webui.models.users import UserModel, UserProfileImageResponse, Users
 from pydantic import BaseModel
 from sqlalchemy import Boolean, Column, String, Text
