@@ -11,11 +11,9 @@
 	const i18n = getContext('i18n');
 
 	let {
-		saveSettings,
-		onsave
+		saveSettings
 	}: {
 		saveSettings: (settings: Record<string, unknown>) => void;
-		onsave: () => void;
 	} = $props();
 
 	let inputFiles = $state(null);
@@ -118,13 +116,6 @@
 		saveSettings({ ctrlEnterToSend });
 	};
 
-	const updateInterfaceHandler = async () => {
-		saveSettings({
-			models: [defaultModelId],
-			imageCompressionSize: imageCompressionSize
-		});
-	};
-
 	const setTextScaleHandler = (scale) => {
 		textScale = scale;
 		setTextScale(textScale);
@@ -153,15 +144,7 @@
 	}}
 />
 
-<form
-	id="tab-interface"
-	class="flex flex-col h-full justify-between space-y-3 text-sm"
-	onsubmit={(e) => {
-		e.preventDefault();
-		updateInterfaceHandler();
-		onsave();
-	}}
->
+<div id="tab-interface" class="flex flex-col h-full justify-between space-y-3 text-sm">
 	<input
 		bind:this={filesInputElement}
 		bind:files={inputFiles}
@@ -919,13 +902,4 @@
 			</div>
 		</div>
 	</div>
-
-	<div class="flex justify-end text-sm font-medium">
-		<button
-			class="px-3.5 py-1.5 text-sm font-medium bg-black hover:bg-gray-900 text-white dark:bg-white dark:text-black dark:hover:bg-gray-100 transition rounded-full"
-			type="submit"
-		>
-			{$i18n.t('Save')}
-		</button>
-	</div>
-</form>
+</div>
