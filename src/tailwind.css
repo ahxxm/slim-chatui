@@ -24,7 +24,7 @@
 	html,
 	pre {
 		--font-cjk: 'LXGW WenKai Screen', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans CJK SC';
-		font-family: 'Inter', var(--font-cjk), system-ui, sans-serif;
+		font-family: 'Inter', 'Twemoji', var(--font-cjk), system-ui, sans-serif;
 	}
 
 	pre {

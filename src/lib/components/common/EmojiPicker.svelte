@@ -4,12 +4,12 @@
 
 	import { getContext } from 'svelte';
 
-	import { WEBUI_BASE_URL } from '$lib/constants';
-
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 
 	import emojiGroups from '$lib/emoji-groups.json';
 	import emojiShortCodes from '$lib/emoji-shortcodes.json';
+
+	import { codePointToEmoji } from '$lib/stores';
 
 	const i18n = getContext('i18n');
 
@@ -153,12 +153,9 @@
 													class="p-1.5 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition"
 													onclick={() => selectEmoji(emojiItem)}
 												>
-													<img
-														src="{WEBUI_BASE_URL}/assets/emojis/{emojiItem.name.toLowerCase()}.svg"
-														alt={emojiItem.name}
-														class="size-5"
-														loading="lazy"
-													/>
+													<span class="text-xl leading-none"
+														>{codePointToEmoji(emojiItem.name)}</span
+													>
 												</button>
 											</Tooltip>
 										{/each}

@@ -38,6 +38,10 @@ export const shortCodesToEmojis = writable(
 	)
 );
 
+export function codePointToEmoji(hex: string): string {
+	return String.fromCodePoint(...hex.split('-').map((cp) => parseInt(cp, 16)));
+}
+
 export const chatId = writable('');
 export const chatTitle = writable('');
 

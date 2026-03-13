@@ -1,18 +1,13 @@
-<script>
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import { shortCodesToEmojis } from '$lib/stores';
+<script lang="ts">
+	import { shortCodesToEmojis, codePointToEmoji } from '$lib/stores';
 
-	export let shortCode;
-	export let className = 'size-4';
+	let { shortCode, className = 'size-4' }: { shortCode: string; className?: string } = $props();
 </script>
 
 {#if $shortCodesToEmojis[shortCode]}
-	<img
-		src="{WEBUI_BASE_URL}/assets/emojis/{$shortCodesToEmojis[shortCode].toLowerCase()}.svg"
-		alt={shortCode}
-		class={className}
-		loading="lazy"
-	/>
+	<span class={className} aria-label={shortCode}
+		>{codePointToEmoji($shortCodesToEmojis[shortCode])}</span
+	>
 {:else}
 	<div>
 		{shortCode}
