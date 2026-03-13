@@ -3,23 +3,12 @@ import re
 import logging
 from datetime import timedelta
 from typing import Optional
-import json
 import aiohttp
 
 
-import collections.abc
 from open_webui.env import CHAT_STREAM_RESPONSE_CHUNK_MAX_BUFFER_SIZE
 
 log = logging.getLogger(__name__)
-
-
-def deep_update(d, u):
-    for k, v in u.items():
-        if isinstance(v, collections.abc.Mapping):
-            d[k] = deep_update(d.get(k, {}), v)
-        else:
-            d[k] = v
-    return d
 
 
 def get_message_list(messages_map, message_id):

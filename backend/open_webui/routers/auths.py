@@ -1,5 +1,4 @@
 import re
-import uuid
 import time
 import datetime
 import logging

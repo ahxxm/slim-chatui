@@ -8,8 +8,6 @@ import traceback
 from datetime import datetime, timezone
 from typing import Any
 from pathlib import Path
-import re
-
 
 from open_webui.constants import ERROR_MESSAGES
 
@@ -28,8 +26,6 @@ BACKEND_DIR = OPEN_WEBUI_DIR.parent
 
 # BASE_DIR is the parent of BACKEND_DIR (open-webui-dev/)
 BASE_DIR = BACKEND_DIR.parent
-
-DOCKER = os.environ.get("DOCKER", "False").lower() == "true"
 
 ####################################
 # LOGGING
@@ -86,10 +82,6 @@ else:
 log = logging.getLogger(__name__)
 log.info(f"GLOBAL_LOG_LEVEL: {GLOBAL_LOG_LEVEL}")
 
-WEBUI_FAVICON_URL = "https://openwebui.com/favicon.png"
-
-TRUSTED_SIGNATURE_KEY = os.environ.get("TRUSTED_SIGNATURE_KEY", "")
-
 ####################################
 # ENV (dev,test,prod)
 ####################################
@@ -142,8 +134,6 @@ if FROM_INIT_PY:
 
     DATA_DIR = Path(os.getenv("DATA_DIR", OPEN_WEBUI_DIR / "data"))
 
-STATIC_DIR = Path(os.getenv("STATIC_DIR", OPEN_WEBUI_DIR / "static"))
-
 FRONTEND_BUILD_DIR = Path(os.getenv("FRONTEND_BUILD_DIR", BASE_DIR / "build")).resolve()
 
 if FROM_INIT_PY:
@@ -156,20 +146,6 @@ if FROM_INIT_PY:
 ####################################
 
 DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{DATA_DIR}/webui.db")
-
-####################################
-# UVICORN WORKERS
-####################################
-
-# Number of uvicorn worker processes for handling requests
-UVICORN_WORKERS = os.environ.get("UVICORN_WORKERS", "1")
-try:
-    UVICORN_WORKERS = int(UVICORN_WORKERS)
-    if UVICORN_WORKERS < 1:
-        UVICORN_WORKERS = 1
-except ValueError:
-    UVICORN_WORKERS = 1
-    log.info(f"Invalid UVICORN_WORKERS value, defaulting to {UVICORN_WORKERS}")
 
 ENABLE_GZIP_MIDDLEWARE = (
     os.environ.get("ENABLE_GZIP_MIDDLEWARE", "False").lower() == "true"
@@ -197,26 +173,6 @@ ENABLE_SIGNUP_PASSWORD_CONFIRMATION = (
 WEBUI_ADMIN_EMAIL = os.environ.get("WEBUI_ADMIN_EMAIL", "")
 WEBUI_ADMIN_PASSWORD = os.environ.get("WEBUI_ADMIN_PASSWORD", "")
 WEBUI_ADMIN_NAME = os.environ.get("WEBUI_ADMIN_NAME", "Admin")
-
-ENABLE_PASSWORD_VALIDATION = (
-    os.environ.get("ENABLE_PASSWORD_VALIDATION", "False").lower() == "true"
-)
-PASSWORD_VALIDATION_REGEX_PATTERN = os.environ.get(
-    "PASSWORD_VALIDATION_REGEX_PATTERN",
-    r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$",
-)
-
-
-try:
-    PASSWORD_VALIDATION_REGEX_PATTERN = rf"{PASSWORD_VALIDATION_REGEX_PATTERN}"
-    PASSWORD_VALIDATION_REGEX_PATTERN = re.compile(PASSWORD_VALIDATION_REGEX_PATTERN)
-except Exception as e:
-    log.error(f"Invalid PASSWORD_VALIDATION_REGEX_PATTERN: {e}")
-    PASSWORD_VALIDATION_REGEX_PATTERN = re.compile(
-        r"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}$"
-    )
-
-PASSWORD_VALIDATION_HINT = os.environ.get("PASSWORD_VALIDATION_HINT", "")
 
 
 WEBUI_AUTH_SIGNOUT_REDIRECT_URL = os.environ.get(
@@ -254,15 +210,6 @@ WEBUI_AUTH_COOKIE_SECURE = (
 
 if WEBUI_AUTH and WEBUI_SECRET_KEY == "":
     raise ValueError(ERROR_MESSAGES.ENV_VAR_NOT_FOUND)
-
-####################################
-# MODELS
-####################################
-
-ENABLE_CUSTOM_MODEL_FALLBACK = (
-    os.environ.get("ENABLE_CUSTOM_MODEL_FALLBACK", "False").lower() == "true"
-)
-
 
 ####################################
 # CHAT

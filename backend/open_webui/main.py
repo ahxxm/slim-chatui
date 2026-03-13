@@ -85,7 +85,6 @@ from open_webui.config import (
     AppConfig,
 )
 from open_webui.env import (
-    ENV,
     ENABLE_GZIP_MIDDLEWARE,
     GLOBAL_LOG_LEVEL,
     VERSION,

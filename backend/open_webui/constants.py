@@ -37,14 +37,7 @@ class ERROR_MESSAGES(str, Enum):
     USER_NOT_FOUND = "We could not find what you're looking for :/"
     RATE_LIMIT_EXCEEDED = "API rate limit exceeded"
 
-    MODEL_NOT_FOUND = lambda name="": f"Model '{name}' was not found"
-    OPENAI_NOT_FOUND = lambda name="": "OpenAI API was not found"
-
     EMPTY_CONTENT = "The content provided is empty. Please ensure that there is text or data present before proceeding."
-
-    INVALID_PASSWORD = lambda err="": (
-        err if err else "The password does not meet the required validation criteria."
-    )
 
 
 class TASKS(str, Enum):

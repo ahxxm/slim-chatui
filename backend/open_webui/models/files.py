@@ -214,14 +214,5 @@ class FilesTable:
             except Exception:
                 return False
 
-    def delete_all_files(self, db: Optional[Session] = None) -> bool:
-        with get_db_context(db) as db:
-            try:
-                db.query(File).delete()
-                db.flush()
-                return True
-            except Exception:
-                return False
-
 
 Files = FilesTable()

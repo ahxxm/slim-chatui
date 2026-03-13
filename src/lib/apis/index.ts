@@ -300,7 +300,7 @@ export interface ModelConfig {
 	params: ModelParams;
 }
 
-export interface ModelMeta {
+interface ModelMeta {
 	description?: string;
 	capabilities?: object;
 	hidden?: boolean;
@@ -309,4 +309,4 @@ export interface ModelMeta {
 	tags?: { name: string }[];
 }
 
-export interface ModelParams {}
+interface ModelParams {}

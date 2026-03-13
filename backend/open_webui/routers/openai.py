@@ -1,35 +1,24 @@
 import asyncio
-import hashlib
 import json
 import logging
 from typing import Optional
 
 import aiohttp
 from aiocache import cached
-import requests
-
 from fastapi import Depends, HTTPException, Request, APIRouter
 from fastapi.responses import (
-    FileResponse,
     StreamingResponse,
     JSONResponse,
     PlainTextResponse,
 )
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 
-from open_webui.config import (
-    CACHE_DIR,
-)
 from open_webui.env import (
     AIOHTTP_CLIENT_SESSION_SSL,
     AIOHTTP_CLIENT_TIMEOUT,
     AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST,
 )
 from open_webui.models.users import UserModel
-
-from open_webui.constants import ERROR_MESSAGES
-
-
 from open_webui.utils.misc import (
     cleanup_response,
     stream_chunks_handler,
@@ -264,81 +253,6 @@ async def update_config(
     }
 
 
-@router.post("/audio/speech")
-async def speech(request: Request, user=Depends(get_verified_user)):
-    idx = None
-    try:
-        idx = request.app.state.config.OPENAI_API_BASE_URLS.index(
-            "https://api.openai.com/v1"
-        )
-
-        body = await request.body()
-        name = hashlib.sha256(body).hexdigest()
-
-        SPEECH_CACHE_DIR = CACHE_DIR / "audio" / "speech"
-        SPEECH_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-        file_path = SPEECH_CACHE_DIR.joinpath(f"{name}.mp3")
-        file_body_path = SPEECH_CACHE_DIR.joinpath(f"{name}.json")
-
-        # Check if the file already exists in the cache
-        if file_path.is_file():
-            return FileResponse(file_path)
-
-        url = request.app.state.config.OPENAI_API_BASE_URLS[idx]
-        key = request.app.state.config.OPENAI_API_KEYS[idx]
-        api_config = request.app.state.config.OPENAI_API_CONFIGS.get(
-            str(idx),
-            request.app.state.config.OPENAI_API_CONFIGS.get(url, {}),  # Legacy support
-        )
-
-        headers, cookies = await get_headers_and_cookies(
-            request, url, key, api_config, user=user
-        )
-
-        r = None
-        try:
-            r = requests.post(
-                url=f"{url}/audio/speech",
-                data=body,
-                headers=headers,
-                cookies=cookies,
-                stream=True,
-            )
-
-            r.raise_for_status()
-
-            # Save the streaming content to a file
-            with open(file_path, "wb") as f:
-                for chunk in r.iter_content(chunk_size=8192):
-                    f.write(chunk)
-
-            with open(file_body_path, "w") as f:
-                json.dump(json.loads(body.decode("utf-8")), f)
-
-            # Return the saved file
-            return FileResponse(file_path)
-
-        except Exception as e:
-            log.exception(e)
-
-            detail = None
-            if r is not None:
-                try:
-                    res = r.json()
-                    if "error" in res:
-                        detail = f"External: {res['error']}"
-                except Exception:
-                    detail = f"External: {e}"
-
-            raise HTTPException(
-                status_code=r.status_code if r else 500,
-                detail=detail if detail else "Open WebUI: Server Connection Error",
-            )
-
-    except ValueError:
-        raise HTTPException(status_code=401, detail=ERROR_MESSAGES.OPENAI_NOT_FOUND)
-
-
 async def get_all_models_responses(request: Request) -> list:
     api_base_urls = request.app.state.config.OPENAI_API_BASE_URLS
     api_keys = list(request.app.state.config.OPENAI_API_KEYS)
@@ -361,40 +275,37 @@ async def get_all_models_responses(request: Request) -> list:
     request_tasks = []
     for idx, url in enumerate(api_base_urls):
         model_url = f"{url}/models"
-        if (str(idx) not in api_configs) and (url not in api_configs):  # Legacy support
-            request_tasks.append(send_get_request(model_url, api_keys[idx]))
-        else:
-            api_config = api_configs.get(
-                str(idx),
-                api_configs.get(url, {}),  # Legacy support
-            )
+        api_config = api_configs.get(
+            str(idx),
+            api_configs.get(url, {}),  # Legacy support
+        )
 
-            enable = api_config.get("enable", True)
-            model_ids = api_config.get("model_ids", [])
+        enable = api_config.get("enable", True)
+        model_ids = api_config.get("model_ids", [])
 
-            if enable:
-                if len(model_ids) == 0:
-                    request_tasks.append(send_get_request(model_url, api_keys[idx]))
-                else:
-                    model_list = {
-                        "object": "list",
-                        "data": [
-                            {
-                                "id": model_id,
-                                "name": model_id,
-                                "owned_by": "openai",
-                                "openai": {"id": model_id},
-                                "urlIdx": idx,
-                            }
-                            for model_id in model_ids
-                        ],
-                    }
-
-                    request_tasks.append(
-                        asyncio.ensure_future(asyncio.sleep(0, model_list))
-                    )
+        if enable:
+            if len(model_ids) == 0:
+                request_tasks.append(send_get_request(model_url, api_keys[idx]))
             else:
-                request_tasks.append(asyncio.ensure_future(asyncio.sleep(0, None)))
+                model_list = {
+                    "object": "list",
+                    "data": [
+                        {
+                            "id": model_id,
+                            "name": model_id,
+                            "owned_by": "openai",
+                            "openai": {"id": model_id},
+                            "urlIdx": idx,
+                        }
+                        for model_id in model_ids
+                    ],
+                }
+
+                request_tasks.append(
+                    asyncio.ensure_future(asyncio.sleep(0, model_list))
+                )
+        else:
+            request_tasks.append(asyncio.ensure_future(asyncio.sleep(0, None)))
 
     responses = await asyncio.gather(*request_tasks)
 
@@ -562,10 +473,6 @@ async def verify_connection(
         cookies=cookies,
         timeout=AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST,
     )
-
-
-def is_openai_reasoning_model(model: str) -> bool:
-    return model.lower().startswith(("o1", "o3", "o4", "gpt-5"))
 
 
 def convert_to_responses_payload(payload: dict) -> dict:
@@ -758,63 +665,3 @@ async def generate_chat_completion(
         response = convert_responses_result(response)
 
     return response
-
-
-class ResponsesForm(BaseModel):
-    model_config = ConfigDict(extra="allow")
-
-    model: str
-    input: Optional[list | str] = None
-    instructions: Optional[str] = None
-    stream: Optional[bool] = None
-    tools: Optional[list] = None
-    tool_choice: Optional[str | dict] = None
-    text: Optional[dict] = None
-    truncation: Optional[str] = None
-    metadata: Optional[dict] = None
-    store: Optional[bool] = None
-    reasoning: Optional[dict] = None
-    previous_response_id: Optional[str] = None
-
-
-@router.post("/responses")
-async def responses(
-    request: Request,
-    form_data: ResponsesForm,
-    user=Depends(get_verified_user),
-):
-    """
-    Forward requests to the OpenAI Responses API endpoint.
-    Routes to the correct upstream backend based on the model field.
-    """
-    payload = form_data.model_dump(exclude_none=True)
-    body = json.dumps(payload)
-
-    idx = 0
-    model_id = form_data.model
-    if model_id:
-        models = request.app.state.OPENAI_MODELS
-        if not models or model_id not in models:
-            await get_all_models(request, user=user)
-            models = request.app.state.OPENAI_MODELS
-        if model_id in models:
-            idx = models[model_id]["urlIdx"]
-
-    url = request.app.state.config.OPENAI_API_BASE_URLS[idx]
-    key = request.app.state.config.OPENAI_API_KEYS[idx]
-    api_config = request.app.state.config.OPENAI_API_CONFIGS.get(
-        str(idx),
-        request.app.state.config.OPENAI_API_CONFIGS.get(url, {}),  # Legacy support
-    )
-
-    headers, cookies = await get_headers_and_cookies(
-        request, url, key, api_config, user=user
-    )
-
-    return await _proxy_request(
-        method="POST",
-        url=f"{url}/responses",
-        data=body,
-        headers=headers,
-        cookies=cookies,
-    )

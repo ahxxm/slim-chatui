@@ -180,7 +180,7 @@ type PromptSuggestion = {
 	title: [string, string];
 };
 
-export type SessionUser = {
+type SessionUser = {
 	id: string;
 	email: string;
 	name: string;

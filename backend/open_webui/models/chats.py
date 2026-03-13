@@ -1,11 +1,10 @@
 import logging
-import json
 import time
 import uuid
 from typing import Optional
 
 from sqlalchemy.orm import Session
-from open_webui.internal.db import Base, JSONField, get_db, get_db_context
+from open_webui.internal.db import Base, get_db_context
 from open_webui.models.folders import Folders
 from open_webui.models.chat_messages import ChatMessage, ChatMessages
 from open_webui.utils.misc import sanitize_data_for_db, sanitize_text_for_db
@@ -22,7 +21,7 @@ from sqlalchemy import (
     Index,
     UniqueConstraint,
 )
-from sqlalchemy import or_, func, select, and_, text
+from sqlalchemy import or_, and_, text
 from sqlalchemy.sql import exists
 from sqlalchemy.sql.expression import bindparam
 
@@ -134,10 +133,6 @@ class ChatImportForm(ChatForm):
 
 class ChatsImportForm(BaseModel):
     chats: list[ChatImportForm]
-
-
-class ChatTitleForm(BaseModel):
-    title: str
 
 
 class ChatResponse(BaseModel):
