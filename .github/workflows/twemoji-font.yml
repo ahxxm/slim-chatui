@@ -37,7 +37,10 @@ jobs:
           cd /tmp/twemoji-*/assets/svg && zip -j /tmp/twemoji-colr/twe-svg.zip *.svg
 
       - if: steps.check.outputs.skip != 'true'
-        run: sudo apt-get update && sudo apt-get install -y fontforge python3-fontforge python3-fonttools
+        run: |
+          sudo apt-get update && sudo apt-get install -y fontforge python3-fontforge
+          sudo pip install fonttools
+          which ttx
 
       - if: steps.check.outputs.skip != 'true'
         uses: actions/setup-node@v4
