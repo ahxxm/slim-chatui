@@ -12,6 +12,12 @@
 	font-display: swap;
 }
 
+@font-face {
+	font-family: 'Twemoji';
+	src: url('/assets/fonts/twemoji-colr.woff2') format('woff2');
+	font-display: swap;
+}
+
 /* --app-text-scale is updated via the UI Scale slider (Interface.svelte) */
 :root {
 	--app-text-scale: 1;

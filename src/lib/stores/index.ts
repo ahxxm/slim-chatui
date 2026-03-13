@@ -38,6 +38,10 @@ export const shortCodesToEmojis = writable(
 	)
 );
 
+export function codePointToEmoji(hex: string): string {
+	return String.fromCodePoint(...hex.split('-').map((cp) => parseInt(cp, 16)));
+}
+
 export const chatId = writable('');
 export const chatTitle = writable('');
 
@@ -155,7 +159,6 @@ type Config = {
 	version: string;
 	default_models: string;
 	default_prompt_suggestions: PromptSuggestion[];
-	onboarding?: boolean;
 	features: {
 		auth: boolean;
 		enable_signup: boolean;

@@ -615,13 +615,8 @@ async def get_app_config(request: Request):
             user = Users.get_user_by_id(data["id"])
 
     user_count = Users.get_num_users()
-    onboarding = False
-
-    if user is None:
-        onboarding = user_count == 0
 
     return {
-        **({"onboarding": True} if onboarding else {}),
         "status": True,
         "name": app.state.WEBUI_NAME,
         "version": VERSION,
