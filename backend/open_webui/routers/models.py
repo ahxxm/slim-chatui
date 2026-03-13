@@ -1,5 +1,4 @@
 from typing import Optional
-import json
 import logging
 
 from open_webui.models.models import (

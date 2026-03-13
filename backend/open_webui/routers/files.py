@@ -30,7 +30,7 @@ from open_webui.models.files import (
 )
 from open_webui.storage.provider import Storage
 
-from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.auth import get_verified_user
 from open_webui.utils.route import route_error_handler
 
 log = logging.getLogger(__name__)
@@ -162,26 +162,6 @@ async def search_files(
         )
 
     return files
-
-
-############################
-# Delete All Files
-############################
-
-
-@router.delete("/all")
-async def delete_all_files(
-    user=Depends(get_admin_user),
-):
-    result = Files.delete_all_files()
-    if not result:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.DEFAULT("Error deleting files"),
-        )
-
-    Storage.delete_all_files()
-    return {"message": "All files deleted successfully"}
 
 
 ############################

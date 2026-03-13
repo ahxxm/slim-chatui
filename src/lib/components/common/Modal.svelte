@@ -6,7 +6,6 @@
 	let {
 		show = $bindable(true),
 		size = 'md',
-		containerClassName = 'p-3',
 		className = 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-4xl'
 	} = $props();
 
@@ -54,12 +53,7 @@
 	$effect(() => {
 		if (show && modalElement) {
 			focusTrap = FocusTrap.createFocusTrap(modalElement, {
-				allowOutsideClick: (e) => {
-					return (
-						e.target.closest('[data-sonner-toast]') !== null ||
-						e.target.closest('.modal-content') === null
-					);
-				}
+				allowOutsideClick: true
 			});
 			focusTrap.activate();
 			window.addEventListener('keydown', handleKeyDown);
@@ -83,7 +77,7 @@
 		bind:this={modalElement}
 		aria-modal="true"
 		role="dialog"
-		class="modal fixed top-0 right-0 left-0 bottom-0 bg-black/30 dark:bg-black/60 w-full h-screen max-h-[100dvh] {containerClassName}  flex justify-center z-9999 overflow-y-auto overscroll-contain"
+		class="modal fixed top-0 right-0 left-0 bottom-0 bg-black/30 dark:bg-black/60 w-full h-screen max-h-[100dvh] p-3 flex justify-center z-9999 overflow-y-auto overscroll-contain"
 		style="scrollbar-gutter: stable;"
 		transition:fade={{ duration: 100 }}
 		onmousedown={() => {
@@ -103,20 +97,3 @@
 		</div>
 	</div>
 {/if}
-
-<style>
-	.modal-content {
-		animation: scaleUp 0.1s ease-out forwards;
-	}
-
-	@keyframes scaleUp {
-		from {
-			transform: scale(0.985);
-			opacity: 0;
-		}
-		to {
-			transform: scale(1);
-			opacity: 1;
-		}
-	}
-</style>

@@ -1,4 +1,3 @@
-import json
 import logging
 from typing import Optional
 
@@ -12,8 +11,6 @@ from open_webui.models.chats import (
     Chats,
     ChatTitleIdResponse,
 )
-from open_webui.models.folders import Folders
-
 from open_webui.constants import ERROR_MESSAGES
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel

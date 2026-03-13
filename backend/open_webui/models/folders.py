@@ -6,10 +6,10 @@ import re
 
 
 from pydantic import BaseModel, ConfigDict
-from sqlalchemy import BigInteger, Column, Text, JSON, Boolean, func
+from sqlalchemy import BigInteger, Column, Text, JSON, Boolean
 from sqlalchemy.orm import Session
 
-from open_webui.internal.db import Base, JSONField, get_db, get_db_context
+from open_webui.internal.db import Base, get_db_context
 
 log = logging.getLogger(__name__)
 
