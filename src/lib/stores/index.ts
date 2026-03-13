@@ -159,7 +159,6 @@ type Config = {
 	version: string;
 	default_models: string;
 	default_prompt_suggestions: PromptSuggestion[];
-	onboarding?: boolean;
 	features: {
 		auth: boolean;
 		enable_signup: boolean;
