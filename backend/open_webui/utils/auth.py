@@ -86,7 +86,7 @@ def get_http_authorization_cred(auth_header: Optional[str]):
         return None
 
 
-async def get_current_user(
+def get_current_user(
     request: Request,
     response: Response,
     background_tasks: BackgroundTasks,
