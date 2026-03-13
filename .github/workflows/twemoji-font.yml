@@ -1,5 +1,7 @@
-name: Build Twemoji Color Font
+name: Build Twemoji Color Font Monthly
 on:
+  schedule:
+    - cron: '0 0 1 * *'
   push:
     paths:
       - '.github/workflows/twemoji-font.yml'
@@ -12,7 +14,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - id: twemoji
         run: |
@@ -21,12 +23,11 @@ jobs:
 
       - id: check
         run: |
+          TAG=${{ steps.twemoji.outputs.tag }}
           EXISTING=$(gh release view twemoji-colr-font --json assets -q '.assets[].name' 2>/dev/null || echo "")
-          DATE=$(date +%Y%m%d)
-          if echo "$EXISTING" | grep -q "$DATE"; then
+          if echo "$EXISTING" | grep -q "$TAG"; then
             echo "skip=true" >> $GITHUB_OUTPUT
           fi
-          echo "date=$DATE" >> $GITHUB_OUTPUT
         env:
           GH_TOKEN: ${{ github.token }}
 
@@ -43,7 +44,7 @@ jobs:
           which ttx
 
       - if: steps.check.outputs.skip != 'true'
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
 
@@ -56,27 +57,27 @@ jobs:
       - if: steps.check.outputs.skip != 'true'
         working-directory: /tmp/twemoji-colr
         run: |
+          TAG=${{ steps.twemoji.outputs.tag }}
           node -e "
             const fs = require('fs');
             const ttf2woff2 = require('ttf2woff2');
-            const date = '${{ steps.check.outputs.date }}';
-            fs.writeFileSync('build/twemoji-colr-font-' + date + '.woff2',
+            const tag = '${{ steps.twemoji.outputs.tag }}';
+            fs.writeFileSync('build/twemoji-colr-font-' + tag + '.woff2',
               ttf2woff2(fs.readFileSync('build/Twemoji Mozilla.ttf')));
           "
-          DATE=${{ steps.check.outputs.date }}
-          cp "build/Twemoji Mozilla.ttf" "build/twemoji-colr-font-${DATE}.ttf"
+          cp "build/Twemoji Mozilla.ttf" "build/twemoji-colr-font-${TAG}.ttf"
 
       - if: steps.check.outputs.skip != 'true'
         run: |
-          DATE=${{ steps.check.outputs.date }}
+          TAG=${{ steps.twemoji.outputs.tag }}
           gh release upload twemoji-colr-font \
-            "/tmp/twemoji-colr/build/twemoji-colr-font-${DATE}.ttf" \
-            "/tmp/twemoji-colr/build/twemoji-colr-font-${DATE}.woff2" \
+            "/tmp/twemoji-colr/build/twemoji-colr-font-${TAG}.ttf" \
+            "/tmp/twemoji-colr/build/twemoji-colr-font-${TAG}.woff2" \
             --clobber 2>/dev/null || \
           gh release create twemoji-colr-font \
             --title "twemoji-colr-font" \
             --notes "COLRv0/CPAL color font built from jdecked/twemoji." \
-            "/tmp/twemoji-colr/build/twemoji-colr-font-${DATE}.ttf" \
-            "/tmp/twemoji-colr/build/twemoji-colr-font-${DATE}.woff2"
+            "/tmp/twemoji-colr/build/twemoji-colr-font-${TAG}.ttf" \
+            "/tmp/twemoji-colr/build/twemoji-colr-font-${TAG}.woff2"
         env:
           GH_TOKEN: ${{ github.token }}
