@@ -1,0 +1,81 @@
+name: Build Twemoji Color Font Monthly
+on:
+  schedule:
+    - cron: '0 0 1 * *'
+  push:
+    paths:
+      - '.github/workflows/twemoji-font.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.twemoji.outputs.tag }}
+      skip: ${{ steps.twemoji.outputs.skip }}
+    steps:
+      - id: twemoji
+        run: |
+          TAG=$(curl -s https://api.github.com/repos/jdecked/twemoji/releases/latest | jq -r .tag_name)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          EXISTING=$(gh release view twemoji-colr-font --json assets -q '.assets[].name' 2>/dev/null || echo "")
+          if echo "$EXISTING" | grep -q "$TAG"; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+  build:
+    needs: check
+    if: needs.check.outputs.skip != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+
+      - run: |
+          sudo apt-get update && sudo apt-get install -y fontforge python3-fontforge
+          sudo pip install fonttools
+          which ttx
+
+      - run: |
+          TAG=${{ needs.check.outputs.tag }}
+          git clone --depth 1 -b matthew/sbix https://github.com/matrix-org/twemoji-colr.git /tmp/twemoji-colr
+          curl -L "https://github.com/jdecked/twemoji/archive/${TAG}.tar.gz" | tar xz -C /tmp
+          cd /tmp/twemoji-*/assets/svg && zip -j /tmp/twemoji-colr/twe-svg.zip *.svg
+
+      - working-directory: /tmp/twemoji-colr
+        run: |
+          npm install
+          make PYTHON=/usr/bin/python3
+
+      - working-directory: /tmp/twemoji-colr
+        run: |
+          TAG=${{ needs.check.outputs.tag }}
+          node -e "
+            const fs = require('fs');
+            const ttf2woff2 = require('ttf2woff2');
+            fs.writeFileSync('build/twemoji-colr-font-${TAG}.woff2',
+              ttf2woff2(fs.readFileSync('build/Twemoji Mozilla.ttf')));
+          "
+          cp "build/Twemoji Mozilla.ttf" "build/twemoji-colr-font-${TAG}.ttf"
+
+      - run: |
+          TAG=${{ needs.check.outputs.tag }}
+          gh release upload twemoji-colr-font \
+            "/tmp/twemoji-colr/build/twemoji-colr-font-${TAG}.ttf" \
+            "/tmp/twemoji-colr/build/twemoji-colr-font-${TAG}.woff2" \
+            --clobber 2>/dev/null || \
+          gh release create twemoji-colr-font \
+            --title "twemoji-colr-font" \
+            --notes "COLRv0/CPAL color font built from jdecked/twemoji." \
+            "/tmp/twemoji-colr/build/twemoji-colr-font-${TAG}.ttf" \
+            "/tmp/twemoji-colr/build/twemoji-colr-font-${TAG}.woff2"
+        env:
+          GH_TOKEN: ${{ github.token }}
