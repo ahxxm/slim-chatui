@@ -17,7 +17,7 @@ ENV APP_BUILD_HASH=${BUILD_HASH}
 RUN npm run build
 
 ######## Backend ########
-FROM python:3.12-alpine AS base
+FROM python:3.14-alpine AS base
 
 RUN apk add --no-cache bash
 
@@ -39,7 +39,7 @@ RUN pip3 install --no-cache-dir uv && \
     uv pip install --system --no-cache-dir -r /tmp/requirements.txt && \
     pip3 uninstall -y uv pip && \
     rm /tmp/requirements.txt && \
-    python3 -m compileall -q /usr/local/lib/python3.12/site-packages/ && \
+    python3 -m compileall -q /usr/local/lib/python3.14/site-packages/ && \
     mkdir -p /app/backend/data
 
 EXPOSE 8080
