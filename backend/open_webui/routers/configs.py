@@ -19,7 +19,7 @@ class ImportConfigForm(BaseModel):
 
 
 @router.post("/import", response_model=dict)
-async def import_config(form_data: ImportConfigForm, user=Depends(get_admin_user)):
+def import_config(form_data: ImportConfigForm, user=Depends(get_admin_user)):
     save_config(form_data.config)
     return get_config()
 
@@ -30,7 +30,7 @@ async def import_config(form_data: ImportConfigForm, user=Depends(get_admin_user
 
 
 @router.get("/export", response_model=dict)
-async def export_config(user=Depends(get_admin_user)):
+def export_config(user=Depends(get_admin_user)):
     return get_config()
 
 
@@ -43,7 +43,7 @@ class ModelsConfigForm(BaseModel):
 
 
 @router.get("/models", response_model=ModelsConfigForm)
-async def get_models_config(request: Request, user=Depends(get_admin_user)):
+def get_models_config(request: Request, user=Depends(get_admin_user)):
     return {
         "DEFAULT_MODELS": request.app.state.config.DEFAULT_MODELS,
         "DEFAULT_MODEL_METADATA": request.app.state.config.DEFAULT_MODEL_METADATA,
@@ -51,7 +51,7 @@ async def get_models_config(request: Request, user=Depends(get_admin_user)):
 
 
 @router.post("/models", response_model=ModelsConfigForm)
-async def set_models_config(
+def set_models_config(
     request: Request,
     form_data: ModelsConfigForm,
     user=Depends(get_admin_user),
@@ -75,7 +75,7 @@ class SetDefaultSuggestionsForm(BaseModel):
 
 
 @router.post("/suggestions", response_model=list[PromptSuggestion])
-async def set_default_suggestions(
+def set_default_suggestions(
     request: Request,
     form_data: SetDefaultSuggestionsForm,
     user=Depends(get_admin_user),

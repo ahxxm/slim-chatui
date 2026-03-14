@@ -120,7 +120,7 @@ def upload_file_handler(
 
 
 @router.get("/", response_model=list[FileModelResponse])
-async def list_files(
+def list_files(
     user=Depends(get_verified_user),
 ):
     if user.role == "admin":
@@ -135,7 +135,7 @@ async def list_files(
 
 
 @router.get("/search", response_model=list[FileModelResponse])
-async def search_files(
+def search_files(
     filename: str = Query(
         ...,
         description="Filename pattern to search for. Supports wildcards such as '*.txt'",
@@ -170,7 +170,7 @@ async def search_files(
 
 
 @router.get("/{id}", response_model=Optional[FileModel])
-async def get_file_by_id(id: str, user=Depends(get_verified_user)):
+def get_file_by_id(id: str, user=Depends(get_verified_user)):
     file = Files.get_file_by_id(id)
 
     if not file:
@@ -195,7 +195,7 @@ async def get_file_by_id(id: str, user=Depends(get_verified_user)):
 
 @router.get("/{id}/content")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error getting file content"))
-async def get_file_content_by_id(
+def get_file_content_by_id(
     id: str,
     user=Depends(get_verified_user),
     attachment: bool = Query(False),
@@ -242,7 +242,7 @@ async def get_file_content_by_id(
 
 @router.get("/{id}/content/html")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error getting file content"))
-async def get_html_file_content_by_id(id: str, user=Depends(get_verified_user)):
+def get_html_file_content_by_id(id: str, user=Depends(get_verified_user)):
     file = Files.get_file_by_id(id)
     if not file:
         raise HTTPException(
@@ -275,7 +275,7 @@ async def get_html_file_content_by_id(id: str, user=Depends(get_verified_user)):
 
 
 @router.get("/{id}/content/{file_name}")
-async def get_file_content_by_id_and_name(id: str, user=Depends(get_verified_user)):
+def get_file_content_by_id_and_name(id: str, user=Depends(get_verified_user)):
     file = Files.get_file_by_id(id)
 
     if not file:
@@ -312,7 +312,7 @@ async def get_file_content_by_id_and_name(id: str, user=Depends(get_verified_use
 
 
 @router.delete("/{id}")
-async def delete_file_by_id(id: str, user=Depends(get_verified_user)):
+def delete_file_by_id(id: str, user=Depends(get_verified_user)):
     file = Files.get_file_by_id(id)
     if not file:
         raise HTTPException(

@@ -16,12 +16,12 @@ router = APIRouter()
 
 
 @router.get("/gravatar")
-async def get_gravatar(email: str, user=Depends(get_verified_user)):
+def get_gravatar(email: str, user=Depends(get_verified_user)):
     return get_gravatar_url(email)
 
 
 @router.get("/db/download")
-async def download_db(user=Depends(get_admin_user)):
+def download_db(user=Depends(get_admin_user)):
     from open_webui.internal.db import backup_db
 
     backup_path = backup_db()
