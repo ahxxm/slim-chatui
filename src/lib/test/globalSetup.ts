@@ -23,7 +23,7 @@ export async function setup() {
 	await rm(TMP_ROOT, { recursive: true, force: true });
 	await mkdir(DATA_DIR, { recursive: true });
 
-	server = spawn('uv', ['run', 'uvicorn', 'open_webui.main:app', '--port', String(PORT)], {
+	server = spawn('uv', ['run', 'hypercorn', 'open_webui.main:app', '--bind', `0.0.0.0:${PORT}`], {
 		cwd: 'backend',
 		env: {
 			...process.env,

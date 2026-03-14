@@ -167,13 +167,11 @@ export const updateTaskConfig = async (token: string, config: object) => {
 };
 
 export const generateTitle = async (
-	token: string = '',
+	token: string,
 	model: string,
 	messages: object[],
 	chat_id?: string
-) => {
-	let error = null;
-
+): Promise<string | null> => {
 	const res = await fetch(`${WEBUI_BASE_URL}/api/v1/tasks/title/completions`, {
 		method: 'POST',
 		headers: {
@@ -181,115 +179,45 @@ export const generateTitle = async (
 			'Content-Type': 'application/json',
 			Authorization: `Bearer ${token}`
 		},
-		body: JSON.stringify({
-			model: model,
-			messages: messages,
-			...(chat_id && { chat_id: chat_id })
-		})
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			if ('detail' in err) {
-				error = err.detail;
-			}
-			return null;
-		});
+		body: JSON.stringify({ model, messages, ...(chat_id && { chat_id }) })
+	});
 
-	if (error) {
-		throw error;
+	if (!res.ok) {
+		const err = await res.json().catch(() => ({}));
+		throw err.detail || 'Failed to generate title';
 	}
 
-	try {
-		// Step 1: Safely extract the response string
-		const response = res?.choices[0]?.message?.content ?? '';
-
-		// Step 2: Attempt to fix common JSON format issues like single quotes
-		const sanitizedResponse = response.replace(/['‘’`]/g, '"'); // Convert single quotes to double quotes for valid JSON
-
-		// Step 3: Find the relevant JSON block within the response
-		const jsonStartIndex = sanitizedResponse.indexOf('{');
-		const jsonEndIndex = sanitizedResponse.lastIndexOf('}');
-
-		// Step 4: Check if we found a valid JSON block (with both `{` and `}`)
-		if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
-			const jsonResponse = sanitizedResponse.substring(jsonStartIndex, jsonEndIndex + 1);
-
-			// Step 5: Parse the JSON block
-			const parsed = JSON.parse(jsonResponse);
-
-			// Step 6: If there's a "title" key, return it; otherwise, return null
-			if (parsed && parsed.title) {
-				return parsed.title;
-			} else {
-				return null;
-			}
-		}
-
-		// If no valid JSON block found, return an empty array
-		return null;
-	} catch (e) {
-		// Catch and safely return empty array on any parsing errors
-		console.error('Failed to parse response: ', e);
-		return null;
-	}
+	const data = await res.json();
+	return data.title || null;
 };
 
 export const getBackendConfig = async () => {
-	let error = null;
-
 	const res = await fetch(`${WEBUI_BASE_URL}/api/config`, {
 		method: 'GET',
 		credentials: 'include',
-		headers: {
-			'Content-Type': 'application/json'
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
+		headers: { 'Content-Type': 'application/json' }
+	});
 
-	if (error) {
-		throw error;
+	if (!res.ok) {
+		const err = await res.json().catch(() => ({}));
+		throw err.detail || 'Failed to fetch backend config';
 	}
 
-	return res;
+	return res.json();
 };
 
 export const getVersion = async (token: string) => {
-	let error = null;
-
 	const res = await fetch(`${WEBUI_BASE_URL}/api/version`, {
 		method: 'GET',
-		headers: {
-			'Content-Type': 'application/json',
-			Authorization: `Bearer ${token}`
-		}
-	})
-		.then(async (res) => {
-			if (!res.ok) throw await res.json();
-			return res.json();
-		})
-		.catch((err) => {
-			console.error(err);
-			error = err;
-			return null;
-		});
+		headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+	});
 
-	if (error) {
-		throw error;
+	if (!res.ok) {
+		const err = await res.json().catch(() => ({}));
+		throw err.detail || 'Failed to fetch version';
 	}
 
-	return res;
+	return res.json();
 };
 
 export interface ModelConfig {

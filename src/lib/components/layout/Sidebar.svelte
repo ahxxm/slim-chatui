@@ -769,22 +769,10 @@
 						selectedFolder.set(null);
 					}}
 					ondrop={async (data) => {
-						const { type, id, item } = data;
+						const { type, id } = data;
 
 						if (type === 'chat') {
-							let chat = await getChatById(localStorage.token, id).catch(() => null);
-							if (!chat && item) {
-								chat = await importChats(localStorage.token, [
-									{
-										chat: item.chat,
-										meta: item?.meta ?? {},
-										pinned: false,
-										folder_id: null,
-										created_at: item?.created_at ?? null,
-										updated_at: item?.updated_at ?? null
-									}
-								]);
-							}
+							const chat = await getChatById(localStorage.token, id).catch(() => null);
 
 							if (chat) {
 								console.log(chat);
@@ -813,22 +801,10 @@
 									id="sidebar-pinned-chats"
 									buttonClassName=" text-gray-500"
 									ondrop={async (data) => {
-										const { type, id, item } = data;
+										const { type, id } = data;
 
 										if (type === 'chat') {
-											let chat = await getChatById(localStorage.token, id).catch(() => null);
-											if (!chat && item) {
-												chat = await importChats(localStorage.token, [
-													{
-														chat: item.chat,
-														meta: item?.meta ?? {},
-														pinned: false,
-														folder_id: null,
-														created_at: item?.created_at ?? null,
-														updated_at: item?.updated_at ?? null
-													}
-												]);
-											}
+											const chat = await getChatById(localStorage.token, id).catch(() => null);
 
 											if (chat) {
 												console.log(chat);

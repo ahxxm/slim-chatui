@@ -5,6 +5,7 @@ from pydantic import BaseModel
 import logging
 
 from open_webui.routers.openai import generate_chat_completion
+from open_webui.utils.response import parse_task_json
 from open_webui.utils.task import (
     title_generation_template,
     follow_up_generation_template,
@@ -119,9 +120,9 @@ async def generate_title(
     request: Request, form_data: dict, user=Depends(get_verified_user)
 ):
     if not request.app.state.config.ENABLE_TITLE_GENERATION:
-        return JSONResponse(
-            status_code=status.HTTP_200_OK,
-            content={"detail": "Title generation is disabled"},
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Title generation is disabled",
         )
 
     template = (
@@ -130,13 +131,21 @@ async def generate_title(
     )
     content = title_generation_template(template, form_data["messages"])
 
-    return await _run_task(
+    response = await _run_task(
         request,
         form_data,
         user,
         task_type=TASKS.TITLE_GENERATION,
         content=content,
     )
+
+    title = parse_task_json(response, "title", "")
+    if not title:
+        raise HTTPException(
+            status_code=502, detail="Could not parse title from model response"
+        )
+
+    return {"title": title}
 
 
 @router.post("/follow_up/completions")

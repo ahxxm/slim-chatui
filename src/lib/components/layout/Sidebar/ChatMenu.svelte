@@ -6,7 +6,7 @@
 
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
-	import Pencil from '$lib/components/icons/Pencil.svelte';
+	import Sparkles from '$lib/components/icons/Sparkles.svelte';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import DocumentDuplicate from '$lib/components/icons/DocumentDuplicate.svelte';
 	import Bookmark from '$lib/components/icons/Bookmark.svelte';
@@ -151,7 +151,7 @@
 					renameHandler();
 				}}
 			>
-				<Pencil strokeWidth="1.5" />
+				<Sparkles strokeWidth="1.5" />
 				<div class="flex items-center">{$i18n.t('Rename')}</div>
 			</DropdownMenu.Item>
 
