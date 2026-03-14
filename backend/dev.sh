@@ -8,9 +8,6 @@ if [[ "$1" == "--fresh" ]]; then
     rm -f "$BACKEND_DIR/data/webui.db"
 fi
 
-uv run --directory "$BACKEND_DIR" uvicorn open_webui.main:app \
-    --host 0.0.0.0 \
-    --port "$PORT" \
-    --timeout-keep-alive 75 \
-    --forwarded-allow-ips '*' \
+uv run --directory "$BACKEND_DIR" hypercorn open_webui.main:app \
+    --bind "0.0.0.0:$PORT" \
     --reload
