@@ -26,8 +26,9 @@ fi
 
 PYTHON_CMD=$(command -v python3 || command -v python)
 
+# worker_func(config, sockets) instead of spawn
 WEBUI_SECRET_KEY="$WEBUI_SECRET_KEY" exec "$PYTHON_CMD" -m hypercorn open_webui.main:app \
     --bind "$HOST:$PORT" \
-    --workers 1 \
+    --workers 0 \
     --keep-alive 75 \
     "$@"
