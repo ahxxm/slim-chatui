@@ -33,7 +33,7 @@ router = APIRouter()
 
 
 @router.get("/", response_model=list[FolderNameIdResponse])
-async def get_folders(
+def get_folders(
     request: Request,
     user=Depends(get_verified_user),
 ):
@@ -91,7 +91,7 @@ def create_folder(
 
 
 @router.get("/{id}", response_model=Optional[FolderModel])
-async def get_folder_by_id(id: str, user=Depends(get_verified_user)):
+def get_folder_by_id(id: str, user=Depends(get_verified_user)):
     folder = Folders.get_folder_by_id_and_user_id(id, user.id)
     if not folder:
         raise HTTPException(
@@ -109,7 +109,7 @@ async def get_folder_by_id(id: str, user=Depends(get_verified_user)):
 
 @router.post("/{id}/update")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error updating folder"))
-async def update_folder_name_by_id(
+def update_folder_name_by_id(
     id: str,
     form_data: FolderUpdateForm,
     user=Depends(get_verified_user),
@@ -145,7 +145,7 @@ class FolderIsExpandedForm(BaseModel):
 
 @router.post("/{id}/update/expanded")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error updating folder"))
-async def update_folder_is_expanded_by_id(
+def update_folder_is_expanded_by_id(
     id: str,
     form_data: FolderIsExpandedForm,
     user=Depends(get_verified_user),
@@ -169,7 +169,7 @@ async def update_folder_is_expanded_by_id(
 
 @router.delete("/{id}")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error deleting folder"))
-async def delete_folder_by_id(
+def delete_folder_by_id(
     id: str,
     delete_contents: Optional[bool] = True,
     user=Depends(get_verified_user),

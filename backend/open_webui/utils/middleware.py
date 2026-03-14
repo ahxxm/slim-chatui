@@ -883,7 +883,7 @@ async def background_tasks_handler(ctx):
                 },
                 user,
             )
-            title = parse_task_json(res, "title", "")
+            title = res.get("title", "")
         except Exception as e:
             log.error(f"title generation failed: {e}")
             title = ""

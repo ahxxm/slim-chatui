@@ -118,7 +118,7 @@ class SessionUserResponse(Token, UserProfileImageResponse):
 
 
 @router.get("/", response_model=SessionUserResponse)
-async def get_session_user(
+def get_session_user(
     request: Request,
     response: Response,
     user=Depends(get_current_user),
@@ -171,7 +171,7 @@ async def get_session_user(
 
 
 @router.post("/update/profile", response_model=UserProfileImageResponse)
-async def update_profile(
+def update_profile(
     form_data: UpdateProfileForm,
     session_user=Depends(get_verified_user),
 ):
@@ -191,7 +191,7 @@ async def update_profile(
 
 
 @router.post("/update/password", response_model=bool)
-async def update_password(
+def update_password(
     form_data: UpdatePasswordForm,
     session_user=Depends(get_current_user),
 ):
@@ -213,7 +213,7 @@ async def update_password(
 
 
 @router.post("/signin", response_model=SessionUserResponse)
-async def signin(
+def signin(
     request: Request,
     response: Response,
     form_data: SigninForm,
@@ -308,7 +308,7 @@ def signup_handler(
 @route_error_handler(
     detail="An internal error occurred during signup.", status_code=500
 )
-async def signup(
+def signup(
     request: Request,
     response: Response,
     form_data: SignupForm,
@@ -349,7 +349,7 @@ async def signup(
 
 
 @router.get("/signout")
-async def signout(request: Request, response: Response):
+def signout(request: Request, response: Response):
     response.delete_cookie("token")
 
     if WEBUI_AUTH_SIGNOUT_REDIRECT_URL:
@@ -376,7 +376,7 @@ async def signout(request: Request, response: Response):
 @route_error_handler(
     detail="An internal error occurred while adding the user.", status_code=500
 )
-async def add_user(
+def add_user(
     request: Request,
     form_data: AddUserForm,
     user=Depends(get_admin_user),
@@ -421,7 +421,7 @@ async def add_user(
 
 
 @router.get("/admin/details")
-async def get_admin_details(request: Request, user=Depends(get_current_user)):
+def get_admin_details(request: Request, user=Depends(get_current_user)):
     admin_email = request.app.state.config.ADMIN_EMAIL
     admin_name = None
 
@@ -449,7 +449,7 @@ async def get_admin_details(request: Request, user=Depends(get_current_user)):
 
 
 @router.get("/admin/config")
-async def get_admin_config(request: Request, user=Depends(get_admin_user)):
+def get_admin_config(request: Request, user=Depends(get_admin_user)):
     return {
         "ADMIN_EMAIL": request.app.state.config.ADMIN_EMAIL,
         "WEBUI_URL": request.app.state.config.WEBUI_URL,
@@ -468,7 +468,7 @@ class AdminConfig(BaseModel):
 
 
 @router.post("/admin/config")
-async def update_admin_config(
+def update_admin_config(
     request: Request,
     form_data: AdminConfig,
     user=Depends(get_admin_user),

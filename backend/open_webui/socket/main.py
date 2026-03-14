@@ -1,5 +1,6 @@
 import asyncio
 
+import anyio.to_thread
 import socketio
 import logging
 import sys
@@ -168,6 +169,49 @@ async def disconnect(sid):
         del SESSION_POOL[sid]
 
 
+def _persist_event(chat_id, message_id, event_data):
+    """Called via anyio.to_thread to keep DB writes off the event loop."""
+    event_type = event_data.get("type")
+
+    if event_type == "status":
+        Chats.add_message_status_to_chat_by_id_and_message_id(
+            chat_id, message_id, event_data.get("data", {})
+        )
+
+    elif event_type == "message":
+        message = Chats.get_message_by_id_and_message_id(chat_id, message_id)
+        if message:
+            content = message.get("content", "")
+            content += event_data.get("data", {}).get("content", "")
+            Chats.upsert_message_to_chat_by_id_and_message_id(
+                chat_id, message_id, {"content": content}
+            )
+
+    elif event_type == "replace":
+        content = event_data.get("data", {}).get("content", "")
+        Chats.upsert_message_to_chat_by_id_and_message_id(
+            chat_id, message_id, {"content": content}
+        )
+
+    elif event_type == "files":
+        message = Chats.get_message_by_id_and_message_id(chat_id, message_id)
+        files = event_data.get("data", {}).get("files", [])
+        files.extend(message.get("files", []))
+        Chats.upsert_message_to_chat_by_id_and_message_id(
+            chat_id, message_id, {"files": files}
+        )
+
+    elif event_type in ("source", "citation"):
+        data = event_data.get("data", {})
+        if data.get("type") is None:
+            message = Chats.get_message_by_id_and_message_id(chat_id, message_id)
+            sources = message.get("sources", [])
+            sources.append(data)
+            Chats.upsert_message_to_chat_by_id_and_message_id(
+                chat_id, message_id, {"sources": sources}
+            )
+
+
 def get_event_emitter(request_info, update_db=True):
     async def __event_emitter__(event_data):
         user_id = request_info["user_id"]
@@ -183,83 +227,10 @@ def get_event_emitter(request_info, update_db=True):
             },
             room=f"user:{user_id}",
         )
-        if (
-            update_db
-            and message_id
-            and not request_info.get("chat_id", "").startswith("local:")
-        ):
-
-            if "type" in event_data and event_data["type"] == "status":
-                Chats.add_message_status_to_chat_by_id_and_message_id(
-                    request_info["chat_id"],
-                    request_info["message_id"],
-                    event_data.get("data", {}),
-                )
-
-            if "type" in event_data and event_data["type"] == "message":
-                message = Chats.get_message_by_id_and_message_id(
-                    request_info["chat_id"],
-                    request_info["message_id"],
-                )
-
-                if message:
-                    content = message.get("content", "")
-                    content += event_data.get("data", {}).get("content", "")
-
-                    Chats.upsert_message_to_chat_by_id_and_message_id(
-                        request_info["chat_id"],
-                        request_info["message_id"],
-                        {
-                            "content": content,
-                        },
-                    )
-
-            if "type" in event_data and event_data["type"] == "replace":
-                content = event_data.get("data", {}).get("content", "")
-
-                Chats.upsert_message_to_chat_by_id_and_message_id(
-                    request_info["chat_id"],
-                    request_info["message_id"],
-                    {
-                        "content": content,
-                    },
-                )
-
-            if "type" in event_data and event_data["type"] == "files":
-                message = Chats.get_message_by_id_and_message_id(
-                    request_info["chat_id"],
-                    request_info["message_id"],
-                )
-
-                files = event_data.get("data", {}).get("files", [])
-                files.extend(message.get("files", []))
-
-                Chats.upsert_message_to_chat_by_id_and_message_id(
-                    request_info["chat_id"],
-                    request_info["message_id"],
-                    {
-                        "files": files,
-                    },
-                )
-
-            if event_data.get("type") in ["source", "citation"]:
-                data = event_data.get("data", {})
-                if data.get("type") == None:
-                    message = Chats.get_message_by_id_and_message_id(
-                        request_info["chat_id"],
-                        request_info["message_id"],
-                    )
-
-                    sources = message.get("sources", [])
-                    sources.append(data)
-
-                    Chats.upsert_message_to_chat_by_id_and_message_id(
-                        request_info["chat_id"],
-                        request_info["message_id"],
-                        {
-                            "sources": sources,
-                        },
-                    )
+        if update_db and message_id and not chat_id.startswith("local:"):
+            await anyio.to_thread.run_sync(
+                lambda: _persist_event(chat_id, message_id, event_data)
+            )
 
     if (
         "user_id" in request_info

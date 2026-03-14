@@ -57,7 +57,7 @@ def get_session_user_chat_list(
 
 
 @router.delete("/", response_model=bool)
-async def delete_all_user_chats(
+def delete_all_user_chats(
     user=Depends(get_verified_user),
 ):
 
@@ -71,7 +71,7 @@ async def delete_all_user_chats(
 
 
 @router.get("/list/user/{user_id}", response_model=list[ChatTitleIdResponse])
-async def get_user_chat_list_by_user_id(
+def get_user_chat_list_by_user_id(
     user_id: str,
     page: Optional[int] = None,
     query: Optional[str] = None,
@@ -105,7 +105,7 @@ async def get_user_chat_list_by_user_id(
 
 @router.post("/new", response_model=Optional[ChatResponse])
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT())
-async def create_new_chat(
+def create_new_chat(
     form_data: ChatForm,
     user=Depends(get_verified_user),
 ):
@@ -120,7 +120,7 @@ async def create_new_chat(
 
 @router.post("/import", response_model=list[ChatResponse])
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT())
-async def import_chats(
+def import_chats(
     form_data: ChatsImportForm,
     user=Depends(get_verified_user),
 ):
@@ -160,7 +160,7 @@ def search_user_chats(
 
 
 @router.get("/folder/{folder_id}", response_model=list[ChatResponse])
-async def get_chats_by_folder_id(folder_id: str, user=Depends(get_verified_user)):
+def get_chats_by_folder_id(folder_id: str, user=Depends(get_verified_user)):
     return [
         ChatResponse(**chat.model_dump())
         for chat in Chats.get_chats_by_folder_ids_and_user_id([folder_id], user.id)
@@ -169,7 +169,7 @@ async def get_chats_by_folder_id(folder_id: str, user=Depends(get_verified_user)
 
 @router.get("/folder/{folder_id}/list")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT())
-async def get_chat_list_by_folder_id(
+def get_chat_list_by_folder_id(
     folder_id: str,
     page: Optional[int] = 1,
     user=Depends(get_verified_user),
@@ -191,7 +191,7 @@ async def get_chat_list_by_folder_id(
 
 
 @router.get("/pinned", response_model=list[ChatTitleIdResponse])
-async def get_user_pinned_chats(user=Depends(get_verified_user)):
+def get_user_pinned_chats(user=Depends(get_verified_user)):
     return Chats.get_pinned_chats_by_user_id(user.id)
 
 
@@ -201,7 +201,7 @@ async def get_user_pinned_chats(user=Depends(get_verified_user)):
 
 
 @router.get("/all", response_model=list[ChatResponse])
-async def get_user_chats(user=Depends(get_verified_user)):
+def get_user_chats(user=Depends(get_verified_user)):
     result = Chats.get_chats_by_user_id(user.id)
     return [ChatResponse(**chat.model_dump()) for chat in result.items]
 
@@ -212,7 +212,7 @@ async def get_user_chats(user=Depends(get_verified_user)):
 
 
 @router.get("/all/db", response_model=list[ChatResponse])
-async def get_all_user_chats_in_db(
+def get_all_user_chats_in_db(
     user=Depends(get_admin_user),
 ):
     return [ChatResponse(**chat.model_dump()) for chat in Chats.get_chats()]
@@ -244,7 +244,7 @@ def get_chat_by_id(id: str, user=Depends(get_verified_user)):
 
 
 @router.post("/{id}", response_model=Optional[ChatResponse])
-async def update_chat_by_id(
+def update_chat_by_id(
     id: str,
     form_data: ChatForm,
     user=Depends(get_verified_user),
@@ -379,7 +379,7 @@ async def send_chat_message_event_by_id(
 
 
 @router.delete("/{id}", response_model=bool)
-async def delete_chat_by_id(
+def delete_chat_by_id(
     id: str,
     user=Depends(get_verified_user),
 ):
@@ -412,7 +412,7 @@ async def delete_chat_by_id(
 
 
 @router.get("/{id}/pinned", response_model=Optional[bool])
-async def get_pinned_status_by_id(id: str, user=Depends(get_verified_user)):
+def get_pinned_status_by_id(id: str, user=Depends(get_verified_user)):
     chat = Chats.get_chat_by_id_and_user_id(id, user.id)
     if not chat:
         raise HTTPException(
@@ -428,7 +428,7 @@ async def get_pinned_status_by_id(id: str, user=Depends(get_verified_user)):
 
 
 @router.post("/{id}/pin", response_model=Optional[ChatResponse])
-async def pin_chat_by_id(id: str, user=Depends(get_verified_user)):
+def pin_chat_by_id(id: str, user=Depends(get_verified_user)):
     chat = Chats.get_chat_by_id_and_user_id(id, user.id)
     if not chat:
         raise HTTPException(
@@ -448,7 +448,7 @@ class CloneForm(BaseModel):
 
 
 @router.post("/{id}/clone", response_model=Optional[ChatResponse])
-async def clone_chat_by_id(
+def clone_chat_by_id(
     form_data: CloneForm,
     id: str,
     user=Depends(get_verified_user),
@@ -499,7 +499,7 @@ class ChatFolderIdForm(BaseModel):
 
 
 @router.post("/{id}/folder", response_model=Optional[ChatResponse])
-async def update_chat_folder_id_by_id(
+def update_chat_folder_id_by_id(
     id: str,
     form_data: ChatFolderIdForm,
     user=Depends(get_verified_user),
