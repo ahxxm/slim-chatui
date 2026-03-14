@@ -43,7 +43,7 @@ PAGE_ITEM_COUNT = 30
 @router.get(
     "/list", response_model=ModelListResponse
 )  # do NOT use "/" as path, conflicts with main.py
-async def get_models(
+def get_models(
     query: Optional[str] = None,
     view_option: Optional[str] = None,
     tag: Optional[str] = None,
@@ -84,7 +84,7 @@ async def get_models(
 
 
 @router.get("/base", response_model=list[ModelResponse])
-async def get_base_models(
+def get_base_models(
     user=Depends(get_admin_user),
 ):
     return Models.get_base_models()
@@ -96,7 +96,7 @@ async def get_base_models(
 
 
 @router.post("/create", response_model=Optional[ModelModel])
-async def create_new_model(
+def create_new_model(
     request: Request,
     form_data: ModelForm,
     user=Depends(get_verified_user),
@@ -136,7 +136,7 @@ async def create_new_model(
 
 
 @router.get("/export", response_model=list[ModelModel])
-async def export_models(
+def export_models(
     request: Request,
     user=Depends(get_verified_user),
 ):
@@ -160,7 +160,7 @@ class ModelsImportForm(BaseModel):
 
 @router.post("/import", response_model=bool)
 @route_error_handler(detail="Error importing models", status_code=500)
-async def import_models(
+def import_models(
     request: Request,
     user=Depends(get_verified_user),
     form_data: ModelsImportForm = (...),
@@ -213,7 +213,7 @@ class SyncModelsForm(BaseModel):
 
 
 @router.post("/sync", response_model=list[ModelModel])
-async def sync_models(
+def sync_models(
     request: Request,
     form_data: SyncModelsForm,
     user=Depends(get_admin_user),
@@ -232,7 +232,7 @@ class ModelIdForm(BaseModel):
 
 # Note: We're not using the typical url path param here, but instead using a query parameter to allow '/' in the id
 @router.get("/model", response_model=Optional[ModelResponse])
-async def get_model_by_id(id: str, user=Depends(get_verified_user)):
+def get_model_by_id(id: str, user=Depends(get_verified_user)):
     model = Models.get_model_by_id(id)
     if not model:
         raise HTTPException(
@@ -249,7 +249,7 @@ async def get_model_by_id(id: str, user=Depends(get_verified_user)):
 
 
 @router.post("/model/toggle", response_model=Optional[ModelResponse])
-async def toggle_model_by_id(id: str, user=Depends(get_verified_user)):
+def toggle_model_by_id(id: str, user=Depends(get_verified_user)):
     model = Models.get_model_by_id(id)
     if not model:
         raise HTTPException(
@@ -279,7 +279,7 @@ async def toggle_model_by_id(id: str, user=Depends(get_verified_user)):
 
 
 @router.post("/model/update", response_model=Optional[ModelModel])
-async def update_model_by_id(
+def update_model_by_id(
     form_data: ModelForm,
     user=Depends(get_verified_user),
 ):
@@ -306,7 +306,7 @@ async def update_model_by_id(
 
 
 @router.post("/model/delete", response_model=bool)
-async def delete_model_by_id(
+def delete_model_by_id(
     form_data: ModelIdForm,
     user=Depends(get_verified_user),
 ):
@@ -328,7 +328,7 @@ async def delete_model_by_id(
 
 
 @router.delete("/delete/all", response_model=bool)
-async def delete_all_models(
+def delete_all_models(
     user=Depends(get_admin_user),
 ):
     result = Models.delete_all_models()
