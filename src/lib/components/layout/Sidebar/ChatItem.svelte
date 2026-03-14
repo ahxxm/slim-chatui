@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
-	import { onMount, getContext, tick, onDestroy, untrack } from 'svelte';
+	import { onMount, getContext, tick, onDestroy } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import {
@@ -76,24 +76,6 @@
 	let chat = $state(null);
 
 	let mouseOver = $state(false);
-	let draggable = $state(false);
-	$effect(() => {
-		if (mouseOver) {
-			untrack(() => loadChat());
-		}
-	});
-
-	const loadChat = async () => {
-		if (!chat) {
-			draggable = false;
-			// Chat may be deleted between mouseEnter and response arriving
-			const result = await getChatById(localStorage.token, id).catch(() => null);
-			if (result) {
-				chat = result;
-				draggable = true;
-			}
-		}
-	};
 
 	let confirmEdit = $state(false);
 
@@ -193,8 +175,7 @@
 			'text/plain',
 			JSON.stringify({
 				type: 'chat',
-				id: id,
-				item: chat
+				id: id
 			})
 		);
 
@@ -352,7 +333,7 @@
 	id="sidebar-chat-group"
 	bind:this={itemElement}
 	class=" w-full {className} relative group"
-	draggable={draggable && !confirmEdit}
+	draggable={!confirmEdit}
 >
 	{#if confirmEdit}
 		<div
