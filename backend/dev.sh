@@ -10,4 +10,5 @@ fi
 
 uv run --directory "$BACKEND_DIR" hypercorn open_webui.main:app \
     --bind "0.0.0.0:$PORT" \
+    --graceful-timeout 0 \
     --reload

@@ -178,6 +178,19 @@ async def lifespan(app: FastAPI):
         limiter = anyio.to_thread.current_default_thread_limiter()
         limiter.total_tokens = THREAD_POOL_SIZE
 
+    # Server.wait_closed() blocks until all connections drop (fixed in 3.12.1,
+    # was a no-op before 3.12; see cpython#113538).
+    # Hypercorn#308 unbounded call lets WebSocket cons prevent dev C-c shutdown.
+    _orig_wait_closed = asyncio.Server.wait_closed
+
+    async def _bounded_wait_closed(self):
+        try:
+            await asyncio.wait_for(_orig_wait_closed(self), timeout=1.0)
+        except asyncio.TimeoutError:
+            pass
+
+    asyncio.Server.wait_closed = _bounded_wait_closed
+
     background_tasks = [
         asyncio.create_task(periodic_session_pool_cleanup()),
         asyncio.create_task(periodic_orphan_file_cleanup()),

@@ -7,7 +7,7 @@ authors = [
 license = { file = "LICENSE" }
 dependencies = [
     "fastapi>=0.135.1",
-    "hypercorn>=0.18.0",
+    "hypercorn==0.18.0",  # Hypercorn#308 wait_closed() and Py3.12 
     "pydantic>=2.12.5",
     "python-multipart>=0.0.22", # lazy import but hard dependency of FastAPI
     "python-socketio>=5.16.1",
