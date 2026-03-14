@@ -26,7 +26,6 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import DragGhost from '$lib/components/common/DragGhost.svelte';
 	import Document from '$lib/components/icons/Document.svelte';
-	import Sparkles from '$lib/components/icons/Sparkles.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 	import { generateTitle } from '$lib/apis';
 
@@ -76,26 +75,6 @@
 	let chat = $state(null);
 
 	let mouseOver = $state(false);
-
-	let confirmEdit = $state(false);
-
-	let chatTitle = $state(title);
-
-	const editChatTitle = async (id, title) => {
-		if (title === '') {
-			toast.error($i18n.t('Title cannot be an empty string.'));
-		} else {
-			await updateChatById(localStorage.token, id, {
-				title: title
-			});
-
-			if (id === $chatId) {
-				_chatTitle.set(title);
-			}
-
-			onchange();
-		}
-	};
 
 	const cloneChatHandler = async (id) => {
 		const res = await cloneChatById(
@@ -153,9 +132,7 @@
 
 	let itemElement = $state<HTMLElement>();
 
-	let generating = $state(false);
-
-	let doubleClicked = $state(false);
+	let generating = false;
 
 	let dragged = $state(false);
 	let x = $state(0);
@@ -199,36 +176,16 @@
 		onDragEnd(event);
 	};
 
-	const onClickOutside = (event) => {
-		if (!itemElement.contains(event.target)) {
-			if (confirmEdit) {
-				if (chatTitle !== title) {
-					editChatTitle(id, chatTitle);
-				}
-
-				confirmEdit = false;
-				chatTitle = '';
-			}
-		}
-	};
-
 	onMount(() => {
 		if (itemElement) {
-			document.addEventListener('click', onClickOutside, true);
-
-			// Event listener for when dragging starts
 			itemElement.addEventListener('dragstart', onDragStart);
-			// Event listener for when dragging occurs (optional)
 			itemElement.addEventListener('drag', onDrag);
-			// Event listener for when dragging ends
 			itemElement.addEventListener('dragend', onDragEndHandler);
 		}
 	});
 
 	onDestroy(() => {
 		if (itemElement) {
-			document.removeEventListener('click', onClickOutside, true);
-
 			itemElement.removeEventListener('dragstart', onDragStart);
 			itemElement.removeEventListener('drag', onDrag);
 			itemElement.removeEventListener('dragend', onDragEndHandler);
@@ -237,51 +194,20 @@
 
 	let showDeleteConfirm = $state(false);
 
-	const chatTitleInputKeydownHandler = (e) => {
-		if (e.key === 'Enter') {
-			e.preventDefault();
-			setTimeout(() => {
-				const input = document.getElementById(`chat-title-input-${id}`);
-				if (input) input.blur();
-			}, 0);
-		} else if (e.key === 'Escape') {
-			e.preventDefault();
-			confirmEdit = false;
-			chatTitle = '';
-		}
-	};
-
-	const renameHandler = async () => {
-		chatTitle = title;
-		confirmEdit = true;
-
-		await tick();
-
-		setTimeout(() => {
-			const input = document.getElementById(`chat-title-input-${id}`);
-			if (input) {
-				input.focus();
-				input.select();
-			}
-		}, 0);
-	};
-
 	const generateTitleHandler = async () => {
+		if (generating) return;
 		generating = true;
+
 		if (!chat) {
 			chat = await getChatById(localStorage.token, id);
 		}
 
-		const messages = (chat.chat?.messages ?? []).map((message) => {
-			return {
-				role: message.role,
-				content: message.content
-			};
-		});
+		const messages = (chat.chat?.messages ?? []).map((message) => ({
+			role: message.role,
+			content: message.content
+		}));
 
 		const model = chat.chat.models.at(0) ?? chat.models.at(0) ?? '';
-
-		chatTitle = '';
 
 		const generatedTitle = await generateTitle(localStorage.token, model, messages).catch(
 			(error) => {
@@ -290,14 +216,12 @@
 			}
 		);
 
-		if (generatedTitle) {
-			if (generatedTitle !== title) {
-				editChatTitle(id, generatedTitle);
+		if (generatedTitle && generatedTitle !== title) {
+			await updateChatById(localStorage.token, id, { title: generatedTitle });
+			if (id === $chatId) {
+				_chatTitle.set(generatedTitle);
 			}
-
-			confirmEdit = false;
-		} else {
-			chatTitle = title;
+			onchange();
 		}
 
 		generating = false;
@@ -333,108 +257,60 @@
 	id="sidebar-chat-group"
 	bind:this={itemElement}
 	class=" w-full {className} relative group"
-	draggable={!confirmEdit}
+	draggable={true}
 >
-	{#if confirmEdit}
-		<div
-			id="sidebar-chat-item"
-			class=" w-full flex justify-between rounded-xl px-[11px] py-[6px] {id === $chatId ||
-			confirmEdit
-				? 'bg-gray-100 dark:bg-gray-900 selected'
-				: selected
-					? 'bg-gray-100 dark:bg-gray-950 selected'
-					: 'group-hover:bg-gray-100 dark:group-hover:bg-gray-950'}  whitespace-nowrap text-ellipsis relative {generating
-				? 'cursor-not-allowed'
-				: ''}"
-		>
-			<input
-				id="chat-title-input-{id}"
-				bind:value={chatTitle}
-				class=" bg-transparent w-full outline-hidden mr-10"
-				placeholder={generating ? $i18n.t('Generating...') : ''}
-				disabled={generating}
-				onkeydown={chatTitleInputKeydownHandler}
-				onblur={async (e) => {
-					if (doubleClicked) {
-						e.preventDefault();
-						e.stopPropagation();
+	<a
+		id="sidebar-chat-item"
+		class=" w-full flex justify-between rounded-xl px-[11px] py-[6px] {id === $chatId
+			? 'bg-gray-100 dark:bg-gray-900 selected'
+			: selected
+				? 'bg-gray-100 dark:bg-gray-950 selected'
+				: ' group-hover:bg-gray-100 dark:group-hover:bg-gray-950'}  whitespace-nowrap text-ellipsis"
+		href="/c/{id}"
+		onclick={() => {
+			onselect();
 
-						await tick();
-						setTimeout(() => {
-							const input = document.getElementById(`chat-title-input-${id}`);
-							if (input) input.focus();
-						}, 0);
+			if ($selectedFolder) {
+				selectedFolder.set(null);
+			}
 
-						doubleClicked = false;
-						return;
-					}
-				}}
-			/>
-		</div>
-	{:else}
-		<a
-			id="sidebar-chat-item"
-			class=" w-full flex justify-between rounded-xl px-[11px] py-[6px] {id === $chatId ||
-			confirmEdit
-				? 'bg-gray-100 dark:bg-gray-900 selected'
-				: selected
-					? 'bg-gray-100 dark:bg-gray-950 selected'
-					: ' group-hover:bg-gray-100 dark:group-hover:bg-gray-950'}  whitespace-nowrap text-ellipsis"
-			href="/c/{id}"
-			onclick={() => {
-				onselect();
-
-				if ($selectedFolder) {
-					selectedFolder.set(null);
-				}
-
-				if ($mobile) {
-					showSidebar.set(false);
-				}
-			}}
-			ondblclick={async (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-
-				doubleClicked = true;
-				renameHandler();
-			}}
-			onmouseenter={() => {
-				mouseOver = true;
-			}}
-			onmouseleave={() => {
-				mouseOver = false;
-			}}
-			onfocus={() => {}}
-			draggable="false"
-		>
-			<!-- Loading spinner for active chat (left side) -->
-			{#if $activeChatIds.has(id)}
-				<div class="shrink-0 self-center pr-2">
-					<Spinner className="size-3" />
-				</div>
-			{/if}
-
-			<div class="flex self-center flex-1 w-full min-w-0">
-				<div dir="auto" class="text-left self-center overflow-hidden w-full h-[20px] truncate">
-					{title}
-				</div>
+			if ($mobile) {
+				showSidebar.set(false);
+			}
+		}}
+		onmouseenter={() => {
+			mouseOver = true;
+		}}
+		onmouseleave={() => {
+			mouseOver = false;
+		}}
+		onfocus={() => {}}
+		draggable="false"
+	>
+		{#if $activeChatIds.has(id)}
+			<div class="shrink-0 self-center pr-2">
+				<Spinner className="size-3" />
 			</div>
+		{/if}
 
-			<!-- Time ago indicator -->
-			{#if createdAt && !mouseOver}
-				<div class="shrink-0 self-center text-[10px] text-gray-400 dark:text-gray-500 pl-2">
-					{formatTimeAgo(createdAt)}
-				</div>
-			{/if}
-		</a>
-	{/if}
+		<div class="flex self-center flex-1 w-full min-w-0">
+			<div dir="auto" class="text-left self-center overflow-hidden w-full h-[20px] truncate">
+				{title}
+			</div>
+		</div>
+
+		{#if createdAt && !mouseOver}
+			<div class="shrink-0 self-center text-[10px] text-gray-400 dark:text-gray-500 pl-2">
+				{formatTimeAgo(createdAt)}
+			</div>
+		{/if}
+	</a>
 
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div
 		id="sidebar-chat-item-menu"
 		class="
-        {id === $chatId || confirmEdit
+        {id === $chatId
 			? 'from-gray-100 dark:from-gray-900 selected'
 			: selected
 				? 'from-gray-100 dark:from-gray-950 selected'
@@ -451,24 +327,7 @@
 			mouseOver = false;
 		}}
 	>
-		{#if confirmEdit}
-			<div
-				class="flex self-center items-center space-x-1.5 z-10 translate-y-[0.5px] -translate-x-[0.5px]"
-			>
-				<Tooltip content={$i18n.t('Generate')}>
-					<button
-						class=" self-center dark:hover:text-white transition disabled:cursor-not-allowed"
-						id="generate-title-button"
-						disabled={generating}
-						onclick={() => {
-							generateTitleHandler();
-						}}
-					>
-						<Sparkles strokeWidth="2" />
-					</button>
-				</Tooltip>
-			</div>
-		{:else if shiftKey && mouseOver}
+		{#if shiftKey && mouseOver}
 			<div class=" flex items-center self-center space-x-1.5">
 				<Tooltip content={$i18n.t('Delete')}>
 					<button
@@ -491,7 +350,7 @@
 						cloneChatHandler(id);
 					}}
 					{moveChatHandler}
-					{renameHandler}
+					renameHandler={generateTitleHandler}
 					deleteHandler={() => {
 						showDeleteConfirm = true;
 					}}
