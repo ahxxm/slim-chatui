@@ -18,8 +18,7 @@
 		getChatById,
 		getChatsByFolderId,
 		getChatListByFolderId,
-		updateChatFolderIdById,
-		importChats
+		updateChatFolderIdById
 	} from '$lib/apis/chats';
 
 	import ChevronDown from '../../icons/ChevronDown.svelte';
@@ -117,24 +116,7 @@
 			if (data.type !== 'chat') return;
 
 			open = true;
-			let chat = await getChatById(localStorage.token, data.id).catch(() => null);
-
-			if (!chat && data.item) {
-				chat = await importChats(localStorage.token, [
-					{
-						chat: data.item.chat,
-						meta: data.item?.meta ?? {},
-						pinned: false,
-						folder_id: null,
-						created_at: data.item?.created_at ?? null,
-						updated_at: data.item?.updated_at ?? null
-					}
-				]).catch((error) => {
-					toast.error(`${error}`);
-					return null;
-				});
-			}
-
+			const chat = await getChatById(localStorage.token, data.id).catch(() => null);
 			if (!chat) return;
 
 			await updateChatFolderIdById(localStorage.token, chat.id, folderId).catch((error) => {

@@ -10,7 +10,7 @@
 	import LightBulb from '$lib/components/icons/LightBulb.svelte';
 	import Markdown from '../Messages/Markdown.svelte';
 	import Skeleton from '../Messages/Skeleton.svelte';
-	import { chatId, socket } from '$lib/stores';
+	import { chatId, settings, socket } from '$lib/stores';
 
 	const DEFAULT_ACTIONS = [
 		{
@@ -31,7 +31,7 @@
 	let {
 		id = '',
 		messageId = '',
-		model = null,
+		model = null, // the model that generated this message
 		messages = [] as { role: string; content: string }[],
 		actions: actionsProp = [] as {
 			id: string;
@@ -107,19 +107,14 @@
 
 		let res;
 		[res, controller] = await chatCompletion(localStorage.token, {
-			model: model,
+			model,
 			session_id: $socket?.id,
 			chat_id: $chatId,
 			messages: [
-				...messages,
-				{
-					role: 'user',
-					content: content
-				}
-			].map((message) => ({
-				role: message.role,
-				content: message.content
-			})),
+				...($settings?.system ? [{ role: 'system', content: $settings.system }] : []),
+				...messages.map((m) => ({ role: m.role, content: m.content })),
+				{ role: 'user', content }
+			],
 			stream: true
 		});
 
@@ -154,10 +149,14 @@
 								try {
 									const data = JSON.parse(line.slice(6));
 
-									// Append the `content` field from the "choices" object
-									if (data.choices && data.choices[0]?.delta?.content) {
+									// NOTE: raw proxy stream, ONLY completion/responses.
+									// Chat Completions: choices[0].delta.content
+									// Responses API: response.output_text.delta events
+									if (data.choices?.[0]?.delta?.content) {
 										responseContent += data.choices[0].delta.content;
-
+										autoScroll();
+									} else if (data.type === 'response.output_text.delta' && data.delta) {
+										responseContent += data.delta;
 										autoScroll();
 									}
 								} catch (e) {
