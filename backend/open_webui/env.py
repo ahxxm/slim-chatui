@@ -4,9 +4,6 @@ import logging
 import os
 import sys
 import shutil
-import traceback
-from datetime import datetime, timezone
-from typing import Any
 from pathlib import Path
 
 from open_webui.constants import ERROR_MESSAGES
@@ -31,56 +28,7 @@ BASE_DIR = BACKEND_DIR.parent
 # LOGGING
 ####################################
 
-_LEVEL_MAP = {
-    "DEBUG": "debug",
-    "INFO": "info",
-    "WARNING": "warn",
-    "ERROR": "error",
-    "CRITICAL": "fatal",
-}
-
-
-class JSONFormatter(logging.Formatter):
-    """Format log records as single-line JSON objects for structured logging."""
-
-    def format(self, record: logging.LogRecord) -> str:
-        log_entry: dict[str, Any] = {
-            "ts": datetime.fromtimestamp(record.created, tz=timezone.utc).isoformat(
-                timespec="milliseconds"
-            ),
-            "level": _LEVEL_MAP.get(record.levelname, record.levelname.lower()),
-            "msg": record.getMessage(),
-            "caller": record.name,
-        }
-
-        if record.exc_info and record.exc_info[0] is not None:
-            log_entry["error"] = "".join(
-                traceback.format_exception(*record.exc_info)
-            ).rstrip()
-        elif record.exc_text:
-            log_entry["error"] = record.exc_text
-
-        if record.stack_info:
-            log_entry["stacktrace"] = record.stack_info
-
-        return json.dumps(log_entry, ensure_ascii=False, default=str)
-
-
-LOG_FORMAT = os.environ.get("LOG_FORMAT", "").lower()
-
-GLOBAL_LOG_LEVEL = os.environ.get("GLOBAL_LOG_LEVEL", "").upper()
-if GLOBAL_LOG_LEVEL in logging.getLevelNamesMapping():
-    if LOG_FORMAT == "json":
-        _handler = logging.StreamHandler(sys.stdout)
-        _handler.setFormatter(JSONFormatter())
-        logging.basicConfig(handlers=[_handler], level=GLOBAL_LOG_LEVEL, force=True)
-    else:
-        logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL, force=True)
-else:
-    GLOBAL_LOG_LEVEL = "INFO"
-
 log = logging.getLogger(__name__)
-log.info(f"GLOBAL_LOG_LEVEL: {GLOBAL_LOG_LEVEL}")
 
 ####################################
 # ENV (dev,test,prod)

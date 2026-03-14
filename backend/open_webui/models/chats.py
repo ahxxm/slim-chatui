@@ -164,7 +164,7 @@ class ChatTable:
         """Recursively remove null bytes from strings in dict/list structures."""
         return sanitize_data_for_db(obj)
 
-    def _sanitize_chat_row(self, chat_item):
+    def _sanitize_chat_row(self, chat_item: Chat):
         """
         Clean a Chat SQLAlchemy model's title + chat JSON,
         and return True if anything changed.

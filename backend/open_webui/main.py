@@ -86,7 +86,6 @@ from open_webui.config import (
 )
 from open_webui.env import (
     ENABLE_GZIP_MIDDLEWARE,
-    GLOBAL_LOG_LEVEL,
     VERSION,
     WEBUI_BUILD_HASH,
     ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
@@ -95,7 +94,6 @@ from open_webui.env import (
     WEBUI_ADMIN_EMAIL,
     WEBUI_ADMIN_PASSWORD,
     WEBUI_ADMIN_NAME,
-    LOG_FORMAT,
 )
 
 
@@ -130,7 +128,6 @@ from open_webui.tasks import (
 
 from open_webui.constants import ERROR_MESSAGES
 
-logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 
 
@@ -149,8 +146,7 @@ class SPAStaticFiles(StaticFiles):
                 raise ex
 
 
-if LOG_FORMAT != "json":
-    print(rf"""
+print(rf"""
  ██████╗ ██████╗ ███████╗███╗   ██╗    ██╗    ██╗███████╗██████╗ ██╗   ██╗██╗
 ██╔═══██╗██╔══██╗██╔════╝████╗  ██║    ██║    ██║██╔════╝██╔══██╗██║   ██║██║
 ██║   ██║██████╔╝█████╗  ██╔██╗ ██║    ██║ █╗ ██║█████╗  ██████╔╝██║   ██║██║
@@ -182,10 +178,29 @@ async def lifespan(app: FastAPI):
         limiter = anyio.to_thread.current_default_thread_limiter()
         limiter.total_tokens = THREAD_POOL_SIZE
 
-    asyncio.create_task(periodic_session_pool_cleanup())
-    asyncio.create_task(periodic_orphan_file_cleanup())
+    # Server.wait_closed() blocks until all connections drop (fixed in 3.12.1,
+    # was a no-op before 3.12; see cpython#113538).
+    # Hypercorn#308 unbounded call lets WebSocket cons prevent dev C-c shutdown.
+    _orig_wait_closed = asyncio.Server.wait_closed
+
+    async def _bounded_wait_closed(self):
+        try:
+            await asyncio.wait_for(_orig_wait_closed(self), timeout=1.0)
+        except asyncio.TimeoutError:
+            pass
+
+    asyncio.Server.wait_closed = _bounded_wait_closed
+
+    background_tasks = [
+        asyncio.create_task(periodic_session_pool_cleanup()),
+        asyncio.create_task(periodic_orphan_file_cleanup()),
+    ]
 
     yield
+
+    for task in background_tasks:
+        task.cancel()
+    await asyncio.gather(*background_tasks, return_exceptions=True)
 
 
 app = FastAPI(
@@ -285,7 +300,7 @@ if ENABLE_GZIP_MIDDLEWARE:
 
 @app.middleware("http")
 async def check_url(request: Request, call_next):
-    start_time = int(time.time())
+    start_time = time.perf_counter()
     request.state.token = get_http_authorization_cred(
         request.headers.get("Authorization")
     )
@@ -298,8 +313,19 @@ async def check_url(request: Request, call_next):
         )
 
     response = await call_next(request)
-    process_time = int(time.time()) - start_time
-    response.headers["X-Process-Time"] = str(process_time)
+    dt_ms = (time.perf_counter() - start_time) * 1000
+    response.headers["X-Process-Time"] = f"{dt_ms:.0f}"
+
+    path = request.url.path
+    if path != "/health":
+        log.info(
+            "%s %s %d %.1fms",
+            request.method,
+            path,
+            response.status_code,
+            dt_ms,
+        )
+
     return response
 
 
