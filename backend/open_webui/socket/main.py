@@ -1,5 +1,6 @@
 import asyncio
 
+import anyio.to_thread
 import socketio
 import logging
 import sys
@@ -169,7 +170,7 @@ async def disconnect(sid):
 
 
 def _persist_event(chat_id, message_id, event_data):
-    """Called via asyncio.to_thread to keep DB writes off the event loop."""
+    """Called via anyio.to_thread to keep DB writes off the event loop."""
     event_type = event_data.get("type")
 
     if event_type == "status":
@@ -227,7 +228,9 @@ def get_event_emitter(request_info, update_db=True):
             room=f"user:{user_id}",
         )
         if update_db and message_id and not chat_id.startswith("local:"):
-            await asyncio.to_thread(_persist_event, chat_id, message_id, event_data)
+            await anyio.to_thread.run_sync(
+                lambda: _persist_event(chat_id, message_id, event_data)
+            )
 
     if (
         "user_id" in request_info
