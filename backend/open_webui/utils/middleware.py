@@ -1,6 +1,5 @@
 import time
 import logging
-import sys
 import asyncio
 from typing import Optional
 import json
@@ -40,13 +39,11 @@ from open_webui.utils.response import normalize_usage
 
 
 from open_webui.env import (
-    GLOBAL_LOG_LEVEL,
     ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION,
     CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE,
 )
 from open_webui.constants import TASKS
 
-logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 
 

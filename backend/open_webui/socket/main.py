@@ -14,7 +14,6 @@ from open_webui.config import (
 
 from open_webui.env import (
     ENABLE_WEBSOCKET_SUPPORT,
-    GLOBAL_LOG_LEVEL,
     WEBSOCKET_SERVER_PING_TIMEOUT,
     WEBSOCKET_SERVER_PING_INTERVAL,
     WEBSOCKET_SERVER_LOGGING,
@@ -22,7 +21,6 @@ from open_webui.env import (
 )
 from open_webui.utils.auth import decode_token
 
-logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 
 

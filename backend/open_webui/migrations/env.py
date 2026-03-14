@@ -4,7 +4,7 @@ from logging.config import fileConfig
 from alembic import context
 import open_webui.models  # register all models on Base.metadata
 from open_webui.internal.db import Base
-from open_webui.env import DATABASE_URL, LOG_FORMAT
+from open_webui.env import DATABASE_URL
 from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
@@ -15,13 +15,6 @@ config = context.config
 # This line sets up loggers basically.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name, disable_existing_loggers=False)
-
-# Re-apply JSON formatter after fileConfig replaces handlers.
-if LOG_FORMAT == "json":
-    from open_webui.env import JSONFormatter
-
-    for handler in logging.root.handlers:
-        handler.setFormatter(JSONFormatter())
 
 # add your model's MetaData object here
 # for 'autogenerate' support

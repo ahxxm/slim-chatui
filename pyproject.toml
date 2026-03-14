@@ -7,23 +7,17 @@ authors = [
 license = { file = "LICENSE" }
 dependencies = [
     "fastapi>=0.135.1",
-    "uvicorn>=0.41.0",
+    "hypercorn==0.18.0",  # Hypercorn#308 wait_closed() and Py3.12 
     "pydantic>=2.12.5",
     "python-multipart>=0.0.22", # lazy import but hard dependency of FastAPI
-
     "python-socketio>=5.16.1",
-
     "bcrypt>=5.0.0",
     "PyJWT>=2.11.0",
-
     "requests>=2.32.5",
     "aiohttp==3.13.2", # do not update to 3.13.3 - broken(brotli fn param)
     "aiocache",
-
     "sqlalchemy>=2.0.47",
     "alembic>=1.18.4",
-
-    "loguru>=0.7.3",
 ]
 readme = "README.md"
 requires-python = ">= 3.12, < 3.13.0a1"

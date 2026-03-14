@@ -1,17 +1,13 @@
 import copy
 import logging
-import sys
 
 from fastapi import Request
 
 from open_webui.routers import openai
 
 from open_webui.models.models import Models
-
-from open_webui.env import GLOBAL_LOG_LEVEL
 from open_webui.models.users import UserModel
 
-logging.basicConfig(stream=sys.stdout, level=GLOBAL_LOG_LEVEL)
 log = logging.getLogger(__name__)
 
 
