@@ -20,8 +20,8 @@ RUN npm run build
 FROM python:3.14-alpine AS base
 
 RUN apk add --no-cache bash
-
 ENV PYTHONUNBUFFERED=1
+ENV PYTHONOPTIMIZE=2
 ENV ENV=prod \
     PORT=8080
 
@@ -39,7 +39,7 @@ RUN pip3 install --no-cache-dir uv && \
     uv pip install --system --no-cache-dir -r /tmp/requirements.txt && \
     pip3 uninstall -y uv pip && \
     rm /tmp/requirements.txt && \
-    python3 -m compileall -q /usr/local/lib/python3.14/site-packages/ && \
+    python3 -m compileall -q -o 2 /usr/local/lib/python3.14/site-packages/ && \
     mkdir -p /app/backend/data
 
 EXPOSE 8080
