@@ -8,7 +8,7 @@ license = { file = "LICENSE" }
 dependencies = [
     "anyio>=4.12.1",
     "fastapi>=0.135.1",
-    "hypercorn==0.18.0",  # Hypercorn#308 wait_closed() and Py3.12 
+    "hypercorn==0.18.0",  # Hypercorn#308 wait_closed() and Py3.12
     "pydantic>=2.12.5",
     "python-multipart>=0.0.22", # lazy import but hard dependency of FastAPI
     "python-socketio>=5.16.1",
@@ -21,13 +21,13 @@ dependencies = [
     "alembic>=1.18.4",
 ]
 readme = "README.md"
-requires-python = ">= 3.12, < 3.13.0a1"
+requires-python = ">= 3.14"
 dynamic = ["version"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "License :: Other/Proprietary License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Communications :: Chat",
     "Topic :: Multimedia",
 ]

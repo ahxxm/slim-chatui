@@ -95,8 +95,8 @@ if FROM_INIT_PY:
 
 DATABASE_URL = os.environ.get("DATABASE_URL", f"sqlite:///{DATA_DIR}/webui.db")
 
-ENABLE_GZIP_MIDDLEWARE = (
-    os.environ.get("ENABLE_GZIP_MIDDLEWARE", "False").lower() == "true"
+ENABLE_ZSTD_MIDDLEWARE = (
+    os.environ.get("ENABLE_ZSTD_MIDDLEWARE", "False").lower() == "true"
 )
 
 ####################################

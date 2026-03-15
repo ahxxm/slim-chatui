@@ -24,7 +24,7 @@ from fastapi.staticfiles import StaticFiles
 
 
 from starlette.exceptions import HTTPException as StarletteHTTPException
-from starlette.middleware.gzip import GZipMiddleware
+from open_webui.utils.zstd import ZstdMiddleware
 
 from open_webui.utils.logger import configure_logging
 from open_webui.socket.main import (
@@ -85,7 +85,7 @@ from open_webui.config import (
     AppConfig,
 )
 from open_webui.env import (
-    ENABLE_GZIP_MIDDLEWARE,
+    ENABLE_ZSTD_MIDDLEWARE,
     VERSION,
     WEBUI_BUILD_HASH,
     ENABLE_SIGNUP_PASSWORD_CONFIRMATION,
@@ -294,8 +294,8 @@ app.state.MODELS = MODELS
 
 
 app.add_middleware(SecurityHeadersMiddleware)
-if ENABLE_GZIP_MIDDLEWARE:
-    app.add_middleware(GZipMiddleware, minimum_size=500)
+if ENABLE_ZSTD_MIDDLEWARE:
+    app.add_middleware(ZstdMiddleware, minimum_size=500)
 
 
 @app.middleware("http")
