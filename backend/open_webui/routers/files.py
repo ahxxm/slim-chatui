@@ -38,6 +38,21 @@ log = logging.getLogger(__name__)
 router = APIRouter()
 
 
+def resolve_owned_file(id: str, user=Depends(get_verified_user)):
+    file = Files.get_file_by_id(id)
+    if not file:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+    if file.user_id != user.id and user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+    return file
+
+
 ############################
 # Upload File
 ############################
@@ -170,21 +185,7 @@ def search_files(
 
 
 @router.get("/{id}", response_model=Optional[FileModel])
-def get_file_by_id(id: str, user=Depends(get_verified_user)):
-    file = Files.get_file_by_id(id)
-
-    if not file:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-    if file.user_id != user.id and user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
+def get_file_by_id(file=Depends(resolve_owned_file)):
     return file
 
 
@@ -196,23 +197,9 @@ def get_file_by_id(id: str, user=Depends(get_verified_user)):
 @router.get("/{id}/content")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error getting file content"))
 def get_file_content_by_id(
-    id: str,
-    user=Depends(get_verified_user),
+    file=Depends(resolve_owned_file),
     attachment: bool = Query(False),
 ):
-    file = Files.get_file_by_id(id)
-    if not file:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-    if file.user_id != user.id and user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
     file_path = Path(file.path)
     if not file_path.is_file():
         raise HTTPException(
@@ -242,22 +229,9 @@ def get_file_content_by_id(
 
 @router.get("/{id}/content/html")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error getting file content"))
-def get_html_file_content_by_id(id: str, user=Depends(get_verified_user)):
-    file = Files.get_file_by_id(id)
-    if not file:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
+def get_html_file_content_by_id(file=Depends(resolve_owned_file)):
     file_user = Users.get_user_by_id(file.user_id)
     if not file_user.role == "admin":
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-    if file.user_id != user.id and user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=ERROR_MESSAGES.NOT_FOUND,
@@ -275,21 +249,7 @@ def get_html_file_content_by_id(id: str, user=Depends(get_verified_user)):
 
 
 @router.get("/{id}/content/{file_name}")
-def get_file_content_by_id_and_name(id: str, user=Depends(get_verified_user)):
-    file = Files.get_file_by_id(id)
-
-    if not file:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-    if file.user_id != user.id and user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
+def get_file_content_by_id_and_name(file=Depends(resolve_owned_file)):
     filename = file.meta.get("name", file.filename)
     encoded_filename = quote(filename)
     headers = {
@@ -312,21 +272,8 @@ def get_file_content_by_id_and_name(id: str, user=Depends(get_verified_user)):
 
 
 @router.delete("/{id}")
-def delete_file_by_id(id: str, user=Depends(get_verified_user)):
-    file = Files.get_file_by_id(id)
-    if not file:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-    if file.user_id != user.id and user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-    result = Files.delete_file_by_id(id)
+def delete_file_by_id(file=Depends(resolve_owned_file)):
+    result = Files.delete_file_by_id(file.id)
     if not result:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

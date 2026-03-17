@@ -7,12 +7,9 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from open_webui.models.auths import Auths
 
-from open_webui.models.chats import Chats
 from open_webui.models.users import (
     UserModel,
-    UserModelResponse,
     UserListResponse,
-    UserInfoResponse,
     UserInfoListResponse,
     Users,
     UserSettings,
@@ -104,16 +101,7 @@ def search_users(
 
 
 @router.get("/user/settings", response_model=Optional[UserSettings])
-def get_user_settings_by_session_user(
-    user=Depends(get_verified_user),
-):
-    user = Users.get_user_by_id(user.id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.USER_NOT_FOUND,
-        )
-
+def get_user_settings_by_session_user(user=Depends(get_verified_user)):
     return user.settings
 
 
@@ -137,47 +125,6 @@ def update_user_settings_by_session_user(
         )
 
     return user.settings
-
-
-############################
-# GetUserById
-############################
-
-
-@router.get("/{user_id}", response_model=UserModelResponse)
-def get_user_by_id(user_id: str, user=Depends(get_admin_user)):
-    # Check if user_id is a shared chat
-    # If it is, get the user_id from the chat
-    if user_id.startswith("shared-"):
-        chat_id = user_id.replace("shared-", "")
-        chat = Chats.get_chat_by_id(chat_id)
-        if not chat:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ERROR_MESSAGES.USER_NOT_FOUND,
-            )
-        user_id = chat.user_id
-
-    user = Users.get_user_by_id(user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.USER_NOT_FOUND,
-        )
-
-    return user
-
-
-@router.get("/{user_id}/info", response_model=UserInfoResponse)
-def get_user_info_by_id(user_id: str, user=Depends(get_verified_user)):
-    user = Users.get_user_by_id(user_id)
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ERROR_MESSAGES.USER_NOT_FOUND,
-        )
-
-    return UserInfoResponse(**user.model_dump())
 
 
 ############################

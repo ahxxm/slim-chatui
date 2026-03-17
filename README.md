@@ -4,7 +4,7 @@ Opinionated, diverged hard fork of [Open WebUI](https://github.com/open-webui/op
 
 Opinions:
 
-- Chat first: completion or responses, text and images, preferably through LiteLLM/OpenRouter
+- Chat first: completion or responses, text and images, preferably through LiteLLM/OpenRouter(see `litellm_config.yaml`)
 - Personal usage: no `$ENTERPRISE` ldap/oauth/analytics/chats/status/share, text in Markdown and LaTex
 - Slim: cold start in ~1 seconds, 48MB Docker image, 102MB RSS.
 

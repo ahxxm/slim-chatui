@@ -17,11 +17,54 @@ from pydantic import BaseModel
 
 
 from open_webui.utils.auth import get_admin_user, get_verified_user
+from open_webui.utils.middleware import serialize_output
 from open_webui.utils.route import route_error_handler
 
 log = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+# FastAPI caches get_verified_user per-request, so handlers that also
+# declare user=Depends(get_verified_user) pay no extra cost.
+def resolve_owned_chat(id: str, user=Depends(get_verified_user)):
+    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
+    if not chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+    return chat
+
+
+def resolve_chat_access(id: str, user=Depends(get_verified_user)):
+    chat = (
+        Chats.get_chat_by_id(id)
+        if user.role == "admin"
+        else Chats.get_chat_by_id_and_user_id(id, user.id)
+    )
+    if not chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+    return chat
+
+
+def resolve_chat_owner_or_admin(id: str, user=Depends(get_verified_user)):
+    chat = Chats.get_chat_by_id(id)
+    if not chat:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+    if chat.user_id != user.id and user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
+    return chat
+
 
 ############################
 # GetChatList
@@ -224,17 +267,7 @@ def get_all_user_chats_in_db(
 
 
 @router.get("/{id}", response_model=Optional[ChatResponse])
-def get_chat_by_id(id: str, user=Depends(get_verified_user)):
-    if user.role == "admin":
-        chat = Chats.get_chat_by_id(id)
-    else:
-        chat = Chats.get_chat_by_id_and_user_id(id, user.id)
-
-    if not chat:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.NOT_FOUND
-        )
-
+def get_chat_by_id(chat=Depends(resolve_chat_access)):
     return ChatResponse(**chat.model_dump())
 
 
@@ -245,19 +278,9 @@ def get_chat_by_id(id: str, user=Depends(get_verified_user)):
 
 @router.post("/{id}", response_model=Optional[ChatResponse])
 def update_chat_by_id(
-    id: str,
     form_data: ChatForm,
-    user=Depends(get_verified_user),
+    chat=Depends(resolve_owned_chat),
 ):
-    from open_webui.utils.middleware import serialize_output
-
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
-    if not chat:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
-
     updated_chat = {**chat.chat, **form_data.chat}
     # Re-serialize content from output for messages that have it,
     # since the frontend may send stale content from intermediate
@@ -265,8 +288,8 @@ def update_chat_by_id(
     for msg in updated_chat.get("history", {}).get("messages", {}).values():
         if msg.get("output"):
             msg["content"] = serialize_output(msg["output"])
-    chat = Chats.update_chat_by_id(id, updated_chat)
-    return ChatResponse(**chat.model_dump())
+    updated = Chats.update_chat_by_id(chat.id, updated_chat)
+    return ChatResponse(**updated.model_dump())
 
 
 ############################
@@ -278,27 +301,13 @@ class MessageForm(BaseModel):
 
 @router.post("/{id}/messages/{message_id}", response_model=Optional[ChatResponse])
 async def update_chat_message_by_id(
-    id: str,
     message_id: str,
     form_data: MessageForm,
+    chat=Depends(resolve_chat_owner_or_admin),
     user=Depends(get_verified_user),
 ):
-    chat = Chats.get_chat_by_id(id)
-
-    if not chat:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
-
-    if chat.user_id != user.id and user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
-
-    chat = Chats.upsert_message_to_chat_by_id_and_message_id(
-        id,
+    updated = Chats.upsert_message_to_chat_by_id_and_message_id(
+        chat.id,
         message_id,
         {
             "content": form_data.content,
@@ -308,7 +317,7 @@ async def update_chat_message_by_id(
     event_emitter = get_event_emitter(
         {
             "user_id": user.id,
-            "chat_id": id,
+            "chat_id": chat.id,
             "message_id": message_id,
         },
         False,
@@ -319,14 +328,14 @@ async def update_chat_message_by_id(
             {
                 "type": "chat:message",
                 "data": {
-                    "chat_id": id,
+                    "chat_id": chat.id,
                     "message_id": message_id,
                     "content": form_data.content,
                 },
             }
         )
 
-    return ChatResponse(**chat.model_dump())
+    return ChatResponse(**updated.model_dump())
 
 
 ############################
@@ -339,29 +348,15 @@ class EventForm(BaseModel):
 
 @router.post("/{id}/messages/{message_id}/event", response_model=Optional[bool])
 async def send_chat_message_event_by_id(
-    id: str,
     message_id: str,
     form_data: EventForm,
+    chat=Depends(resolve_chat_owner_or_admin),
     user=Depends(get_verified_user),
 ):
-    chat = Chats.get_chat_by_id(id)
-
-    if not chat:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
-
-    if chat.user_id != user.id and user.role != "admin":
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
-        )
-
     event_emitter = get_event_emitter(
         {
             "user_id": user.id,
-            "chat_id": id,
+            "chat_id": chat.id,
             "message_id": message_id,
         }
     )
@@ -379,31 +374,8 @@ async def send_chat_message_event_by_id(
 
 
 @router.delete("/{id}", response_model=bool)
-def delete_chat_by_id(
-    id: str,
-    user=Depends(get_verified_user),
-):
-    if user.role == "admin":
-        chat = Chats.get_chat_by_id(id)
-        if not chat:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=ERROR_MESSAGES.NOT_FOUND,
-            )
-
-        result = Chats.delete_chat_by_id(id)
-
-        return result
-    else:
-        chat = Chats.get_chat_by_id_and_user_id(id, user.id)
-        if not chat:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=ERROR_MESSAGES.NOT_FOUND,
-            )
-
-        result = Chats.delete_chat_by_id_and_user_id(id, user.id)
-        return result
+def delete_chat_by_id(chat=Depends(resolve_chat_access)):
+    return Chats.delete_chat_by_id(chat.id)
 
 
 ############################
@@ -412,13 +384,7 @@ def delete_chat_by_id(
 
 
 @router.get("/{id}/pinned", response_model=Optional[bool])
-def get_pinned_status_by_id(id: str, user=Depends(get_verified_user)):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
-    if not chat:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.DEFAULT()
-        )
-
+def get_pinned_status_by_id(chat=Depends(resolve_owned_chat)):
     return chat.pinned
 
 
@@ -428,14 +394,8 @@ def get_pinned_status_by_id(id: str, user=Depends(get_verified_user)):
 
 
 @router.post("/{id}/pin", response_model=Optional[ChatResponse])
-def pin_chat_by_id(id: str, user=Depends(get_verified_user)):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
-    if not chat:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-    return Chats.toggle_chat_pinned_by_id(id)
+def pin_chat_by_id(chat=Depends(resolve_owned_chat)):
+    return Chats.toggle_chat_pinned_by_id(chat.id)
 
 
 ############################
@@ -450,15 +410,9 @@ class CloneForm(BaseModel):
 @router.post("/{id}/clone", response_model=Optional[ChatResponse])
 def clone_chat_by_id(
     form_data: CloneForm,
-    id: str,
+    chat=Depends(resolve_owned_chat),
     user=Depends(get_verified_user),
 ):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
-    if not chat:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.DEFAULT()
-        )
-
     updated_chat = {
         **chat.chat,
         "originalChatId": chat.id,
@@ -500,17 +454,11 @@ class ChatFolderIdForm(BaseModel):
 
 @router.post("/{id}/folder", response_model=Optional[ChatResponse])
 def update_chat_folder_id_by_id(
-    id: str,
     form_data: ChatFolderIdForm,
+    chat=Depends(resolve_owned_chat),
     user=Depends(get_verified_user),
 ):
-    chat = Chats.get_chat_by_id_and_user_id(id, user.id)
-    if not chat:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail=ERROR_MESSAGES.DEFAULT()
-        )
-
-    chat = Chats.update_chat_folder_id_by_id_and_user_id(
-        id, user.id, form_data.folder_id
+    updated = Chats.update_chat_folder_id_by_id_and_user_id(
+        chat.id, user.id, form_data.folder_id
     )
-    return ChatResponse(**chat.model_dump())
+    return ChatResponse(**updated.model_dump())

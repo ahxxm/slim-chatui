@@ -18,6 +18,7 @@ from sqlalchemy.orm import Session
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
+from open_webui.models.users import UserModel
 from open_webui.utils.auth import get_verified_user
 from open_webui.utils.route import route_error_handler
 
@@ -25,6 +26,18 @@ log = logging.getLogger(__name__)
 
 
 router = APIRouter()
+
+
+def resolve_owned_folder(
+    id: str, user: UserModel = Depends(get_verified_user)
+) -> FolderModel:
+    folder = Folders.get_folder_by_id_and_user_id(id, user.id)
+    if not folder:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+    return folder
 
 
 ############################
@@ -35,7 +48,7 @@ router = APIRouter()
 @router.get("/", response_model=list[FolderNameIdResponse])
 def get_folders(
     request: Request,
-    user=Depends(get_verified_user),
+    user: UserModel = Depends(get_verified_user),
 ):
     folders = Folders.get_folders_by_user_id(user.id)
 
@@ -73,7 +86,7 @@ def get_folders(
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error creating folder"))
 def create_folder(
     form_data: FolderForm,
-    user=Depends(get_verified_user),
+    user: UserModel = Depends(get_verified_user),
 ):
     folder = Folders.get_folder_by_user_id_and_name(user.id, form_data.name)
     if folder:
@@ -91,14 +104,7 @@ def create_folder(
 
 
 @router.get("/{id}", response_model=Optional[FolderModel])
-def get_folder_by_id(id: str, user=Depends(get_verified_user)):
-    folder = Folders.get_folder_by_id_and_user_id(id, user.id)
-    if not folder:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
+def get_folder_by_id(folder: FolderModel = Depends(resolve_owned_folder)):
     return folder
 
 
@@ -110,17 +116,10 @@ def get_folder_by_id(id: str, user=Depends(get_verified_user)):
 @router.post("/{id}/update")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error updating folder"))
 def update_folder_name_by_id(
-    id: str,
     form_data: FolderUpdateForm,
-    user=Depends(get_verified_user),
+    folder: FolderModel = Depends(resolve_owned_folder),
+    user: UserModel = Depends(get_verified_user),
 ):
-    folder = Folders.get_folder_by_id_and_user_id(id, user.id)
-    if not folder:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
     if form_data.name is not None:
         existing_folder = Folders.get_folder_by_user_id_and_name(
             user.id, form_data.name
@@ -131,7 +130,7 @@ def update_folder_name_by_id(
                 detail=ERROR_MESSAGES.DEFAULT("Folder already exists"),
             )
 
-    return Folders.update_folder_by_id_and_user_id(id, user.id, form_data)
+    return Folders.update_folder_by_id_and_user_id(folder.id, user.id, form_data)
 
 
 ############################
@@ -146,19 +145,12 @@ class FolderIsExpandedForm(BaseModel):
 @router.post("/{id}/update/expanded")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error updating folder"))
 def update_folder_is_expanded_by_id(
-    id: str,
     form_data: FolderIsExpandedForm,
-    user=Depends(get_verified_user),
+    folder: FolderModel = Depends(resolve_owned_folder),
+    user: UserModel = Depends(get_verified_user),
 ):
-    folder = Folders.get_folder_by_id_and_user_id(id, user.id)
-    if not folder:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
     return Folders.update_folder_is_expanded_by_id_and_user_id(
-        id, user.id, form_data.is_expanded
+        folder.id, user.id, form_data.is_expanded
     )
 
 
@@ -170,19 +162,12 @@ def update_folder_is_expanded_by_id(
 @router.delete("/{id}")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error deleting folder"))
 def delete_folder_by_id(
-    id: str,
     delete_contents: Optional[bool] = True,
-    user=Depends(get_verified_user),
+    folder: FolderModel = Depends(resolve_owned_folder),
+    user: UserModel = Depends(get_verified_user),
     db: Session = Depends(get_session),
 ):
-    folder = Folders.get_folder_by_id_and_user_id(id, user.id, db=db)
-    if not folder:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-    folder_ids = Folders.delete_folder_by_id_and_user_id(id, user.id, db=db)
+    folder_ids = Folders.delete_folder_by_id_and_user_id(folder.id, user.id, db=db)
 
     for folder_id in folder_ids:
         if delete_contents:

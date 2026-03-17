@@ -32,6 +32,20 @@ def is_valid_model_id(model_id: str) -> bool:
     return model_id and len(model_id) <= 256
 
 
+def require_owned_model(model_id: str, user) -> None:
+    model = Models.get_model_by_id(model_id)
+    if not model:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+    if user.role != "admin" and model.user_id != user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=ERROR_MESSAGES.ACCESS_PROHIBITED,
+        )
+
+
 ###########################
 # GetModels
 ###########################
@@ -250,19 +264,7 @@ def get_model_by_id(id: str, user=Depends(get_verified_user)):
 
 @router.post("/model/toggle", response_model=Optional[ModelResponse])
 def toggle_model_by_id(id: str, user=Depends(get_verified_user)):
-    model = Models.get_model_by_id(id)
-    if not model:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-    if user.role != "admin" and model.user_id != user.id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.UNAUTHORIZED,
-        )
-
+    require_owned_model(id, user)
     model = Models.toggle_model_by_id(id)
     if not model:
         raise HTTPException(
@@ -283,21 +285,8 @@ def update_model_by_id(
     form_data: ModelForm,
     user=Depends(get_verified_user),
 ):
-    model = Models.get_model_by_id(form_data.id)
-    if not model:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-    if user.role != "admin" and model.user_id != user.id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.UNAUTHORIZED,
-        )
-
-    model = Models.update_model_by_id(form_data.id, ModelForm(**form_data.model_dump()))
-    return model
+    require_owned_model(form_data.id, user)
+    return Models.update_model_by_id(form_data.id, ModelForm(**form_data.model_dump()))
 
 
 ############################
@@ -310,21 +299,8 @@ def delete_model_by_id(
     form_data: ModelIdForm,
     user=Depends(get_verified_user),
 ):
-    model = Models.get_model_by_id(form_data.id)
-    if not model:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-
-    if user.role != "admin" and model.user_id != user.id:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=ERROR_MESSAGES.UNAUTHORIZED,
-        )
-
-    result = Models.delete_model_by_id(form_data.id)
-    return result
+    require_owned_model(form_data.id, user)
+    return Models.delete_model_by_id(form_data.id)
 
 
 @router.delete("/delete/all", response_model=bool)

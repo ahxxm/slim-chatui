@@ -6,7 +6,7 @@ import bcrypt
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
 
-from open_webui.models.users import Users
+from open_webui.models.users import UserModel, Users
 from open_webui.models.auths import Auths
 
 
@@ -95,7 +95,7 @@ def get_current_user(
     # Sessions are managed internally with short-lived context managers.
     # This ensures connections are released immediately after auth queries,
     # not held for the entire request duration (e.g., during 30+ second LLM calls).
-):
+) -> UserModel:
     token = None
 
     if auth_token is not None:
@@ -143,7 +143,7 @@ def get_current_user(
         raise e
 
 
-def get_verified_user(user=Depends(get_current_user)):
+def get_verified_user(user: UserModel = Depends(get_current_user)) -> UserModel:
     if user.role not in {"user", "admin"}:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -152,7 +152,7 @@ def get_verified_user(user=Depends(get_current_user)):
     return user
 
 
-def get_admin_user(user=Depends(get_current_user)):
+def get_admin_user(user: UserModel = Depends(get_current_user)) -> UserModel:
     if user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
