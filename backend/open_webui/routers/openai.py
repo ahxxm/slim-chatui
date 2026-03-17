@@ -638,6 +638,7 @@ async def generate_chat_completion(
     key = request.app.state.config.OPENAI_API_KEYS[idx]
 
     payload = fix_openai_system_role(payload["model"], payload)
+
     headers, cookies = await get_headers_and_cookies(
         request, url, key, api_config, metadata, user=user
     )

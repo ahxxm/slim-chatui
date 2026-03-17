@@ -799,18 +799,6 @@ class ChatTable:
         except Exception:
             return False
 
-    def delete_chat_by_id_and_user_id(
-        self, id: str, user_id: str, db: Optional[Session] = None
-    ) -> bool:
-        try:
-            with get_db_context(db) as db:
-                db.query(ChatMessage).filter_by(chat_id=id).delete()
-                db.query(Chat).filter_by(id=id, user_id=user_id).delete()
-                db.flush()
-                return True
-        except Exception:
-            return False
-
     def delete_chats_by_user_id(
         self, user_id: str, db: Optional[Session] = None
     ) -> bool:
