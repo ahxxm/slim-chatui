@@ -1,0 +1,49 @@
+---
+model_list:
+  - model_name: gpt-5.4
+    litellm_params:
+      model: openai/gpt-5.4
+      # api_base: "1234"
+      api_key: "1234"
+      service_tier: "priority"
+      reasoning: {"effort": "xhigh", "summary": "auto"}
+      tools:
+        - type: web_search
+      tool_choice: auto
+
+  - model_name: gpt-5.4-fast
+    litellm_params:
+      model: openai/gpt-5.4
+      api_key: "1234"
+      service_tier: "priority"
+      reasoning: {"effort": "medium", "summary": "auto"}
+      text: {"verbosity": "low"}
+      tools:
+        - type: web_search
+      tool_choice: auto
+
+  - model_name: kimi-k2.5
+    litellm_params:
+      model: nvidia_nim/moonshotai/kimi-k2.5
+      api_key: nvapi-123
+      additional_drop_params: ["extra_body"]
+    model_info:
+      # "response bridge" https://docs.litellm.ai/docs/response_api
+      mode: chat
+
+  - model_name: qwen3.5
+    litellm_params:
+      model: hosted_vllm/qwen/qwen3.5-397b-a17b   # need this prefix for callback hook to inject thinking
+      api_base: https://integrate.api.nvidia.com/v1
+      api_key: nvapi-456
+      additional_drop_params: ["extra_body"]
+    model_info:
+      mode: chat
+
+general_settings:
+  master_key: sk-0001
+
+litellm_settings:
+  callbacks:
+    - qwen_thinking.proxy_handler_instance
+  drop_params: true
