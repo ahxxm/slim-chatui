@@ -1,5 +1,6 @@
 from litellm.integrations.custom_logger import CustomLogger
 
+
 class QwenThinkingCallback(CustomLogger):
     """Inject chat_template_kwargs for Qwen models via dict mutation.
 
@@ -16,5 +17,6 @@ class QwenThinkingCallback(CustomLogger):
         if not isinstance(data, dict):
             return
         data["chat_template_kwargs"] = {"enable_thinking": True}
+
 
 proxy_handler_instance = QwenThinkingCallback()

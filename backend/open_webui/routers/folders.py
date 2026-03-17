@@ -28,7 +28,9 @@ log = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def resolve_owned_folder(id: str, user: UserModel = Depends(get_verified_user)) -> FolderModel:
+def resolve_owned_folder(
+    id: str, user: UserModel = Depends(get_verified_user)
+) -> FolderModel:
     folder = Folders.get_folder_by_id_and_user_id(id, user.id)
     if not folder:
         raise HTTPException(
