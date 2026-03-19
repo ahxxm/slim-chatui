@@ -473,31 +473,30 @@ def handle_responses_streaming_event(
         response_data = data.get("response", {})
         final_output = response_data.get("output")
 
-        # Carry over per-block timing and durations already computed
-        timing = {}
-        computed_durations = {}
-        for item in current_output:
-            if item.get("type") == "reasoning":
-                item_id = item.get("id")
-                if "started_at" in item:
-                    timing[item_id] = item["started_at"]
-                if "duration" in item:
-                    computed_durations[item_id] = item["duration"]
+        # Carry over per-block timing from streaming state.
+        # IDs may differ between streaming (locally assigned) and final output
+        # (server-assigned), so match reasoning items by ordinal position.
+        streamed_reasoning = [
+            item for item in current_output if item.get("type") == "reasoning"
+        ]
 
         new_output = final_output if final_output is not None else current_output
 
         now = time.time()
-        if new_output:
-            for item in new_output:
-                if item.get("type") == "reasoning":
-                    if item.get("status") != "completed":
-                        item["status"] = "completed"
-                    item_id = item.get("id")
-                    if item_id in computed_durations:
-                        item["duration"] = computed_durations[item_id]
-                    elif "duration" not in item:
-                        started = timing.get(item_id)
-                        item["duration"] = (now - started) if started else 0
+        ordinal = 0
+        for item in new_output or []:
+            if item.get("type") == "reasoning":
+                if item.get("status") != "completed":
+                    item["status"] = "completed"
+                if "duration" not in item and ordinal < len(streamed_reasoning):
+                    started = streamed_reasoning[ordinal].get("started_at")
+                    precomputed = streamed_reasoning[ordinal].get("duration")
+                    item["duration"] = (
+                        precomputed
+                        if precomputed is not None
+                        else ((now - started) if started else 0)
+                    )
+                ordinal += 1
 
         return new_output, {"usage": response_data.get("usage"), "done": True}
 
