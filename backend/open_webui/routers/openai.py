@@ -40,7 +40,7 @@ log = logging.getLogger(__name__)
 async def send_get_request(url, key=None):
     timeout = aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST)
     try:
-        async with aiohttp.ClientSession(timeout=timeout, trust_env=True) as session:
+        async with aiohttp.ClientSession(timeout=timeout) as session:
             headers = {
                 **({"Authorization": f"Bearer {key}"} if key else {}),
             }
@@ -78,7 +78,7 @@ async def _proxy_request(
 
     try:
         session = aiohttp.ClientSession(
-            trust_env=True, timeout=aiohttp.ClientTimeout(total=timeout)
+            timeout=aiohttp.ClientTimeout(total=timeout),
         )
         r = await session.request(
             method=method,
@@ -88,8 +88,11 @@ async def _proxy_request(
             cookies=cookies,
             ssl=AIOHTTP_CLIENT_SESSION_SSL,
         )
+        log.info("proxy_request: got %d Content-Type=%s", r.status, r.headers.get("Content-Type", ""))
 
-        if "text/event-stream" in r.headers.get("Content-Type", ""):
+        content_type = r.headers.get("Content-Type", "")
+        if "text/event-stream" in content_type or "application/x-ndjson" in content_type:
+            log.info(f"Streaming response Content-Type={content_type}")
             streaming = True
             wrapper_args = (
                 (r, session, stream_handler) if stream_handler else (r, session)
@@ -100,24 +103,7 @@ async def _proxy_request(
                 headers=dict(r.headers),
             )
 
-        try:
-            response_data = await r.json()
-        except Exception:
-            response_data = await r.text()
-
-        if r.status >= 400:
-            if isinstance(response_data, (dict, list)):
-                return JSONResponse(status_code=r.status, content=response_data)
-            return PlainTextResponse(status_code=r.status, content=response_data)
-
-        return response_data
-
-    except Exception as e:
-        log.exception(e)
-        raise HTTPException(
-            status_code=r.status if r else 500,
-            detail="Open WebUI: Server Connection Error",
-        )
+        return await r.json()
     finally:
         if not streaming:
             await cleanup_response(r, session)
@@ -151,7 +137,10 @@ async def get_headers_and_cookies(
     user: UserModel = None,
 ):
     cookies = {}
-    headers = {"Accept": "text/event-stream" if stream else "application/json"}
+    headers = {
+        "Content-Type": "application/json",
+        "Accept": "text/event-stream" if stream else "application/json",
+    }
 
     token = None
     auth_type = config.get("auth_type")
@@ -393,7 +382,6 @@ async def get_models(
 
         r = None
         async with aiohttp.ClientSession(
-            trust_env=True,
             timeout=aiohttp.ClientTimeout(total=AIOHTTP_CLIENT_TIMEOUT_MODEL_LIST),
         ) as session:
             try:
@@ -642,7 +630,6 @@ async def generate_chat_completion(
         request_url = f"{url}/chat/completions"
 
     payload = json.dumps(payload)
-
     response = await _proxy_request(
         method="POST",
         url=request_url,
@@ -651,7 +638,6 @@ async def generate_chat_completion(
         cookies=cookies,
         stream_handler=stream_chunks_handler,
     )
-
     if is_responses and isinstance(response, dict):
         response = convert_responses_result(response)
 
