@@ -52,7 +52,7 @@ def output_id(prefix: str) -> str:
     return f"{prefix}_{uuid4().hex[:24]}"
 
 
-def make_message_item(text: str = "", status: str = "in_progress") -> dict[str, Any]:
+def make_message_item(text: str, status: str) -> dict[str, Any]:
     return {
         "type": "message",
         "id": output_id("msg"),
@@ -62,7 +62,7 @@ def make_message_item(text: str = "", status: str = "in_progress") -> dict[str, 
     }
 
 
-def make_reasoning_item(status: str = "in_progress") -> dict[str, Any]:
+def make_reasoning_item(status: str) -> dict[str, Any]:
     return {
         "type": "reasoning",
         "id": output_id("r"),
@@ -185,7 +185,7 @@ def finalize_output(output: OutputList) -> OutputList:
                 if not content_parts[-1]["text"]:
                     output.pop()
                     if not output:
-                        output.append(make_message_item())
+                        output.append(make_message_item("", "in_progress"))
 
         if output and output[-1].get("type") == "reasoning":
             item = output[-1]
@@ -605,7 +605,7 @@ def apply_completions_delta(
 
     if reasoning_text:
         if not output or output[-1].get("type") != "reasoning":
-            output.append(make_reasoning_item())
+            output.append(make_reasoning_item("in_progress"))
         reasoning_item = output[-1]
         parts = reasoning_item.get("content", [])
         if parts and parts[-1].get("type") == "output_text":
@@ -624,12 +624,12 @@ def apply_completions_delta(
             and output[-1].get("attributes", {}).get("type") == "reasoning_content"
         ):
             close_reasoning_item(output[-1])
-            output.append(make_message_item())
+            output.append(make_message_item("", "in_progress"))
 
         content += value
 
         if not output or output[-1].get("type") != "message":
-            output.append(make_message_item())
+            output.append(make_message_item("", "in_progress"))
 
         msg_parts = output[-1].get("content", [])
         if msg_parts and msg_parts[-1].get("type") == "output_text":
