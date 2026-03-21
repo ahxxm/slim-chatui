@@ -283,43 +283,24 @@ def _responses_part_added(
 # --- delta sub-handlers ---
 
 
-def _delta_message(
+# (field, index_key, default entry type) — keyed by (item_type, delta_type).
+_DELTA_ROUTES = {
+    ("message", "text"): ("content", "content_index", "text"),
+    ("message", "output_text"): ("content", "content_index", "text"),
+    ("reasoning", "reasoning_summary_text"): ("summary", "summary_index", "summary_text"),
+    ("reasoning", "reasoning_text"): ("content", "content_index", "text"),
+}
+
+
+def _apply_item_delta(
+    item_type: str,
     delta_type: str,
     data: dict[str, Any],
     delta: Any,
     item: dict[str, Any],
     new_output: OutputList,
 ) -> tuple[OutputList, dict[str, Any] | None]:
-    # Reasoning deltas don't belong on message items
-    if delta_type in ("reasoning_text", "reasoning_summary_text"):
-        return new_output, None
-
-    assert delta_type in {"text", "output_text"}, f"delta_type={delta_type} unseen"
-    idx = data.get("content_index", 0)
-    entries = item["content"] = list(item.get("content", []))
-    while len(entries) <= idx:
-        entries.append({"type": "text", "text": ""})
-    entries[idx] = {**entries[idx], "text": deep_merge(entries[idx].get("text"), delta)}
-    return new_output, None
-
-
-def _delta_reasoning(
-    delta_type: str,
-    data: dict[str, Any],
-    delta: Any,
-    item: dict[str, Any],
-    new_output: OutputList,
-) -> tuple[OutputList, dict[str, Any] | None]:
-    # (field, index_key, default entry type)
-    targets = {
-        "reasoning_summary_text": ("summary", "summary_index", "summary_text"),
-        "reasoning_text": ("content", "content_index", "text"),
-    }
-    target = targets.get(delta_type)
-    if not target:
-        # text/output_text deltas don't belong on reasoning items
-        return new_output, None
-    field, index_key, entry_type = target
+    field, index_key, entry_type = _DELTA_ROUTES[(item_type, delta_type)]
     idx = data.get(index_key, 0)
     entries = item[field] = list(item.get(field, []))
     while len(entries) <= idx:
@@ -335,6 +316,7 @@ def _responses_delta(
 ) -> tuple[OutputList, dict[str, Any] | None]:
     parts = event_type.split(".")
     if len(parts) < 3:
+        log.warning(f"[stream] malformed delta event?: {event_type}")
         return current_output, None
 
     delta_type = parts[1]
@@ -354,18 +336,10 @@ def _responses_delta(
             item["arguments"] = item.get("arguments", "") + str(delta)
         return new_output, None
 
-    if item_type == "message":
-        return _delta_message(delta_type, data, delta, item, new_output)
+    if (item_type, delta_type) in _DELTA_ROUTES:
+        return _apply_item_delta(item_type, delta_type, data, delta, item, new_output)
 
-    if item_type == "reasoning":
-        return _delta_reasoning(delta_type, data, delta, item, new_output)
-
-    # Fallback for other item types
-    key = "text" if delta_type in ("text", "output_text") else delta_type
-    current_val = item.get(key)
-    if current_val is None:
-        current_val = {} if isinstance(delta, dict) else ""
-    item[key] = deep_merge(current_val, delta)
+    log.warning(f"[stream] unrouted delta {delta_type} on {item_type} item")
     return new_output, None
 
 
