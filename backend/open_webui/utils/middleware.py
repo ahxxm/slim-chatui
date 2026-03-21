@@ -267,6 +267,7 @@ def _responses_part_added(
     output_index = data.get("output_index", len(current_output) - 1)
 
     if not current_output or not (0 <= output_index < len(current_output)):
+        log.warning(f"[stream] part_added has invalid output_index {output_index}")
         return current_output, None
 
     new_output = list(current_output)
@@ -324,6 +325,7 @@ def _responses_delta(
     output_index = data.get("output_index", len(current_output) - 1)
 
     if not current_output or not (0 <= output_index < len(current_output)):
+        log.warning(f"[stream] delta event {event_type} has invalid output_index {output_index}")
         return current_output, None
 
     new_output = list(current_output)
@@ -346,74 +348,31 @@ def _responses_delta(
 # --- done sub-handlers ---
 
 
-def _replace_part_in_list(
-    data: dict[str, Any],
-    current_output: OutputList,
-    field: str,
-    index_key: str,
-) -> tuple[OutputList, dict[str, Any] | None]:
-    part = data.get("part")
+
+def _resolve_done_item(
+    data: dict[str, Any], current_output: OutputList
+) -> dict[str, Any] | None:
+    """Return the output item targeted by a .done event, or None."""
     output_index = data.get("output_index", len(current_output) - 1)
-
-    if not part or not current_output or not (0 <= output_index < len(current_output)):
-        return current_output, None
-
-    new_output = list(current_output)
-    item = new_output[output_index].copy()
-    new_output[output_index] = item
-
-    if field not in item:
-        return current_output, None
-
-    item[field] = list(item[field])
-    idx = data.get(index_key, len(item[field]) - 1)
-    if 0 <= idx < len(item[field]):
-        item[field][idx] = part
-        return new_output, {}
-
-    return current_output, None
+    if current_output and 0 <= output_index < len(current_output):
+        return current_output[output_index]
+    return None
 
 
-def _done_generic_field(
-    type_name: str,
-    data: dict[str, Any],
-    current_output: OutputList,
-) -> tuple[OutputList, dict[str, Any] | None]:
-    output_index = data.get("output_index", len(current_output) - 1)
-    if not current_output or not (0 <= output_index < len(current_output)):
-        return current_output, None
+# .done events that replace a part in a list field
+_DONE_PART_FIELDS = {
+    "content_part": ("content", "content_index"),
+    "reasoning_summary_part": ("summary", "summary_index"),
+}
 
-    key = type_name
-    if type_name in ("text", "output_text", "reasoning_text", "reasoning_summary_text"):
-        key = "text"
-    elif type_name == "function_call_arguments":
-        key = "arguments"
-
-    if key not in data:
-        return current_output, None
-
-    final_value = data[key]
-    new_output = list(current_output)
-    item = new_output[output_index].copy()
-    new_output[output_index] = item
-    item_type = item.get("type", "")
-
-    if type_name == "function_call_arguments" and item_type == "function_call":
-        item["arguments"] = final_value
-    elif item_type == "message":
-        content_index = data.get("content_index", 0)
-        if "content" in item:
-            item["content"] = list(item["content"])
-            if len(item["content"]) > content_index:
-                part = item["content"][content_index].copy()
-                item["content"][content_index] = part
-                part[key] = final_value
-    elif item_type == "reasoning":
-        item["status"] = "completed"
-    else:
-        item[key] = final_value
-
-    return new_output, {}
+# .done events that finalize a scalar field
+_DONE_KEY_MAP = {
+    "text": "text",
+    "output_text": "text",
+    "reasoning_text": "text",
+    "reasoning_summary_text": "text",
+    "function_call_arguments": "arguments",
+}
 
 
 def _responses_done(
@@ -423,15 +382,10 @@ def _responses_done(
 ) -> tuple[OutputList, dict[str, Any] | None]:
     parts = event_type.split(".")
     if len(parts) < 3:
+        log.warning(f"[stream] malformed done event: {event_type}")
         return current_output, None
 
     type_name = parts[1]
-
-    if type_name == "content_part":
-        return _replace_part_in_list(data, current_output, "content", "content_index")
-
-    if type_name == "reasoning_summary_part":
-        return _replace_part_in_list(data, current_output, "summary", "summary_index")
 
     # Replace by id, not output_index — index may not match our array
     # if we inserted extra items (e.g. reasoning blocks)
@@ -441,8 +395,45 @@ def _responses_done(
     if type_name in ("completed", "failed"):
         return current_output, None
 
-    # Generic field done (text.done, function_call_arguments.done, etc.)
-    return _done_generic_field(type_name, data, current_output)
+    item = _resolve_done_item(data, current_output)
+    if not item:
+        log.warning(f"[stream] done event {event_type} has no target item")
+        return current_output, None
+
+    # Part list replacement (content_part.done, reasoning_summary_part.done)
+    if type_name in _DONE_PART_FIELDS:
+        part = data.get("part")
+        if not part:
+            return current_output, None
+        field, index_key = _DONE_PART_FIELDS[type_name]
+        field_list = item.get(field, [])
+        idx = data.get(index_key, len(field_list) - 1)
+        if 0 <= idx < len(field_list):
+            field_list[idx] = part
+            return current_output, {}
+        return current_output, None
+
+    # Scalar field finalization (text.done, function_call_arguments.done, etc.)
+    key = _DONE_KEY_MAP.get(type_name, type_name)
+    if key not in data:
+        return current_output, None
+
+    final_value = data[key]
+    item_type = item.get("type", "")
+
+    if item_type == "function_call":
+        item["arguments"] = final_value
+    elif item_type == "message":
+        content = item.get("content", [])
+        idx = data.get("content_index", 0)
+        if idx < len(content):
+            content[idx][key] = final_value
+    elif item_type == "reasoning":
+        item["status"] = "completed"
+    else:
+        item[key] = final_value
+
+    return current_output, {}
 
 
 def _responses_completed(
@@ -1086,16 +1077,24 @@ async def background_tasks_handler(ctx: dict[str, Any]) -> None:
     if not (message and "model" in message and tasks and messages):
         return
 
+    coros = []
+
     if tasks.get(TASKS.FOLLOW_UP_GENERATION):
-        await _generate_follow_ups(
-            request, message, messages, metadata, user, event_emitter, is_ephemeral
+        coros.append(
+            _generate_follow_ups(
+                request, message, messages, metadata, user, event_emitter, is_ephemeral
+            )
         )
 
-    if is_ephemeral:
-        return
+    if not is_ephemeral and tasks.get(TASKS.TITLE_GENERATION):
+        coros.append(
+            _generate_title(
+                request, message, messages, metadata, user, event_emitter
+            )
+        )
 
-    if tasks.get(TASKS.TITLE_GENERATION):
-        await _generate_title(request, message, messages, metadata, user, event_emitter)
+    if coros:
+        await asyncio.gather(*coros)
 
 
 # ---------------------------------------------------------------------------
