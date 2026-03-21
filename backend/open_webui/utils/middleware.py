@@ -166,12 +166,17 @@ def deep_merge(target: Any, source: Any) -> Any:
     return source
 
 
-def close_reasoning_item(item: dict[str, Any]) -> None:
-    """Close an in-progress reasoning item with timing."""
+def close_reasoning_item(item: dict[str, Any]) -> dict[str, Any]:
+    """Return a closed copy of a reasoning item. Idempotent."""
+    if item.get("ended_at") is not None:
+        return item
     now = time.time()
-    item["ended_at"] = now
-    item["duration"] = now - item.get("started_at", now)
-    item["status"] = "completed"
+    return {
+        **item,
+        "ended_at": now,
+        "duration": now - item.get("started_at", now),
+        "status": "completed",
+    }
 
 
 def finalize_output(output: OutputList) -> OutputList:
@@ -188,9 +193,7 @@ def finalize_output(output: OutputList) -> OutputList:
                         output.append(make_message_item("", "in_progress"))
 
         if output and output[-1].get("type") == "reasoning":
-            item = output[-1]
-            if item.get("ended_at") is None:
-                close_reasoning_item(item)
+            output[-1] = close_reasoning_item(output[-1])
 
     for item in output:
         if item.get("status") == "in_progress":
@@ -623,7 +626,7 @@ def apply_completions_delta(
             and output[-1].get("type") == "reasoning"
             and output[-1].get("attributes", {}).get("type") == "reasoning_content"
         ):
-            close_reasoning_item(output[-1])
+            output[-1] = close_reasoning_item(output[-1])
             output.append(make_message_item("", "in_progress"))
 
         content += value
