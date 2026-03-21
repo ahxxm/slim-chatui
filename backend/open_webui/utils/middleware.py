@@ -18,7 +18,6 @@ from open_webui.models.folders import Folders
 from open_webui.socket.main import get_event_emitter
 from open_webui.routers.tasks import generate_title, generate_follow_ups
 from open_webui.utils.files import (
-    convert_markdown_base64_images,
     get_image_base64_from_url,
     get_image_url_from_base64,
 )
@@ -32,10 +31,7 @@ from open_webui.utils.misc import (
 )
 from open_webui.utils.payload import apply_system_prompt_to_body
 from open_webui.utils.response import normalize_usage
-from open_webui.env import (
-    ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION,
-    CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE,
-)
+from open_webui.env import CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE
 from open_webui.constants import TASKS
 
 log = logging.getLogger(__name__)
@@ -603,7 +599,6 @@ def apply_completions_delta(
     delta: dict[str, Any],
     output: OutputList,
     content: str,
-    convert_images: Callable[[str], str] | None = None,
 ) -> tuple[OutputList, str]:
     """Apply a Chat Completions delta to output state.  Mutates items in-place."""
     reasoning_text = (
@@ -634,9 +629,6 @@ def apply_completions_delta(
         ):
             close_reasoning_item(output[-1])
             output.append(make_message_item())
-
-        if convert_images:
-            value = convert_images(value)
 
         content += value
 
@@ -1312,20 +1304,6 @@ async def streaming_chat_response_handler(
 
     batcher = DeltaBatcher(event_emitter, CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE)
 
-    convert_images_fn: Callable[[str], str] | None = None
-    if ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION:
-
-        def convert_images_fn(value: str) -> str:
-            return convert_markdown_base64_images(
-                request,
-                value,
-                {
-                    "chat_id": metadata.get("chat_id"),
-                    "message_id": metadata.get("message_id"),
-                },
-                user,
-            )
-
     try:
         async for data in parse_sse_lines(response.body_iterator):
             _log_chunk(data)
@@ -1389,7 +1367,7 @@ async def streaming_chat_response_handler(
 
             # State update
             output, content = apply_completions_delta(
-                delta, output, content, convert_images=convert_images_fn
+                delta, output, content
             )
 
             emit_data = {"content": serialize_output(output)}
