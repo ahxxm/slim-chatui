@@ -19,7 +19,6 @@ from open_webui.routers.files import upload_file_handler
 log = logging.getLogger(__name__)
 
 BASE64_IMAGE_URL_PREFIX = re.compile(r"data:image/\w+;base64,", re.IGNORECASE)
-MARKDOWN_IMAGE_URL_PATTERN = re.compile(r"!\[(.*?)\]\((.+?)\)", re.IGNORECASE)
 
 
 def get_image_data(data: str, headers=None):
@@ -140,16 +139,3 @@ def get_image_url_from_base64(request, base64_image_string, metadata, user):
 
         return image_url
     return None
-
-
-def convert_markdown_base64_images(request, content: str, metadata, user):
-    def replace(match):
-        base64_string = match.group(2)
-        MIN_REPLACEMENT_URL_LENGTH = 1024
-        if len(base64_string) > MIN_REPLACEMENT_URL_LENGTH:
-            url = get_image_url_from_base64(request, base64_string, metadata, user)
-            if url:
-                return f"![{match.group(1)}]({url})"
-        return match.group(0)
-
-    return MARKDOWN_IMAGE_URL_PATTERN.sub(replace, content)
