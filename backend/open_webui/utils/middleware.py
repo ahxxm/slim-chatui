@@ -1204,7 +1204,7 @@ async def streaming_chat_response_handler(
                     metadata["message_id"],
                     {"selectedModelId": data["selected_model_id"]},
                 )
-                await batcher.emit_now(data)
+                await batcher.emit(data, immediate=True)
                 continue
 
             # --- Responses API events ---
@@ -1225,9 +1225,7 @@ async def streaming_chat_response_handler(
                 }
                 if response_metadata:
                     processed.update(response_metadata)
-                    await batcher.emit_now(processed)
-                else:
-                    await batcher.add(processed)
+                await batcher.emit(processed, immediate=bool(response_metadata))
                 continue
 
             # --- Chat Completions events ---
@@ -1236,12 +1234,12 @@ async def streaming_chat_response_handler(
             raw_usage = data.get("usage") or {}
             if raw_usage:
                 usage = normalize_usage(raw_usage)
-                await batcher.emit_now({"usage": usage})
+                await batcher.emit({"usage": usage}, immediate=True)
 
             if not choices:
                 error = data.get("error")
                 if error:
-                    await batcher.emit_now({"error": error})
+                    await batcher.emit({"error": error}, immediate=True)
                 continue
 
             delta = choices[0].get("delta", {})
@@ -1255,11 +1253,9 @@ async def streaming_chat_response_handler(
                 delta, output, content
             )
 
-            emit_data = {"content": serialize_output(output)}
-            if delta:
-                await batcher.add(emit_data)
-            else:
-                await event_emitter({"type": "chat:completion", "data": emit_data})
+            await batcher.emit(
+                {"content": serialize_output(output)}, immediate=not delta
+            )
 
         # Stream fully consumed
         await batcher.flush()

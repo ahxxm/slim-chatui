@@ -18,21 +18,21 @@ class DeltaBatcher:
         self._count = 0
         self._pending: dict[str, Any] | None = None
 
-    async def add(self, data: dict[str, Any]) -> None:
-        self._count += 1
-        self._pending = data
-        if self._count >= self._chunk_size:
+    async def emit(self, data: dict[str, Any], immediate: bool = False) -> None:
+        if immediate:
             await self.flush()
+            await self._emit({"type": "chat:completion", "data": data})
+        else:
+            self._count += 1
+            self._pending = data
+            if self._count >= self._chunk_size:
+                await self.flush()
 
     async def flush(self) -> None:
         if self._pending is not None:
             await self._emit({"type": "chat:completion", "data": self._pending})
             self._count = 0
             self._pending = None
-
-    async def emit_now(self, data: dict[str, Any]) -> None:
-        await self.flush()
-        await self._emit({"type": "chat:completion", "data": data})
 
 
 # inplace function: form_data is modified
