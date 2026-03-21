@@ -1077,24 +1077,19 @@ async def background_tasks_handler(ctx: dict[str, Any]) -> None:
     if not (message and "model" in message and tasks and messages):
         return
 
-    coros = []
-
-    if tasks.get(TASKS.FOLLOW_UP_GENERATION):
-        coros.append(
-            _generate_follow_ups(
-                request, message, messages, metadata, user, event_emitter, is_ephemeral
+    async with asyncio.TaskGroup() as tg:
+        if tasks.get(TASKS.FOLLOW_UP_GENERATION):
+            tg.create_task(
+                _generate_follow_ups(
+                    request, message, messages, metadata, user, event_emitter, is_ephemeral
+                )
             )
-        )
-
-    if not is_ephemeral and tasks.get(TASKS.TITLE_GENERATION):
-        coros.append(
-            _generate_title(
-                request, message, messages, metadata, user, event_emitter
+        if not is_ephemeral and tasks.get(TASKS.TITLE_GENERATION):
+            tg.create_task(
+                _generate_title(
+                    request, message, messages, metadata, user, event_emitter
+                )
             )
-        )
-
-    if coros:
-        await asyncio.gather(*coros)
 
 
 # ---------------------------------------------------------------------------
