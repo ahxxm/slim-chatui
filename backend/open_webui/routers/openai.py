@@ -144,24 +144,14 @@ def fix_openai_system_role(model: str, payload):
 
 async def get_headers_and_cookies(
     request: Request,
-    url,
+    stream: bool,
     key=None,
     config=None,
     metadata: Optional[dict] = None,
     user: UserModel = None,
 ):
     cookies = {}
-    headers = {
-        "Content-Type": "application/json",
-        **(
-            {
-                "HTTP-Referer": "https://openwebui.com/",
-                "X-Title": "Open WebUI",
-            }
-            if "openrouter.ai" in url
-            else {}
-        ),
-    }
+    headers = {"Accept": "text/event-stream" if stream else "application/json"}
 
     token = None
     auth_type = config.get("auth_type")
@@ -408,7 +398,7 @@ async def get_models(
         ) as session:
             try:
                 headers, cookies = await get_headers_and_cookies(
-                    request, url, key, api_config, user=user
+                    request, False, key, api_config, user=user
                 )
 
                 async with session.get(
@@ -463,7 +453,7 @@ async def verify_connection(
     api_config = form_data.config or {}
 
     headers, cookies = await get_headers_and_cookies(
-        request, url, key, api_config, user=user
+        request, False, key, api_config, user=user
     )
 
     return await _proxy_request(
@@ -640,7 +630,7 @@ async def generate_chat_completion(
     payload = fix_openai_system_role(payload["model"], payload)
 
     headers, cookies = await get_headers_and_cookies(
-        request, url, key, api_config, metadata, user=user
+        request, True, key, api_config, metadata, user=user
     )
 
     is_responses = api_config.get("api_type") == "responses"
