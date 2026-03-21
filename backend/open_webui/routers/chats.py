@@ -17,7 +17,7 @@ from pydantic import BaseModel
 
 
 from open_webui.utils.auth import get_admin_user, get_verified_user
-from open_webui.utils.middleware import serialize_output
+from open_webui.utils.response import serialize_output
 from open_webui.utils.route import route_error_handler
 
 log = logging.getLogger(__name__)

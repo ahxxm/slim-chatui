@@ -163,11 +163,6 @@ if WEBUI_AUTH and WEBUI_SECRET_KEY == "":
 # CHAT
 ####################################
 
-ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION = (
-    os.environ.get("ENABLE_CHAT_RESPONSE_BASE64_IMAGE_URL_CONVERSION", "False").lower()
-    == "true"
-)
-
 CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE = 3
 
 

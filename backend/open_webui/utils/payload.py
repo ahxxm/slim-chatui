@@ -1,9 +1,38 @@
+from typing import Any, Optional
+from collections.abc import Awaitable, Callable
+
 from open_webui.utils.misc import (
     add_or_update_system_message,
     replace_system_message_content,
 )
 
-from typing import Optional
+EventEmitter = Callable[[dict[str, Any]], Awaitable[None]]
+
+
+class DeltaBatcher:
+    """Batch delta emissions to reduce WebSocket traffic."""
+
+    def __init__(self, emit: EventEmitter, chunk_size: int) -> None:
+        self._emit = emit
+        self._chunk_size = chunk_size
+        self._count = 0
+        self._pending: dict[str, Any] | None = None
+
+    async def emit(self, data: dict[str, Any], immediate: bool = False) -> None:
+        if immediate:
+            await self.flush()
+            await self._emit({"type": "chat:completion", "data": data})
+        else:
+            self._count += 1
+            self._pending = data
+            if self._count >= self._chunk_size:
+                await self.flush()
+
+    async def flush(self) -> None:
+        if self._pending is not None:
+            await self._emit({"type": "chat:completion", "data": self._pending})
+            self._count = 0
+            self._pending = None
 
 
 # inplace function: form_data is modified

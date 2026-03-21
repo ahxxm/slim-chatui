@@ -16,7 +16,7 @@ import json
 import time
 from pathlib import Path
 
-from open_webui.utils.middleware import (
+from open_webui.utils.response import (
     handle_responses_streaming_event,
     serialize_output,
 )
