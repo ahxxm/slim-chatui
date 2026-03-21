@@ -181,19 +181,23 @@ def close_reasoning_item(item: dict[str, Any]) -> dict[str, Any]:
 
 def finalize_output(output: OutputList) -> OutputList:
     """Post-stream cleanup: strip whitespace, close reasoning, mark completed."""
-    if output:
-        last = output[-1]
-        if last.get("type") == "message":
-            content_parts = last.get("content", [])
-            if content_parts and content_parts[-1].get("type") == "output_text":
-                content_parts[-1]["text"] = content_parts[-1]["text"].strip()
-                if not content_parts[-1]["text"]:
-                    output.pop()
-                    if not output:
-                        output.append(make_message_item("", "in_progress"))
+    if not output:
+        return output
 
-        if output and output[-1].get("type") == "reasoning":
-            output[-1] = close_reasoning_item(output[-1])
+    last = output[-1]
+
+    # Strip trailing whitespace from last message; drop if empty
+    if last.get("type") == "message":
+        parts = last.get("content", [])
+        if parts and parts[-1].get("type") == "output_text":
+            parts[-1]["text"] = parts[-1]["text"].strip()
+            if not parts[-1]["text"]:
+                output.pop()
+                if not output:
+                    output.append(make_message_item("", "in_progress"))
+
+    if output and output[-1].get("type") == "reasoning":
+        output[-1] = close_reasoning_item(output[-1])
 
     for item in output:
         if item.get("status") == "in_progress":
