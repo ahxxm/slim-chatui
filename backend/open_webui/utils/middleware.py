@@ -1299,15 +1299,15 @@ async def streaming_chat_response_handler(
 
     except asyncio.CancelledError:
         log.warning("Task was cancelled!")
-        await event_emitter({"type": "chat:tasks:cancel"})
         Chats.upsert_message_to_chat_by_id_and_message_id(
             metadata["chat_id"],
             metadata["message_id"],
             {"content": serialize_output(output), "output": output},
         )
-
         if response.background is not None:
             await response.background()
+        # raise to cancel by caller's caller
+        raise
 
 
 # ---------------------------------------------------------------------------
