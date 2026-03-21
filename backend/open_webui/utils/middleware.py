@@ -310,23 +310,21 @@ def _delta_reasoning(
     item: dict[str, Any],
     new_output: OutputList,
 ) -> tuple[OutputList, dict[str, Any] | None]:
-    if delta_type == "reasoning_summary_text":
-        idx = data.get("summary_index", 0)
-        entries = item["summary"] = list(item.get("summary", []))
-        while len(entries) <= idx:
-            entries.append({"type": "summary_text", "text": ""})
-        entries[idx] = {**entries[idx], "text": deep_merge(entries[idx].get("text"), delta)}
+    # (field, index_key, default entry type)
+    targets = {
+        "reasoning_summary_text": ("summary", "summary_index", "summary_text"),
+        "reasoning_text": ("content", "content_index", "text"),
+    }
+    target = targets.get(delta_type)
+    if not target:
+        # text/output_text deltas don't belong on reasoning items
         return new_output, None
-
-    if delta_type == "reasoning_text":
-        idx = data.get("content_index", 0)
-        entries = item["content"] = list(item.get("content", []))
-        while len(entries) <= idx:
-            entries.append({"type": "text", "text": ""})
-        entries[idx] = {**entries[idx], "text": deep_merge(entries[idx].get("text"), delta)}
-        return new_output, None
-
-    # text/output_text deltas don't belong on reasoning items
+    field, index_key, entry_type = target
+    idx = data.get(index_key, 0)
+    entries = item[field] = list(item.get(field, []))
+    while len(entries) <= idx:
+        entries.append({"type": entry_type, "text": ""})
+    entries[idx] = {**entries[idx], "text": deep_merge(entries[idx].get("text"), delta)}
     return new_output, None
 
 
