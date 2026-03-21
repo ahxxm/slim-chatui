@@ -21,7 +21,6 @@ log = logging.getLogger(__name__)
 BASE64_IMAGE_URL_PREFIX = re.compile(r"data:image/\w+;base64,", re.IGNORECASE)
 
 
-
 def get_image_data(data: str, headers=None):
     try:
         if data.startswith("http://") or data.startswith("https://"):
@@ -140,6 +139,3 @@ def get_image_url_from_base64(request, base64_image_string, metadata, user):
 
         return image_url
     return None
-
-
-

@@ -29,7 +29,11 @@ from open_webui.utils.misc import (
     get_system_message,
     convert_output_to_messages,
 )
-from open_webui.utils.payload import apply_system_prompt_to_body, DeltaBatcher, EventEmitter
+from open_webui.utils.payload import (
+    apply_system_prompt_to_body,
+    DeltaBatcher,
+    EventEmitter,
+)
 from open_webui.utils.response import normalize_usage
 from open_webui.env import CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE
 from open_webui.constants import TASKS
@@ -37,7 +41,7 @@ from open_webui.constants import TASKS
 log = logging.getLogger(__name__)
 
 # Backward-compat re-exports
-from open_webui.utils.response import extract_task_text, parse_task_json  # noqa: F401
+from open_webui.utils.response import parse_task_json  # noqa: F401
 
 OutputList = list[dict[str, Any]]
 
@@ -237,21 +241,14 @@ def _responses_item_added(
     if not item:
         return current_output, None
 
-    now = time.time()
     new_output = list(current_output)
 
-    # Close the previous reasoning block's duration
-    if new_output:
-        prev = new_output[-1]
-        if (
-            prev.get("type") == "reasoning"
-            and "started_at" in prev
-            and "duration" not in prev
-        ):
-            new_output[-1] = {**prev, "duration": now - prev["started_at"]}
+    # Close the previous reasoning block
+    if new_output and new_output[-1].get("type") == "reasoning":
+        new_output[-1] = close_reasoning_item(new_output[-1])
 
     if item.get("type") == "reasoning":
-        item = {**item, "started_at": now}
+        item = {**item, "started_at": time.time()}
 
     new_output.append(item)
     return new_output, None
@@ -288,7 +285,11 @@ def _responses_part_added(
 _DELTA_ROUTES = {
     ("message", "text"): ("content", "content_index", "text"),
     ("message", "output_text"): ("content", "content_index", "text"),
-    ("reasoning", "reasoning_summary_text"): ("summary", "summary_index", "summary_text"),
+    ("reasoning", "reasoning_summary_text"): (
+        "summary",
+        "summary_index",
+        "summary_text",
+    ),
     ("reasoning", "reasoning_text"): ("content", "content_index", "text"),
 }
 
@@ -325,7 +326,9 @@ def _responses_delta(
     output_index = data.get("output_index", len(current_output) - 1)
 
     if not current_output or not (0 <= output_index < len(current_output)):
-        log.warning(f"[stream] delta event {event_type} has invalid output_index {output_index}")
+        log.warning(
+            f"[stream] delta event {event_type} has invalid output_index {output_index}"
+        )
         return current_output, None
 
     new_output = list(current_output)
@@ -346,7 +349,6 @@ def _responses_delta(
 
 
 # --- done sub-handlers ---
-
 
 
 def _resolve_done_item(
@@ -1081,7 +1083,13 @@ async def background_tasks_handler(ctx: dict[str, Any]) -> None:
         if tasks.get(TASKS.FOLLOW_UP_GENERATION):
             tg.create_task(
                 _generate_follow_ups(
-                    request, message, messages, metadata, user, event_emitter, is_ephemeral
+                    request,
+                    message,
+                    messages,
+                    metadata,
+                    user,
+                    event_emitter,
+                    is_ephemeral,
                 )
             )
         if not is_ephemeral and tasks.get(TASKS.TITLE_GENERATION):
@@ -1249,9 +1257,7 @@ async def streaming_chat_response_handler(
             await _emit_images(delta, request, metadata, user, event_emitter)
 
             # State update
-            output, content = apply_completions_delta(
-                delta, output, content
-            )
+            output, content = apply_completions_delta(delta, output, content)
 
             await batcher.emit(
                 {"content": serialize_output(output)}, immediate=not delta
