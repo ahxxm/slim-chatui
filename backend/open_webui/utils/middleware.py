@@ -1101,72 +1101,66 @@ async def non_streaming_chat_response_handler(
     response: Any, ctx: dict[str, Any]
 ) -> Any:
     metadata: dict[str, Any] = ctx["metadata"]
-    event_emitter: EventEmitter | None = ctx["event_emitter"]
+    event_emitter: EventEmitter = ctx["event_emitter"]
 
     response, response_data = get_response_data(response)
     if response_data is None:
         return response
 
-    if not event_emitter:
-        return response_data if isinstance(response, dict) else response
-
-    try:
-        if "error" in response_data:
-            error = _normalize_error(response_data["error"])
-            Chats.upsert_message_to_chat_by_id_and_message_id(
-                metadata["chat_id"],
-                metadata["message_id"],
-                {"error": {"content": error}},
-            )
-            if isinstance(error, (str, dict)):
-                await event_emitter(
-                    {
-                        "type": "chat:message:error",
-                        "data": {"error": {"content": error}},
-                    }
-                )
-
-        if "selected_model_id" in response_data:
-            Chats.upsert_message_to_chat_by_id_and_message_id(
-                metadata["chat_id"],
-                metadata["message_id"],
-                {"selectedModelId": response_data["selected_model_id"]},
-            )
-
-        content = _extract_completion_content(response_data)
-        if content:
-            await event_emitter({"type": "chat:completion", "data": response_data})
-
-            response_output = response_data.get("output") or [
-                make_message_item(content, "completed")
-            ]
-            title = Chats.get_chat_title_by_id(metadata["chat_id"])
-
+    if "error" in response_data:
+        error = _normalize_error(response_data["error"])
+        Chats.upsert_message_to_chat_by_id_and_message_id(
+            metadata["chat_id"],
+            metadata["message_id"],
+            {"error": {"content": error}},
+        )
+        if isinstance(error, (str, dict)):
             await event_emitter(
                 {
-                    "type": "chat:completion",
-                    "data": {
-                        "done": True,
-                        "content": content,
-                        "output": response_output,
-                        "title": title,
-                    },
+                    "type": "chat:message:error",
+                    "data": {"error": {"content": error}},
                 }
             )
 
-            Chats.upsert_message_to_chat_by_id_and_message_id(
-                metadata["chat_id"],
-                metadata["message_id"],
-                {
-                    "role": "assistant",
+    if "selected_model_id" in response_data:
+        Chats.upsert_message_to_chat_by_id_and_message_id(
+            metadata["chat_id"],
+            metadata["message_id"],
+            {"selectedModelId": response_data["selected_model_id"]},
+        )
+
+    content = _extract_completion_content(response_data)
+    if content:
+        await event_emitter({"type": "chat:completion", "data": response_data})
+
+        response_output = response_data.get("output") or [
+            make_message_item(content, "completed")
+        ]
+        title = Chats.get_chat_title_by_id(metadata["chat_id"])
+
+        await event_emitter(
+            {
+                "type": "chat:completion",
+                "data": {
+                    "done": True,
                     "content": content,
                     "output": response_output,
+                    "title": title,
                 },
-            )
+            }
+        )
 
-            await background_tasks_handler(ctx)
-    except Exception as e:
-        log.debug(f"Error in non-streaming handler: {e}")
+        Chats.upsert_message_to_chat_by_id_and_message_id(
+            metadata["chat_id"],
+            metadata["message_id"],
+            {
+                "role": "assistant",
+                "content": content,
+                "output": response_output,
+            },
+        )
+
+        await background_tasks_handler(ctx)
 
     return build_response_object(response, response_data)
 
@@ -1178,16 +1172,8 @@ async def non_streaming_chat_response_handler(
 
 async def streaming_chat_response_handler(
     response: StreamingResponse, ctx: dict[str, Any]
-) -> StreamingResponse | None:
-    event_emitter: EventEmitter | None = ctx["event_emitter"]
-
-    if not event_emitter:
-        return StreamingResponse(
-            response.body_iterator,
-            headers=dict(response.headers),
-            background=response.background,
-        )
-
+) -> None:
+    event_emitter: EventEmitter = ctx["event_emitter"]
     metadata: dict[str, Any] = ctx["metadata"]
     form_data: dict[str, Any] = ctx["form_data"]
     request: Request = ctx["request"]
@@ -1334,6 +1320,16 @@ async def streaming_chat_response_handler(
 
 
 async def process_chat_response(response: Any, ctx: dict[str, Any]) -> Any:
+    if not ctx["event_emitter"]:
+        if isinstance(response, StreamingResponse):
+            return StreamingResponse(
+                response.body_iterator,
+                headers=dict(response.headers),
+                background=response.background,
+            )
+        _, response_data = get_response_data(response)
+        return response_data if isinstance(response, dict) else response
+
     if not isinstance(response, StreamingResponse):
         return await non_streaming_chat_response_handler(response, ctx)
 
