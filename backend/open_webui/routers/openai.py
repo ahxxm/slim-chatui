@@ -88,11 +88,9 @@ async def _proxy_request(
             cookies=cookies,
             ssl=AIOHTTP_CLIENT_SESSION_SSL,
         )
-        log.info("proxy_request: got %d Content-Type=%s", r.status, r.headers.get("Content-Type", ""))
 
         content_type = r.headers.get("Content-Type", "")
         if "text/event-stream" in content_type or "application/x-ndjson" in content_type:
-            log.info(f"Streaming response Content-Type={content_type}")
             streaming = True
             wrapper_args = (
                 (r, session, stream_handler) if stream_handler else (r, session)

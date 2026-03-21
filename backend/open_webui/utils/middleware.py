@@ -155,7 +155,9 @@ def serialize_output(output: OutputList) -> str:
 
 
 def deep_merge(target: Any, source: Any) -> Any:
-    """Merge source into target: dicts recurse, strings concat, else overwrite."""
+    """Merge source into target: None is identity, dicts recurse, strings concat, else overwrite."""
+    if target is None:
+        return source
     if isinstance(target, dict) and isinstance(source, dict):
         merged = target.copy()
         for k, v in source.items():
@@ -204,39 +206,6 @@ def finalize_output(output: OutputList) -> OutputList:
             item["status"] = "completed"
 
     return output
-
-
-# ---------------------------------------------------------------------------
-# Shared: merge delta into a list field's entry at index
-# ---------------------------------------------------------------------------
-
-
-def _merge_delta_into_list(
-    item: dict[str, Any],
-    field: str,
-    index: int,
-    key: str,
-    delta: Any,
-    default_entry: dict[str, Any],
-) -> None:
-    """Merge a delta value into a list field's entry at the given index.
-
-    Copies the list and the target entry before mutating (the item itself
-    is already a shallow copy in every call-site).
-    """
-    if field not in item:
-        item[field] = []
-    else:
-        item[field] = list(item[field])
-    entries = item[field]
-    while len(entries) <= index:
-        entries.append(dict(default_entry))
-    entry = entries[index].copy()
-    entries[index] = entry
-    current = entry.get(key)
-    if current is None:
-        current = {} if isinstance(delta, dict) else ""
-    entry[key] = deep_merge(current, delta)
 
 
 # ---------------------------------------------------------------------------
@@ -321,18 +290,16 @@ def _delta_message(
     item: dict[str, Any],
     new_output: OutputList,
 ) -> tuple[OutputList, dict[str, Any] | None]:
+    # Reasoning deltas don't belong on message items
     if delta_type in ("reasoning_text", "reasoning_summary_text"):
         return new_output, None
 
-    key = "text" if delta_type in ("text", "output_text") else delta_type
-    _merge_delta_into_list(
-        item,
-        "content",
-        data.get("content_index", 0),
-        key,
-        delta,
-        {"type": "text", "text": ""},
-    )
+    assert delta_type in {"text", "output_text"}, f"delta_type={delta_type} unseen"
+    idx = data.get("content_index", 0)
+    entries = item["content"] = list(item.get("content", []))
+    while len(entries) <= idx:
+        entries.append({"type": "text", "text": ""})
+    entries[idx] = {**entries[idx], "text": deep_merge(entries[idx].get("text"), delta)}
     return new_output, None
 
 
@@ -344,25 +311,19 @@ def _delta_reasoning(
     new_output: OutputList,
 ) -> tuple[OutputList, dict[str, Any] | None]:
     if delta_type == "reasoning_summary_text":
-        _merge_delta_into_list(
-            item,
-            "summary",
-            data.get("summary_index", 0),
-            "text",
-            delta,
-            {"type": "summary_text", "text": ""},
-        )
+        idx = data.get("summary_index", 0)
+        entries = item["summary"] = list(item.get("summary", []))
+        while len(entries) <= idx:
+            entries.append({"type": "summary_text", "text": ""})
+        entries[idx] = {**entries[idx], "text": deep_merge(entries[idx].get("text"), delta)}
         return new_output, None
 
     if delta_type == "reasoning_text":
-        _merge_delta_into_list(
-            item,
-            "content",
-            data.get("content_index", 0),
-            "text",
-            delta,
-            {"type": "text", "text": ""},
-        )
+        idx = data.get("content_index", 0)
+        entries = item["content"] = list(item.get("content", []))
+        while len(entries) <= idx:
+            entries.append({"type": "text", "text": ""})
+        entries[idx] = {**entries[idx], "text": deep_merge(entries[idx].get("text"), delta)}
         return new_output, None
 
     # text/output_text deltas don't belong on reasoning items
