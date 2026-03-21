@@ -90,7 +90,10 @@ async def _proxy_request(
         )
 
         content_type = r.headers.get("Content-Type", "")
-        if "text/event-stream" in content_type or "application/x-ndjson" in content_type:
+        if (
+            "text/event-stream" in content_type
+            or "application/x-ndjson" in content_type
+        ):
             streaming = True
             wrapper_args = (
                 (r, session, stream_handler) if stream_handler else (r, session)
