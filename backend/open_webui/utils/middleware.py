@@ -7,7 +7,7 @@ import json
 import html
 import re
 from typing import Any
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator
 from uuid import uuid4
 
 from fastapi import Request
@@ -29,7 +29,7 @@ from open_webui.utils.misc import (
     get_system_message,
     convert_output_to_messages,
 )
-from open_webui.utils.payload import apply_system_prompt_to_body
+from open_webui.utils.payload import apply_system_prompt_to_body, DeltaBatcher, EventEmitter
 from open_webui.utils.response import normalize_usage
 from open_webui.env import CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE
 from open_webui.constants import TASKS
@@ -39,10 +39,6 @@ log = logging.getLogger(__name__)
 # Backward-compat re-exports
 from open_webui.utils.response import extract_task_text, parse_task_json  # noqa: F401
 
-# ---------------------------------------------------------------------------
-# Type aliases
-# ---------------------------------------------------------------------------
-EventEmitter = Callable[[dict[str, Any]], Awaitable[None]]
 OutputList = list[dict[str, Any]]
 
 
@@ -668,37 +664,6 @@ async def parse_sse_lines(
             yield json.loads(payload)
         except json.JSONDecodeError as e:
             log.info("[stream] parse error: %s — %s", line[:200], e)
-
-
-# ---------------------------------------------------------------------------
-# Delta batching
-# ---------------------------------------------------------------------------
-
-
-class DeltaBatcher:
-    """Batch delta emissions to reduce WebSocket traffic."""
-
-    def __init__(self, emit: EventEmitter, chunk_size: int) -> None:
-        self._emit = emit
-        self._chunk_size = chunk_size
-        self._count = 0
-        self._pending: dict[str, Any] | None = None
-
-    async def add(self, data: dict[str, Any]) -> None:
-        self._count += 1
-        self._pending = data
-        if self._count >= self._chunk_size:
-            await self.flush()
-
-    async def flush(self) -> None:
-        if self._pending is not None:
-            await self._emit({"type": "chat:completion", "data": self._pending})
-            self._count = 0
-            self._pending = None
-
-    async def emit_now(self, data: dict[str, Any]) -> None:
-        await self.flush()
-        await self._emit({"type": "chat:completion", "data": data})
 
 
 # ---------------------------------------------------------------------------
