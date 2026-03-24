@@ -1,16 +1,19 @@
 <script lang="ts">
 	import { onMount, getContext } from 'svelte';
+	import type { Snippet } from 'svelte';
 	import { goto } from '$app/navigation';
 
 	import { WEBUI_NAME, mobile, showSidebar, user } from '$lib/stores';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 
 	import Sidebar from '$lib/components/icons/Sidebar.svelte';
 
+	let { children }: { children: Snippet } = $props();
+
 	const i18n = getContext('i18n');
 
-	let loaded = false;
+	let loaded = $state(false);
 
 	onMount(async () => {
 		if ($user?.role !== 'admin') {
@@ -43,7 +46,7 @@
 							<button
 								id="sidebar-toggle-button"
 								class=" cursor-pointer flex rounded-lg hover:bg-gray-100 dark:hover:bg-gray-850 transition cursor-"
-								on:click={() => {
+								onclick={() => {
 									showSidebar.set(!$showSidebar);
 								}}
 							>
@@ -61,14 +64,14 @@
 					>
 						<a
 							draggable="false"
-							class="min-w-fit p-1.5 {$page.url.pathname.includes('/admin/users')
+							class="min-w-fit p-1.5 {page.url.pathname.includes('/admin/users')
 								? ''
 								: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition select-none"
 							href="/admin">{$i18n.t('Users')}</a
 						>
 						<a
 							draggable="false"
-							class="min-w-fit p-1.5 {$page.url.pathname.includes('/admin/settings')
+							class="min-w-fit p-1.5 {page.url.pathname.includes('/admin/settings')
 								? ''
 								: 'text-gray-300 dark:text-gray-600 hover:text-gray-700 dark:hover:text-white'} transition select-none"
 							href="/admin/settings">{$i18n.t('Settings')}</a
@@ -79,7 +82,7 @@
 		</nav>
 
 		<div class="  pb-1 flex-1 max-h-full overflow-y-auto">
-			<slot />
+			{@render children()}
 		</div>
 	</div>
 {/if}
