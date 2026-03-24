@@ -1,10 +1,11 @@
-import json
 import logging
 import os
 import sqlite3
 import tempfile
 from contextlib import contextmanager
 from typing import Any
+
+import orjson
 
 from open_webui.env import DATABASE_URL
 from sqlalchemy import Dialect, create_engine, MetaData, event, types
@@ -15,22 +16,31 @@ from typing_extensions import Self
 log = logging.getLogger(__name__)
 
 
+def _orjson_serializer(obj: Any) -> str:
+    return orjson.dumps(obj).decode()
+
+
 class JSONField(types.TypeDecorator):
     impl = types.Text
     cache_ok = True
 
     def process_bind_param(self, value: _T | None, dialect: Dialect) -> Any:
-        return json.dumps(value)
+        return _orjson_serializer(value)
 
     def process_result_value(self, value: _T | None, dialect: Dialect) -> Any:
         if value is not None:
-            return json.loads(value)
+            return orjson.loads(value)
 
     def copy(self, **kw: Any) -> Self:
         return JSONField(self.impl.length)
 
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
+engine = create_engine(
+    DATABASE_URL,
+    connect_args={"check_same_thread": False},
+    json_serializer=_orjson_serializer,
+    json_deserializer=orjson.loads,
+)
 
 
 def on_connect(dbapi_connection, connection_record):
