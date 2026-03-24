@@ -296,7 +296,6 @@ def get_response_data(
     return response, None
 
 
-
 # ---------------------------------------------------------------------------
 # Streaming-handler helpers
 # ---------------------------------------------------------------------------
@@ -528,9 +527,7 @@ async def background_tasks_handler(ctx: dict[str, Any]) -> None:
 # ---------------------------------------------------------------------------
 
 
-async def json_response_handler(
-    response: Any, ctx: dict[str, Any]
-) -> Any:
+async def json_response_handler(response: Any, ctx: dict[str, Any]) -> Any:
     metadata: dict[str, Any] = ctx["metadata"]
     event_emitter: EventEmitter = ctx["event_emitter"]
 

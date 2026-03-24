@@ -17,7 +17,9 @@
 	{placeholder}
 	aria-label={ariaLabel || placeholder}
 	class={className}
-	style="field-sizing:content;{minSize != null ? `min-height:${minSize}px;` : ''}{maxSize != null ? `max-height:${maxSize}px;` : ''}"
+	style="field-sizing:content;{minSize != null ? `min-height:${minSize}px;` : ''}{maxSize != null
+		? `max-height:${maxSize}px;`
+		: ''}"
 	{rows}
 	{required}
 	{readonly}

@@ -1493,9 +1493,7 @@
 			responseMessage.done = false;
 			await tick();
 
-			const model = $models.find(
-				(m) => m.id === responseMessage.model
-			);
+			const model = $models.find((m) => m.id === responseMessage.model);
 
 			if (model) {
 				await sendMessageSocket(

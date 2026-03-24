@@ -51,7 +51,10 @@
 		await setModels().catch((e) => console.error('Failed to load models:', e));
 
 		// Helper function to check if the pressed keys match the shortcut definition
-		const isShortcutMatch = (event: KeyboardEvent, shortcut: (typeof shortcuts)[Shortcut]): boolean => {
+		const isShortcutMatch = (
+			event: KeyboardEvent,
+			shortcut: (typeof shortcuts)[Shortcut]
+		): boolean => {
 			const keys = shortcut?.keys || [];
 
 			const normalized = keys.map((k) => k.toLowerCase());
@@ -78,71 +81,71 @@
 		};
 
 		keydownHandler = async (event) => {
-				if (isShortcutMatch(event, shortcuts[Shortcut.SEARCH])) {
-					console.log('Shortcut triggered: SEARCH');
-					event.preventDefault();
-					showSearch.set(!$showSearch);
-				} else if (isShortcutMatch(event, shortcuts[Shortcut.NEW_CHAT])) {
-					console.log('Shortcut triggered: NEW_CHAT');
-					event.preventDefault();
-					document.getElementById('sidebar-new-chat-button')?.click();
-				} else if (isShortcutMatch(event, shortcuts[Shortcut.FOCUS_INPUT])) {
-					console.log('Shortcut triggered: FOCUS_INPUT');
-					event.preventDefault();
-					document.getElementById('chat-input')?.focus();
-				} else if (isShortcutMatch(event, shortcuts[Shortcut.COPY_LAST_CODE_BLOCK])) {
-					console.log('Shortcut triggered: COPY_LAST_CODE_BLOCK');
-					event.preventDefault();
-					[...document.getElementsByClassName('copy-code-button')]?.at(-1)?.click();
-				} else if (isShortcutMatch(event, shortcuts[Shortcut.COPY_LAST_RESPONSE])) {
-					console.log('Shortcut triggered: COPY_LAST_RESPONSE');
-					event.preventDefault();
-					[...document.getElementsByClassName('copy-response-button')]?.at(-1)?.click();
-				} else if (isShortcutMatch(event, shortcuts[Shortcut.TOGGLE_SIDEBAR])) {
-					console.log('Shortcut triggered: TOGGLE_SIDEBAR');
-					event.preventDefault();
-					showSidebar.set(!$showSidebar);
-				} else if (isShortcutMatch(event, shortcuts[Shortcut.DELETE_CHAT])) {
-					console.log('Shortcut triggered: DELETE_CHAT');
-					event.preventDefault();
-					document.getElementById('delete-chat-button')?.click();
-				} else if (isShortcutMatch(event, shortcuts[Shortcut.OPEN_SETTINGS])) {
-					console.log('Shortcut triggered: OPEN_SETTINGS');
-					event.preventDefault();
-					showSettings.set(!$showSettings);
-				} else if (isShortcutMatch(event, shortcuts[Shortcut.SHOW_SHORTCUTS])) {
-					console.log('Shortcut triggered: SHOW_SHORTCUTS');
-					event.preventDefault();
-					showShortcuts.set(!$showShortcuts);
-				} else if (isShortcutMatch(event, shortcuts[Shortcut.CLOSE_MODAL])) {
-					console.log('Shortcut triggered: CLOSE_MODAL');
-					event.preventDefault();
-					showSettings.set(false);
-					showShortcuts.set(false);
-				} else if (isShortcutMatch(event, shortcuts[Shortcut.OPEN_MODEL_SELECTOR])) {
-					console.log('Shortcut triggered: OPEN_MODEL_SELECTOR');
-					event.preventDefault();
-					document.getElementById('model-selector-0-button')?.click();
-				} else if (isShortcutMatch(event, shortcuts[Shortcut.NEW_TEMPORARY_CHAT])) {
-					console.log('Shortcut triggered: NEW_TEMPORARY_CHAT');
-					event.preventDefault();
-					temporaryChatEnabled.set(!$temporaryChatEnabled);
-					await goto('/');
-					setTimeout(() => {
-						document.getElementById('new-chat-button')?.click();
-					}, 0);
-				} else if (isShortcutMatch(event, shortcuts[Shortcut.GENERATE_MESSAGE_PAIR])) {
-					console.log('Shortcut triggered: GENERATE_MESSAGE_PAIR');
-					event.preventDefault();
-					document.getElementById('generate-message-pair-button')?.click();
-				} else if (
-					isShortcutMatch(event, shortcuts[Shortcut.REGENERATE_RESPONSE]) &&
-					document.activeElement?.id === 'chat-input'
-				) {
-					console.log('Shortcut triggered: REGENERATE_RESPONSE');
-					event.preventDefault();
-					[...document.getElementsByClassName('regenerate-response-button')]?.at(-1)?.click();
-				}
+			if (isShortcutMatch(event, shortcuts[Shortcut.SEARCH])) {
+				console.log('Shortcut triggered: SEARCH');
+				event.preventDefault();
+				showSearch.set(!$showSearch);
+			} else if (isShortcutMatch(event, shortcuts[Shortcut.NEW_CHAT])) {
+				console.log('Shortcut triggered: NEW_CHAT');
+				event.preventDefault();
+				document.getElementById('sidebar-new-chat-button')?.click();
+			} else if (isShortcutMatch(event, shortcuts[Shortcut.FOCUS_INPUT])) {
+				console.log('Shortcut triggered: FOCUS_INPUT');
+				event.preventDefault();
+				document.getElementById('chat-input')?.focus();
+			} else if (isShortcutMatch(event, shortcuts[Shortcut.COPY_LAST_CODE_BLOCK])) {
+				console.log('Shortcut triggered: COPY_LAST_CODE_BLOCK');
+				event.preventDefault();
+				[...document.getElementsByClassName('copy-code-button')]?.at(-1)?.click();
+			} else if (isShortcutMatch(event, shortcuts[Shortcut.COPY_LAST_RESPONSE])) {
+				console.log('Shortcut triggered: COPY_LAST_RESPONSE');
+				event.preventDefault();
+				[...document.getElementsByClassName('copy-response-button')]?.at(-1)?.click();
+			} else if (isShortcutMatch(event, shortcuts[Shortcut.TOGGLE_SIDEBAR])) {
+				console.log('Shortcut triggered: TOGGLE_SIDEBAR');
+				event.preventDefault();
+				showSidebar.set(!$showSidebar);
+			} else if (isShortcutMatch(event, shortcuts[Shortcut.DELETE_CHAT])) {
+				console.log('Shortcut triggered: DELETE_CHAT');
+				event.preventDefault();
+				document.getElementById('delete-chat-button')?.click();
+			} else if (isShortcutMatch(event, shortcuts[Shortcut.OPEN_SETTINGS])) {
+				console.log('Shortcut triggered: OPEN_SETTINGS');
+				event.preventDefault();
+				showSettings.set(!$showSettings);
+			} else if (isShortcutMatch(event, shortcuts[Shortcut.SHOW_SHORTCUTS])) {
+				console.log('Shortcut triggered: SHOW_SHORTCUTS');
+				event.preventDefault();
+				showShortcuts.set(!$showShortcuts);
+			} else if (isShortcutMatch(event, shortcuts[Shortcut.CLOSE_MODAL])) {
+				console.log('Shortcut triggered: CLOSE_MODAL');
+				event.preventDefault();
+				showSettings.set(false);
+				showShortcuts.set(false);
+			} else if (isShortcutMatch(event, shortcuts[Shortcut.OPEN_MODEL_SELECTOR])) {
+				console.log('Shortcut triggered: OPEN_MODEL_SELECTOR');
+				event.preventDefault();
+				document.getElementById('model-selector-0-button')?.click();
+			} else if (isShortcutMatch(event, shortcuts[Shortcut.NEW_TEMPORARY_CHAT])) {
+				console.log('Shortcut triggered: NEW_TEMPORARY_CHAT');
+				event.preventDefault();
+				temporaryChatEnabled.set(!$temporaryChatEnabled);
+				await goto('/');
+				setTimeout(() => {
+					document.getElementById('new-chat-button')?.click();
+				}, 0);
+			} else if (isShortcutMatch(event, shortcuts[Shortcut.GENERATE_MESSAGE_PAIR])) {
+				console.log('Shortcut triggered: GENERATE_MESSAGE_PAIR');
+				event.preventDefault();
+				document.getElementById('generate-message-pair-button')?.click();
+			} else if (
+				isShortcutMatch(event, shortcuts[Shortcut.REGENERATE_RESPONSE]) &&
+				document.activeElement?.id === 'chat-input'
+			) {
+				console.log('Shortcut triggered: REGENERATE_RESPONSE');
+				event.preventDefault();
+				[...document.getElementsByClassName('regenerate-response-button')]?.at(-1)?.click();
+			}
 		};
 		document.addEventListener('keydown', keydownHandler);
 
