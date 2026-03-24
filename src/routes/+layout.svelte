@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { io } from 'socket.io-client';
 	import { Toaster, toast } from 'svelte-sonner';
-
 	import { onMount, tick, setContext, onDestroy } from 'svelte';
+	import type { Snippet } from 'svelte';
+	import { goto, beforeNavigate } from '$app/navigation';
+	import { page, updated } from '$app/state';
+	import dayjs from 'dayjs';
+
 	import {
 		config,
 		user,
@@ -18,18 +22,10 @@
 		playingNotificationSound,
 		refreshChatList
 	} from '$lib/stores';
-	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
-	import { beforeNavigate } from '$app/navigation';
-	import { updated } from '$app/state';
-
 	import i18n, { initI18n, getLanguages, changeLanguage } from '$lib/i18n';
-
-	import '../tailwind.css';
-	import '../app.css';
 	import { getBackendConfig, getVersion } from '$lib/apis';
 	import { getSessionUser, userSignOut } from '$lib/apis/auths';
-
+	import { getUserSettings } from '$lib/apis/users';
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { bestMatchingLanguage } from '$lib/utils';
 	import { setTextScale } from '$lib/utils/text-scale';
@@ -37,8 +33,11 @@
 
 	import NotificationToast from '$lib/components/NotificationToast.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
-	import { getUserSettings } from '$lib/apis/users';
-	import dayjs from 'dayjs';
+
+	import '../tailwind.css';
+	import '../app.css';
+
+	let { children }: { children: Snippet } = $props();
 	// handle frontend updates (https://svelte.dev/docs/kit/configuration#version)
 	beforeNavigate(async ({ willUnload, to }) => {
 		if (updated.current && !willUnload && to?.url) {
@@ -50,19 +49,20 @@
 
 	const bc = new BroadcastChannel('active-tab-channel');
 
-	let loaded = false;
-	let tokenTimer = null;
+	let loaded = $state(false);
+	let tokenTimer: ReturnType<typeof setInterval> | undefined;
 
-	let showRefresh = false;
+	let showRefresh = $state(false);
 
-	let heartbeatInterval = null;
+	let heartbeatInterval: ReturnType<typeof setInterval> | undefined;
 
 	let onMountCleanup: (() => void) | null = null;
+	let unsubscribeUser: (() => void) | null = null;
 
 	const BREAKPOINT = 768;
 
-	const setupSocket = async (enableWebsocket) => {
-		const _socket = io(`${WEBUI_BASE_URL}` || undefined, {
+	const setupSocket = async (enableWebsocket: boolean) => {
+		const _socket = io(WEBUI_BASE_URL || undefined, {
 			reconnection: true,
 			reconnectionDelay: 1000,
 			reconnectionDelayMax: 5000,
@@ -124,7 +124,7 @@
 
 			if (heartbeatInterval) {
 				clearInterval(heartbeatInterval);
-				heartbeatInterval = null;
+				heartbeatInterval = undefined;
 			}
 
 			if (details) {
@@ -142,13 +142,13 @@
 			return;
 		}
 
-		let isFocused = document.visibilityState !== 'visible';
+		let isBackground = document.visibilityState !== 'visible';
 
 		await tick();
 		const type = event?.data?.type ?? null;
 		const data = event?.data?.data ?? null;
 
-		if ((event.chat_id !== $chatId && !$temporaryChatEnabled) || isFocused) {
+		if ((event.chat_id !== $chatId && !$temporaryChatEnabled) || isBackground) {
 			if (type === 'chat:completion') {
 				const { done, content, title } = data;
 				const displayTitle = title || $i18n.t('New Chat');
@@ -197,7 +197,7 @@
 
 		if (now >= exp - TOKEN_EXPIRY_BUFFER) {
 			const res = await userSignOut();
-			user.set(null);
+			user.set(undefined);
 			localStorage.removeItem('token');
 
 			location.href = res?.redirect_url ?? '/auth';
@@ -239,10 +239,8 @@
 		document.addEventListener('touchmove', touchmoveHandler, { passive: false });
 		document.addEventListener('touchend', touchendHandler);
 
-		if (typeof window !== 'undefined') {
-			if (window.applyTheme) {
-				window.applyTheme();
-			}
+		if (window.applyTheme) {
+			window.applyTheme();
 		}
 
 		// Listen for messages on the BroadcastChannel
@@ -282,7 +280,7 @@
 		};
 		window.addEventListener('resize', onResize);
 
-		user.subscribe(async (value) => {
+		unsubscribeUser = user.subscribe(async (value) => {
 			if (value) {
 				$socket?.off('events', chatEventHandler);
 
@@ -321,9 +319,7 @@
 		initI18n(localStorage?.locale);
 		if (!localStorage.locale) {
 			const languages = await getLanguages();
-			const browserLanguages = navigator.languages
-				? navigator.languages
-				: [navigator.language || navigator.userLanguage];
+			const browserLanguages = navigator.languages;
 			const lang = bestMatchingLanguage(languages, browserLanguages, 'en-US');
 			changeLanguage(lang);
 			dayjs.locale(lang);
@@ -358,7 +354,7 @@
 					}
 				} else {
 					// Don't redirect if we're already on the auth page
-					if ($page.url.pathname !== '/auth') {
+					if (page.url.pathname !== '/auth') {
 						await goto(`/auth?redirect=${encodedUrl}`);
 					}
 				}
@@ -384,6 +380,9 @@
 
 	onDestroy(() => {
 		onMountCleanup?.();
+		unsubscribeUser?.();
+		if (tokenTimer) clearInterval(tokenTimer);
+		if (heartbeatInterval) clearInterval(heartbeatInterval);
 		bc.close();
 	});
 </script>
@@ -403,7 +402,7 @@
 {/if}
 
 {#if loaded}
-	<slot />
+	{@render children()}
 {/if}
 
 <Toaster
