@@ -1,73 +1,24 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
-
-	export let value = '';
-	export let placeholder = '';
-	export let rows = 1;
-	export let minSize = null;
-	export let maxSize = null;
-	export let required = false;
-	export let readonly = false;
-	export let className =
-		'w-full rounded-lg px-3.5 py-2 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden  h-full';
-	export let ariaLabel = null;
-
-	let textareaElement;
-
-	onMount(() => {
-		let pollInterval: ReturnType<typeof setInterval> | null = null;
-
-		(async () => {
-			await tick();
-			resize();
-		})();
-
-		requestAnimationFrame(() => {
-			pollInterval = setInterval(() => {
-				if (textareaElement) {
-					clearInterval(pollInterval!);
-					pollInterval = null;
-					resize();
-				}
-			}, 100);
-		});
-
-		return () => {
-			if (pollInterval) clearInterval(pollInterval);
-		};
-	});
-
-	const resize = () => {
-		if (textareaElement) {
-			textareaElement.style.height = '';
-
-			let height = textareaElement.scrollHeight;
-			if (maxSize && height > maxSize) {
-				height = maxSize;
-			}
-			if (minSize && height < minSize) {
-				height = minSize;
-			}
-
-			textareaElement.style.height = `${height}px`;
-		}
-	};
+	let {
+		value = $bindable(''),
+		placeholder = '',
+		rows = 1,
+		minSize = null as number | null,
+		maxSize = null as number | null,
+		required = false,
+		readonly = false,
+		className = 'w-full rounded-lg px-3.5 py-2 text-sm bg-gray-50 dark:text-gray-300 dark:bg-gray-850 outline-hidden',
+		ariaLabel = null as string | null
+	} = $props();
 </script>
 
 <textarea
-	bind:this={textareaElement}
 	bind:value
 	{placeholder}
 	aria-label={ariaLabel || placeholder}
 	class={className}
-	style="field-sizing: content;"
+	style="field-sizing:content;{minSize != null ? `min-height:${minSize}px;` : ''}{maxSize != null ? `max-height:${maxSize}px;` : ''}"
 	{rows}
 	{required}
 	{readonly}
-	on:input={() => {
-		resize();
-	}}
-	on:focus={() => {
-		resize();
-	}}
 />
