@@ -50,9 +50,6 @@ from open_webui.constants import TASKS
 
 log = logging.getLogger(__name__)
 
-# Backward-compat re-exports
-from open_webui.utils.response import parse_task_json as parse_task_json  # noqa: F401
-
 # ---------------------------------------------------------------------------
 # Small helpers
 # ---------------------------------------------------------------------------
@@ -113,13 +110,6 @@ def _normalize_error(error: Any) -> str | dict[str, Any]:
     if isinstance(error, dict):
         return error.get("detail", error)
     return str(error)
-
-
-def _extract_completion_content(response_data: dict[str, Any]) -> str:
-    choices = response_data.get("choices", [])
-    if not choices:
-        return ""
-    return choices[0].get("message", {}).get("content", "") or ""
 
 
 def load_messages_from_db(chat_id: str, message_id: str) -> list[dict[str, Any]] | None:
@@ -223,21 +213,10 @@ async def process_chat_payload(
             _inject_image_files(form_data["messages"])
 
     form_data["messages"] = process_messages_with_output(form_data.get("messages", []))
-
-    system_message = get_system_message(form_data.get("messages", []))
-    if system_message:  # Chat Controls/User Settings
-        try:
-            form_data = apply_system_prompt_to_body(
-                system_message.get("content"), form_data, replace=True
-            )
-        except:
-            pass
-
     form_data = await convert_url_images_to_base64(form_data)
 
     # Folder "Project" handling
     # Uses lightweight column query — only fetches folder_id, not the full chat JSON blob
-    chat_id = metadata.get("chat_id")
     if chat_id and user:
         folder_id = Chats.get_chat_folder_id(chat_id, user.id)
         if folder_id:
@@ -315,18 +294,6 @@ def get_response_data(
     if isinstance(response, dict):
         return response, response
     return response, None
-
-
-def build_response_object(response: Any, response_data: dict[str, Any]) -> Any:
-    if isinstance(response, dict):
-        return response_data
-    if isinstance(response, JSONResponse):
-        return JSONResponse(
-            content=response_data,
-            headers=response.headers,
-            status_code=response.status_code,
-        )
-    return response
 
 
 # ---------------------------------------------------------------------------
@@ -555,13 +522,12 @@ async def background_tasks_handler(ctx: dict[str, Any]) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Non-streaming response handler
+# JSON (non-streaming) response handler — upstream errors that arrive as
+# JSON despite stream=True (rate limit, auth failure, bad request, etc.)
 # ---------------------------------------------------------------------------
 
 
-async def non_streaming_chat_response_handler(
-    response: Any, ctx: dict[str, Any]
-) -> Any:
+async def json_response_handler(response: Any, ctx: dict[str, Any]) -> Any:
     metadata: dict[str, Any] = ctx["metadata"]
     event_emitter: EventEmitter = ctx["event_emitter"]
 
@@ -584,47 +550,7 @@ async def non_streaming_chat_response_handler(
                 }
             )
 
-    if "selected_model_id" in response_data:
-        Chats.upsert_message_to_chat_by_id_and_message_id(
-            metadata["chat_id"],
-            metadata["message_id"],
-            {"selectedModelId": response_data["selected_model_id"]},
-        )
-
-    content = _extract_completion_content(response_data)
-    if content:
-        await event_emitter({"type": "chat:completion", "data": response_data})
-
-        response_output = response_data.get("output") or [
-            make_message_item(content, "completed")
-        ]
-        title = Chats.get_chat_title_by_id(metadata["chat_id"])
-
-        await event_emitter(
-            {
-                "type": "chat:completion",
-                "data": {
-                    "done": True,
-                    "content": content,
-                    "output": response_output,
-                    "title": title,
-                },
-            }
-        )
-
-        Chats.upsert_message_to_chat_by_id_and_message_id(
-            metadata["chat_id"],
-            metadata["message_id"],
-            {
-                "role": "assistant",
-                "content": content,
-                "output": response_output,
-            },
-        )
-
-        await background_tasks_handler(ctx)
-
-    return build_response_object(response, response_data)
+    return response
 
 
 # ---------------------------------------------------------------------------
@@ -658,16 +584,6 @@ async def streaming_chat_response_handler(
             # Custom event passthrough
             if "event" in data:
                 await event_emitter(data.get("event", {}))
-
-            # Model selection
-            if "selected_model_id" in data:
-                Chats.upsert_message_to_chat_by_id_and_message_id(
-                    metadata["chat_id"],
-                    metadata["message_id"],
-                    {"selectedModelId": data["selected_model_id"]},
-                )
-                await batcher.emit(data, immediate=True)
-                continue
 
             # --- Responses API events ---
             if data.get("type", "").startswith("response."):
@@ -720,7 +636,7 @@ async def streaming_chat_response_handler(
         # Stream fully consumed
         await batcher.flush()
 
-        if response.background:
+        if response.background is not None:
             await response.background()
 
         output = finalize_output(output)
@@ -786,7 +702,7 @@ async def process_chat_response(response: Any, ctx: dict[str, Any]) -> Any:
         return response_data if isinstance(response, dict) else response
 
     if not isinstance(response, StreamingResponse):
-        return await non_streaming_chat_response_handler(response, ctx)
+        return await json_response_handler(response, ctx)
 
     if not any(
         ct in response.headers.get("Content-Type", "")

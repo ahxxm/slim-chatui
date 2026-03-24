@@ -107,8 +107,7 @@
 	import { ListKit } from '@tiptap/extension-list';
 	import { Placeholder, CharacterCount } from '@tiptap/extensions';
 
-	import Image from './RichTextInput/Image/index.js';
-	// import TiptapImage from '@tiptap/extension-image';
+	import { Image } from './RichTextInput/Image.js';
 
 	import FileHandler from '@tiptap/extension-file-handler';
 	import Typography from '@tiptap/extension-typography';

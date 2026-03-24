@@ -655,7 +655,7 @@ export const extractFrontmatter = (content: string) => {
 // Function to determine the best matching language
 export const bestMatchingLanguage = (
 	supportedLanguages: { code: string }[],
-	preferredLanguages: string[],
+	preferredLanguages: readonly string[],
 	defaultLocale: string
 ) => {
 	const languages = supportedLanguages.map((lang) => lang.code);
