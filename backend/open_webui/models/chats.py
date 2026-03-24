@@ -164,29 +164,6 @@ class ChatTable:
         """Recursively remove null bytes from strings in dict/list structures."""
         return sanitize_data_for_db(obj)
 
-    def _sanitize_chat_row(self, chat_item: Chat):
-        """
-        Clean a Chat SQLAlchemy model's title + chat JSON,
-        and return True if anything changed.
-        """
-        changed = False
-
-        # Clean title
-        if chat_item.title:
-            cleaned = self._clean_null_bytes(chat_item.title)
-            if cleaned != chat_item.title:
-                chat_item.title = cleaned
-                changed = True
-
-        # Clean JSON
-        if chat_item.chat:
-            cleaned = self._clean_null_bytes(chat_item.chat)
-            if cleaned != chat_item.chat:
-                chat_item.chat = cleaned
-                changed = True
-
-        return changed
-
     def insert_new_chat(
         self, user_id: str, form_data: ChatForm, db: Optional[Session] = None
     ) -> Optional[ChatModel]:
@@ -532,11 +509,6 @@ class ChatTable:
                 chat_item = db.get(Chat, id)
                 if chat_item is None:
                     return None
-
-                if self._sanitize_chat_row(chat_item):
-                    db.flush()
-                    db.refresh(chat_item)
-
                 return ChatModel.model_validate(chat_item)
         except Exception:
             return None
