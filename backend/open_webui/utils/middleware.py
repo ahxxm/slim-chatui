@@ -112,13 +112,6 @@ def _normalize_error(error: Any) -> str | dict[str, Any]:
     return str(error)
 
 
-def _extract_completion_content(response_data: dict[str, Any]) -> str:
-    choices = response_data.get("choices", [])
-    if not choices:
-        return ""
-    return choices[0].get("message", {}).get("content", "") or ""
-
-
 def load_messages_from_db(chat_id: str, message_id: str) -> list[dict[str, Any]] | None:
     """Load message chain from DB, keeping only LLM-relevant fields."""
     messages_map = Chats.get_messages_map_by_chat_id(chat_id)
@@ -302,17 +295,6 @@ def get_response_data(
         return response, response
     return response, None
 
-
-def build_response_object(response: Any, response_data: dict[str, Any]) -> Any:
-    if isinstance(response, dict):
-        return response_data
-    if isinstance(response, JSONResponse):
-        return JSONResponse(
-            content=response_data,
-            headers=response.headers,
-            status_code=response.status_code,
-        )
-    return response
 
 
 # ---------------------------------------------------------------------------
@@ -571,40 +553,7 @@ async def json_response_handler(
                 }
             )
 
-    content = _extract_completion_content(response_data)
-    if content:
-        await event_emitter({"type": "chat:completion", "data": response_data})
-
-        response_output = response_data.get("output") or [
-            make_message_item(content, "completed")
-        ]
-        title = Chats.get_chat_title_by_id(metadata["chat_id"])
-
-        await event_emitter(
-            {
-                "type": "chat:completion",
-                "data": {
-                    "done": True,
-                    "content": content,
-                    "output": response_output,
-                    "title": title,
-                },
-            }
-        )
-
-        Chats.upsert_message_to_chat_by_id_and_message_id(
-            metadata["chat_id"],
-            metadata["message_id"],
-            {
-                "role": "assistant",
-                "content": content,
-                "output": response_output,
-            },
-        )
-
-        await background_tasks_handler(ctx)
-
-    return build_response_object(response, response_data)
+    return response
 
 
 # ---------------------------------------------------------------------------
