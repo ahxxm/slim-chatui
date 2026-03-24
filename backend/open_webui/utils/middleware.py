@@ -50,9 +50,6 @@ from open_webui.constants import TASKS
 
 log = logging.getLogger(__name__)
 
-# Backward-compat re-exports
-from open_webui.utils.response import parse_task_json as parse_task_json  # noqa: F401
-
 # ---------------------------------------------------------------------------
 # Small helpers
 # ---------------------------------------------------------------------------
@@ -223,21 +220,10 @@ async def process_chat_payload(
             _inject_image_files(form_data["messages"])
 
     form_data["messages"] = process_messages_with_output(form_data.get("messages", []))
-
-    system_message = get_system_message(form_data.get("messages", []))
-    if system_message:  # Chat Controls/User Settings
-        try:
-            form_data = apply_system_prompt_to_body(
-                system_message.get("content"), form_data, replace=True
-            )
-        except:
-            pass
-
     form_data = await convert_url_images_to_base64(form_data)
 
     # Folder "Project" handling
     # Uses lightweight column query — only fetches folder_id, not the full chat JSON blob
-    chat_id = metadata.get("chat_id")
     if chat_id and user:
         folder_id = Chats.get_chat_folder_id(chat_id, user.id)
         if folder_id:
@@ -720,7 +706,7 @@ async def streaming_chat_response_handler(
         # Stream fully consumed
         await batcher.flush()
 
-        if response.background:
+        if response.background is not None:
             await response.background()
 
         output = finalize_output(output)
