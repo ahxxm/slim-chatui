@@ -541,11 +541,12 @@ async def background_tasks_handler(ctx: dict[str, Any]) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Non-streaming response handler
+# JSON (non-streaming) response handler — upstream errors that arrive as
+# JSON despite stream=True (rate limit, auth failure, bad request, etc.)
 # ---------------------------------------------------------------------------
 
 
-async def non_streaming_chat_response_handler(
+async def json_response_handler(
     response: Any, ctx: dict[str, Any]
 ) -> Any:
     metadata: dict[str, Any] = ctx["metadata"]
@@ -569,13 +570,6 @@ async def non_streaming_chat_response_handler(
                     "data": {"error": {"content": error}},
                 }
             )
-
-    if "selected_model_id" in response_data:
-        Chats.upsert_message_to_chat_by_id_and_message_id(
-            metadata["chat_id"],
-            metadata["message_id"],
-            {"selectedModelId": response_data["selected_model_id"]},
-        )
 
     content = _extract_completion_content(response_data)
     if content:
@@ -644,16 +638,6 @@ async def streaming_chat_response_handler(
             # Custom event passthrough
             if "event" in data:
                 await event_emitter(data.get("event", {}))
-
-            # Model selection
-            if "selected_model_id" in data:
-                Chats.upsert_message_to_chat_by_id_and_message_id(
-                    metadata["chat_id"],
-                    metadata["message_id"],
-                    {"selectedModelId": data["selected_model_id"]},
-                )
-                await batcher.emit(data, immediate=True)
-                continue
 
             # --- Responses API events ---
             if data.get("type", "").startswith("response."):
@@ -772,7 +756,7 @@ async def process_chat_response(response: Any, ctx: dict[str, Any]) -> Any:
         return response_data if isinstance(response, dict) else response
 
     if not isinstance(response, StreamingResponse):
-        return await non_streaming_chat_response_handler(response, ctx)
+        return await json_response_handler(response, ctx)
 
     if not any(
         ct in response.headers.get("Content-Type", "")

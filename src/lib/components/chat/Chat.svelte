@@ -884,7 +884,7 @@
 	};
 
 	const chatCompletionEventHandler = async (data, message, chatId) => {
-		const { done, choices, content, output, sources, selected_model_id, error, usage } = data;
+		const { done, choices, content, output, sources, error, usage } = data;
 
 		// Store raw OR-aligned output items from backend
 		if (output) {
@@ -917,10 +917,6 @@
 		if (content) {
 			// REALTIME_CHAT_SAVE is disabled
 			message.content = content;
-		}
-
-		if (selected_model_id) {
-			message.selectedModelId = selected_model_id;
 		}
 
 		if (usage) {
@@ -1498,7 +1494,7 @@
 			await tick();
 
 			const model = $models.find(
-				(m) => m.id === (responseMessage?.selectedModelId ?? responseMessage.model)
+				(m) => m.id === responseMessage.model
 			);
 
 			if (model) {
