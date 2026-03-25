@@ -234,9 +234,37 @@ class ChatTable:
             db.flush()
             return [ChatModel.model_validate(chat) for chat in chats]
 
+    @staticmethod
+    def _compact_history(chat: dict) -> dict:
+        """Remove orphan messages and the deleted top-level messages array."""
+        chat.pop("messages", None)
+        history = chat.get("history")
+        if not history:
+            return chat
+        messages = history.get("messages")
+        if not messages or not isinstance(messages, dict):
+            return chat
+
+        # Walk from roots (parentId is None) down all childrenIds
+        reachable = set()
+        stack = [mid for mid, msg in messages.items() if not msg.get("parentId")]
+        while stack:
+            mid = stack.pop()
+            if mid in reachable or mid not in messages:
+                continue
+            reachable.add(mid)
+            stack.extend(messages[mid].get("childrenIds", []))
+
+        if len(reachable) < len(messages):
+            history["messages"] = {
+                mid: msg for mid, msg in messages.items() if mid in reachable
+            }
+        return chat
+
     def update_chat_by_id(
         self, id: str, chat: dict, db: Optional[Session] = None
     ) -> Optional[ChatModel]:
+        chat = self._compact_history(chat)
         _chat = self._clean_null_bytes(chat)
         _title = (
             self._clean_null_bytes(chat["title"]) if "title" in chat else "New Chat"
@@ -309,8 +337,13 @@ class ChatTable:
             }
         else:
             history["messages"][message_id] = message
+            # Only advance currentId for new messages linked into the tree.
+            # Patches to existing messages (content, followUps, status) and
+            # metadata-only inserts must not move the cursor, the frontend
+            # may have closed before saving, so this is the authoritative write.
+            if message.get("parentId"):
+                history["currentId"] = message_id
 
-        history["currentId"] = message_id
         chat["history"] = history
         return self.update_chat_by_id(id, chat)
 
