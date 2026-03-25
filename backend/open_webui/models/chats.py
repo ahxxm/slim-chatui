@@ -191,8 +191,7 @@ class ChatTable:
             db.add(chat_item)
             db.flush()
             db.refresh(chat_item)
-
-        return ChatModel.model_validate(chat_item) if chat_item else None
+            return ChatModel.model_validate(chat_item) if chat_item else None
 
     def _chat_import_form_to_chat_model(
         self, user_id: str, form_data: ChatImportForm
@@ -233,14 +232,15 @@ class ChatTable:
         with get_db_context(db) as db:
             db.add_all(chats)
             db.flush()
-
-        return [ChatModel.model_validate(chat) for chat in chats]
+            return [ChatModel.model_validate(chat) for chat in chats]
 
     def update_chat_by_id(
         self, id: str, chat: dict, db: Optional[Session] = None
     ) -> Optional[ChatModel]:
         _chat = self._clean_null_bytes(chat)
-        _title = self._clean_null_bytes(chat["title"]) if "title" in chat else "New Chat"
+        _title = (
+            self._clean_null_bytes(chat["title"]) if "title" in chat else "New Chat"
+        )
         try:
             with get_db_context(db) as db:
                 chat_item = db.get(Chat, id)
@@ -521,9 +521,7 @@ class ChatTable:
         except Exception:
             return None
 
-    def is_chat_owner(
-        self, id: str, user_id: str
-    ) -> bool:
+    def is_chat_owner(self, id: str, user_id: str) -> bool:
         """
         Lightweight ownership check — uses EXISTS subquery instead of loading
         the full Chat row (which includes the potentially large JSON blob).
@@ -533,21 +531,17 @@ class ChatTable:
                 exists().where(and_(Chat.id == id, Chat.user_id == user_id))
             ).scalar()
 
-    def get_chat_folder_id(
-        self, id: str, user_id: str
-    ) -> Optional[str]:
+    def get_chat_folder_id(self, id: str, user_id: str) -> Optional[str]:
         """
         Fetch only the folder_id column for a chat, without loading the full
         JSON blob. Returns None if chat doesn't exist or doesn't belong to user.
         """
         with get_db_context() as db:
-            result = (
-                db.query(Chat.folder_id).filter_by(id=id, user_id=user_id).first()
-            )
+            result = db.query(Chat.folder_id).filter_by(id=id, user_id=user_id).first()
             return result[0] if result else None
 
     def get_all_chats(
-        self, 
+        self,
     ) -> list[ChatModel]:
         with get_db_context() as db:
             all_chats = (
@@ -766,7 +760,7 @@ class ChatTable:
 
     def delete_chats_by_user_id_and_folder_id(
         self, user_id: str, folder_id: str, db: Optional[Session] = None
-    ) -> bool:
+    ):
         with get_db_context(db) as db:
             db.query(Chat).filter_by(user_id=user_id, folder_id=folder_id).delete()
             db.flush()
