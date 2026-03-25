@@ -86,15 +86,11 @@ def get_http_authorization_cred(auth_header: Optional[str]):
         return None
 
 
-def get_current_user(
+async def get_current_user(
     request: Request,
     response: Response,
     background_tasks: BackgroundTasks,
     auth_token: HTTPAuthorizationCredentials = Depends(bearer_security),
-    # NOTE: We intentionally do NOT use Depends(get_session) here.
-    # Sessions are managed internally with short-lived context managers.
-    # This ensures connections are released immediately after auth queries,
-    # not held for the entire request duration (e.g., during 30+ second LLM calls).
 ) -> UserModel:
     token = None
 
@@ -143,7 +139,7 @@ def get_current_user(
         raise e
 
 
-def get_verified_user(user: UserModel = Depends(get_current_user)) -> UserModel:
+async def get_verified_user(user: UserModel = Depends(get_current_user)) -> UserModel:
     if user.role not in {"user", "admin"}:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -152,7 +148,7 @@ def get_verified_user(user: UserModel = Depends(get_current_user)) -> UserModel:
     return user
 
 
-def get_admin_user(user: UserModel = Depends(get_current_user)) -> UserModel:
+async def get_admin_user(user: UserModel = Depends(get_current_user)) -> UserModel:
     if user.role != "admin":
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

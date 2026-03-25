@@ -41,7 +41,7 @@ PAGE_ITEM_COUNT = 30
 
 
 @router.get("/", response_model=UserListResponse)
-def get_users(
+async def get_users(
     query: Optional[str] = None,
     order_by: Optional[str] = None,
     direction: Optional[str] = None,
@@ -65,14 +65,14 @@ def get_users(
 
 
 @router.get("/all", response_model=UserInfoListResponse)
-def get_all_users(
+async def get_all_users(
     user=Depends(get_admin_user),
 ):
     return Users.get_users()
 
 
 @router.get("/search", response_model=UserInfoListResponse)
-def search_users(
+async def search_users(
     query: Optional[str] = None,
     order_by: Optional[str] = None,
     direction: Optional[str] = None,
@@ -101,7 +101,7 @@ def search_users(
 
 
 @router.get("/user/settings", response_model=Optional[UserSettings])
-def get_user_settings_by_session_user(user=Depends(get_verified_user)):
+async def get_user_settings_by_session_user(user=Depends(get_verified_user)):
     return user.settings
 
 
@@ -111,7 +111,7 @@ def get_user_settings_by_session_user(user=Depends(get_verified_user)):
 
 
 @router.post("/user/settings/update", response_model=UserSettings)
-def update_user_settings_by_session_user(
+async def update_user_settings_by_session_user(
     request: Request,
     form_data: UserSettings,
     user=Depends(get_verified_user),
@@ -214,7 +214,7 @@ def update_user_by_id(
 
 
 @router.delete("/{user_id}", response_model=bool)
-def delete_user_by_id(user_id: str, user=Depends(get_admin_user)):
+async def delete_user_by_id(user_id: str, user=Depends(get_admin_user)):
     # Prevent deletion of the primary admin user
     try:
         first_user = Users.get_first_user()

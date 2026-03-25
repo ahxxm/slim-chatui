@@ -16,7 +16,7 @@ router = APIRouter()
 
 
 @router.get("/gravatar")
-def get_gravatar(email: str, user=Depends(get_verified_user)):
+async def get_gravatar(email: str, user=Depends(get_verified_user)):
     return get_gravatar_url(email)
 
 

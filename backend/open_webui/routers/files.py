@@ -38,7 +38,7 @@ log = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def resolve_owned_file(id: str, user=Depends(get_verified_user)):
+async def resolve_owned_file(id: str, user=Depends(get_verified_user)):
     file = Files.get_file_by_id(id)
     if not file:
         raise HTTPException(
@@ -135,7 +135,7 @@ def upload_file_handler(
 
 
 @router.get("/", response_model=list[FileModelResponse])
-def list_files(
+async def list_files(
     user=Depends(get_verified_user),
 ):
     if user.role == "admin":
@@ -150,7 +150,7 @@ def list_files(
 
 
 @router.get("/search", response_model=list[FileModelResponse])
-def search_files(
+async def search_files(
     filename: str = Query(
         ...,
         description="Filename pattern to search for. Supports wildcards such as '*.txt'",
@@ -185,7 +185,7 @@ def search_files(
 
 
 @router.get("/{id}", response_model=Optional[FileModel])
-def get_file_by_id(file=Depends(resolve_owned_file)):
+async def get_file_by_id(file=Depends(resolve_owned_file)):
     return file
 
 
@@ -196,7 +196,7 @@ def get_file_by_id(file=Depends(resolve_owned_file)):
 
 @router.get("/{id}/content")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error getting file content"))
-def get_file_content_by_id(
+async def get_file_content_by_id(
     file=Depends(resolve_owned_file),
     attachment: bool = Query(False),
 ):
@@ -229,7 +229,7 @@ def get_file_content_by_id(
 
 @router.get("/{id}/content/html")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error getting file content"))
-def get_html_file_content_by_id(file=Depends(resolve_owned_file)):
+async def get_html_file_content_by_id(file=Depends(resolve_owned_file)):
     file_user = Users.get_user_by_id(file.user_id)
     if not file_user.role == "admin":
         raise HTTPException(
@@ -249,7 +249,7 @@ def get_html_file_content_by_id(file=Depends(resolve_owned_file)):
 
 
 @router.get("/{id}/content/{file_name}")
-def get_file_content_by_id_and_name(file=Depends(resolve_owned_file)):
+async def get_file_content_by_id_and_name(file=Depends(resolve_owned_file)):
     filename = file.meta.get("name", file.filename)
     encoded_filename = quote(filename)
     headers = {
@@ -272,7 +272,7 @@ def get_file_content_by_id_and_name(file=Depends(resolve_owned_file)):
 
 
 @router.delete("/{id}")
-def delete_file_by_id(file=Depends(resolve_owned_file)):
+async def delete_file_by_id(file=Depends(resolve_owned_file)):
     result = Files.delete_file_by_id(file.id)
     if not result:
         raise HTTPException(

@@ -28,7 +28,7 @@ log = logging.getLogger(__name__)
 router = APIRouter()
 
 
-def resolve_owned_folder(
+async def resolve_owned_folder(
     id: str, user: UserModel = Depends(get_verified_user)
 ) -> FolderModel:
     folder = Folders.get_folder_by_id_and_user_id(id, user.id)
@@ -46,7 +46,7 @@ def resolve_owned_folder(
 
 
 @router.get("/", response_model=list[FolderNameIdResponse])
-def get_folders(
+async def get_folders(
     request: Request,
     user: UserModel = Depends(get_verified_user),
 ):
@@ -84,7 +84,7 @@ def get_folders(
 
 @router.post("/")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error creating folder"))
-def create_folder(
+async def create_folder(
     form_data: FolderForm,
     user: UserModel = Depends(get_verified_user),
 ):
@@ -104,7 +104,7 @@ def create_folder(
 
 
 @router.get("/{id}", response_model=Optional[FolderModel])
-def get_folder_by_id(folder: FolderModel = Depends(resolve_owned_folder)):
+async def get_folder_by_id(folder: FolderModel = Depends(resolve_owned_folder)):
     return folder
 
 
@@ -115,7 +115,7 @@ def get_folder_by_id(folder: FolderModel = Depends(resolve_owned_folder)):
 
 @router.post("/{id}/update")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error updating folder"))
-def update_folder_name_by_id(
+async def update_folder_name_by_id(
     form_data: FolderUpdateForm,
     folder: FolderModel = Depends(resolve_owned_folder),
     user: UserModel = Depends(get_verified_user),
@@ -144,7 +144,7 @@ class FolderIsExpandedForm(BaseModel):
 
 @router.post("/{id}/update/expanded")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error updating folder"))
-def update_folder_is_expanded_by_id(
+async def update_folder_is_expanded_by_id(
     form_data: FolderIsExpandedForm,
     folder: FolderModel = Depends(resolve_owned_folder),
     user: UserModel = Depends(get_verified_user),
@@ -161,7 +161,7 @@ def update_folder_is_expanded_by_id(
 
 @router.delete("/{id}")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT("Error deleting folder"))
-def delete_folder_by_id(
+async def delete_folder_by_id(
     delete_contents: Optional[bool] = True,
     folder: FolderModel = Depends(resolve_owned_folder),
     user: UserModel = Depends(get_verified_user),
