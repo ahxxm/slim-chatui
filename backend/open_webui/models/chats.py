@@ -3,6 +3,8 @@ import time
 import uuid
 from typing import Optional
 
+import orjson
+
 from sqlalchemy.orm import Session
 from open_webui.internal.db import Base, get_db_context
 from open_webui.models.folders import Folders
@@ -135,6 +137,7 @@ class ChatsImportForm(BaseModel):
     chats: list[ChatImportForm]
 
 
+# keep in sync with get_chat_by_id_as_json raw SQL
 class ChatResponse(BaseModel):
     id: str
     user_id: str
@@ -512,6 +515,58 @@ class ChatTable:
                 return ChatModel.model_validate(chat_item)
         except Exception:
             return None
+
+    def get_chat_by_id_as_json(
+        self, id: str, user_id: Optional[str] = None
+    ) -> Optional[bytes]:
+        """PK lookup returning pre-serialized JSON bytes.
+
+        Bypasses ORM materialization and Pydantic validation entirely.
+        The chat/meta JSON columns are embedded via orjson.Fragment
+        (zero parse-serialize round-trip for the large blob).
+        """
+        # keep in sync with ChatResponse fields
+        sql = "SELECT id, user_id, title, chat, updated_at, created_at, pinned, meta, folder_id FROM chat WHERE id = :id"
+        params: dict = {"id": id}
+        if user_id is not None:
+            sql += " AND user_id = :uid"
+            params["uid"] = user_id
+
+        with get_db_context() as db:
+            row = db.execute(text(sql), params).first()
+            if row is None:
+                return None
+
+        (
+            id_,
+            user_id_,
+            title,
+            chat_raw,
+            updated_at,
+            created_at,
+            pinned,
+            meta_raw,
+            folder_id,
+        ) = row
+        return orjson.dumps(
+            {
+                "id": id_,
+                "user_id": user_id_,
+                "title": title,
+                "chat": orjson.Fragment(
+                    chat_raw if isinstance(chat_raw, bytes) else chat_raw.encode()
+                ),
+                "updated_at": updated_at,
+                "created_at": created_at,
+                "pinned": bool(pinned) if pinned is not None else False,
+                "meta": orjson.Fragment(
+                    meta_raw.encode()
+                    if isinstance(meta_raw, str)
+                    else (meta_raw or b"{}")
+                ),
+                "folder_id": folder_id,
+            }
+        )
 
     def get_chat_by_id_and_user_id(
         self, id: str, user_id: str, db: Optional[Session] = None

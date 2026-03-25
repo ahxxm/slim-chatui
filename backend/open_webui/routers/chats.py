@@ -12,7 +12,7 @@ from open_webui.models.chats import (
     ChatTitleIdResponse,
 )
 from open_webui.constants import ERROR_MESSAGES
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from pydantic import BaseModel
 
 
@@ -29,20 +29,6 @@ router = APIRouter()
 # declare user=Depends(get_verified_user) pay no extra cost.
 async def resolve_owned_chat(id: str, user=Depends(get_verified_user)):
     chat = Chats.get_chat_by_id_and_user_id(id, user.id)
-    if not chat:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=ERROR_MESSAGES.NOT_FOUND,
-        )
-    return chat
-
-
-async def resolve_chat_access(id: str, user=Depends(get_verified_user)):
-    chat = (
-        Chats.get_chat_by_id(id)
-        if user.role == "admin"
-        else Chats.get_chat_by_id_and_user_id(id, user.id)
-    )
     if not chat:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -266,9 +252,16 @@ async def get_all_user_chats_in_db(
 ############################
 
 
-@router.get("/{id}", response_model=Optional[ChatResponse])
-async def get_chat_by_id(chat=Depends(resolve_chat_access)):
-    return ChatResponse(**chat.model_dump())
+@router.get("/{id}")
+async def get_chat_by_id(id: str, user=Depends(get_verified_user)):
+    user_id = None if user.role == "admin" else user.id
+    body = Chats.get_chat_by_id_as_json(id, user_id=user_id)
+    if body is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+    return Response(content=body, media_type="application/json")
 
 
 ############################
@@ -374,8 +367,13 @@ async def send_chat_message_event_by_id(
 
 
 @router.delete("/{id}", response_model=bool)
-async def delete_chat_by_id(chat=Depends(resolve_chat_access)):
-    return Chats.delete_chat_by_id(chat.id)
+async def delete_chat_by_id(id: str, user=Depends(get_verified_user)):
+    if user.role != "admin" and not Chats.is_chat_owner(id, user.id):
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=ERROR_MESSAGES.NOT_FOUND,
+        )
+    return Chats.delete_chat_by_id(id)
 
 
 ############################
