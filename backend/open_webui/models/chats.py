@@ -8,7 +8,6 @@ import orjson
 from sqlalchemy.orm import Session
 from open_webui.internal.db import Base, get_db_context
 from open_webui.models.folders import Folders
-from open_webui.models.chat_messages import ChatMessage, ChatMessages
 from open_webui.utils.misc import sanitize_data_for_db, sanitize_text_for_db
 
 from pydantic import BaseModel, ConfigDict
@@ -193,25 +192,7 @@ class ChatTable:
             db.flush()
             db.refresh(chat_item)
 
-            # Dual-write initial messages to chat_message table
-            try:
-                history = form_data.chat.get("history", {})
-                messages = history.get("messages", {})
-                for message_id, message in messages.items():
-                    if isinstance(message, dict) and message.get("role"):
-                        ChatMessages.upsert_message(
-                            message_id=message_id,
-                            chat_id=id,
-                            user_id=user_id,
-                            data=message,
-                            db=db,
-                        )
-            except Exception as e:
-                log.warning(
-                    f"Failed to write initial messages to chat_message table: {e}"
-                )
-
-            return ChatModel.model_validate(chat_item) if chat_item else None
+        return ChatModel.model_validate(chat_item) if chat_item else None
 
     def _chat_import_form_to_chat_model(
         self, user_id: str, form_data: ChatImportForm
@@ -244,52 +225,28 @@ class ChatTable:
         chat_import_forms: list[ChatImportForm],
         db: Optional[Session] = None,
     ) -> list[ChatModel]:
+        chats = []
+        for form_data in chat_import_forms:
+            chat = self._chat_import_form_to_chat_model(user_id, form_data)
+            chats.append(Chat(**chat.model_dump()))
+
         with get_db_context(db) as db:
-            chats = []
-
-            for form_data in chat_import_forms:
-                chat = self._chat_import_form_to_chat_model(user_id, form_data)
-                chats.append(Chat(**chat.model_dump()))
-
             db.add_all(chats)
             db.flush()
 
-            # Dual-write messages to chat_message table
-            try:
-                for form_data, chat_obj in zip(chat_import_forms, chats):
-                    history = form_data.chat.get("history", {})
-                    messages = history.get("messages", {})
-                    for message_id, message in messages.items():
-                        if isinstance(message, dict) and message.get("role"):
-                            ChatMessages.upsert_message(
-                                message_id=message_id,
-                                chat_id=chat_obj.id,
-                                user_id=user_id,
-                                data=message,
-                                db=db,
-                            )
-            except Exception as e:
-                log.warning(
-                    f"Failed to write imported messages to chat_message table: {e}"
-                )
-
-            return [ChatModel.model_validate(chat) for chat in chats]
+        return [ChatModel.model_validate(chat) for chat in chats]
 
     def update_chat_by_id(
         self, id: str, chat: dict, db: Optional[Session] = None
     ) -> Optional[ChatModel]:
+        _chat = self._clean_null_bytes(chat)
+        _title = self._clean_null_bytes(chat["title"]) if "title" in chat else "New Chat"
         try:
             with get_db_context(db) as db:
                 chat_item = db.get(Chat, id)
-                chat_item.chat = self._clean_null_bytes(chat)
-                chat_item.title = (
-                    self._clean_null_bytes(chat["title"])
-                    if "title" in chat
-                    else "New Chat"
-                )
-
+                chat_item.chat = _chat
+                chat_item.title = _title
                 chat_item.updated_at = int(time.time())
-
                 db.flush()
                 db.refresh(chat_item)
 
@@ -342,7 +299,6 @@ class ChatTable:
         if isinstance(message.get("content"), str):
             message["content"] = sanitize_text_for_db(message["content"])
 
-        user_id = chat.user_id
         chat = chat.chat
         history = chat.get("history", {})
 
@@ -355,20 +311,7 @@ class ChatTable:
             history["messages"][message_id] = message
 
         history["currentId"] = message_id
-
         chat["history"] = history
-
-        # Dual-write to chat_message table
-        try:
-            ChatMessages.upsert_message(
-                message_id=message_id,
-                chat_id=id,
-                user_id=user_id,
-                data=history["messages"][message_id],
-            )
-        except Exception as e:
-            log.warning(f"Failed to write to chat_message table: {e}")
-
         return self.update_chat_by_id(id, chat)
 
     def add_message_status_to_chat_by_id_and_message_id(
@@ -579,40 +522,34 @@ class ChatTable:
             return None
 
     def is_chat_owner(
-        self, id: str, user_id: str, db: Optional[Session] = None
+        self, id: str, user_id: str
     ) -> bool:
         """
         Lightweight ownership check — uses EXISTS subquery instead of loading
         the full Chat row (which includes the potentially large JSON blob).
         """
-        try:
-            with get_db_context(db) as db:
-                return db.query(
-                    exists().where(and_(Chat.id == id, Chat.user_id == user_id))
-                ).scalar()
-        except Exception:
-            return False
+        with get_db_context() as db:
+            return db.query(
+                exists().where(and_(Chat.id == id, Chat.user_id == user_id))
+            ).scalar()
 
     def get_chat_folder_id(
-        self, id: str, user_id: str, db: Optional[Session] = None
+        self, id: str, user_id: str
     ) -> Optional[str]:
         """
         Fetch only the folder_id column for a chat, without loading the full
         JSON blob. Returns None if chat doesn't exist or doesn't belong to user.
         """
-        try:
-            with get_db_context(db) as db:
-                result = (
-                    db.query(Chat.folder_id).filter_by(id=id, user_id=user_id).first()
-                )
-                return result[0] if result else None
-        except Exception:
-            return None
+        with get_db_context() as db:
+            result = (
+                db.query(Chat.folder_id).filter_by(id=id, user_id=user_id).first()
+            )
+            return result[0] if result else None
 
-    def get_chats(
-        self, skip: int = 0, limit: int = 50, db: Optional[Session] = None
+    def get_all_chats(
+        self, 
     ) -> list[ChatModel]:
-        with get_db_context(db) as db:
+        with get_db_context() as db:
             all_chats = (
                 db.query(Chat)
                 # .limit(limit).offset(skip)
@@ -802,66 +739,37 @@ class ChatTable:
             return [ChatModel.model_validate(chat) for chat in all_chats]
 
     def update_chat_folder_id_by_id_and_user_id(
-        self, id: str, user_id: str, folder_id: str, db: Optional[Session] = None
+        self, chat_id: str, folder_id: str
     ) -> Optional[ChatModel]:
-        try:
-            with get_db_context(db) as db:
-                chat = db.get(Chat, id)
-                chat.folder_id = folder_id
-                chat.updated_at = int(time.time())
-                chat.pinned = False
-                db.flush()
-                db.refresh(chat)
-                return ChatModel.model_validate(chat)
-        except Exception:
-            return None
+        with get_db_context() as db:
+            chat = db.get(Chat, chat_id)
+            chat.folder_id = folder_id
+            chat.updated_at = int(time.time())
+            chat.pinned = False
+            db.flush()
+            db.refresh(chat)
+            return ChatModel.model_validate(chat)
 
     def delete_chat_by_id(self, id: str, db: Optional[Session] = None) -> bool:
-        try:
-            with get_db_context(db) as db:
-                db.query(ChatMessage).filter_by(chat_id=id).delete()
-                db.query(Chat).filter_by(id=id).delete()
-                db.flush()
-                return True
-        except Exception:
-            return False
+        with get_db_context(db) as db:
+            db.query(Chat).filter_by(id=id).delete()
+            db.flush()
+            return True
 
     def delete_chats_by_user_id(
         self, user_id: str, db: Optional[Session] = None
     ) -> bool:
-        try:
-            with get_db_context(db) as db:
-                chat_ids = (
-                    db.query(Chat.id).filter_by(user_id=user_id).scalar_subquery()
-                )
-                db.query(ChatMessage).filter(ChatMessage.chat_id.in_(chat_ids)).delete(
-                    synchronize_session=False
-                )
-                db.query(Chat).filter_by(user_id=user_id).delete()
-                db.flush()
-                return True
-        except Exception:
-            return False
+        with get_db_context(db) as db:
+            db.query(Chat).filter_by(user_id=user_id).delete()
+            db.flush()
+            return True
 
     def delete_chats_by_user_id_and_folder_id(
         self, user_id: str, folder_id: str, db: Optional[Session] = None
     ) -> bool:
-        try:
-            with get_db_context(db) as db:
-                chat_id_subquery = (
-                    db.query(Chat.id)
-                    .filter_by(user_id=user_id, folder_id=folder_id)
-                    .subquery()
-                )
-                db.query(ChatMessage).filter(
-                    ChatMessage.chat_id.in_(chat_id_subquery)
-                ).delete(synchronize_session=False)
-                db.query(Chat).filter_by(user_id=user_id, folder_id=folder_id).delete()
-                db.flush()
-
-                return True
-        except Exception:
-            return False
+        with get_db_context(db) as db:
+            db.query(Chat).filter_by(user_id=user_id, folder_id=folder_id).delete()
+            db.flush()
 
     def move_chats_by_user_id_and_folder_id(
         self,
@@ -870,16 +778,12 @@ class ChatTable:
         new_folder_id: Optional[str],
         db: Optional[Session] = None,
     ) -> bool:
-        try:
-            with get_db_context(db) as db:
-                db.query(Chat).filter_by(user_id=user_id, folder_id=folder_id).update(
-                    {"folder_id": new_folder_id}
-                )
-                db.flush()
-
-                return True
-        except Exception:
-            return False
+        with get_db_context(db) as db:
+            db.query(Chat).filter_by(user_id=user_id, folder_id=folder_id).update(
+                {"folder_id": new_folder_id}
+            )
+            db.flush()
+            return True
 
     def insert_chat_files(
         self,

@@ -244,7 +244,7 @@ async def get_user_chats(user=Depends(get_verified_user)):
 async def get_all_user_chats_in_db(
     user=Depends(get_admin_user),
 ):
-    return [ChatResponse(**chat.model_dump()) for chat in Chats.get_chats()]
+    return [ChatResponse(**chat.model_dump()) for chat in Chats.get_all_chats()]
 
 
 ############################
@@ -454,9 +454,8 @@ class ChatFolderIdForm(BaseModel):
 async def update_chat_folder_id_by_id(
     form_data: ChatFolderIdForm,
     chat=Depends(resolve_owned_chat),
-    user=Depends(get_verified_user),
 ):
     updated = Chats.update_chat_folder_id_by_id_and_user_id(
-        chat.id, user.id, form_data.folder_id
+        chat.id, form_data.folder_id
     )
     return ChatResponse(**updated.model_dump())
