@@ -11,6 +11,7 @@
 		updateChatById,
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
+	import { createMessagesList } from '$lib/utils';
 	import {
 		chatId,
 		chatTitle as _chatTitle,
@@ -202,10 +203,13 @@
 			chat = await getChatById(localStorage.token, id);
 		}
 
-		const messages = (chat.chat?.messages ?? []).map((message) => ({
-			role: message.role,
-			content: message.content
-		}));
+		const history = chat.chat?.history;
+		const messages = history?.currentId
+			? createMessagesList(history, history.currentId).map((message) => ({
+					role: message.role,
+					content: message.content
+				}))
+			: [];
 
 		const model = chat.chat.models.at(0) ?? chat.models.at(0) ?? '';
 
