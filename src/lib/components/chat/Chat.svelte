@@ -165,7 +165,7 @@
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
 		);
 
-		if (chatIdProp && (await loadChat())) {
+		if (await loadChat()) {
 			if (signal?.aborted) return;
 			await tick();
 			if (signal?.aborted) return;
@@ -664,55 +664,50 @@
 			temporaryChatEnabled.set(false);
 		}
 
-		chat = await getChatById(localStorage.token, $chatId).catch(async () => {
-			await goto('/');
-			return null;
-		});
+		const [chatRes, taskRes] = await Promise.all([
+			getChatById(localStorage.token, $chatId).catch(() => null),
+			getTaskIdsByChatId(localStorage.token, $chatId).catch(() => null)
+		]);
 
-		if (chat) {
-			const chatContent = chat.chat;
+		chat = chatRes;
 
-			if (chatContent) {
-				console.log(chatContent);
+		if (!chat) return null;
 
-				const savedModels = chatContent?.models ?? [];
-				selectedModels = [savedModels[0] ?? ''];
+		const chatContent = chat.chat;
+		if (!chatContent) return null;
 
-				history =
-					(chatContent?.history ?? undefined) !== undefined
-						? chatContent.history
-						: convertMessagesToHistory(chatContent.messages);
+		console.log(chatContent);
 
-				chatTitle.set(chatContent.title);
+		const savedModels = chatContent?.models ?? [];
+		selectedModels = [savedModels[0] ?? ''];
 
-				chatFiles = chatContent?.files ?? [];
+		history =
+			(chatContent?.history ?? undefined) !== undefined
+				? chatContent.history
+				: convertMessagesToHistory(chatContent.messages);
 
-				autoScroll = true;
-				await tick();
+		chatTitle.set(chatContent.title);
 
-				if (history.currentId) {
-					for (const message of Object.values(history.messages)) {
-						if (message && message.role === 'assistant') {
-							message.done = true;
-						}
-					}
+		chatFiles = chatContent?.files ?? [];
+
+		autoScroll = true;
+		await tick();
+
+		if (history.currentId) {
+			for (const message of Object.values(history.messages)) {
+				if (message && message.role === 'assistant') {
+					message.done = true;
 				}
-
-				const taskRes = await getTaskIdsByChatId(localStorage.token, $chatId).catch(() => {
-					return null;
-				});
-
-				if (taskRes) {
-					taskIds = taskRes.task_ids;
-				}
-
-				await tick();
-
-				return true;
-			} else {
-				return null;
 			}
 		}
+
+		if (taskRes) {
+			taskIds = taskRes.task_ids;
+		}
+
+		await tick();
+
+		return true;
 	};
 
 	const scrollToBottom = async (behavior: ScrollBehavior = 'auto') => {
