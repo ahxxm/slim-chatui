@@ -9,7 +9,6 @@
 	} from '$lib/stores';
 
 	import { deleteAllChats, getAllChats, getPinnedChatList, importChats } from '$lib/apis/chats';
-	import { getImportOrigin, convertOpenAIChats } from '$lib/utils';
 	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
@@ -33,13 +32,6 @@
 			reader.onload = (event) => {
 				let chats = JSON.parse(event.target.result);
 				console.log(chats);
-				if (getImportOrigin(chats) == 'openai') {
-					try {
-						chats = convertOpenAIChats(chats);
-					} catch (error) {
-						console.log('Unable to import chats:', error);
-					}
-				}
 				importChatsHandler(chats);
 			};
 

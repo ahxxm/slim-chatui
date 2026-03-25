@@ -148,7 +148,7 @@ describe('Sidebar: shift-delete race', () => {
 		for (let i = 0; i < 70; i++) {
 			await fetch('/api/v1/chats/new', {
 				method: 'POST',
-				body: JSON.stringify({ chat: { title: `Chat ${i}`, messages: [] } })
+				body: JSON.stringify({ chat: { title: `Chat ${i}` } })
 			});
 		}
 
