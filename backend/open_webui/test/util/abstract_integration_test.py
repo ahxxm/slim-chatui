@@ -59,7 +59,7 @@ class IntegrationTest:
     def create_chat(self, headers, chat=None):
         resp = self.fast_api_client.post(
             "/api/v1/chats/new",
-            json={"chat": chat or {"messages": []}},
+            json={"chat": chat or {}},
             headers=headers,
         )
         assert resp.status_code == 200, f"create_chat failed: {resp.text}"

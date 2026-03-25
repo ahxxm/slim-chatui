@@ -717,13 +717,12 @@
 		}
 	};
 
-	const saveAndProcessQueue = async (_chatId: string, messages: any[]) => {
+	const saveAndProcessQueue = async (_chatId: string) => {
 		await tick();
 
 		if ($chatId == _chatId && !$temporaryChatEnabled) {
 			chat = await updateChatById(localStorage.token, _chatId, {
 				models: selectedModels,
-				messages: messages,
 				history: history,
 				files: chatFiles
 			});
@@ -936,7 +935,7 @@
 				scrollToBottom();
 			}
 
-			await saveAndProcessQueue(chatId, createMessagesList(history, message.id));
+			await saveAndProcessQueue(chatId);
 		} else {
 			scheduleRender();
 		}
