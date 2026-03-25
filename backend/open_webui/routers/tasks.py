@@ -77,7 +77,7 @@ class ActiveChatsForm(BaseModel):
 
 
 @router.post("/active/chats")
-def check_active_chats(
+async def check_active_chats(
     request: Request, form_data: ActiveChatsForm, user=Depends(get_verified_user)
 ):
     """Check which chat IDs have active tasks."""
@@ -88,7 +88,7 @@ def check_active_chats(
 
 
 @router.get("/config")
-def get_task_config(request: Request, user=Depends(get_verified_user)):
+async def get_task_config(request: Request, user=Depends(get_verified_user)):
     return {
         field: getattr(request.app.state.config, field) for field in TASK_CONFIG_FIELDS
     }
@@ -102,7 +102,7 @@ class TaskConfigForm(BaseModel):
 
 
 @router.post("/config/update")
-def update_task_config(
+async def update_task_config(
     request: Request,
     form_data: TaskConfigForm,
     user=Depends(get_admin_user),

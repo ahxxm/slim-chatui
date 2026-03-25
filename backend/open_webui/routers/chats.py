@@ -27,7 +27,7 @@ router = APIRouter()
 
 # FastAPI caches get_verified_user per-request, so handlers that also
 # declare user=Depends(get_verified_user) pay no extra cost.
-def resolve_owned_chat(id: str, user=Depends(get_verified_user)):
+async def resolve_owned_chat(id: str, user=Depends(get_verified_user)):
     chat = Chats.get_chat_by_id_and_user_id(id, user.id)
     if not chat:
         raise HTTPException(
@@ -37,7 +37,7 @@ def resolve_owned_chat(id: str, user=Depends(get_verified_user)):
     return chat
 
 
-def resolve_chat_access(id: str, user=Depends(get_verified_user)):
+async def resolve_chat_access(id: str, user=Depends(get_verified_user)):
     chat = (
         Chats.get_chat_by_id(id)
         if user.role == "admin"
@@ -51,7 +51,7 @@ def resolve_chat_access(id: str, user=Depends(get_verified_user)):
     return chat
 
 
-def resolve_chat_owner_or_admin(id: str, user=Depends(get_verified_user)):
+async def resolve_chat_owner_or_admin(id: str, user=Depends(get_verified_user)):
     chat = Chats.get_chat_by_id(id)
     if not chat:
         raise HTTPException(
@@ -74,7 +74,7 @@ def resolve_chat_owner_or_admin(id: str, user=Depends(get_verified_user)):
 @router.get("/", response_model=list[ChatTitleIdResponse])
 @router.get("/list", response_model=list[ChatTitleIdResponse])
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT())
-def get_session_user_chat_list(
+async def get_session_user_chat_list(
     user=Depends(get_verified_user),
     page: Optional[int] = None,
     include_pinned: Optional[bool] = False,
@@ -100,7 +100,7 @@ def get_session_user_chat_list(
 
 
 @router.delete("/", response_model=bool)
-def delete_all_user_chats(
+async def delete_all_user_chats(
     user=Depends(get_verified_user),
 ):
 
@@ -114,7 +114,7 @@ def delete_all_user_chats(
 
 
 @router.get("/list/user/{user_id}", response_model=list[ChatTitleIdResponse])
-def get_user_chat_list_by_user_id(
+async def get_user_chat_list_by_user_id(
     user_id: str,
     page: Optional[int] = None,
     query: Optional[str] = None,
@@ -148,7 +148,7 @@ def get_user_chat_list_by_user_id(
 
 @router.post("/new", response_model=Optional[ChatResponse])
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT())
-def create_new_chat(
+async def create_new_chat(
     form_data: ChatForm,
     user=Depends(get_verified_user),
 ):
@@ -163,7 +163,7 @@ def create_new_chat(
 
 @router.post("/import", response_model=list[ChatResponse])
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT())
-def import_chats(
+async def import_chats(
     form_data: ChatsImportForm,
     user=Depends(get_verified_user),
 ):
@@ -176,7 +176,7 @@ def import_chats(
 
 
 @router.get("/search", response_model=list[ChatTitleIdResponse])
-def search_user_chats(
+async def search_user_chats(
     text: str,
     page: Optional[int] = None,
     user=Depends(get_verified_user),
@@ -203,7 +203,7 @@ def search_user_chats(
 
 
 @router.get("/folder/{folder_id}", response_model=list[ChatResponse])
-def get_chats_by_folder_id(folder_id: str, user=Depends(get_verified_user)):
+async def get_chats_by_folder_id(folder_id: str, user=Depends(get_verified_user)):
     return [
         ChatResponse(**chat.model_dump())
         for chat in Chats.get_chats_by_folder_ids_and_user_id([folder_id], user.id)
@@ -212,7 +212,7 @@ def get_chats_by_folder_id(folder_id: str, user=Depends(get_verified_user)):
 
 @router.get("/folder/{folder_id}/list")
 @route_error_handler(detail=ERROR_MESSAGES.DEFAULT())
-def get_chat_list_by_folder_id(
+async def get_chat_list_by_folder_id(
     folder_id: str,
     page: Optional[int] = 1,
     user=Depends(get_verified_user),
@@ -234,7 +234,7 @@ def get_chat_list_by_folder_id(
 
 
 @router.get("/pinned", response_model=list[ChatTitleIdResponse])
-def get_user_pinned_chats(user=Depends(get_verified_user)):
+async def get_user_pinned_chats(user=Depends(get_verified_user)):
     return Chats.get_pinned_chats_by_user_id(user.id)
 
 
@@ -244,7 +244,7 @@ def get_user_pinned_chats(user=Depends(get_verified_user)):
 
 
 @router.get("/all", response_model=list[ChatResponse])
-def get_user_chats(user=Depends(get_verified_user)):
+async def get_user_chats(user=Depends(get_verified_user)):
     result = Chats.get_chats_by_user_id(user.id)
     return [ChatResponse(**chat.model_dump()) for chat in result.items]
 
@@ -255,7 +255,7 @@ def get_user_chats(user=Depends(get_verified_user)):
 
 
 @router.get("/all/db", response_model=list[ChatResponse])
-def get_all_user_chats_in_db(
+async def get_all_user_chats_in_db(
     user=Depends(get_admin_user),
 ):
     return [ChatResponse(**chat.model_dump()) for chat in Chats.get_chats()]
@@ -267,7 +267,7 @@ def get_all_user_chats_in_db(
 
 
 @router.get("/{id}", response_model=Optional[ChatResponse])
-def get_chat_by_id(chat=Depends(resolve_chat_access)):
+async def get_chat_by_id(chat=Depends(resolve_chat_access)):
     return ChatResponse(**chat.model_dump())
 
 
@@ -277,7 +277,7 @@ def get_chat_by_id(chat=Depends(resolve_chat_access)):
 
 
 @router.post("/{id}", response_model=Optional[ChatResponse])
-def update_chat_by_id(
+async def update_chat_by_id(
     form_data: ChatForm,
     chat=Depends(resolve_owned_chat),
 ):
@@ -374,7 +374,7 @@ async def send_chat_message_event_by_id(
 
 
 @router.delete("/{id}", response_model=bool)
-def delete_chat_by_id(chat=Depends(resolve_chat_access)):
+async def delete_chat_by_id(chat=Depends(resolve_chat_access)):
     return Chats.delete_chat_by_id(chat.id)
 
 
@@ -384,7 +384,7 @@ def delete_chat_by_id(chat=Depends(resolve_chat_access)):
 
 
 @router.get("/{id}/pinned", response_model=Optional[bool])
-def get_pinned_status_by_id(chat=Depends(resolve_owned_chat)):
+async def get_pinned_status_by_id(chat=Depends(resolve_owned_chat)):
     return chat.pinned
 
 
@@ -394,7 +394,7 @@ def get_pinned_status_by_id(chat=Depends(resolve_owned_chat)):
 
 
 @router.post("/{id}/pin", response_model=Optional[ChatResponse])
-def pin_chat_by_id(chat=Depends(resolve_owned_chat)):
+async def pin_chat_by_id(chat=Depends(resolve_owned_chat)):
     return Chats.toggle_chat_pinned_by_id(chat.id)
 
 
@@ -408,7 +408,7 @@ class CloneForm(BaseModel):
 
 
 @router.post("/{id}/clone", response_model=Optional[ChatResponse])
-def clone_chat_by_id(
+async def clone_chat_by_id(
     form_data: CloneForm,
     chat=Depends(resolve_owned_chat),
     user=Depends(get_verified_user),
@@ -453,7 +453,7 @@ class ChatFolderIdForm(BaseModel):
 
 
 @router.post("/{id}/folder", response_model=Optional[ChatResponse])
-def update_chat_folder_id_by_id(
+async def update_chat_folder_id_by_id(
     form_data: ChatFolderIdForm,
     chat=Depends(resolve_owned_chat),
     user=Depends(get_verified_user),

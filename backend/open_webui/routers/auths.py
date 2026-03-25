@@ -118,7 +118,7 @@ class SessionUserResponse(Token, UserProfileImageResponse):
 
 
 @router.get("/", response_model=SessionUserResponse)
-def get_session_user(
+async def get_session_user(
     request: Request,
     response: Response,
     user=Depends(get_current_user),
@@ -171,7 +171,7 @@ def get_session_user(
 
 
 @router.post("/update/profile", response_model=UserProfileImageResponse)
-def update_profile(
+async def update_profile(
     form_data: UpdateProfileForm,
     session_user=Depends(get_verified_user),
 ):
@@ -349,7 +349,7 @@ def signup(
 
 
 @router.get("/signout")
-def signout(request: Request, response: Response):
+async def signout(request: Request, response: Response):
     response.delete_cookie("token")
 
     if WEBUI_AUTH_SIGNOUT_REDIRECT_URL:
@@ -421,7 +421,7 @@ def add_user(
 
 
 @router.get("/admin/details")
-def get_admin_details(request: Request, user=Depends(get_current_user)):
+async def get_admin_details(request: Request, user=Depends(get_current_user)):
     admin_email = request.app.state.config.ADMIN_EMAIL
     admin_name = None
 
@@ -449,7 +449,7 @@ def get_admin_details(request: Request, user=Depends(get_current_user)):
 
 
 @router.get("/admin/config")
-def get_admin_config(request: Request, user=Depends(get_admin_user)):
+async def get_admin_config(request: Request, user=Depends(get_admin_user)):
     return {
         "ADMIN_EMAIL": request.app.state.config.ADMIN_EMAIL,
         "WEBUI_URL": request.app.state.config.WEBUI_URL,
@@ -468,7 +468,7 @@ class AdminConfig(BaseModel):
 
 
 @router.post("/admin/config")
-def update_admin_config(
+async def update_admin_config(
     request: Request,
     form_data: AdminConfig,
     user=Depends(get_admin_user),
