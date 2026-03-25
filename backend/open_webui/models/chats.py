@@ -284,14 +284,21 @@ class ChatTable:
             return None
 
     def update_chat_title_by_id(self, id: str, title: str) -> Optional[ChatModel]:
-        chat = self.get_chat_by_id(id)
-        if chat is None:
-            return None
-
-        chat = chat.chat
-        chat["title"] = title
-
-        return self.update_chat_by_id(id, chat)
+        title = sanitize_text_for_db(title) if title else "New Chat"
+        with get_db_context() as db:
+            db.execute(
+                text(
+                    "UPDATE chat SET"
+                    " chat = json_set(chat, '$.title', :title),"
+                    " title = :title,"
+                    " updated_at = :now"
+                    " WHERE id = :id"
+                ),
+                {"title": title, "now": int(time.time()), "id": id},
+            )
+            db.flush()
+            chat_item = db.get(Chat, id)
+            return ChatModel.model_validate(chat_item) if chat_item else None
 
     def get_chat_title_by_id(self, id: str) -> Optional[str]:
         with get_db_context() as db:
@@ -319,73 +326,127 @@ class ChatTable:
     def upsert_message_to_chat_by_id_and_message_id(
         self, id: str, message_id: str, message: dict
     ) -> Optional[ChatModel]:
-        chat = self.get_chat_by_id(id)
-        if chat is None:
-            return None
+        """Atomic message upsert via json_patch/json_set.
 
-        # Sanitize message content for null characters before upserting
+        Existing message: json_patch merges keys (content, followUps, etc.)
+        without touching the rest of the blob.
+
+        New message (must have parentId): json_set inserts the message,
+        appends message_id to parent's childrenIds, and advances currentId.
+        All three in one UPDATE to avoid no read-modify-write.
+
+        No parentId and not existing: no-op (metadata-only patch for a
+        message not yet in history).
+        """
         if isinstance(message.get("content"), str):
             message["content"] = sanitize_text_for_db(message["content"])
 
-        chat = chat.chat
-        history = chat.get("history", {})
+        msg_path = f"$.history.messages.{message_id}"
+        msg_data = orjson.dumps(message).decode()
+        now = int(time.time())
 
-        if message_id in history.get("messages", {}):
-            history["messages"][message_id] = {
-                **history["messages"][message_id],
-                **message,
-            }
-        else:
-            history["messages"][message_id] = message
-            # Only advance currentId for new messages linked into the tree.
-            # Patches to existing messages (content, followUps, status) and
-            # metadata-only inserts must not move the cursor, the frontend
-            # may have closed before saving, so this is the authoritative write.
-            if message.get("parentId"):
-                history["currentId"] = message_id
+        with get_db_context() as db:
+            # Try patching existing message first (most common path)
+            result = db.execute(
+                text(
+                    "UPDATE chat SET"
+                    " chat = json_set(chat, :msg_path,"
+                    "   json_patch(json_extract(chat, :msg_path), json(:msg_data))),"
+                    " updated_at = :now"
+                    " WHERE id = :id"
+                    "   AND json_type(chat, :msg_path) IS NOT NULL"
+                ),
+                {"msg_path": msg_path, "msg_data": msg_data, "now": now, "id": id},
+            )
 
-        chat["history"] = history
-        return self.update_chat_by_id(id, chat)
+            if result.rowcount == 0 and message.get("parentId"):
+                # Message doesn't exist yet — insert, link to parent, advance cursor
+                parent_children_path = (
+                    f"$.history.messages.{message['parentId']}.childrenIds"
+                )
+                db.execute(
+                    text(
+                        "UPDATE chat SET chat = json_set("
+                        "  json_set("
+                        "    json_set(chat, :msg_path, json(:msg_data)),"
+                        "    :parent_children_path,"
+                        "    json_insert("
+                        "      COALESCE(json_extract(chat, :parent_children_path),"
+                        "              json('[]')),"
+                        "      '$[#]', :message_id"
+                        "    )"
+                        "  ),"
+                        "  '$.history.currentId', :message_id"
+                        "), updated_at = :now WHERE id = :id"
+                    ),
+                    {
+                        "msg_path": msg_path,
+                        "msg_data": msg_data,
+                        "parent_children_path": parent_children_path,
+                        "message_id": message_id,
+                        "now": now,
+                        "id": id,
+                    },
+                )
+
+            db.flush()
+            chat_item = db.get(Chat, id)
+            return ChatModel.model_validate(chat_item) if chat_item else None
 
     def add_message_status_to_chat_by_id_and_message_id(
         self, id: str, message_id: str, status: dict
     ) -> Optional[ChatModel]:
-        chat = self.get_chat_by_id(id)
-        if chat is None:
-            return None
-
-        chat = chat.chat
-        history = chat.get("history", {})
-
-        if message_id in history.get("messages", {}):
-            status_history = history["messages"][message_id].get("statusHistory", [])
-            status_history.append(status)
-            history["messages"][message_id]["statusHistory"] = status_history
-
-        chat["history"] = history
-        return self.update_chat_by_id(id, chat)
+        arr_path = f"$.history.messages.{message_id}.statusHistory"
+        with get_db_context() as db:
+            db.execute(
+                text(
+                    "UPDATE chat SET chat = json_set(chat, :arr_path,"
+                    "  json_insert("
+                    "    COALESCE(json_extract(chat, :arr_path), json('[]')),"
+                    "    '$[#]', json(:status)"
+                    "  )"
+                    "), updated_at = :now WHERE id = :id"
+                ),
+                {
+                    "arr_path": arr_path,
+                    "status": orjson.dumps(status).decode(),
+                    "now": int(time.time()),
+                    "id": id,
+                },
+            )
+            db.flush()
 
     def add_message_files_by_id_and_message_id(
         self, id: str, message_id: str, files: list[dict]
     ) -> list[dict]:
+        arr_path = f"$.history.messages.{message_id}.files"
         with get_db_context() as db:
-            chat = self.get_chat_by_id(id, db=db)
-            if chat is None:
-                return None
+            # Append each file atomically
+            for file in files:
+                db.execute(
+                    text(
+                        "UPDATE chat SET chat = json_set(chat, :arr_path,"
+                        "  json_insert("
+                        "    COALESCE(json_extract(chat, :arr_path), json('[]')),"
+                        "    '$[#]', json(:file)"
+                        "  )"
+                        "), updated_at = :now WHERE id = :id"
+                    ),
+                    {
+                        "arr_path": arr_path,
+                        "file": orjson.dumps(file).decode(),
+                        "now": int(time.time()),
+                        "id": id,
+                    },
+                )
+            db.flush()
 
-            chat = chat.chat
-            history = chat.get("history", {})
-
-            message_files = []
-
-            if message_id in history.get("messages", {}):
-                message_files = history["messages"][message_id].get("files", [])
-                message_files = message_files + files
-                history["messages"][message_id]["files"] = message_files
-
-            chat["history"] = history
-            self.update_chat_by_id(id, chat, db=db)
-            return message_files
+            # Return the current files list
+            result = db.execute(
+                text("SELECT json_extract(chat, :arr_path) FROM chat WHERE id = :id"),
+                {"arr_path": arr_path, "id": id},
+            ).scalar()
+            return orjson.loads(result) if result else []
 
     def toggle_chat_pinned_by_id(
         self, id: str, db: Optional[Session] = None
