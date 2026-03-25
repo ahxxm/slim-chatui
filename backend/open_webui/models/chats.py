@@ -678,7 +678,7 @@ class ChatTable:
             content_sql = (
                 "EXISTS ("
                 "    SELECT 1 "
-                "    FROM json_each(Chat.chat, '$.messages') AS message "
+                "    FROM json_each(Chat.chat, '$.history.messages') AS message "
                 "    WHERE LOWER(message.value->>'content') LIKE '%' || :content_key || '%'"
                 ")"
             )

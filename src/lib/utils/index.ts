@@ -159,39 +159,6 @@ export function unescapeHtml(html: string) {
 	return doc.documentElement.textContent;
 }
 
-export const convertMessagesToHistory = (messages: any[]) => {
-	const history: { messages: Record<string, any>; currentId: string | null } = {
-		messages: {},
-		currentId: null
-	};
-
-	let parentMessageId: string | null = null;
-	let messageId: string | null = null;
-
-	for (const message of messages) {
-		messageId = uuidv4();
-
-		if (parentMessageId !== null) {
-			history.messages[parentMessageId].childrenIds = [
-				...history.messages[parentMessageId].childrenIds,
-				messageId
-			];
-		}
-
-		history.messages[messageId] = {
-			...message,
-			id: messageId,
-			parentId: parentMessageId,
-			childrenIds: []
-		};
-
-		parentMessageId = messageId;
-	}
-
-	history.currentId = messageId;
-	return history;
-};
-
 export const compressImage = async (imageUrl: string, maxWidth: number, maxHeight: number) => {
 	return new Promise((resolve, reject) => {
 		const img = new Image();

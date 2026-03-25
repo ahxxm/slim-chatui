@@ -31,7 +31,7 @@
 		refreshChatList
 	} from '$lib/stores';
 
-	import { convertMessagesToHistory, createMessagesList, processDetails } from '$lib/utils';
+	import { createMessagesList, processDetails } from '$lib/utils';
 
 	import {
 		createNewChat,
@@ -681,10 +681,7 @@
 		const savedModels = chatContent?.models ?? [];
 		selectedModels = [savedModels[0] ?? ''];
 
-		history =
-			(chatContent?.history ?? undefined) !== undefined
-				? chatContent.history
-				: convertMessagesToHistory(chatContent.messages);
+		history = chatContent.history;
 
 		chatTitle.set(chatContent.title);
 
@@ -1513,7 +1510,6 @@
 					models: selectedModels,
 					system: $settings.system ?? undefined,
 					history: history,
-					messages: createMessagesList(history, history.currentId),
 					timestamp: Date.now()
 				},
 				$selectedFolder?.id
@@ -1541,7 +1537,6 @@
 				chat = await updateChatById(localStorage.token, _chatId, {
 					models: selectedModels,
 					history: history,
-					messages: createMessagesList(history, history.currentId),
 					files: chatFiles
 				});
 			}
@@ -1654,8 +1649,7 @@
 								toast.error($i18n.t('No conversation to save'));
 								return;
 							}
-							const messages = createMessagesList(history, history.currentId);
-							const title = messages.find((m) => m.role === 'user')?.content ?? $i18n.t('New Chat');
+							const title = $i18n.t('New Chat');
 
 							const savedChat = await createNewChat(
 								localStorage.token,
@@ -1664,7 +1658,6 @@
 									title: title.length > 50 ? `${title.slice(0, 50)}...` : title,
 									models: selectedModels,
 									history: history,
-									messages: messages,
 									timestamp: Date.now()
 								},
 								null
