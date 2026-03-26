@@ -297,13 +297,6 @@ class ChatTable:
                 {"title": title, "now": int(time.time()), "id": id},
             )
 
-    def get_chat_title_by_id(self, id: str) -> Optional[str]:
-        with get_db_context() as db:
-            result = db.query(Chat.title).filter_by(id=id).first()
-            if result is None:
-                return None
-            return result[0]
-
     def get_messages_map_by_chat_id(self, id: str) -> Optional[dict]:
         chat = self.get_chat_by_id(id)
         if chat is None:

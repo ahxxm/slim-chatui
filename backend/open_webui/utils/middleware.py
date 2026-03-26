@@ -645,12 +645,10 @@ async def streaming_chat_response_handler(
             serialize_output(output)[:200],
         )
 
-        title = Chats.get_chat_title_by_id(metadata["chat_id"])
         done_data = {
             "done": True,
             "content": serialize_output(output),
             "output": output,
-            "title": title,
         }
 
         Chats.upsert_message_to_chat_by_id_and_message_id(
