@@ -9,6 +9,7 @@
 		chatId,
 		idx = 0,
 		history = { messages: {}, currentId: null } as ChatHistory,
+		streamingMessages,
 		messageId,
 		user,
 		setInputText = () => {},
@@ -58,6 +59,7 @@
 			<ResponseMessage
 				{chatId}
 				{history}
+				{streamingMessages}
 				{messageId}
 				isLastMessage={messageId === history.currentId}
 				// always children of a user message

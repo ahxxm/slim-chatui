@@ -316,17 +316,16 @@ async def update_chat_message_by_id(
         False,
     )
 
-    if event_emitter:
-        await event_emitter(
-            {
-                "type": "chat:message",
-                "data": {
-                    "chat_id": chat.id,
-                    "message_id": message_id,
-                    "content": form_data.content,
-                },
-            }
-        )
+    await event_emitter(
+        {
+            "type": "chat:message",
+            "data": {
+                "chat_id": chat.id,
+                "message_id": message_id,
+                "content": form_data.content,
+            },
+        }
+    )
 
     return ChatResponse(**updated.model_dump())
 
@@ -353,9 +352,6 @@ async def send_chat_message_event_by_id(
             "message_id": message_id,
         }
     )
-
-    if not event_emitter:
-        return False
 
     await event_emitter(form_data.model_dump())
     return True

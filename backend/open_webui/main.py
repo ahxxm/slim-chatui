@@ -411,15 +411,13 @@ async def chat_completion(
         await get_all_models(request, user=user)
 
     model_id = form_data.get("model", None)
+    if model_id not in request.app.state.MODELS:
+        raise Exception("Model not found")
+    model = request.app.state.MODELS[model_id]
     tasks = form_data.pop("background_tasks", None)
 
     metadata = {}
     try:
-        if model_id not in request.app.state.MODELS:
-            raise Exception("Model not found")
-
-        model = request.app.state.MODELS[model_id]
-
         metadata = {
             "user_id": user.id,
             "chat_id": form_data.pop("chat_id", None),
@@ -433,41 +431,41 @@ async def chat_completion(
             "model": model,
         }
 
-        if metadata.get("chat_id") and user:
-            if not metadata["chat_id"].startswith(
-                "local:"
-            ):  # temporary chats are not stored
+        stored_chat = bool(
+            metadata.get("chat_id")
+            and metadata.get("message_id")
+            and metadata.get("parent_message_id")
+            and user
+            and not metadata["chat_id"].startswith("local:")
+        )
 
-                # Verify chat ownership — lightweight EXISTS check avoids
-                # deserializing the full chat JSON blob just to confirm the row exists
-                if (
-                    not Chats.is_chat_owner(metadata["chat_id"], user.id)
-                    and user.role != "admin"
-                ):  # admins can access any chat
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail=ERROR_MESSAGES.DEFAULT(),
-                    )
+        if stored_chat:
+            # Verify chat ownership — lightweight EXISTS check avoids
+            # deserializing the full chat JSON blob just to confirm the row exists
+            if (
+                not Chats.is_chat_owner(metadata["chat_id"], user.id)
+                and user.role != "admin"
+            ):  # admins can access any chat
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail=ERROR_MESSAGES.DEFAULT(),
+                )
 
-                # Insert chat files from parent message if any
-                parent_message = metadata.get("parent_message") or {}
-                parent_message_files = parent_message.get("files", [])
-                if parent_message_files:
-                    try:
-                        Chats.insert_chat_files(
-                            metadata["chat_id"],
-                            parent_message.get("id"),
-                            [
-                                fid
-                                for file_item in parent_message_files
-                                if file_item.get("type") == "file"
-                                and (fid := file_item.get("id"))
-                            ],
-                            user.id,
-                        )
-                    except Exception as e:
-                        log.debug(f"Error inserting chat files: {e}")
-                        pass
+            # Insert chat files from parent message if any
+            parent_message = metadata.get("parent_message") or {}
+            parent_message_files = parent_message.get("files", [])
+            if parent_message_files:
+                Chats.insert_chat_files(
+                    metadata["chat_id"],
+                    parent_message.get("id"),
+                    [
+                        fid
+                        for file_item in parent_message_files
+                        if file_item.get("type") == "file"
+                        and (fid := file_item.get("id"))
+                    ],
+                    user.id,
+                )
 
         request.state.metadata = metadata
         form_data["metadata"] = metadata
@@ -479,26 +477,22 @@ async def chat_completion(
             detail=str(e),
         )
 
-    async def process_chat(request, form_data, user, metadata, model):
+    async def process_chat(request, form_data, user, metadata, model, stored_chat):
         try:
             form_data, metadata = await process_chat_payload(
                 request, form_data, user, metadata, model
             )
 
             response = await chat_completion_handler(request, form_data, user)
-            if metadata.get("chat_id") and metadata.get("message_id"):
-                try:
-                    if not metadata["chat_id"].startswith("local:"):
-                        Chats.upsert_message_to_chat_by_id_and_message_id(
-                            metadata["chat_id"],
-                            metadata["message_id"],
-                            {
-                                "parentId": metadata.get("parent_message_id", None),
-                                "model": model_id,
-                            },
-                        )
-                except:
-                    pass
+            if stored_chat:
+                Chats.upsert_message_to_chat_by_id_and_message_id(
+                    metadata["chat_id"],
+                    metadata["message_id"],
+                    {
+                        "parentId": metadata["parent_message_id"],
+                        "model": model_id,
+                    },
+                )
 
             ctx = build_chat_response_context(
                 request, form_data, user, model, metadata, tasks
@@ -520,61 +514,47 @@ async def chat_completion(
                 raise  # re-raise to ensure proper task cancellation handling
         except Exception as e:
             log.debug(f"Error processing chat payload: {e}")
-            if metadata.get("chat_id") and metadata.get("message_id"):
-                # Update the chat message with the error
-                try:
-                    if not metadata["chat_id"].startswith("local:"):
-                        Chats.upsert_message_to_chat_by_id_and_message_id(
-                            metadata["chat_id"],
-                            metadata["message_id"],
-                            {
-                                "parentId": metadata.get("parent_message_id", None),
-                                "error": {"content": str(e)},
-                            },
-                        )
+            if stored_chat:
+                Chats.upsert_message_to_chat_by_id_and_message_id(
+                    metadata["chat_id"],
+                    metadata["message_id"],
+                    {
+                        "parentId": metadata["parent_message_id"],
+                        "error": {"content": str(e)},
+                    },
+                )
 
-                    event_emitter = get_event_emitter(metadata)
-                    await event_emitter(
-                        {
-                            "type": "chat:message:error",
-                            "data": {"error": {"content": str(e)}},
-                        }
-                    )
-                    await event_emitter(
-                        {"type": "chat:tasks:cancel"},
-                    )
+                event_emitter = get_event_emitter(metadata)
+                await event_emitter(
+                    {
+                        "type": "chat:message:error",
+                        "data": {"error": {"content": str(e)}},
+                    }
+                )
+                await event_emitter(
+                    {"type": "chat:tasks:cancel"},
+                )
 
-                except:
-                    pass
         finally:
             # Emit chat:active=false when task completes
-            try:
-                if metadata.get("chat_id"):
-                    event_emitter = get_event_emitter(metadata, update_db=False)
-                    if event_emitter:
-                        await event_emitter(
-                            {"type": "chat:active", "data": {"active": False}}
-                        )
-            except Exception as e:
-                log.debug(f"Error emitting chat:active: {e}")
+            if metadata.get("chat_id"):
+                event_emitter = get_event_emitter(metadata, update_db=False)
+                await event_emitter({"type": "chat:active", "data": {"active": False}})
 
-    if (
-        metadata.get("session_id")
-        and metadata.get("chat_id")
-        and metadata.get("message_id")
-    ):
+    if metadata.get("session_id") and metadata.get("chat_id"):
         # Asynchronous Chat Processing
         task_id, _ = await create_task(
-            process_chat(request, form_data, user, metadata, model),
+            process_chat(request, form_data, user, metadata, model, stored_chat),
             id=metadata["chat_id"],
         )
         # Emit chat:active=true when task starts
         event_emitter = get_event_emitter(metadata, update_db=False)
-        if event_emitter:
-            await event_emitter({"type": "chat:active", "data": {"active": True}})
+        await event_emitter({"type": "chat:active", "data": {"active": True}})
         return {"status": True, "task_id": task_id}
     else:
-        return await process_chat(request, form_data, user, metadata, model)
+        return await process_chat(
+            request, form_data, user, metadata, model, stored_chat
+        )
 
 
 @app.post("/api/tasks/stop/{task_id}")

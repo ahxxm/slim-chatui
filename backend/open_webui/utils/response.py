@@ -333,6 +333,8 @@ _DELTA_ROUTES = {
         "summary_text",
     ),
     ("reasoning", "reasoning_text"): ("content", "content_index", "text"),
+    # LiteLLM chat→responses bridge mislabels reasoning content as output_text
+    ("reasoning", "output_text"): ("content", "content_index", "text"),
 }
 
 
