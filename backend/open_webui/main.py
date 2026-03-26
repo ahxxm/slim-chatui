@@ -411,15 +411,13 @@ async def chat_completion(
         await get_all_models(request, user=user)
 
     model_id = form_data.get("model", None)
+    if model_id not in request.app.state.MODELS:
+        raise Exception("Model not found")
+    model = request.app.state.MODELS[model_id]
     tasks = form_data.pop("background_tasks", None)
 
     metadata = {}
     try:
-        if model_id not in request.app.state.MODELS:
-            raise Exception("Model not found")
-
-        model = request.app.state.MODELS[model_id]
-
         metadata = {
             "user_id": user.id,
             "chat_id": form_data.pop("chat_id", None),
@@ -449,7 +447,7 @@ async def chat_completion(
                 and user.role != "admin"
             ):  # admins can access any chat
                 raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
+                    status_code=status.HTTP_401_UNAUTHORIZED,
                     detail=ERROR_MESSAGES.DEFAULT(),
                 )
 
@@ -541,9 +539,7 @@ async def chat_completion(
             # Emit chat:active=false when task completes
             if metadata.get("chat_id"):
                 event_emitter = get_event_emitter(metadata, update_db=False)
-                await event_emitter(
-                    {"type": "chat:active", "data": {"active": False}}
-                )
+                await event_emitter({"type": "chat:active", "data": {"active": False}})
 
     if metadata.get("session_id") and metadata.get("chat_id"):
         # Asynchronous Chat Processing
@@ -556,7 +552,9 @@ async def chat_completion(
         await event_emitter({"type": "chat:active", "data": {"active": True}})
         return {"status": True, "task_id": task_id}
     else:
-        return await process_chat(request, form_data, user, metadata, model, stored_chat)
+        return await process_chat(
+            request, form_data, user, metadata, model, stored_chat
+        )
 
 
 @app.post("/api/tasks/stop/{task_id}")

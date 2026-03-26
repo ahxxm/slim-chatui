@@ -65,6 +65,25 @@ class IntegrationTest:
         assert resp.status_code == 200, f"create_chat failed: {resp.text}"
         return resp.json()
 
+    @staticmethod
+    def chat_with_message(content, msg_id="msg-root", role="user", title="New Chat"):
+        """Build a chat dict with one root message in history."""
+        return {
+            "title": title,
+            "history": {
+                "currentId": msg_id,
+                "messages": {
+                    msg_id: {
+                        "id": msg_id,
+                        "role": role,
+                        "content": content,
+                        "parentId": None,
+                        "childrenIds": [],
+                    }
+                },
+            },
+        }
+
     def add_user(self, headers):
         """Admin adds a user via API. Returns (data, headers)."""
         resp = self.fast_api_client.post(
