@@ -238,5 +238,8 @@ def get_event_emitter(request_info, update_db=True):
         and "message_id" in request_info
     ):
         return __event_emitter__
-    else:
-        return None
+
+    async def __event_emitter_noop__(_):
+        pass
+
+    return __event_emitter_noop__

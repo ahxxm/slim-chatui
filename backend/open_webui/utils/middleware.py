@@ -253,6 +253,7 @@ async def process_chat_payload(
 def get_event_emitter_or_none(
     metadata: dict[str, Any],
 ) -> EventEmitter | None:
+    """Returns None (not noop) — callers branch on the result."""
     required = ("session_id", "chat_id", "message_id")
     if all(metadata.get(k) for k in required):
         return get_event_emitter(metadata)
@@ -464,10 +465,7 @@ async def _generate_title(
         )
         title = res.get("title", "")
     except Exception as e:
-        log.error(f"title generation failed: {e}")
-        title = ""
-
-    if not title:
+        log.error(f"title generation failed, use message: {e}")
         user_message = get_last_user_message(messages) or ""
         title = user_message[:100] or "New Chat"
 
@@ -648,12 +646,10 @@ async def streaming_chat_response_handler(
             serialize_output(output)[:200],
         )
 
-        title = Chats.get_chat_title_by_id(metadata["chat_id"])
         done_data = {
             "done": True,
             "content": serialize_output(output),
             "output": output,
-            "title": title,
         }
 
         Chats.upsert_message_to_chat_by_id_and_message_id(

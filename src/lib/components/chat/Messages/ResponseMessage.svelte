@@ -37,6 +37,7 @@
 	let {
 		chatId = '',
 		history,
+		streamingMessages,
 		messageId,
 		siblings,
 		setInputText = () => {},
@@ -57,7 +58,7 @@
 
 	let message = $derived(history.messages[messageId]);
 	let messageContent: string = $derived(history.messages[messageId]?.content ?? '');
-	let messageDone: boolean = $derived(history.messages[messageId]?.done ?? false);
+	let messageDone: boolean = $derived(!(messageId in streamingMessages));
 
 	let citationsElement = $state();
 	let contentContainerElement = $state();
