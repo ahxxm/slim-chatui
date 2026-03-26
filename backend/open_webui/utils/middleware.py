@@ -253,6 +253,7 @@ async def process_chat_payload(
 def get_event_emitter_or_none(
     metadata: dict[str, Any],
 ) -> EventEmitter | None:
+    """Returns None (not noop) — callers branch on the result."""
     required = ("session_id", "chat_id", "message_id")
     if all(metadata.get(k) for k in required):
         return get_event_emitter(metadata)
