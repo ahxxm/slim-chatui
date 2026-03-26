@@ -20,6 +20,7 @@
 		user = $_user,
 		history = $bindable({ messages: {}, currentId: null }),
 		selectedModels = [],
+		streamingMessages,
 		setInputText = () => {},
 		sendMessage,
 		continueResponse,
@@ -297,6 +298,7 @@
 							<Message
 								{chatId}
 								bind:history
+								{streamingMessages}
 								messageId={message.id}
 								idx={messageIdx}
 								{user}

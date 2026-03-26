@@ -85,6 +85,10 @@
 		currentId: null
 	});
 
+	// Tracks which message IDs are currently being streamed.
+	// Purely runtime, empty on load (= all messages done).
+	let streamingMessages: Record<string, true> = $state({});
+
 	let taskIds = $state<string[] | null>(null);
 
 	// Typewriter throttle: batch streaming tokens, emit to DOM N times per second.
@@ -279,6 +283,15 @@
 				const type = event?.data?.type ?? null;
 				const data = event?.data?.data ?? null;
 
+				// Backend is actively streaming for this message — track it.
+				if (
+					history.messages[event.message_id]?.role === 'assistant' &&
+					!(event.message_id in streamingMessages) &&
+					type !== 'chat:active'
+				) {
+					streamingMessages[event.message_id] = true;
+				}
+
 				if (type === 'status') {
 					let message = history.messages[event.message_id];
 					if (message?.statusHistory) {
@@ -292,9 +305,8 @@
 				} else if (type === 'chat:tasks:cancel') {
 					taskIds = null;
 					const responseMessage = history.messages[history.currentId];
-					// Set all response messages to done
 					for (const messageId of history.messages[responseMessage.parentId].childrenIds) {
-						history.messages[messageId].done = true;
+						delete streamingMessages[messageId];
 					}
 				} else if (type === 'chat:message:delta' || type === 'message') {
 					const msg = getStreamingMessage(event.message_id);
@@ -376,7 +388,9 @@
 					eventConfirmationInputValue = data?.value ?? '';
 					eventConfirmationInputType = data?.type ?? '';
 				} else if (type === 'chat:active') {
-					// status indicator — ignored
+					if (!data?.active && event.message_id && event.message_id in streamingMessages) {
+						delete streamingMessages[event.message_id];
+					}
 				} else {
 					console.log('Unknown message type', data);
 				}
@@ -690,14 +704,6 @@
 		autoScroll = true;
 		await tick();
 
-		if (history.currentId) {
-			for (const message of Object.values(history.messages)) {
-				if (message && message.role === 'assistant') {
-					message.done = true;
-				}
-			}
-		}
-
 		if (taskRes) {
 			taskIds = taskRes.task_ids;
 		}
@@ -783,8 +789,6 @@
 			childrenIds: [],
 			role: 'assistant',
 			content: `[RESPONSE] ${responseMessageId}`,
-			done: true,
-
 			model: modelId,
 			modelName: model.name ?? model.id,
 			timestamp: Math.floor(Date.now() / 1000)
@@ -842,7 +846,6 @@
 					id: messageId,
 					parentId: currentParentId,
 					childrenIds: [],
-					done: true,
 					model: model.id,
 					modelName: model.name ?? model.id,
 					timestamp: Math.floor(Date.now() / 1000),
@@ -916,8 +919,8 @@
 
 		// Guard: Responses API emits done:true twice per stream (see middleware.py).
 		// Content/output fields above update on both, but save+queue runs only on first.
-		if (done && !message.done) {
-			message.done = true;
+		if (done && message.id in streamingMessages) {
+			delete streamingMessages[message.id];
 
 			eventTarget.dispatchEvent(
 				new CustomEvent('chat:finish', {
@@ -969,7 +972,7 @@
 			return;
 		}
 
-		// Check if there are pending tasks (more reliable than lastMessage.done)
+		// Check if there are pending tasks
 		if (taskIds !== null && taskIds.length > 0) {
 			if ($settings?.enableMessageQueue ?? true) {
 				// Queue the message
@@ -1098,6 +1101,8 @@
 			modelName: model.name ?? model.id,
 			timestamp: Math.floor(Date.now() / 1000)
 		};
+
+		streamingMessages[responseMessageId] = true;
 
 		history = {
 			...history,
@@ -1313,7 +1318,7 @@
 				content: error
 			};
 
-			responseMessage.done = true;
+			delete streamingMessages[responseMessageId];
 
 			history.messages[responseMessageId] = responseMessage;
 			history.currentId = responseMessageId;
@@ -1368,7 +1373,7 @@
 		responseMessage.error = {
 			content: $i18n.t(`Uh-oh! There was an issue with the response.`) + '\n' + errorMessage
 		};
-		responseMessage.done = true;
+		delete streamingMessages[responseMessage.id];
 
 		history.messages[responseMessage.id] = responseMessage;
 	};
@@ -1382,14 +1387,11 @@
 			taskIds = null;
 
 			const responseMessage = history.messages[history.currentId];
-			// Set all response messages to done
 			if (responseMessage.parentId && history.messages[responseMessage.parentId]) {
 				for (const messageId of history.messages[responseMessage.parentId].childrenIds) {
-					history.messages[messageId].done = true;
+					delete streamingMessages[messageId];
 				}
 			}
-
-			history.messages[history.currentId] = responseMessage;
 
 			if (autoScroll) {
 				scrollToBottom();
@@ -1479,9 +1481,9 @@
 		console.log('continueResponse');
 		const _chatId = $chatId;
 
-		if (history.currentId && history.messages[history.currentId].done == true) {
+		if (history.currentId && !(history.currentId in streamingMessages)) {
 			const responseMessage = history.messages[history.currentId];
-			responseMessage.done = false;
+			streamingMessages[history.currentId] = true;
 			await tick();
 
 			const model = $models.find((m) => m.id === responseMessage.model);
@@ -1698,6 +1700,7 @@
 										messageInput?.setText(text);
 									}}
 									{selectedModels}
+									{streamingMessages}
 									{sendMessage}
 									{showMessage}
 									{submitMessage}
@@ -1716,6 +1719,7 @@
 							<MessageInput
 								bind:this={messageInput}
 								{history}
+								{streamingMessages}
 								{taskIds}
 								{selectedModels}
 								bind:files
