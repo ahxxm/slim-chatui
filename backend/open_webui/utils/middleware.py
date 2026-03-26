@@ -464,10 +464,7 @@ async def _generate_title(
         )
         title = res.get("title", "")
     except Exception as e:
-        log.error(f"title generation failed: {e}")
-        title = ""
-
-    if not title:
+        log.error(f"title generation failed, use message: {e}")
         user_message = get_last_user_message(messages) or ""
         title = user_message[:100] or "New Chat"
 

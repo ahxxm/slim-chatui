@@ -283,8 +283,8 @@ class ChatTable:
             log.exception(f"update_chat_by_id failed: {e}")
             return None
 
-    def update_chat_title_by_id(self, id: str, title: str) -> Optional[ChatModel]:
-        title = sanitize_text_for_db(title) if title else "New Chat"
+    def update_chat_title_by_id(self, id: str, title: str) -> None:
+        title = sanitize_text_for_db(title)
         with get_db_context() as db:
             db.execute(
                 text(
@@ -296,16 +296,13 @@ class ChatTable:
                 ),
                 {"title": title, "now": int(time.time()), "id": id},
             )
-            db.flush()
-            chat_item = db.get(Chat, id)
-            return ChatModel.model_validate(chat_item) if chat_item else None
 
     def get_chat_title_by_id(self, id: str) -> Optional[str]:
         with get_db_context() as db:
             result = db.query(Chat.title).filter_by(id=id).first()
             if result is None:
                 return None
-            return result[0] or "New Chat"
+            return result[0]
 
     def get_messages_map_by_chat_id(self, id: str) -> Optional[dict]:
         chat = self.get_chat_by_id(id)
