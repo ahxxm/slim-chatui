@@ -206,7 +206,7 @@ export const getBackendConfig = async () => {
 	return res.json();
 };
 
-export const getVersion = async (token: string) => {
+export const getBuildInfo = async (token: string) => {
 	const res = await fetch(`${WEBUI_BASE_URL}/api/version`, {
 		method: 'GET',
 		headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }

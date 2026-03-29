@@ -47,6 +47,6 @@ EXPOSE 8080
 HEALTHCHECK CMD python3 -c "import urllib.request,json,sys;r=urllib.request.urlopen('http://localhost:${PORT:-8080}/health');sys.exit(0 if json.load(r).get('status') else 1)"
 
 ARG BUILD_HASH
-ENV WEBUI_BUILD_VERSION=${BUILD_HASH}
+ENV WEBUI_BUILD_HASH=${BUILD_HASH}
 
 CMD ["bash", "start.sh"]
