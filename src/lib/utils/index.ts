@@ -1,4 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
+import { decode } from 'html-entities';
 import { WEBUI_BASE_URL } from '$lib/constants';
 
 import dayjs from 'dayjs';
@@ -154,9 +155,8 @@ function processChineseDelimiters(
 	});
 }
 
-export function unescapeHtml(html: string) {
-	const doc = new DOMParser().parseFromString(html, 'text/html');
-	return doc.documentElement.textContent;
+export function unescapeHtml(html: string): string {
+	return decode(html);
 }
 
 export const compressImage = async (imageUrl: string, maxWidth: number, maxHeight: number) => {

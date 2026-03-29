@@ -5,7 +5,7 @@
 
 	import { saveAs } from '$lib/utils';
 
-	import { marked, type Token } from 'marked';
+	import type { Token } from 'marked';
 	import { copyToClipboard, unescapeHtml } from '$lib/utils';
 
 	import { WEBUI_BASE_URL } from '$lib/constants';
@@ -310,9 +310,7 @@
 			</ul>
 		{/if}
 	{:else if token.type === 'details'}
-		{@const textContent = decode(token.text || '')
-			.replace(/<summary>.*?<\/summary>/gi, '')
-			.trim()}
+		{@const hasContent = (token.tokens?.length ?? 0) > 0}
 		<!-- token.attributes.done is baked into the HTML by the backend during streaming;
 			 when cancelled, message-level done is true but the HTML still says done="false",
 			 so override it here to stop the Collapsible spinner -->
@@ -338,7 +336,7 @@
 				className="w-full space-y-1"
 				dir="auto"
 			/>
-		{:else if textContent.length > 0}
+		{:else if hasContent}
 			<Collapsible
 				title={token.summary}
 				open={$settings?.expandDetails ?? false}
@@ -349,7 +347,7 @@
 				<div class=" mb-1.5" slot="content">
 					<svelte:self
 						id={`${id}-${tokenIdx}-d`}
-						tokens={marked.lexer(decode(token.text))}
+						tokens={token.tokens}
 						attributes={attrs}
 						{done}
 						{editCodeBlock}

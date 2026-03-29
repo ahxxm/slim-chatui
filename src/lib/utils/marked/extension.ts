@@ -1,3 +1,10 @@
+import { decode } from 'html-entities';
+import { Marked } from 'marked';
+
+// Plain marked instance for lexing decoded details content.
+// No chat extensions — inner content is plain markdown.
+const plainMarked = new Marked();
+
 // Helper function to find matching closing tag
 function findMatchingClosingTag(src: string, openTag: string, closeTag: string): number {
 	let depth = 1;
@@ -29,7 +36,7 @@ function parseAttributes(tag: string): { [key: string]: string } {
 function detailsTokenizer(src: string) {
 	// Updated regex to capture attributes inside <details>
 	const detailsRegex = /^<details(\s+[^>]*)?>\n/;
-	const summaryRegex = /^<summary>(.*?)<\/summary>\n/;
+	const summaryRegex = /^<summary>(.*?)<\/summary>\n?/;
 
 	const detailsMatch = detailsRegex.exec(src);
 	if (detailsMatch) {
@@ -49,11 +56,17 @@ function detailsTokenizer(src: string) {
 			content = content.slice(summaryMatch[0].length).trim();
 		}
 
+		// Backend html.escape()s markdown inside <details> to protect the
+		// HTML structure. Decode + lex once here instead of per-render.
+		const decoded = decode(content);
+		const tokens: any[] = decoded ? plainMarked.lexer(decoded) : [];
+
 		return {
 			type: 'details',
 			raw: fullMatch,
 			summary: summary,
-			text: content,
+			text: decoded,
+			tokens: tokens,
 			attributes: attributes // Include extracted attributes from <details>
 		};
 	}
