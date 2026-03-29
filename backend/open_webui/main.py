@@ -652,7 +652,7 @@ async def get_app_config(request: Request):
 @app.get("/api/version")
 async def get_app_version():
     return {
-        "version": VERSION,
+        "build_hash": WEBUI_BUILD_HASH,
     }
 
 

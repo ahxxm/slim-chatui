@@ -3,8 +3,8 @@
 	import { Toaster, toast } from 'svelte-sonner';
 	import { onMount, tick, setContext, onDestroy } from 'svelte';
 	import type { Snippet } from 'svelte';
-	import { goto, beforeNavigate } from '$app/navigation';
-	import { page, updated } from '$app/state';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import dayjs from 'dayjs';
 
 	import {
@@ -13,7 +13,6 @@
 		settings,
 		theme,
 		WEBUI_NAME,
-		WEBUI_VERSION,
 		mobile,
 		socket,
 		chatId,
@@ -23,10 +22,10 @@
 		refreshChatList
 	} from '$lib/stores';
 	import i18n, { initI18n, getLanguages, changeLanguage } from '$lib/i18n';
-	import { getBackendConfig, getVersion } from '$lib/apis';
+	import { getBackendConfig, getBuildInfo } from '$lib/apis';
 	import { getSessionUser, userSignOut } from '$lib/apis/auths';
 	import { getUserSettings } from '$lib/apis/users';
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	import { WEBUI_BASE_URL, WEBUI_BUILD_HASH } from '$lib/constants';
 	import { bestMatchingLanguage } from '$lib/utils';
 	import { setTextScale } from '$lib/utils/text-scale';
 	import { applyCjkFont } from '$lib/utils/cjk-font';
@@ -38,12 +37,6 @@
 	import '../app.css';
 
 	let { children }: { children: Snippet } = $props();
-	// handle frontend updates (https://svelte.dev/docs/kit/configuration#version)
-	beforeNavigate(async ({ willUnload, to }) => {
-		if (updated.current && !willUnload && to?.url) {
-			location.href = to.url.href;
-		}
-	});
 
 	setContext('i18n', i18n);
 
@@ -79,12 +72,11 @@
 
 		_socket.on('connect', async () => {
 			console.log('connected', _socket.id);
-			const res = await getVersion(localStorage.token);
+			const res = await getBuildInfo(localStorage.token);
+			const buildHash = res?.build_hash ?? null;
 
-			const version = res?.version ?? null;
-
-			if (version !== null && $WEBUI_VERSION !== null && version !== $WEBUI_VERSION) {
-				location.href = location.href;
+			if (buildHash && buildHash !== WEBUI_BUILD_HASH) {
+				location.reload();
 				return;
 			}
 
@@ -97,11 +89,7 @@
 				}
 			}, 30000);
 
-			if (version !== null) {
-				WEBUI_VERSION.set(version);
-			}
-
-			console.log('version', version);
+			console.log('build', buildHash);
 
 			if (localStorage.getItem('token')) {
 				// Emit user-join event with auth token
