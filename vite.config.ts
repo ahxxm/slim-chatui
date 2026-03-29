@@ -1,9 +1,10 @@
+import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { svelteTesting } from '@testing-library/svelte/vite';
 import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
-	plugins: [sveltekit(), svelteTesting()],
+	plugins: [tailwindcss(), sveltekit(), svelteTesting()],
 	test: {
 		globalSetup: ['src/lib/test/globalSetup.ts'],
 		fileParallelism: false
@@ -14,9 +15,12 @@ export default defineConfig({
 	},
 	build: {
 		sourcemap: false,
-		reportCompressedSize: false
-	},
-	esbuild: {
-		pure: process.env.ENV === 'dev' ? [] : ['console.log', 'console.debug', 'console.error']
+		reportCompressedSize: false,
+		rolldownOptions: {
+			treeshake: {
+				manualPureFunctions:
+					process.env.ENV === 'dev' ? [] : ['console.log', 'console.debug', 'console.error']
+			}
+		}
 	}
 });
