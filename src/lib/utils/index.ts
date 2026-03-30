@@ -13,6 +13,11 @@ dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 dayjs.extend(localizedFormat);
 
+// 1x1 transparent PNG — shared drag ghost to suppress default browser preview
+export const DRAG_GHOST = new Image();
+DRAG_GHOST.src =
+	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
 //////////////////////////
 // Helper functions
 //////////////////////////

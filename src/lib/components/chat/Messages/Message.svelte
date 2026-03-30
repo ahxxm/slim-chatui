@@ -26,6 +26,19 @@
 		editCodeBlock = true,
 		topPadding = false
 	} = $props();
+
+	let userSiblings = $derived.by(() => {
+		const msg = history.messages[messageId];
+		if (!msg) return [];
+		if (msg.parentId !== null) {
+			return history.messages[msg.parentId]?.childrenIds ?? [];
+		}
+		const rootIds: string[] = [];
+		for (const id in history.messages) {
+			if (history.messages[id].parentId === null) rootIds.push(id);
+		}
+		return rootIds;
+	});
 </script>
 
 <div
@@ -42,11 +55,7 @@
 				{history}
 				{messageId}
 				isFirstMessage={idx === 0}
-				siblings={history.messages[messageId].parentId !== null
-					? (history.messages[history.messages[messageId].parentId]?.childrenIds ?? [])
-					: (Object.values(history.messages)
-							.filter((message) => message.parentId === null)
-							.map((message) => message.id) ?? [])}
+				siblings={userSiblings}
 				{showPreviousMessage}
 				{showNextMessage}
 				{editMessage}

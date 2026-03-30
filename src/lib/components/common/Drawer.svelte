@@ -23,25 +23,19 @@
 			document.body.appendChild(modalElement);
 			window.addEventListener('keydown', handleKeyDown);
 			document.body.style.overflow = 'hidden';
-		} else if (modalElement) {
-			onClose();
-			window.removeEventListener('keydown', handleKeyDown);
-
-			if (document.body.contains(modalElement)) {
-				modalElement.remove();
-				document.body.style.overflow = 'unset';
-			}
+			return () => {
+				onClose();
+				window.removeEventListener('keydown', handleKeyDown);
+				if (modalElement && document.body.contains(modalElement)) {
+					modalElement.remove();
+					document.body.style.overflow = 'unset';
+				}
+			};
 		}
 	});
 
 	onDestroy(() => {
 		show = false;
-		if (modalElement) {
-			if (document.body.contains(modalElement)) {
-				modalElement.remove();
-				document.body.style.overflow = 'unset';
-			}
-		}
 	});
 </script>
 

@@ -1,34 +1,58 @@
 <script lang="ts">
-	import { onDestroy, onMount, tick } from 'svelte';
-
+	import { tick } from 'svelte';
 	import Markdown from './Markdown.svelte';
 	import { mobile, settings } from '$lib/stores';
 	import FloatingButtons from '../ContentRenderer/FloatingButtons.svelte';
-	import { createMessagesList } from '$lib/utils';
 
-	export let id;
-	export let content;
+	let {
+		id,
+		content,
+		history,
+		messageId,
+		done = true,
+		model = null as any,
+		sources = null as any[] | null,
+		save = false,
+		floatingButtons = true,
+		editCodeBlock = true,
+		topPadding = false,
+		onSave = (e) => {},
+		onSourceClick = (e) => {},
+		onTaskClick = (e) => {},
+		onAddMessages = (e) => {}
+	} = $props();
 
-	export let history;
-	export let messageId;
+	let contentContainerElement = $state<HTMLDivElement>();
+	let floatingButtonsElement = $state<FloatingButtons>();
 
-	export let done = true;
-	export let model: any = null;
-	export let sources: any[] | null = null;
-
-	export let save = false;
-	export let floatingButtons = true;
-
-	export let editCodeBlock = true;
-	export let topPadding = false;
-
-	export let onSave = (e) => {};
-	export let onSourceClick = (e) => {};
-	export let onTaskClick = (e) => {};
-	export let onAddMessages = (e) => {};
-
-	let contentContainerElement;
-	let floatingButtonsElement;
+	let sourceIds = $derived.by(() => {
+		if (!sources) return [];
+		const seen = new Set<string>();
+		const ids: string[] = [];
+		for (const source of sources) {
+			for (let i = 0; i < (source.document?.length ?? 0); i++) {
+				if (model?.info?.meta?.capabilities?.citations == false) {
+					if (!seen.has('N/A')) {
+						seen.add('N/A');
+						ids.push('N/A');
+					}
+					continue;
+				}
+				const metadata = source.metadata?.[i];
+				const rawId = metadata?.source ?? 'N/A';
+				const id = metadata?.name
+					? metadata.name
+					: rawId.startsWith('http://') || rawId.startsWith('https://')
+						? rawId
+						: (source?.source?.name ?? rawId);
+				if (!seen.has(id)) {
+					seen.add(id);
+					ids.push(id);
+				}
+			}
+		}
+		return ids;
+	});
 
 	const updateButtonPosition = (event) => {
 		const buttonsContainerElement = document.getElementById(`floating-buttons-${id}`);
@@ -100,20 +124,16 @@
 		}
 	};
 
-	onMount(() => {
-		if (floatingButtons) {
-			contentContainerElement?.addEventListener('mouseup', updateButtonPosition);
-			document.addEventListener('mouseup', updateButtonPosition);
-			document.addEventListener('keydown', keydownHandler);
-		}
-	});
-
-	onDestroy(() => {
-		if (floatingButtons) {
-			contentContainerElement?.removeEventListener('mouseup', updateButtonPosition);
+	$effect(() => {
+		if (!floatingButtons || !contentContainerElement) return;
+		contentContainerElement.addEventListener('mouseup', updateButtonPosition);
+		document.addEventListener('mouseup', updateButtonPosition);
+		document.addEventListener('keydown', keydownHandler);
+		return () => {
+			contentContainerElement.removeEventListener('mouseup', updateButtonPosition);
 			document.removeEventListener('mouseup', updateButtonPosition);
 			document.removeEventListener('keydown', keydownHandler);
-		}
+		};
 	});
 </script>
 
@@ -126,36 +146,7 @@
 		{done}
 		{editCodeBlock}
 		{topPadding}
-		sourceIds={(sources ?? []).reduce((acc, source) => {
-			let ids = [];
-			source.document.forEach((document, index) => {
-				if (model?.info?.meta?.capabilities?.citations == false) {
-					ids.push('N/A');
-					return ids;
-				}
-
-				const metadata = source.metadata?.[index];
-				const id = metadata?.source ?? 'N/A';
-
-				if (metadata?.name) {
-					ids.push(metadata.name);
-					return ids;
-				}
-
-				if (id.startsWith('http://') || id.startsWith('https://')) {
-					ids.push(id);
-				} else {
-					ids.push(source?.source?.name ?? id);
-				}
-
-				return ids;
-			});
-
-			acc = [...acc, ...ids];
-
-			// remove duplicates
-			return acc.filter((item, index) => acc.indexOf(item) === index);
-		}, [] as string[])}
+		{sourceIds}
 		{onSourceClick}
 		{onTaskClick}
 		{onSave}
@@ -169,7 +160,7 @@
 		{messageId}
 		actions={$settings?.floatingActionButtons ?? []}
 		model={model?.id}
-		messages={createMessagesList(history, messageId)}
+		{history}
 		onAdd={({ modelId, parentId, messages }) => {
 			console.log(modelId, parentId, messages);
 			onAddMessages({ modelId, parentId, messages });

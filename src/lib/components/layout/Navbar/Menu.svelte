@@ -1,11 +1,9 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { DropdownMenu } from 'bits-ui';
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 
-	import { saveAs } from '$lib/utils';
-
-	import { copyToClipboard, createMessagesList } from '$lib/utils';
+	import { saveAs, copyToClipboard, createMessagesList } from '$lib/utils';
 
 	import { temporaryChatEnabled, folders } from '$lib/stores';
 	import { getChatById } from '$lib/apis/chats';
@@ -17,10 +15,17 @@
 
 	const i18n = getContext('i18n');
 
-	export let moveChatHandler: Function;
-
-	export let chat;
-	export let onClose: Function = () => {};
+	let {
+		moveChatHandler,
+		chat,
+		onClose = () => {},
+		children
+	}: {
+		moveChatHandler: Function;
+		chat: any;
+		onClose?: Function;
+		children?: import('svelte').Snippet;
+	} = $props();
 
 	const getChatAsText = async () => {
 		const history = chat.chat.history;
@@ -58,16 +63,21 @@
 			saveAs(blob, `chat-export-${Date.now()}.json`);
 		}
 	};
+
+	let show = $state(false);
+	let wasOpen = false;
+	$effect(() => {
+		if (show) {
+			wasOpen = true;
+		} else if (wasOpen) {
+			wasOpen = false;
+			untrack(() => onClose());
+		}
+	});
 </script>
 
-<Dropdown
-	on:change={(e) => {
-		if (e.detail === false) {
-			onClose();
-		}
-	}}
->
-	<slot />
+<Dropdown bind:show>
+	{@render children?.()}
 
 	{#snippet content()}
 		<DropdownMenu.Content
@@ -145,7 +155,7 @@
 							class="bits-content select-none w-full rounded-2xl p-1 z-50 bg-white dark:bg-gray-850 dark:text-white border border-gray-100  dark:border-gray-800 shadow-lg max-h-52 overflow-y-auto scrollbar-hidden"
 							sideOffset={8}
 						>
-							{#each $folders.sort((a, b) => b.updated_at - a.updated_at) as folder}
+							{#each [...$folders].sort((a, b) => b.updated_at - a.updated_at) as folder}
 								{#if folder?.id}
 									<DropdownMenu.Item
 										draggable="false"
