@@ -28,7 +28,7 @@ function parseAttributes(tag: string): { [key: string]: string } {
 	const attrRegex = /(\w+)="(.*?)"/g;
 	let match;
 	while ((match = attrRegex.exec(tag)) !== null) {
-		attributes[match[1]] = match[2];
+		attributes[match[1]] = decode(match[2]);
 	}
 	return attributes;
 }
