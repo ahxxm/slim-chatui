@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { goto } from '$app/navigation';
-	import { onMount, getContext, tick, onDestroy } from 'svelte';
+	import { onMount, getContext, tick } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import {
@@ -11,7 +11,7 @@
 		updateChatById,
 		updateChatFolderIdById
 	} from '$lib/apis/chats';
-	import { createMessagesList } from '$lib/utils';
+	import { createMessagesList, DRAG_GHOST } from '$lib/utils';
 	import {
 		chatId,
 		chatTitle as _chatTitle,
@@ -139,14 +139,10 @@
 	let x = $state(0);
 	let y = $state(0);
 
-	const dragImage = new Image();
-	dragImage.src =
-		'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
-
 	const onDragStart = (event) => {
 		event.stopPropagation();
 
-		event.dataTransfer.setDragImage(dragImage, 0, 0);
+		event.dataTransfer.setDragImage(DRAG_GHOST, 0, 0);
 
 		// Set the data to be transferred
 		event.dataTransfer.setData(
@@ -178,19 +174,16 @@
 	};
 
 	onMount(() => {
-		if (itemElement) {
-			itemElement.addEventListener('dragstart', onDragStart);
-			itemElement.addEventListener('drag', onDrag);
-			itemElement.addEventListener('dragend', onDragEndHandler);
-		}
-	});
-
-	onDestroy(() => {
-		if (itemElement) {
-			itemElement.removeEventListener('dragstart', onDragStart);
-			itemElement.removeEventListener('drag', onDrag);
-			itemElement.removeEventListener('dragend', onDragEndHandler);
-		}
+		const el = itemElement;
+		if (!el) return;
+		el.addEventListener('dragstart', onDragStart);
+		el.addEventListener('drag', onDrag);
+		el.addEventListener('dragend', onDragEndHandler);
+		return () => {
+			el.removeEventListener('dragstart', onDragStart);
+			el.removeEventListener('drag', onDrag);
+			el.removeEventListener('dragend', onDragEndHandler);
+		};
 	});
 
 	let showDeleteConfirm = $state(false);

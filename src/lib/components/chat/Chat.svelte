@@ -85,6 +85,8 @@
 		currentId: null
 	});
 
+	let hasMessages = $derived(history.currentId !== null);
+
 	// Tracks which message IDs are currently being streamed.
 	// Purely runtime, empty on load (= all messages done).
 	let streamingMessages: Record<string, true> = $state({});
@@ -135,6 +137,19 @@
 		streamingBuffers.delete(id);
 	};
 
+	const resetStreamingState = () => {
+		if (renderTimer) {
+			clearTimeout(renderTimer);
+			renderTimer = null;
+		}
+		if (activeChatEmitter) {
+			clearInterval(activeChatEmitter);
+			activeChatEmitter = null;
+		}
+		streamingBuffers.clear();
+		streamingMessages = {};
+	};
+
 	// Chat Input
 	let prompt = $state('');
 	let chatFiles: any[] = [];
@@ -152,6 +167,7 @@
 
 	const navigateHandler = async (signal?: AbortSignal) => {
 		console.log('[navigateHandler] chatIdProp:', chatIdProp);
+		resetStreamingState();
 		loading = true;
 
 		// Save current queue to sessionStorage before navigating away
@@ -529,14 +545,7 @@
 		chatInput?.focus();
 
 		return () => {
-			if (renderTimer) {
-				clearTimeout(renderTimer);
-				renderTimer = null;
-			}
-			if (activeChatEmitter) {
-				clearInterval(activeChatEmitter);
-				activeChatEmitter = null;
-			}
+			resetStreamingState();
 			if (saveDraftTimeout) {
 				clearTimeout(saveDraftTimeout);
 				saveDraftTimeout = null;
@@ -555,6 +564,7 @@
 
 	const initNewChat = async () => {
 		console.log('initNewChat');
+		resetStreamingState();
 
 		if ($settings?.temporaryChatByDefault ?? false) {
 			if ($temporaryChatEnabled === false) {
@@ -1680,7 +1690,7 @@
 				/>
 
 				<div class="flex flex-col flex-auto w-full overflow-auto">
-					{#if ($settings?.landingPageMode === 'chat' && !$selectedFolder) || createMessagesList(history, history.currentId).length > 0}
+					{#if ($settings?.landingPageMode === 'chat' && !$selectedFolder) || hasMessages}
 						<div
 							class=" pb-2.5 flex flex-col justify-between w-full flex-auto overflow-auto h-0 max-w-full scrollbar-hidden"
 							id="messages-container"

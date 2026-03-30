@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onDestroy, getContext } from 'svelte';
+	import { getContext } from 'svelte';
 	import panzoom, { type PanZoom } from 'panzoom';
 
 	import { saveAs } from '$lib/utils';
@@ -17,16 +17,13 @@
 	let sceneElement: HTMLElement = $state();
 
 	$effect(() => {
-		if (sceneElement) {
-			if (instance) {
-				instance.dispose();
-			}
-			instance = panzoom(sceneElement, {
-				bounds: true,
-				boundsPadding: 0.1,
-				zoomSpeed: 0.065
-			});
-		}
+		if (!sceneElement) return;
+		instance = panzoom(sceneElement, {
+			bounds: true,
+			boundsPadding: 0.1,
+			zoomSpeed: 0.065
+		});
+		return () => instance.dispose();
 	});
 	const handleKeyDown = (event: KeyboardEvent) => {
 		if (event.key === 'Escape') {
@@ -40,22 +37,13 @@
 			document.body.appendChild(previewElement);
 			window.addEventListener('keydown', handleKeyDown);
 			document.body.style.overflow = 'hidden';
-		} else if (previewElement) {
-			window.removeEventListener('keydown', handleKeyDown);
-			previewElement.remove();
-			document.body.style.overflow = 'unset';
-		}
-	});
-
-	onDestroy(() => {
-		if (instance) {
-			instance.dispose();
-		}
-
-		show = false;
-
-		if (previewElement) {
-			previewElement.remove();
+			return () => {
+				window.removeEventListener('keydown', handleKeyDown);
+				if (previewElement) {
+					previewElement.remove();
+				}
+				document.body.style.overflow = 'unset';
+			};
 		}
 	});
 </script>

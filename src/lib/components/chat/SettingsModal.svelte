@@ -28,8 +28,7 @@
 	$effect(() => {
 		if (show) {
 			untrack(() => addScrollListener());
-		} else {
-			untrack(() => removeScrollListener());
+			return () => untrack(() => removeScrollListener());
 		}
 	});
 

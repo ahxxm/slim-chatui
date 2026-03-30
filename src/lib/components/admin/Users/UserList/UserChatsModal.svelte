@@ -15,7 +15,7 @@
 
 	let { show = $bindable(false), user } = $props();
 
-	let chatList = $state(null);
+	let chatList: any[] | null = $state(null);
 	let page = $state(1);
 
 	let query = $state('');
@@ -25,7 +25,7 @@
 	let allChatsLoaded = $state(false);
 	let chatListLoading = $state(false);
 
-	let searchDebounceTimeout;
+	let searchDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	let filter = $derived({
 		...(query ? { query } : {}),
@@ -37,6 +37,12 @@
 		show;
 		filter;
 		untrack(() => loadFirstPage());
+		return () => {
+			if (searchDebounceTimeout) {
+				clearTimeout(searchDebounceTimeout);
+				searchDebounceTimeout = null;
+			}
+		};
 	});
 
 	const loadFirstPage = async () => {
@@ -75,7 +81,7 @@
 		allChatsLoaded = newChatList.length < PAGE_SIZE;
 
 		if (newChatList.length > 0) {
-			chatList = [...chatList, ...newChatList];
+			chatList = [...(chatList ?? []), ...newChatList];
 		}
 
 		chatListLoading = false;

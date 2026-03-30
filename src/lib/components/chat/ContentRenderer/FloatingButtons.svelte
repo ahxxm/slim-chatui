@@ -5,6 +5,7 @@
 	const i18n = getContext('i18n');
 
 	import { chatCompletion } from '$lib/apis/openai';
+	import { createMessagesList } from '$lib/utils';
 
 	import ChatBubble from '$lib/components/icons/ChatBubble.svelte';
 	import LightBulb from '$lib/components/icons/LightBulb.svelte';
@@ -32,7 +33,7 @@
 		id = '',
 		messageId = '',
 		model = null, // the model that generated this message
-		messages = [] as { role: string; content: string }[],
+		history = { messages: {} } as { messages: Record<string, any> },
 		actions: actionsProp = [] as {
 			id: string;
 			label: string;
@@ -105,6 +106,7 @@
 		content = prompt;
 		responseContent = '';
 
+		const contextMessages = createMessagesList(history, messageId);
 		let res;
 		[res, controller] = await chatCompletion(localStorage.token, {
 			model,
@@ -112,7 +114,7 @@
 			chat_id: $chatId,
 			messages: [
 				...($settings?.system ? [{ role: 'system', content: $settings.system }] : []),
-				...messages.map((m) => ({ role: m.role, content: m.content })),
+				...contextMessages.map((m) => ({ role: m.role, content: m.content })),
 				{ role: 'user', content }
 			],
 			stream: true
