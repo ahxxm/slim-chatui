@@ -75,12 +75,9 @@ def serialize_output(output: OutputList) -> str:
             status = item.get("status", "in_progress")
             action = item.get("action", {})
 
-            def _esc(s: str) -> str:
-                return s.strip().replace('"', "'")
-
-            query = _esc(action.get("query", ""))
-            url = _esc(action.get("url", ""))
-            pattern = _esc(action.get("pattern", ""))
+            query = html.escape(action.get("query", "").strip())
+            url = html.escape(action.get("url", "").strip())
+            pattern = html.escape(action.get("pattern", "").strip())
             done = "true" if status == "completed" else "false"
             action_type = action.get("type", "")
             attrs = (
