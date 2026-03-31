@@ -236,7 +236,7 @@ class ChatTable:
 
     @staticmethod
     def _compact_history(chat: dict) -> dict:
-        """Remove orphan messages and the deleted top-level messages array."""
+        """Remove orphan messages and fix dangling currentId."""
         chat.pop("messages", None)
         history = chat.get("history")
         if not history:
@@ -259,6 +259,17 @@ class ChatTable:
             history["messages"] = {
                 mid: msg for mid, msg in messages.items() if mid in reachable
             }
+
+        current_id = history.get("currentId")
+        valid_messages = history.get("messages", {})
+        if current_id and current_id not in valid_messages:
+            fixed = (
+                max(valid_messages, key=lambda m: valid_messages[m].get("timestamp", 0))
+                if valid_messages
+                else None
+            )
+            log.warning("Dangling currentId %s — recovering to %s", current_id, fixed)
+            history["currentId"] = fixed
         return chat
 
     def update_chat_by_id(
