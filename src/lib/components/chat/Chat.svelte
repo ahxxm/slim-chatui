@@ -643,7 +643,8 @@
 		}
 
 		if ($page.url.pathname.includes('/c/')) {
-			replaceState('/', history.state);
+			goto('/');
+			return;
 		}
 
 		autoScroll = true;
@@ -706,6 +707,19 @@
 		selectedModels = [savedModels[0] ?? ''];
 
 		history = chatContent.history;
+
+		if (history.currentId && history.messages && !(history.currentId in history.messages)) {
+			let latest: string | null = null;
+			let latestTs = -1;
+			for (const [mid, msg] of Object.entries(history.messages) as [string, any][]) {
+				if ((msg.timestamp ?? 0) > latestTs) {
+					latestTs = msg.timestamp ?? 0;
+					latest = mid;
+				}
+			}
+			console.warn('Dangling currentId', history.currentId, '— recovering to', latest);
+			history.currentId = latest;
+		}
 
 		chatTitle.set(chatContent.title);
 
@@ -1152,7 +1166,13 @@
 			'[sendMessage] after tick+copy, _history has responseMessageId:',
 			!!_history.messages[responseMessageId]
 		);
-		await saveChatHandler(_chatId, _history);
+		const saved = await saveChatHandler(_chatId, _history);
+		if (!saved && !$temporaryChatEnabled) {
+			// User navigated away — DB doesn't have this message.
+			// Sending the completion request would create an orphan in the DB.
+			delete streamingMessages[responseMessageId];
+			return;
+		}
 
 		const hasImages = createMessagesList(_history, parentId).some((message) =>
 			message.files?.some(
@@ -1542,16 +1562,16 @@
 		return _chatId;
 	};
 
-	const saveChatHandler = async (_chatId, history) => {
-		if ($chatId == _chatId) {
-			if (!$temporaryChatEnabled) {
-				chat = await updateChatById(localStorage.token, _chatId, {
-					models: selectedModels,
-					history: history,
-					files: chatFiles
-				});
-			}
+	const saveChatHandler = async (_chatId, history): Promise<boolean> => {
+		if ($chatId != _chatId) return false;
+		if (!$temporaryChatEnabled) {
+			chat = await updateChatById(localStorage.token, _chatId, {
+				models: selectedModels,
+				history: history,
+				files: chatFiles
+			});
 		}
+		return true;
 	};
 
 	const MAX_DRAFT_LENGTH = 5000;
