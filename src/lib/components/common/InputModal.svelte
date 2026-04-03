@@ -3,7 +3,7 @@
 	import { settings } from '$lib/stores';
 
 	import Drawer from './Drawer.svelte';
-	import RichTextInput from './RichTextInput.svelte';
+	import AdaptiveTextInput from './AdaptiveTextInput.svelte';
 
 	const i18n = getContext('i18n');
 
@@ -50,7 +50,7 @@
 
 		<div class="flex w-full px-4 dark:text-gray-200 min-h-full flex-1">
 			<div class="flex-1 w-full min-h-full">
-				<RichTextInput
+				<AdaptiveTextInput
 					bind:this={inputElement}
 					{id}
 					onChange={(content) => {
@@ -60,8 +60,8 @@
 						onChange(content);
 					}}
 					json={true}
-					value={inputContent?.json}
-					html={inputContent?.html}
+					value={inputContent?.json ?? value ?? ''}
+					html={inputContent?.html ?? value ?? ''}
 					richText={$settings?.richTextInput ?? true}
 					messageInput={true}
 					showFormattingToolbar={$settings?.showFormattingToolbar ?? false}

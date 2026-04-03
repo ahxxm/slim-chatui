@@ -52,10 +52,7 @@
 	import Folders from './Sidebar/Folders.svelte';
 	import PencilSquare from '../icons/PencilSquare.svelte';
 	import Search from '../icons/Search.svelte';
-	import SearchModal from './SearchModal.svelte';
-	import FolderModal from './Sidebar/Folders/FolderModal.svelte';
 	import Sidebar from '../icons/Sidebar.svelte';
-	import PinnedModelList from './Sidebar/PinnedModelList.svelte';
 	import { slide } from 'svelte/transition';
 	import HotkeyHint from '../common/HotkeyHint.svelte';
 
@@ -69,6 +66,9 @@
 	let allChatsLoaded = $state(false);
 
 	let showCreateFolderModal = $state(false);
+	let SearchModalComponent = $state<any>(null);
+	let FolderModalComponent = $state<any>(null);
+	let PinnedModelListComponent = $state<any>(null);
 
 	let showPinnedModels = $derived(($settings?.pinnedModels ?? []).length > 0);
 	let showFolders = $state(false);
@@ -446,15 +446,56 @@
 	};
 
 	const isWindows = /Windows/i.test(navigator.userAgent);
+
+	const loadSearchModal = async () => {
+		if (SearchModalComponent) return;
+
+		const { default: SearchModal } = await import('./SearchModal.svelte');
+		SearchModalComponent = SearchModal;
+	};
+
+	const loadFolderModal = async () => {
+		if (FolderModalComponent) return;
+
+		const { default: FolderModal } = await import('./Sidebar/Folders/FolderModal.svelte');
+		FolderModalComponent = FolderModal;
+	};
+
+	const loadPinnedModelList = async () => {
+		if (PinnedModelListComponent) return;
+
+		const { default: PinnedModelList } = await import('./Sidebar/PinnedModelList.svelte');
+		PinnedModelListComponent = PinnedModelList;
+	};
+
+	$effect(() => {
+		if ($showSearch && !SearchModalComponent) {
+			void loadSearchModal();
+		}
+	});
+
+	$effect(() => {
+		if (showCreateFolderModal && !FolderModalComponent) {
+			void loadFolderModal();
+		}
+	});
+
+	$effect(() => {
+		if (showPinnedModels && !PinnedModelListComponent) {
+			void loadPinnedModelList();
+		}
+	});
 </script>
 
-<FolderModal
-	bind:show={showCreateFolderModal}
-	onSubmit={async (folder) => {
-		await createFolder(folder);
-		showCreateFolderModal = false;
-	}}
-/>
+{#if showCreateFolderModal && FolderModalComponent}
+	<FolderModalComponent
+		bind:show={showCreateFolderModal}
+		onSubmit={async (folder) => {
+			await createFolder(folder);
+			showCreateFolderModal = false;
+		}}
+	/>
+{/if}
 
 <!-- svelte-ignore a11y-no-static-element-interactions -->
 
@@ -467,14 +508,16 @@
 	/>
 {/if}
 
-<SearchModal
-	bind:show={$showSearch}
-	onClose={() => {
-		if ($mobile) {
-			showSidebar.set(false);
-		}
-	}}
-/>
+{#if $showSearch && SearchModalComponent}
+	<SearchModalComponent
+		bind:show={$showSearch}
+		onClose={() => {
+			if ($mobile) {
+				showSidebar.set(false);
+			}
+		}}
+	/>
+{/if}
 
 <button
 	id="sidebar-new-chat-button"
@@ -733,7 +776,9 @@
 						chevron={false}
 						dragAndDrop={false}
 					>
-						<PinnedModelList bind:selectedChatId {shiftKey} />
+						{#if PinnedModelListComponent}
+							<PinnedModelListComponent bind:selectedChatId {shiftKey} />
+						{/if}
 					</Folder>
 				{/if}
 

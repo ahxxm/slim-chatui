@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { io } from 'socket.io-client';
 	import { Toaster, toast } from 'svelte-sonner';
 	import { onMount, tick, setContext, onDestroy } from 'svelte';
 	import type { Snippet } from 'svelte';
@@ -55,6 +54,7 @@
 	const BREAKPOINT = 768;
 
 	const setupSocket = async (enableWebsocket: boolean) => {
+		const { io } = await import('socket.io-client');
 		const _socket = io(WEBUI_BASE_URL || undefined, {
 			reconnection: true,
 			reconnectionDelay: 1000,

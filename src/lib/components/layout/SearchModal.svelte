@@ -13,8 +13,7 @@
 	import calendar from 'dayjs/plugin/calendar';
 	import Loader from '../common/Loader.svelte';
 	import { createMessagesList } from '$lib/utils';
-	import { user, PAGE_SIZE } from '$lib/stores';
-	import Messages from '../chat/Messages.svelte';
+	import { PAGE_SIZE } from '$lib/stores';
 	import { goto } from '$app/navigation';
 	import PencilSquare from '../icons/PencilSquare.svelte';
 	dayjs.extend(calendar);
@@ -46,11 +45,35 @@
 	let searchDebounceTimeout;
 
 	let selectedIdx = $state(null);
-	let selectedChat: { id: string; [key: string]: any } | null = $state(null);
+	let previewMessages:
+		| { id: string; role: string; modelName?: string; text: string }[]
+		| null = $state(null);
+	let previewLoading = $state(false);
+	let previewRequestId = 0;
 
-	let selectedModels = $state(['']);
-	let history = $state(null);
-	let messages = $state(null);
+	const toPreviewText = (content: unknown) => {
+		if (typeof content !== 'string') return '';
+
+		return content
+			.replace(/```[\s\S]*?```/g, ' ')
+			.replace(/`([^`]*)`/g, '$1')
+			.replace(/!\[.*?\]\(.*?\)/g, ' ')
+			.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+			.replace(/[#>*_~|-]/g, ' ')
+			.replace(/\s+/g, ' ')
+			.trim()
+			.slice(0, 320);
+	};
+
+	const buildPreviewMessages = (chat) =>
+		createMessagesList(chat?.chat?.history, chat?.chat?.history?.currentId)
+			.slice(-12)
+			.map((message) => ({
+				id: message.id,
+				role: message.role,
+				modelName: message.modelName,
+				text: toPreviewText(message?.merged?.content ?? message?.content ?? '')
+			}));
 
 	$effect(() => {
 		if (!chatListLoading && chatList) {
@@ -60,53 +83,44 @@
 
 	const loadChatPreview = async (selectedIdx) => {
 		if (!chatList || chatList.length === 0 || selectedIdx === null) {
-			selectedChat = null;
-			messages = null;
-			history = null;
-			selectedModels = [''];
+			previewMessages = null;
+			previewLoading = false;
 			return;
 		}
 
 		const selectedChatIdx = selectedIdx - actions.length;
 		if (selectedChatIdx < 0 || selectedChatIdx >= chatList.length) {
-			selectedChat = null;
-			messages = null;
-			history = null;
-			selectedModels = [''];
+			previewMessages = null;
+			previewLoading = false;
 			return;
 		}
 
 		const chatId = chatList[selectedChatIdx].id;
+		const requestId = ++previewRequestId;
+		previewLoading = true;
 
 		const chat = await getChatById(localStorage.token, chatId).catch(() => null);
 
+		if (requestId !== previewRequestId) {
+			return;
+		}
+
 		if (chat) {
-			if (chat?.chat?.history) {
-				selectedModels =
-					(chat?.chat?.models ?? undefined) !== undefined
-						? chat?.chat?.models
-						: [chat?.chat?.models ?? ''];
+			previewMessages = chat?.chat?.history ? buildPreviewMessages(chat) : [];
 
-				history = chat?.chat?.history;
-				messages = createMessagesList(chat?.chat?.history, chat?.chat?.history?.currentId);
-
-				// scroll to the bottom of the messages container
-				await tick();
-				const messagesContainerElement = document.getElementById('chat-preview');
-				if (messagesContainerElement) {
-					messagesContainerElement.scrollTop = messagesContainerElement.scrollHeight;
-				}
-			} else {
-				messages = [];
+			await tick();
+			const messagesContainerElement = document.getElementById('chat-preview');
+			if (messagesContainerElement) {
+				messagesContainerElement.scrollTop = messagesContainerElement.scrollHeight;
 			}
 		} else {
 			toast.error($i18n.t('Failed to load chat preview'));
-			selectedChat = null;
-			messages = null;
-			history = null;
-			selectedModels = [''];
+			previewMessages = null;
+			previewLoading = false;
 			return;
 		}
+
+		previewLoading = false;
 	};
 
 	const searchHandler = async () => {
@@ -130,10 +144,8 @@
 			}, 500);
 		}
 
-		selectedChat = null;
-		messages = null;
-		history = null;
-		selectedModels = [''];
+		previewMessages = null;
+		previewLoading = false;
 
 		allChatsLoaded = (chatList ?? []).length < PAGE_SIZE;
 	};
@@ -238,7 +250,8 @@
 				showClearButton={true}
 				onFocus={() => {
 					selectedIdx = null;
-					messages = null;
+					previewMessages = null;
+					previewLoading = false;
 				}}
 				onKeydown={(e) => {
 					console.log('e', e);
@@ -401,27 +414,40 @@
 				id="chat-preview"
 				class="hidden md:flex md:flex-1 w-full overflow-y-auto h-96 md:h-[40rem] scrollbar-hidden"
 			>
-				{#if messages === null}
+				{#if previewLoading}
+					<div class="w-full h-full flex justify-center items-center">
+						<Spinner className="size-5" />
+					</div>
+				{:else if previewMessages === null}
 					<div
 						class="w-full h-full flex justify-center items-center text-gray-500 dark:text-gray-400 text-sm"
 					>
 						{$i18n.t('Select a conversation to preview')}
 					</div>
 				{:else}
-					<div class="w-full h-full flex flex-col">
-						<Messages
-							className="h-full flex pt-4 pb-8 w-full"
-							chatId={`chat-preview-${selectedChat?.id ?? ''}`}
-							user={$user}
-							readOnly={true}
-							{selectedModels}
-							bind:history
-							bind:messages
-							autoScroll={true}
-							sendMessage={() => {}}
-							continueResponse={() => {}}
-							regenerateResponse={() => {}}
-						/>
+					<div class="w-full h-full flex flex-col gap-2 pr-2 py-1">
+						{#if previewMessages.length === 0}
+							<div
+								class="w-full h-full flex justify-center items-center text-gray-500 dark:text-gray-400 text-sm"
+							>
+								{$i18n.t('No messages')}
+							</div>
+						{:else}
+							{#each previewMessages as message (message.id)}
+								<div
+									class="rounded-2xl border border-gray-100 bg-white px-3 py-2 text-sm dark:border-gray-800 dark:bg-gray-900"
+								>
+									<div class="text-[11px] font-medium text-gray-500 dark:text-gray-400">
+										{message.role === 'user'
+											? $i18n.t('You')
+											: message.modelName || $i18n.t('Assistant')}
+									</div>
+									<div class="mt-1 whitespace-pre-wrap break-words text-gray-700 dark:text-gray-200">
+										{message.text || $i18n.t('No text content')}
+									</div>
+								</div>
+							{/each}
+						{/if}
 					</div>
 				{/if}
 			</div>

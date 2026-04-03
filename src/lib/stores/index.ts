@@ -65,14 +65,16 @@ export const currentChatPage = writable(1);
 
 export const PAGE_SIZE = 60;
 
-/** Refetch pages 1..currentChatPage, stopping early on a short page.
- *  Deflates currentChatPage to the actual last page with data.
- *  Returns true if all data was loaded (last fetched page was short). */
-export async function refreshChatList(token: string, signal?: AbortSignal): Promise<boolean> {
+let activeRefreshChatList: Promise<boolean> | null = null;
+let queuedRefreshChatList = false;
+let queuedRefreshToken: string | null = null;
+
+const runRefreshChatList = async (token: string, signal?: AbortSignal): Promise<boolean> => {
 	const throughPage = get(currentChatPage);
 	const allChats: ChatListItem[] = [];
 	let lastPage = 0;
 	let allLoaded = false;
+
 	for (let p = 1; p <= throughPage; p++) {
 		const batch = await getChatList(token, p);
 		if (signal?.aborted) return false;
@@ -83,9 +85,44 @@ export async function refreshChatList(token: string, signal?: AbortSignal): Prom
 			break;
 		}
 	}
+
 	chats.set(allChats);
 	currentChatPage.set(lastPage || 1);
 	return allLoaded;
+};
+
+/** Refetch pages 1..currentChatPage, stopping early on a short page.
+ *  Deflates currentChatPage to the actual last page with data.
+ *  Returns true if all data was loaded (last fetched page was short). */
+export async function refreshChatList(token: string, signal?: AbortSignal): Promise<boolean> {
+	if (signal) {
+		return runRefreshChatList(token, signal);
+	}
+
+	queuedRefreshToken = token;
+
+	if (activeRefreshChatList) {
+		queuedRefreshChatList = true;
+		return activeRefreshChatList;
+	}
+
+	activeRefreshChatList = (async () => {
+		let allLoaded = await runRefreshChatList(queuedRefreshToken ?? token);
+
+		while (queuedRefreshChatList) {
+			queuedRefreshChatList = false;
+			allLoaded = await runRefreshChatList(queuedRefreshToken ?? token);
+		}
+
+		return allLoaded;
+	})();
+
+	try {
+		return await activeRefreshChatList;
+	} finally {
+		activeRefreshChatList = null;
+		queuedRefreshChatList = false;
+	}
 }
 
 export const isLastActiveTab = writable(true);

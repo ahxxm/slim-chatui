@@ -19,7 +19,7 @@
 
 	import InputMenu from './MessageInput/InputMenu.svelte';
 	import FilesOverlay from './MessageInput/FilesOverlay.svelte';
-	import RichTextInput from '../common/RichTextInput.svelte';
+	import AdaptiveTextInput from '../common/AdaptiveTextInput.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import FileItem from '../common/FileItem.svelte';
 	import Image from '../common/Image.svelte';
@@ -419,17 +419,17 @@
 
 <FilesOverlay show={dragged} />
 
-<InputModal
-	bind:show={showInputModal}
-	bind:value={prompt}
-	bind:inputContent
-	onChange={(content) => {
-		console.log(content);
-		chatInputElement?.setContent(content?.json ?? null);
-	}}
-	onClose={async () => {
-		await tick();
-		chatInputElement?.focus();
+	<InputModal
+		bind:show={showInputModal}
+		bind:value={prompt}
+		bind:inputContent
+		onChange={(content) => {
+			console.log(content);
+			chatInputElement?.setEditorContent(content);
+		}}
+		onClose={async () => {
+			await tick();
+			chatInputElement?.focus();
 	}}
 />
 
@@ -648,120 +648,117 @@
 									{/if}
 
 									{#if loaded}
-										{#key $settings?.richTextInput ?? true}
-											{#key $settings?.showFormattingToolbar ?? false}
-												<RichTextInput
-													bind:this={chatInputElement}
-													id="chat-input"
-													editable={!showInputModal}
-													onChange={(content) => {
-														prompt = content.md;
-														inputContent = content;
-														command = getCommand();
-													}}
-													json={true}
-													richText={$settings?.richTextInput ?? true}
-													messageInput={true}
-													showFormattingToolbar={$settings?.showFormattingToolbar ?? false}
-													insertPromptAsRichText={$settings?.insertPromptAsRichText ?? false}
-													shiftEnter={!($settings?.ctrlEnterToSend ?? false) &&
-														!$mobile &&
-														!(
-															'ontouchstart' in window ||
-															navigator.maxTouchPoints > 0 ||
-															navigator.msMaxTouchPoints > 0
-														)}
-													placeholder={placeholder ? placeholder : $i18n.t('Send a Message')}
-													largeTextAsFile={($settings?.largeTextAsFile ?? false) && !shiftKey}
-													oncompositionstart={() => (isComposing = true)}
-													oncompositionend={(e) => {
-														compositionEndedAt = e.timeStamp;
-														isComposing = false;
-													}}
-													onkeydown={async (e) => {
-														const isCtrlPressed = e.ctrlKey || e.metaKey;
-														if (e.key === 'Escape') {
-															stopResponse();
+										<AdaptiveTextInput
+											bind:this={chatInputElement}
+											id="chat-input"
+											value={inputContent?.json ?? prompt ?? ''}
+											html={inputContent?.html ?? prompt ?? ''}
+											editable={!showInputModal}
+											onChange={(content) => {
+												prompt = content.md;
+												inputContent = content;
+												command = getCommand();
+											}}
+											json={true}
+											richText={$settings?.richTextInput ?? true}
+											messageInput={true}
+											showFormattingToolbar={$settings?.showFormattingToolbar ?? false}
+											insertPromptAsRichText={$settings?.insertPromptAsRichText ?? false}
+											shiftEnter={!($settings?.ctrlEnterToSend ?? false) &&
+												!$mobile &&
+												!(
+													'ontouchstart' in window ||
+													navigator.maxTouchPoints > 0 ||
+													navigator.msMaxTouchPoints > 0
+												)}
+											placeholder={placeholder ? placeholder : $i18n.t('Send a Message')}
+											largeTextAsFile={($settings?.largeTextAsFile ?? false) && !shiftKey}
+											oncompositionstart={() => (isComposing = true)}
+											oncompositionend={(e) => {
+												compositionEndedAt = e.timeStamp;
+												isComposing = false;
+											}}
+											onkeydown={async (e) => {
+												const isCtrlPressed = e.ctrlKey || e.metaKey;
+												if (e.key === 'Escape') {
+													stopResponse();
+												}
+
+												if (prompt === '' && e.key == 'ArrowUp') {
+													e.preventDefault();
+
+													const userMessageElement = [
+														...document.getElementsByClassName('user-message')
+													]?.at(-1);
+
+													if (userMessageElement) {
+														userMessageElement.scrollIntoView({ block: 'center' });
+														const editButton = [
+															...document.getElementsByClassName('edit-user-message-button')
+														]?.at(-1);
+
+														editButton?.click();
+													}
+												}
+
+												if (
+													!$mobile ||
+													!(
+														'ontouchstart' in window ||
+														navigator.maxTouchPoints > 0 ||
+														navigator.msMaxTouchPoints > 0
+													)
+												) {
+													if (inOrNearComposition(e)) {
+														return;
+													}
+
+													const enterPressed = ($settings?.ctrlEnterToSend ?? false)
+														? (e.key === 'Enter' || e.keyCode === 13) && isCtrlPressed
+														: (e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey;
+
+													if (enterPressed) {
+														e.preventDefault();
+														if (prompt !== '' || files.length > 0) {
+															onSubmit(prompt);
 														}
+													}
+												}
+											}}
+											onpaste={async (e) => {
+												const clipboardData = e.clipboardData || window.clipboardData;
 
-														if (prompt === '' && e.key == 'ArrowUp') {
-															e.preventDefault();
+												if (clipboardData && clipboardData.items) {
+													for (const item of clipboardData.items) {
+														if (item.type === 'text/plain') {
+															if (($settings?.largeTextAsFile ?? false) && !shiftKey) {
+																const text = clipboardData.getData('text/plain');
 
-															const userMessageElement = [
-																...document.getElementsByClassName('user-message')
-															]?.at(-1);
-
-															if (userMessageElement) {
-																userMessageElement.scrollIntoView({ block: 'center' });
-																const editButton = [
-																	...document.getElementsByClassName('edit-user-message-button')
-																]?.at(-1);
-
-																editButton?.click();
-															}
-														}
-
-														if (
-															!$mobile ||
-															!(
-																'ontouchstart' in window ||
-																navigator.maxTouchPoints > 0 ||
-																navigator.msMaxTouchPoints > 0
-															)
-														) {
-															if (inOrNearComposition(e)) {
-																return;
-															}
-
-															const enterPressed =
-																($settings?.ctrlEnterToSend ?? false)
-																	? (e.key === 'Enter' || e.keyCode === 13) && isCtrlPressed
-																	: (e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey;
-
-															if (enterPressed) {
-																e.preventDefault();
-																if (prompt !== '' || files.length > 0) {
-																	onSubmit(prompt);
-																}
-															}
-														}
-													}}
-													onpaste={async (e) => {
-														const clipboardData = e.clipboardData || window.clipboardData;
-
-														if (clipboardData && clipboardData.items) {
-															for (const item of clipboardData.items) {
-																if (item.type === 'text/plain') {
-																	if (($settings?.largeTextAsFile ?? false) && !shiftKey) {
-																		const text = clipboardData.getData('text/plain');
-
-																		if (text.length > PASTED_TEXT_CHARACTER_LIMIT) {
-																			e.preventDefault();
-																			const blob = new Blob([text], { type: 'text/plain' });
-																			const file = new File(
-																				[blob],
-																				`Pasted_Text_${Date.now()}.txt`,
-																				{
-																					type: 'text/plain'
-																				}
-																			);
-
-																			await uploadFileHandler(file, { context: 'full' });
+																if (text.length > PASTED_TEXT_CHARACTER_LIMIT) {
+																	e.preventDefault();
+																	const blob = new Blob([text], { type: 'text/plain' });
+																	const file = new File(
+																		[blob],
+																		`Pasted_Text_${Date.now()}.txt`,
+																		{
+																			type: 'text/plain'
 																		}
-																	}
-																} else {
-																	const file = item.getAsFile();
-																	if (file) {
-																		await inputFilesHandler([file]);
-																		e.preventDefault();
-																	}
+																	);
+
+																	await uploadFileHandler(file, { context: 'full' });
 																}
 															}
+														} else {
+															const file = item.getAsFile();
+															if (file) {
+																await inputFilesHandler([file]);
+																e.preventDefault();
+															}
 														}
-													}}
-												/>
-											{/key}
-										{/key}
+													}
+												}
+											}}
+										/>
 									{/if}
 								</div>
 							</div>

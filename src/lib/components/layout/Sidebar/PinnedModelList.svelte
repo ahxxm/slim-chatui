@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Sortable from 'sortablejs';
 
-	import { onMount, tick } from 'svelte';
+	import { onDestroy, tick } from 'svelte';
 
 	import { chatId, mobile, models, settings, showSidebar } from '$lib/stores';
 	import { updateUserSettings } from '$lib/apis/users';
@@ -10,24 +10,36 @@
 	let { selectedChatId = $bindable(null), shiftKey = false } = $props();
 
 	let pinnedModels: string[] = $state([]);
+	let sortable: Sortable | null = $state(null);
+
+	const destroyPinnedModelsSortable = () => {
+		sortable?.destroy();
+		sortable = null;
+	};
 
 	const initPinnedModelsSortable = () => {
 		const pinnedModelsList = document.getElementById('pinned-models-list');
+		destroyPinnedModelsSortable();
+
 		if (pinnedModelsList && !$mobile) {
-			new Sortable(pinnedModelsList, {
+			sortable = new Sortable(pinnedModelsList, {
 				animation: 150,
 				onUpdate: async (event) => {
 					const modelId = event.item.dataset.id;
 					const newIndex = event.newIndex;
+					const currentPinnedModels = (($settings?.pinnedModels ?? []) as string[]).slice();
+					const oldIndex = currentPinnedModels.indexOf(modelId);
 
-					const pinnedModels = ($settings.pinnedModels ?? []) as string[];
-					const oldIndex = pinnedModels.indexOf(modelId);
+					if (oldIndex === -1 || newIndex == null) {
+						return;
+					}
 
-					pinnedModels.splice(oldIndex, 1);
-					pinnedModels.splice(newIndex, 0, modelId);
+					currentPinnedModels.splice(oldIndex, 1);
+					currentPinnedModels.splice(newIndex, 0, modelId);
 
-					settings.set({ ...$settings, pinnedModels: pinnedModels });
-					await updateUserSettings(localStorage.token, { ui: $settings });
+					const nextSettings = { ...$settings, pinnedModels: currentPinnedModels };
+					settings.set(nextSettings);
+					await updateUserSettings(localStorage.token, { ui: nextSettings });
 				}
 			});
 		}
@@ -37,9 +49,18 @@
 		pinnedModels = ($settings?.pinnedModels ?? []) as string[];
 	});
 
-	onMount(async () => {
-		await tick();
-		initPinnedModelsSortable();
+	$effect(() => {
+		pinnedModels.length;
+		$mobile;
+
+		(async () => {
+			await tick();
+			initPinnedModelsSortable();
+		})();
+	});
+
+	onDestroy(() => {
+		destroyPinnedModelsSortable();
 	});
 </script>
 
@@ -62,8 +83,9 @@
 							const pinnedModels = ($settings.pinnedModels as string[]).filter(
 								(id: string) => id !== modelId
 							);
-							settings.set({ ...$settings, pinnedModels });
-							updateUserSettings(localStorage.token, { ui: $settings });
+							const nextSettings = { ...$settings, pinnedModels };
+							settings.set(nextSettings);
+							updateUserSettings(localStorage.token, { ui: nextSettings });
 						}
 					: null}
 			/>

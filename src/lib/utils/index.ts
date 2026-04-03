@@ -46,6 +46,10 @@ const replaceOutsideCode = (content: string, replacer: (str: string) => string) 
 };
 
 export const replaceTokens = (content: string, char: string, user: string) => {
+	if (!content.includes('{{')) {
+		return content;
+	}
+
 	const tokens = [
 		{ regex: /{{char}}/gi, replacement: char },
 		{ regex: /{{user}}/gi, replacement: user },
@@ -86,6 +90,10 @@ export const sanitizeResponseContent = (content: string) => {
 };
 
 export const processResponseContent = (content: string) => {
+	if (!/\p{Script=Han}/u.test(content)) {
+		return content.trim();
+	}
+
 	content = processChineseContent(content);
 	return content.trim();
 };
@@ -523,19 +531,30 @@ export const createMessagesList = (
 	history: { messages: Record<string, any> },
 	messageId: string | null
 ): any[] => {
-	if (messageId === null) {
-		return [];
+	if (messageId === null) return [];
+
+	const messages: any[] = [];
+	const visitedMessageIds = new Set<string>();
+	let currentMessageId: string | null = messageId;
+
+	while (currentMessageId !== null) {
+		if (visitedMessageIds.has(currentMessageId)) {
+			console.warn('Circular dependency detected in message history', currentMessageId);
+			break;
+		}
+
+		visitedMessageIds.add(currentMessageId);
+
+		const message = history.messages[currentMessageId];
+		if (message === undefined) {
+			break;
+		}
+
+		messages.push(message);
+		currentMessageId = message.parentId ?? null;
 	}
 
-	const message = history.messages[messageId];
-	if (message === undefined) {
-		return [];
-	}
-	if (message?.parentId) {
-		return [...createMessagesList(history, message.parentId), message];
-	} else {
-		return [message];
-	}
+	return messages.reverse();
 };
 
 export const formatFileSize = (size: number | null | undefined) => {
