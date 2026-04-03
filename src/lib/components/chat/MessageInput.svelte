@@ -419,17 +419,17 @@
 
 <FilesOverlay show={dragged} />
 
-	<InputModal
-		bind:show={showInputModal}
-		bind:value={prompt}
-		bind:inputContent
-		onChange={(content) => {
-			console.log(content);
-			chatInputElement?.setEditorContent(content);
-		}}
-		onClose={async () => {
-			await tick();
-			chatInputElement?.focus();
+<InputModal
+	bind:show={showInputModal}
+	bind:value={prompt}
+	bind:inputContent
+	onChange={(content) => {
+		console.log(content);
+		chatInputElement?.setEditorContent(content);
+	}}
+	onClose={async () => {
+		await tick();
+		chatInputElement?.focus();
 	}}
 />
 
@@ -713,9 +713,10 @@
 														return;
 													}
 
-													const enterPressed = ($settings?.ctrlEnterToSend ?? false)
-														? (e.key === 'Enter' || e.keyCode === 13) && isCtrlPressed
-														: (e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey;
+													const enterPressed =
+														($settings?.ctrlEnterToSend ?? false)
+															? (e.key === 'Enter' || e.keyCode === 13) && isCtrlPressed
+															: (e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey;
 
 													if (enterPressed) {
 														e.preventDefault();
@@ -737,13 +738,9 @@
 																if (text.length > PASTED_TEXT_CHARACTER_LIMIT) {
 																	e.preventDefault();
 																	const blob = new Blob([text], { type: 'text/plain' });
-																	const file = new File(
-																		[blob],
-																		`Pasted_Text_${Date.now()}.txt`,
-																		{
-																			type: 'text/plain'
-																		}
-																	);
+																	const file = new File([blob], `Pasted_Text_${Date.now()}.txt`, {
+																		type: 'text/plain'
+																	});
 
 																	await uploadFileHandler(file, { context: 'full' });
 																}

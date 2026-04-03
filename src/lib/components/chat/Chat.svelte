@@ -93,13 +93,12 @@
 
 	let taskIds = $state<string[] | null>(null);
 
-	// Typewriter throttle: batch streaming tokens, emit to DOM N times per second.
-	// At 12 emits/sec (~83ms): DeepSeek R1 (~24 t/s) batches ~2 tokens/emit,
-	// Opus 4.6 (~43 t/s) ~4, GPT-5.4 (~78 t/s) ~6-7, Gemini 3.1 Pro (~100 t/s) ~8.
-	// All land as unified/natural word-chunks like typewriter output.
+	// Typewriter throttle: batch streaming tokens, emit to DOM at the original 23 Hz cap.
+	// At ~43ms between flushes this still smooths bursty streams, while keeping fast models
+	// visually closer to single-word steps than multi-word jumps.
 	// Technically, streamingBuffers holds plain (non-proxy) message objects
 	// so mutations don't trigger Svelte reactivity until we explicitly flush.
-	const TYPEWRITER_EMITS_PER_SEC = 12;
+	const TYPEWRITER_EMITS_PER_SEC = 23;
 	const EMIT_INTERVAL_MS = Math.round(1000 / TYPEWRITER_EMITS_PER_SEC);
 	const streamingBuffers: Map<string, any> = new Map();
 	let renderTimer: ReturnType<typeof setTimeout> | null = null;

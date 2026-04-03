@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext, untrack } from 'svelte';
+	import { getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import dayjs from '$lib/dayjs';
@@ -8,25 +8,6 @@
 
 	dayjs.extend(duration);
 	dayjs.extend(relativeTime);
-
-	async function loadLocale(locales) {
-		if (!locales || !Array.isArray(locales)) {
-			return;
-		}
-		for (const locale of locales) {
-			try {
-				dayjs.locale(locale);
-				break; // Stop after successfully loading the first available locale
-			} catch (error) {
-				console.error(`Could not load locale '${locale}':`, error);
-			}
-		}
-	}
-
-	$effect(() => {
-		const languages = $i18n.languages;
-		untrack(() => loadLocale(languages));
-	});
 
 	import { slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';

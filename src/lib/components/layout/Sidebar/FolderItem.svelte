@@ -32,7 +32,6 @@
 	import ChatItem from './ChatItem.svelte';
 	import FolderMenu from './Folders/FolderMenu.svelte';
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
-	import FolderModal from './Folders/FolderModal.svelte';
 	import Emoji from '$lib/components/common/Emoji.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
@@ -65,6 +64,7 @@
 	let folderElement: HTMLDivElement;
 
 	let showFolderModal = $state(false);
+	let FolderModalComponent = $state<any>(null);
 	let showDeleteConfirm = $state(false);
 	let edit = $state(false);
 	let draggedOver = $state(false);
@@ -266,6 +266,20 @@
 		const blob = new Blob([JSON.stringify(chats)], { type: 'application/json' });
 		saveAs(blob, `folder-${folders[folderId].name}-export-${Date.now()}.json`);
 	};
+
+	const loadFolderModal = async () => {
+		if (FolderModalComponent) {
+			return;
+		}
+
+		const { default: FolderModal } = await import('./Folders/FolderModal.svelte');
+		FolderModalComponent = FolderModal;
+	};
+
+	const openFolderModal = async () => {
+		await loadFolderModal();
+		showFolderModal = true;
+	};
 </script>
 
 <ConfirmDialog
@@ -287,7 +301,14 @@
 	</div>
 </ConfirmDialog>
 
-<FolderModal bind:show={showFolderModal} edit={true} {folderId} onSubmit={updateHandler} />
+{#if showFolderModal && FolderModalComponent}
+	<FolderModalComponent
+		bind:show={showFolderModal}
+		edit={true}
+		{folderId}
+		onSubmit={updateHandler}
+	/>
+{/if}
 
 {#if dragged && x && y}
 	<DragGhost {x} {y}>
@@ -405,7 +426,7 @@
 				>
 					<FolderMenu
 						onEdit={() => {
-							showFolderModal = true;
+							void openFolderModal();
 						}}
 						onDelete={() => {
 							showDeleteConfirm = true;

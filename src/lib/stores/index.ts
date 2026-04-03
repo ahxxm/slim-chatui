@@ -5,8 +5,6 @@ import type { ChatListItem, FolderItem } from '$lib/types';
 import type { Socket } from 'socket.io-client';
 import { getChatList } from '$lib/apis/chats';
 
-import emojiShortCodes from '$lib/emoji-shortcodes.json';
-
 // Backend
 export const WEBUI_NAME = writable(APP_NAME);
 
@@ -19,26 +17,6 @@ export const mobile = writable(false);
 export const socket: Writable<null | Socket> = writable(null);
 export const activeChatIds: Writable<Set<string>> = writable(new Set());
 export const theme = writable('system');
-
-export const shortCodesToEmojis = writable(
-	Object.entries(emojiShortCodes).reduce(
-		(acc, [key, value]) => {
-			if (typeof value === 'string') {
-				acc[value] = key;
-			} else {
-				for (const v of value) {
-					acc[v] = key;
-				}
-			}
-			return acc;
-		},
-		{} as Record<string, string>
-	)
-);
-
-export function codePointToEmoji(hex: string): string {
-	return String.fromCodePoint(...hex.split('-').map((cp) => parseInt(cp, 16)));
-}
 
 export const chatId = writable('');
 export const chatTitle = writable('');
@@ -136,7 +114,7 @@ export type Model = {
 };
 
 type Settings = {
-	pinnedModels?: never[];
+	pinnedModels?: string[];
 
 	collapseCodeBlocks?: boolean;
 	expandDetails?: boolean;

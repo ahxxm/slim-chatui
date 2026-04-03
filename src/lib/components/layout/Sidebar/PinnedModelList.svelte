@@ -9,8 +9,10 @@
 
 	let { selectedChatId = $bindable(null), shiftKey = false } = $props();
 
+	type SortableInstance = { destroy: () => void };
+
 	let pinnedModels: string[] = $state([]);
-	let sortable: Sortable | null = $state(null);
+	let sortable: SortableInstance | null = $state(null);
 
 	const destroyPinnedModelsSortable = () => {
 		sortable?.destroy();
@@ -24,10 +26,14 @@
 		if (pinnedModelsList && !$mobile) {
 			sortable = new Sortable(pinnedModelsList, {
 				animation: 150,
-				onUpdate: async (event) => {
+				onUpdate: async (event: { item: HTMLElement; newIndex?: number | null }) => {
 					const modelId = event.item.dataset.id;
 					const newIndex = event.newIndex;
 					const currentPinnedModels = (($settings?.pinnedModels ?? []) as string[]).slice();
+					if (!modelId) {
+						return;
+					}
+
 					const oldIndex = currentPinnedModels.indexOf(modelId);
 
 					if (oldIndex === -1 || newIndex == null) {
@@ -52,11 +58,18 @@
 	$effect(() => {
 		pinnedModels.length;
 		$mobile;
+		let cancelled = false;
 
 		(async () => {
 			await tick();
-			initPinnedModelsSortable();
+			if (!cancelled) {
+				initPinnedModelsSortable();
+			}
 		})();
+
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	onDestroy(() => {
@@ -87,7 +100,7 @@
 							settings.set(nextSettings);
 							updateUserSettings(localStorage.token, { ui: nextSettings });
 						}
-					: null}
+					: undefined}
 			/>
 		{/if}
 	{/each}

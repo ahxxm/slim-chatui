@@ -1,10 +1,9 @@
 <script lang="ts">
 	import { Toaster, toast } from 'svelte-sonner';
-	import { onMount, tick, setContext, onDestroy } from 'svelte';
+	import { onMount, tick, setContext, onDestroy, untrack } from 'svelte';
 	import type { Snippet } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import dayjs from 'dayjs';
 
 	import {
 		config,
@@ -25,6 +24,7 @@
 	import { getSessionUser, userSignOut } from '$lib/apis/auths';
 	import { getUserSettings } from '$lib/apis/users';
 	import { WEBUI_BASE_URL, WEBUI_BUILD_HASH } from '$lib/constants';
+	import { setDayjsLocale } from '$lib/dayjs';
 	import { bestMatchingLanguage } from '$lib/utils';
 	import { setTextScale } from '$lib/utils/text-scale';
 	import { applyCjkFont } from '$lib/utils/cjk-font';
@@ -310,7 +310,6 @@
 			const browserLanguages = navigator.languages;
 			const lang = bestMatchingLanguage(languages, browserLanguages, 'en-US');
 			changeLanguage(lang);
-			dayjs.locale(lang);
 		}
 
 		if (backendConfig) {
@@ -372,6 +371,13 @@
 		if (tokenTimer) clearInterval(tokenTimer);
 		if (heartbeatInterval) clearInterval(heartbeatInterval);
 		bc.close();
+	});
+
+	$effect(() => {
+		const languages = $i18n.languages;
+		untrack(() => {
+			void setDayjsLocale(languages);
+		});
 	});
 </script>
 
