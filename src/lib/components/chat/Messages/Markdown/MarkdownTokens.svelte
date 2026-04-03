@@ -104,6 +104,7 @@
 			<CodeBlock
 				id={`${id}-${tokenIdx}`}
 				collapsed={$settings?.collapseCodeBlocks ?? false}
+				{done}
 				lang={token?.lang ?? ''}
 				code={token?.text ?? ''}
 				{save}
