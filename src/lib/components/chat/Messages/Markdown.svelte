@@ -1,6 +1,12 @@
 <script>
-	import { chatMarked } from '$lib/utils/marked/chat-marked';
+	// @ts-nocheck
 	import { replaceTokens, processResponseContent } from '$lib/utils';
+	import {
+		EMPTY_LINKS,
+		createIncrementalTokenState,
+		getRenderSegments,
+		updateIncrementalTokenState
+	} from '$lib/utils/marked/incremental';
 	import { user } from '$lib/stores';
 
 	import MarkdownTokens from './Markdown/MarkdownTokens.svelte';
@@ -20,25 +26,48 @@
 		onTaskClick = () => {}
 	} = $props();
 
-	let tokens = $derived(
+	let normalizedContent = $derived(
 		content
-			? chatMarked.lexer(replaceTokens(processResponseContent(content), model?.name, $user?.name))
-			: []
+			? replaceTokens(processResponseContent(content), model?.name ?? '', $user?.name ?? '')
+			: ''
 	);
+
+	let blockState = createIncrementalTokenState('block');
+	let currentMessageId = '';
+	let renderSegments = $state(getRenderSegments(blockState));
+	let links = $state(EMPTY_LINKS);
+
+	$effect(() => {
+		const nextMessageId = id;
+		const nextContent = normalizedContent;
+
+		if (nextMessageId !== currentMessageId) {
+			currentMessageId = nextMessageId;
+			blockState = createIncrementalTokenState('block');
+		}
+
+		blockState = updateIncrementalTokenState(blockState, nextContent);
+		renderSegments = getRenderSegments(blockState);
+		links = blockState.links;
+	});
 </script>
 
 {#key id}
-	<MarkdownTokens
-		{tokens}
-		{id}
-		{done}
-		{save}
-		{paragraphTag}
-		{editCodeBlock}
-		{sourceIds}
-		{topPadding}
-		{onTaskClick}
-		{onSourceClick}
-		{onSave}
-	/>
+	{#each renderSegments as segment (segment.id)}
+		<MarkdownTokens
+			id={`${id}-${segment.id}`}
+			tokens={segment.tokens}
+			{done}
+			{save}
+			{paragraphTag}
+			{editCodeBlock}
+			{sourceIds}
+			{topPadding}
+			{onTaskClick}
+			{onSourceClick}
+			{onSave}
+			{links}
+			incremental={true}
+		/>
+	{/each}
 {/key}

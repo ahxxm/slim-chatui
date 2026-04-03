@@ -1,15 +1,16 @@
-<script lang="ts">
+<script>
+	// @ts-nocheck
 	import { decode } from 'html-entities';
 	import { getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import { saveAs } from '$lib/utils';
 
-	import type { Token } from 'marked';
 	import { copyToClipboard, unescapeHtml } from '$lib/utils';
 
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { settings } from '$lib/stores';
+	import { EMPTY_LINKS } from '$lib/utils/marked/incremental';
 
 	import CodeBlock from '$lib/components/chat/Messages/CodeBlock.svelte';
 	import MarkdownInlineTokens from '$lib/components/chat/Messages/Markdown/MarkdownInlineTokens.svelte';
@@ -23,8 +24,8 @@
 	import HtmlToken from './HTMLToken.svelte';
 	import Clipboard from '$lib/components/icons/Clipboard.svelte';
 
-	export let id: string;
-	export let tokens: Token[];
+	export let id;
+	export let tokens = [];
 	export let top = true;
 	export let sourceIds = [];
 
@@ -36,13 +37,15 @@
 
 	export let editCodeBlock = true;
 	export let topPadding = false;
+	export let links = EMPTY_LINKS;
+	export let incremental = false;
 
-	export let onSave: Function = () => {};
+	export let onSave = () => {};
 
-	export let onTaskClick: Function = () => {};
-	export let onSourceClick: Function = () => {};
+	export let onTaskClick = () => {};
+	export let onSourceClick = () => {};
 
-	const headerComponent = (depth: number) => {
+	const headerComponent = (depth) => {
 		return 'h' + depth;
 	};
 
@@ -93,10 +96,13 @@
 		<svelte:element this={headerComponent(token.depth)} dir="auto">
 			<MarkdownInlineTokens
 				id={`${id}-${tokenIdx}-h`}
+				source={token.text ?? ''}
 				tokens={token.tokens}
 				{done}
 				{sourceIds}
 				{onSourceClick}
+				{links}
+				{incremental}
 			/>
 		</svelte:element>
 	{:else if token.type === 'code'}
@@ -142,10 +148,13 @@
 										<div class="shrink-0 break-normal">
 											<MarkdownInlineTokens
 												id={`${id}-${tokenIdx}-header-${headerIdx}`}
+												source={header.text ?? ''}
 												tokens={header.tokens}
 												{done}
 												{sourceIds}
 												{onSourceClick}
+												{links}
+												{incremental}
 											/>
 										</div>
 									</div>
@@ -168,10 +177,13 @@
 										<div class="break-normal">
 											<MarkdownInlineTokens
 												id={`${id}-${tokenIdx}-row-${rowIdx}-${cellIdx}`}
+												source={cell.text ?? ''}
 												tokens={cell.tokens}
 												{done}
 												{sourceIds}
 												{onSourceClick}
+												{links}
+												{incremental}
 											/>
 										</div>
 									</td>
@@ -218,7 +230,13 @@
 					id={`${id}-${tokenIdx}`}
 					tokens={token.tokens}
 					{done}
+					{save}
+					{paragraphTag}
 					{editCodeBlock}
+					{topPadding}
+					{links}
+					{incremental}
+					{onSave}
 					{onTaskClick}
 					{sourceIds}
 					{onSourceClick}
@@ -253,7 +271,13 @@
 							tokens={item.tokens}
 							top={token.loose}
 							{done}
+							{save}
+							{paragraphTag}
 							{editCodeBlock}
+							{topPadding}
+							{links}
+							{incremental}
+							{onSave}
 							{onTaskClick}
 							{sourceIds}
 							{onSourceClick}
@@ -288,7 +312,13 @@
 									tokens={item.tokens}
 									top={token.loose}
 									{done}
+									{save}
+									{paragraphTag}
 									{editCodeBlock}
+									{topPadding}
+									{links}
+									{incremental}
+									{onSave}
 									{onTaskClick}
 									{sourceIds}
 									{onSourceClick}
@@ -300,7 +330,13 @@
 								tokens={item.tokens}
 								top={token.loose}
 								{done}
+								{save}
+								{paragraphTag}
 								{editCodeBlock}
+								{topPadding}
+								{links}
+								{incremental}
+								{onSave}
 								{onTaskClick}
 								{sourceIds}
 								{onSourceClick}
@@ -335,7 +371,6 @@
 				disabled={true}
 				attributes={attrs}
 				className="w-full space-y-1"
-				dir="auto"
 			/>
 		{:else if hasContent}
 			<Collapsible
@@ -343,7 +378,6 @@
 				open={$settings?.expandDetails ?? false}
 				attributes={attrs}
 				className="w-full space-y-1"
-				dir="auto"
 			>
 				<div class=" mb-1.5" slot="content">
 					<svelte:self
@@ -351,7 +385,13 @@
 						tokens={token.tokens}
 						attributes={attrs}
 						{done}
+						{save}
+						{paragraphTag}
 						{editCodeBlock}
+						{topPadding}
+						{links}
+						{incremental}
+						{onSave}
 						{onTaskClick}
 						{sourceIds}
 						{onSourceClick}
@@ -365,11 +405,10 @@
 				disabled={true}
 				attributes={attrs}
 				className="w-full space-y-1"
-				dir="auto"
 			/>
 		{/if}
 	{:else if token.type === 'html'}
-		<HtmlToken {token} {onSourceClick} />
+		<HtmlToken {token} />
 	{:else if token.type === 'iframe'}
 		<iframe
 			src="{WEBUI_BASE_URL}/api/v1/files/{token.fileId}/content"
@@ -388,20 +427,26 @@
 			<span dir="auto">
 				<MarkdownInlineTokens
 					id={`${id}-${tokenIdx}-p`}
+					source={token.text ?? ''}
 					tokens={token.tokens ?? []}
 					{done}
 					{sourceIds}
 					{onSourceClick}
+					{links}
+					{incremental}
 				/>
 			</span>
 		{:else}
 			<p dir="auto">
 				<MarkdownInlineTokens
 					id={`${id}-${tokenIdx}-p`}
+					source={token.text ?? ''}
 					tokens={token.tokens ?? []}
 					{done}
 					{sourceIds}
 					{onSourceClick}
+					{links}
+					{incremental}
 				/>
 			</p>
 		{/if}
@@ -411,10 +456,13 @@
 				{#if token.tokens}
 					<MarkdownInlineTokens
 						id={`${id}-${tokenIdx}-t`}
+						source={token.text ?? ''}
 						tokens={token.tokens}
 						{done}
 						{sourceIds}
 						{onSourceClick}
+						{links}
+						{incremental}
 					/>
 				{:else}
 					{unescapeHtml(token.text)}
@@ -423,10 +471,13 @@
 		{:else if token.tokens}
 			<MarkdownInlineTokens
 				id={`${id}-${tokenIdx}-p`}
+				source={token.text ?? ''}
 				tokens={token.tokens ?? []}
 				{done}
 				{sourceIds}
 				{onSourceClick}
+				{links}
+				{incremental}
 			/>
 		{:else}
 			{unescapeHtml(token.text)}
@@ -440,7 +491,7 @@
 			<KatexRenderer content={token.text} displayMode={token?.displayMode ?? false} />
 		{/if}
 	{:else if token.type === 'space'}
-		<div class="my-2" />
+		<div class="my-2"></div>
 	{:else}
 		{console.log('Unknown token', token)}
 	{/if}

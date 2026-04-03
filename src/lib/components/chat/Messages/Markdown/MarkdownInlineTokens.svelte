@@ -1,28 +1,75 @@
-<script lang="ts">
+<script>
+	// @ts-nocheck
 	import DOMPurify from 'dompurify';
-	import type { Token } from 'marked';
 	import { goto } from '$app/navigation';
 
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { unescapeHtml } from '$lib/utils';
+	import {
+		EMPTY_LINKS,
+		createIncrementalTokenState,
+		getRenderSegments,
+		updateIncrementalTokenState
+	} from '$lib/utils/marked/incremental';
 
 	import Image from '$lib/components/common/Image.svelte';
 	import KatexRenderer from './KatexRenderer.svelte';
 	import HtmlToken from './HTMLToken.svelte';
+	import MarkdownInlineTokens from './MarkdownInlineTokens.svelte';
 	import TextToken from './MarkdownInlineTokens/TextToken.svelte';
 	import CodespanToken from './MarkdownInlineTokens/CodespanToken.svelte';
 	import SourceToken from './SourceToken.svelte';
 
-	export let id: string;
-	export let done = true;
-	export let tokens: Token[];
-	export let sourceIds = [];
-	export let onSourceClick: Function = () => {};
+	let {
+		id,
+		done = true,
+		tokens = [],
+		source = null,
+		sourceIds = [],
+		onSourceClick = () => {},
+		links = EMPTY_LINKS,
+		incremental = false
+	} = $props();
+
+	function createStaticSegments(nextTokens) {
+		return nextTokens.map((token, tokenIdx) => ({
+			id: `static-${tokenIdx}`,
+			tokens: [token]
+		}));
+	}
+
+	let inlineState = createIncrementalTokenState('inline', { seedLinks: EMPTY_LINKS });
+	let currentInlineId = '';
+	let renderSegments = $state([]);
+
+	$effect(() => {
+		const nextId = id;
+		const nextTokens = tokens ?? [];
+		const nextLinks = links ?? EMPTY_LINKS;
+		const useIncremental = incremental && source !== null;
+
+		if (!useIncremental) {
+			currentInlineId = nextId;
+			inlineState = createIncrementalTokenState('inline', { seedLinks: nextLinks });
+			renderSegments = createStaticSegments(nextTokens);
+			return;
+		}
+
+		if (nextId !== currentInlineId) {
+			currentInlineId = nextId;
+			inlineState = createIncrementalTokenState('inline', { seedLinks: nextLinks });
+		}
+
+		inlineState = updateIncrementalTokenState(inlineState, source ?? '', {
+			seedLinks: nextLinks
+		});
+		renderSegments = getRenderSegments(inlineState);
+	});
 
 	/**
 	 * Handle link clicks - intercept same-origin app URLs for in-app navigation
 	 */
-	const handleLinkClick = (e: MouseEvent, href: string) => {
+	const handleLinkClick = (e, href) => {
 		try {
 			const url = new URL(href, window.location.origin);
 			// Check if same origin and an in-app route
@@ -34,13 +81,16 @@
 			// Invalid URL, let browser handle it
 		}
 	};
+
 </script>
 
-{#each tokens as token, tokenIdx (tokenIdx)}
+{#each renderSegments as segment (segment.id)}
+	{@const token = segment.tokens[0]}
+
 	{#if token.type === 'escape'}
 		{unescapeHtml(token.text)}
 	{:else if token.type === 'html'}
-		<HtmlToken {token} {onSourceClick} />
+		<HtmlToken {token} />
 	{:else if token.type === 'link'}
 		{#if token.tokens}
 			<a
@@ -48,9 +98,18 @@
 				target="_blank"
 				rel="nofollow"
 				title={token.title}
-				on:click={(e) => handleLinkClick(e, token.href)}
+				onclick={(e) => handleLinkClick(e, token.href)}
 			>
-				<svelte:self id={`${id}-a`} tokens={token.tokens} {onSourceClick} {done} />
+				<MarkdownInlineTokens
+					id={`${id}-${segment.id}-a`}
+					source={token.text ?? ''}
+					tokens={token.tokens}
+					{onSourceClick}
+					{sourceIds}
+					{done}
+					{links}
+					{incremental}
+				/>
 			</a>
 		{:else}
 			<a
@@ -58,21 +117,54 @@
 				target="_blank"
 				rel="nofollow"
 				title={token.title}
-				on:click={(e) => handleLinkClick(e, token.href)}>{token.text}</a
+				onclick={(e) => handleLinkClick(e, token.href)}>{token.text}</a
 			>
 		{/if}
 	{:else if token.type === 'image'}
 		<Image src={token.href} alt={token.text} />
 	{:else if token.type === 'strong'}
-		<strong><svelte:self id={`${id}-strong`} tokens={token.tokens} {onSourceClick} /></strong>
+		<strong>
+			<MarkdownInlineTokens
+				id={`${id}-${segment.id}-strong`}
+				source={token.text ?? ''}
+				tokens={token.tokens}
+				{onSourceClick}
+				{sourceIds}
+				{done}
+				{links}
+				{incremental}
+			/>
+		</strong>
 	{:else if token.type === 'em'}
-		<em><svelte:self id={`${id}-em`} tokens={token.tokens} {onSourceClick} /></em>
+		<em>
+			<MarkdownInlineTokens
+				id={`${id}-${segment.id}-em`}
+				source={token.text ?? ''}
+				tokens={token.tokens}
+				{onSourceClick}
+				{sourceIds}
+				{done}
+				{links}
+				{incremental}
+			/>
+		</em>
 	{:else if token.type === 'codespan'}
 		<CodespanToken {token} {done} />
 	{:else if token.type === 'br'}
 		<br />
 	{:else if token.type === 'del'}
-		<del><svelte:self id={`${id}-del`} tokens={token.tokens} {onSourceClick} /></del>
+		<del>
+			<MarkdownInlineTokens
+				id={`${id}-${segment.id}-del`}
+				source={token.text ?? ''}
+				tokens={token.tokens}
+				{onSourceClick}
+				{sourceIds}
+				{done}
+				{links}
+				{incremental}
+			/>
+		</del>
 	{:else if token.type === 'inlineKatex'}
 		{#if token.text}
 			<KatexRenderer content={token.text} displayMode={false} />
@@ -83,7 +175,7 @@
 			title={token.fileId}
 			width="100%"
 			frameborder="0"
-			on:load={(e) => {
+			onload={(e) => {
 				try {
 					e.currentTarget.style.height =
 						e.currentTarget.contentWindow.document.body.scrollHeight + 20 + 'px';
