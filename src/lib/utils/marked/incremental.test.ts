@@ -114,4 +114,26 @@ describe('incremental markdown token state', () => {
 		expect(nextSegments.map((segment) => segment.id)).toEqual(initialIds);
 		expect((nextSegments[2].tokens[0] as any).text).toBe(' gamma delta');
 	});
+
+	it('falls back to a full inline reset when an appended link closes across the frozen boundary', () => {
+		let state = createIncrementalTokenState('inline', { seedLinks: EMPTY_LINKS });
+		state = updateIncrementalTokenState(state, 'Start [link](https://example.com/do', {
+			seedLinks: EMPTY_LINKS
+		});
+
+		expect(getRenderSegments(state).map((segment) => segment.tokens[0].type)).toEqual(['text', 'link']);
+
+		state = updateIncrementalTokenState(state, 'Start [link](https://example.com/docs) end', {
+			seedLinks: EMPTY_LINKS
+		});
+
+		const nextSegments = getRenderSegments(state);
+		const [prefix, link, suffix] = nextSegments.map((segment) => segment.tokens[0] as any);
+
+		expect(nextSegments.map((segment) => segment.tokens[0].type)).toEqual(['text', 'link', 'text']);
+		expect(prefix.text).toBe('Start ');
+		expect(link.text).toBe('link');
+		expect(link.href).toBe('https://example.com/docs');
+		expect(suffix.text).toBe(' end');
+	});
 });

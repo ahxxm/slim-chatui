@@ -45,6 +45,13 @@
 	export let onTaskClick = () => {};
 	export let onSourceClick = () => {};
 
+	const openStates = new Map();
+
+	const getOpenState = (stateId, defaultOpen) => openStates.get(stateId) ?? defaultOpen;
+	const setOpenState = (stateId, nextOpen) => {
+		openStates.set(stateId, nextOpen);
+	};
+
 	const headerComponent = (depth) => {
 		return 'h' + depth;
 	};
@@ -348,6 +355,7 @@
 		{/if}
 	{:else if token.type === 'details'}
 		{@const hasContent = (token.tokens?.length ?? 0) > 0}
+		{@const openStateId = `${id}-${tokenIdx}-details`}
 		<!-- token.attributes.done is baked into the HTML by the backend during streaming;
 			 when cancelled, message-level done is true but the HTML still says done="false",
 			 so override it here to stop the Collapsible spinner -->
@@ -361,23 +369,26 @@
 			<ToolCallDisplay
 				id={`${id}-${tokenIdx}-tc`}
 				attributes={attrs}
-				open={false}
+				open={getOpenState(openStateId, false)}
 				className="w-full space-y-1"
+				onChange={(nextOpen) => setOpenState(openStateId, nextOpen)}
 			/>
 		{:else if attrs?.type === 'web_search'}
 			<Collapsible
 				title={token.summary}
-				open={false}
+				open={getOpenState(openStateId, false)}
 				disabled={true}
 				attributes={attrs}
 				className="w-full space-y-1"
+				onChange={(nextOpen) => setOpenState(openStateId, nextOpen)}
 			/>
 		{:else if hasContent}
 			<Collapsible
 				title={token.summary}
-				open={$settings?.expandDetails ?? false}
+				open={getOpenState(openStateId, $settings?.expandDetails ?? false)}
 				attributes={attrs}
 				className="w-full space-y-1"
+				onChange={(nextOpen) => setOpenState(openStateId, nextOpen)}
 			>
 				<div class=" mb-1.5" slot="content">
 					<svelte:self
@@ -401,10 +412,11 @@
 		{:else}
 			<Collapsible
 				title={token.summary}
-				open={false}
+				open={getOpenState(openStateId, false)}
 				disabled={true}
 				attributes={attrs}
 				className="w-full space-y-1"
+				onChange={(nextOpen) => setOpenState(openStateId, nextOpen)}
 			/>
 		{/if}
 	{:else if token.type === 'html'}

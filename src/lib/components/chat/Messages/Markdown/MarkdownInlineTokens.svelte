@@ -11,6 +11,7 @@
 		getRenderSegments,
 		updateIncrementalTokenState
 	} from '$lib/utils/marked/incremental';
+	import { shouldRenderNestedLinkTokens } from '$lib/utils/marked/render';
 
 	import Image from '$lib/components/common/Image.svelte';
 	import KatexRenderer from './KatexRenderer.svelte';
@@ -92,7 +93,9 @@
 	{:else if token.type === 'html'}
 		<HtmlToken {token} />
 	{:else if token.type === 'link'}
-		{#if token.tokens}
+		{@const plainLinkTextToken =
+			token.tokens?.length === 1 && token.tokens[0].type === 'text' ? token.tokens[0] : null}
+		{#if shouldRenderNestedLinkTokens(token)}
 			<a
 				href={token.href}
 				target="_blank"
@@ -110,6 +113,16 @@
 					{links}
 					{incremental}
 				/>
+			</a>
+		{:else if plainLinkTextToken}
+			<a
+				href={token.href}
+				target="_blank"
+				rel="nofollow"
+				title={token.title}
+				onclick={(e) => handleLinkClick(e, token.href)}
+			>
+				<TextToken token={plainLinkTextToken} {done} />
 			</a>
 		{:else}
 			<a

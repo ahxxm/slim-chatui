@@ -29,7 +29,8 @@
 		},
 		open = $bindable(false),
 		className = '',
-		buttonClassName = 'w-fit text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition'
+		buttonClassName = 'w-fit text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition',
+		onChange = () => {}
 	}: {
 		id?: string;
 		attributes?: {
@@ -45,6 +46,7 @@
 		open?: boolean;
 		className?: string;
 		buttonClassName?: string;
+		onChange?: (open: boolean) => void;
 	} = $props();
 
 	const componentId = id || uuidv4();
@@ -90,6 +92,10 @@
 
 	let parsedArgs = $derived(parseArguments(args));
 	let parsedResult = $derived(parseJSONString(result));
+
+	$effect(() => {
+		onChange(open);
+	});
 </script>
 
 <div {id} class={className}>

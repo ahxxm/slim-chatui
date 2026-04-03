@@ -37,6 +37,12 @@
 	let renderSegments = $state(getRenderSegments(blockState));
 	let links = $state(EMPTY_LINKS);
 
+	const getSegmentIdentity = (messageId, segmentIndex, segment) => {
+		const token = segment?.tokens?.[0];
+		const detailType = token?.type === 'details' ? token?.attributes?.type ?? 'details' : token?.type;
+		return `${messageId}-${segmentIndex}-${detailType ?? 'unknown'}`;
+	};
+
 	$effect(() => {
 		const nextMessageId = id;
 		const nextContent = normalizedContent;
@@ -53,9 +59,9 @@
 </script>
 
 {#key id}
-	{#each renderSegments as segment (segment.id)}
+	{#each renderSegments as segment, segmentIndex (getSegmentIdentity(id, segmentIndex, segment))}
 		<MarkdownTokens
-			id={`${id}-${segment.id}`}
+			id={getSegmentIdentity(id, segmentIndex, segment)}
 			tokens={segment.tokens}
 			{done}
 			{save}

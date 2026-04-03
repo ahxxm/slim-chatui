@@ -80,6 +80,10 @@ export const updateIncrementalTokenState = (
 		return state;
 	}
 
+	if (state.mode === 'inline' && shouldResetInlineStateForRetroactiveBoundaryChange(state)) {
+		return resetIncrementalTokenState(state, nextSource, nextLinks);
+	}
+
 	if (state.mode === 'block' && canDirectAppendBlockToken(state, delta)) {
 		return extendMutableBlockToken(state, nextSource, delta);
 	}
@@ -258,6 +262,33 @@ const extendMutableBlockToken = (
 };
 
 const hasDefinitionToken = (tokens: Token[]): boolean => tokens.some((token) => token.type === 'def');
+
+const shouldResetInlineStateForRetroactiveBoundaryChange = (
+	state: IncrementalTokenState
+): boolean => {
+	const frozenTextToken = state.frozenSegments.at(-1)?.tokens[0] as
+		| (Token & { text?: string; raw?: string })
+		| undefined;
+	const mutableLinkToken = state.mutableSegment?.tokens[0] as
+		| (Token & { text?: string; raw?: string; href?: string })
+		| undefined;
+
+	if (frozenTextToken?.type !== 'text' || mutableLinkToken?.type !== 'link') {
+		return false;
+	}
+
+	const raw = mutableLinkToken.raw ?? '';
+	const text = mutableLinkToken.text ?? '';
+	const href = mutableLinkToken.href ?? '';
+
+	if (raw !== text || raw !== href) {
+		return false;
+	}
+
+	const frozenText = frozenTextToken.text ?? frozenTextToken.raw ?? '';
+
+	return /(?:!?\[[^\]\r\n]*\]\(|<)$/.test(frozenText);
+};
 
 const createSegment = (token: Token, id: number): IncrementalTokenSegment => ({
 	id: `segment-${id}`,
