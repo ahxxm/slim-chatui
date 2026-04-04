@@ -247,6 +247,120 @@ function benchmarkFullReparse(normalizedFlushes, chatMarked) {
 	return summarize(fullReparseTimes);
 }
 
+function cloneLinks(links) {
+	const nextLinks = Object.create(null);
+
+	if (links) {
+		Object.assign(nextLinks, links);
+	}
+
+	return nextLinks;
+}
+
+function lexBlockTokens(chatMarked, source, seedLinks) {
+	const lexer = new chatMarked.Lexer(chatMarked.defaults);
+	lexer.tokens.links = cloneLinks(seedLinks);
+	return lexer.lex(source);
+}
+
+function createBlockTailLexOnlyState(emptyLinks) {
+	return {
+		frozenTokens: [],
+		mutableToken: null,
+		mutableTailRaw: '',
+		links: emptyLinks,
+		lastSource: ''
+	};
+}
+
+function withBlockTailLexOnlyState(state, source, links, frozenTokens, mutableToken) {
+	return {
+		...state,
+		frozenTokens,
+		mutableToken,
+		mutableTailRaw: mutableToken?.raw ?? '',
+		links,
+		lastSource: source
+	};
+}
+
+function resetBlockTailLexOnlyState(state, source, chatMarked, emptyLinks) {
+	if (!source) {
+		return withBlockTailLexOnlyState(state, source, emptyLinks, [], null);
+	}
+
+	const tokens = lexBlockTokens(chatMarked, source);
+
+	return withBlockTailLexOnlyState(
+		state,
+		source,
+		tokens.links,
+		tokens.slice(0, -1),
+		tokens.at(-1) ?? null
+	);
+}
+
+function updateBlockTailLexOnlyState(state, source, chatMarked, emptyLinks) {
+	const nextSource = source ?? '';
+
+	if (state.lastSource === nextSource) {
+		return state;
+	}
+
+	if (!nextSource) {
+		return withBlockTailLexOnlyState(state, nextSource, emptyLinks, [], null);
+	}
+
+	if (!nextSource.startsWith(state.lastSource) || state.mutableToken?.type === 'def') {
+		return resetBlockTailLexOnlyState(state, nextSource, chatMarked, emptyLinks);
+	}
+
+	const delta = nextSource.slice(state.lastSource.length);
+
+	if (!delta) {
+		return state;
+	}
+
+	const nextMutableTailRaw = `${state.mutableTailRaw}${delta}`;
+	const tailTokens = lexBlockTokens(chatMarked, nextMutableTailRaw, state.links);
+
+	if (tailTokens.some((token) => token.type === 'def')) {
+		return resetBlockTailLexOnlyState(state, nextSource, chatMarked, emptyLinks);
+	}
+
+	if (tailTokens.length === 0) {
+		return withBlockTailLexOnlyState(state, nextSource, state.links, state.frozenTokens, null);
+	}
+
+	if (!state.mutableToken) {
+		return withBlockTailLexOnlyState(
+			state,
+			nextSource,
+			state.links,
+			tailTokens.slice(0, -1),
+			tailTokens.at(-1) ?? null
+		);
+	}
+
+	if (tailTokens.length === 1) {
+		return withBlockTailLexOnlyState(
+			state,
+			nextSource,
+			state.links,
+			state.frozenTokens,
+			tailTokens[0]
+		);
+	}
+
+	return withBlockTailLexOnlyState(
+		state,
+		nextSource,
+		state.links,
+		[...state.frozenTokens, tailTokens[0], ...tailTokens.slice(1, -1)],
+		tailTokens.at(-1) ?? null
+	);
+}
+
 function updateInlineRenderTree(
 	rootInlineSource,
 	previousInlineStates,
@@ -328,6 +442,9 @@ function benchmarkIncrementalRenderPath(
 	const flushTimesWithInlineReset = [];
 	const flushTimesWithoutInlineReset = [];
 	let inlineResetCalls = 0;
+	let blockDirectAppendCalls = 0;
+	let blockTailLexCalls = 0;
+	let blockResetCalls = 0;
 
 	for (const content of normalizedFlushes) {
 		const totalStart = performance.now();
@@ -338,9 +455,22 @@ function benchmarkIncrementalRenderPath(
 		};
 
 		const blockStart = performance.now();
-		blockState = updateIncrementalTokenState(blockState, content);
+		let blockTransition = 'noop';
+		blockState = updateIncrementalTokenState(blockState, content, {
+			onTransition(nextTransition) {
+				blockTransition = nextTransition;
+			}
+		});
 		const blockSegments = getRenderSegments(blockState);
 		blockUpdateTimes.push(performance.now() - blockStart);
+
+		if (blockTransition === 'direct-append') {
+			blockDirectAppendCalls += 1;
+		} else if (blockTransition === 'tail-lex') {
+			blockTailLexCalls += 1;
+		} else if (blockTransition === 'reset') {
+			blockResetCalls += 1;
+		}
 
 		const inlineStart = performance.now();
 		const nextInlineStates = new Map();
@@ -388,8 +518,26 @@ function benchmarkIncrementalRenderPath(
 			inlineResetUpdates: summarizeMaybe(inlineResetUpdateTimes),
 			inlineResetFlushTimes: summarizeMaybe(flushTimesWithInlineReset),
 			inlineNonResetFlushTimes: summarizeMaybe(flushTimesWithoutInlineReset)
+		},
+		blockTransitions: {
+			directAppendCalls: blockDirectAppendCalls,
+			tailLexCalls: blockTailLexCalls,
+			resetCalls: blockResetCalls
 		}
 	};
+}
+
+function benchmarkBlockTailLexOnlyPath(normalizedFlushes, chatMarked, emptyLinks) {
+	let blockState = createBlockTailLexOnlyState(emptyLinks);
+	const updateTimes = [];
+
+	for (const content of normalizedFlushes) {
+		const start = performance.now();
+		blockState = updateBlockTailLexOnlyState(blockState, content, chatMarked, emptyLinks);
+		updateTimes.push(performance.now() - start);
+	}
+
+	return summarize(updateTimes);
 }
 
 function benchmarkScenario(
@@ -412,13 +560,19 @@ function benchmarkScenario(
 		updateIncrementalTokenState,
 		getRenderSegments
 	);
+	const blockTailLexOnly = benchmarkBlockTailLexOnlyPath(
+		normalizedFlushes,
+		chatMarked,
+		createIncrementalTokenState('block').links
+	);
 
 	return {
 		scenario: scenario.name,
 		finalChars: normalizedFlushes.at(-1)?.length ?? 0,
 		flushes: normalizedFlushes.length,
 		fullReparse,
-		incremental
+		incremental,
+		blockTailLexOnly
 	};
 }
 
@@ -437,6 +591,11 @@ function warmUp(
 		createIncrementalTokenState,
 		updateIncrementalTokenState,
 		getRenderSegments
+	);
+	benchmarkBlockTailLexOnlyPath(
+		normalizedFlushes,
+		chatMarked,
+		createIncrementalTokenState('block').links
 	);
 }
 
@@ -512,7 +671,7 @@ try {
 	);
 
 	console.log(
-		`Markdown stage only: normalized content is precomputed, then full reparse is compared against the actual incremental block+inline update path. steadyStateAvgMs uses the last ${STEADY_STATE_FLUSH_WINDOW} flushes.`
+		`Markdown stage only: normalized content is precomputed, then full reparse is compared against the current incremental block+inline path and a block-tail-lex-only variant with no direct-append and no inline incremental stage. steadyStateAvgMs uses the last ${STEADY_STATE_FLUSH_WINDOW} flushes.`
 	);
 
 	const formatSummary = (summary, field = 'average') => (summary ? summary[field].toFixed(2) : '-');
@@ -531,6 +690,25 @@ try {
 				result.fullReparse.steadyStateAverage,
 				result.incremental.total.steadyStateAverage
 			).toFixed(2),
+			blockTailLexOnlyAvgMs: result.blockTailLexOnly.average.toFixed(2),
+			blockTailLexOnlySteadyStateAvgMs: result.blockTailLexOnly.steadyStateAverage.toFixed(2),
+			blockTailLexOnlyDeltaAvgMs: (
+				result.blockTailLexOnly.average - result.incremental.total.average
+			).toFixed(2),
+			blockTailLexOnlyDeltaSteadyStateAvgMs: (
+				result.blockTailLexOnly.steadyStateAverage - result.incremental.total.steadyStateAverage
+			).toFixed(2),
+			blockTailLexOnlySpeedupAvgX: speedup(
+				result.fullReparse.average,
+				result.blockTailLexOnly.average
+			).toFixed(2),
+			blockTailLexOnlySpeedupSteadyStateX: speedup(
+				result.fullReparse.steadyStateAverage,
+				result.blockTailLexOnly.steadyStateAverage
+			).toFixed(2),
+			blockDirectAppendCalls: result.incremental.blockTransitions.directAppendCalls,
+			blockTailLexCalls: result.incremental.blockTransitions.tailLexCalls,
+			blockResetCalls: result.incremental.blockTransitions.resetCalls,
 			inlineResetCalls: result.incremental.resets.inlineResetCalls,
 			inlineResetFlushes: `${result.incremental.resets.inlineResetFlushes}/${result.flushes}`,
 			inlineResetUpdateAvgMs: formatSummary(result.incremental.resets.inlineResetUpdates),
