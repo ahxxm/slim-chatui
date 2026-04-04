@@ -1,14 +1,20 @@
 import type { Token } from 'marked';
 
-export interface DetailsIdentityToken extends Token {
+export type DetailsIdentityToken = Token & {
 	type: 'details';
-	summary?: string;
-	text?: string;
 	attributes?: Record<string, string>;
-}
+};
 
-const IDENTITY_ATTRIBUTE_KEYS = ['id', 'name', 'action', 'query', 'pattern', 'url'] as const;
-const IDENTITY_TEXT_ATTRIBUTE_KEYS = ['arguments', 'files'] as const;
+const IDENTITY_ATTRIBUTE_KEYS = [
+	'id',
+	'name',
+	'action',
+	'query',
+	'pattern',
+	'url',
+	'arguments',
+	'files'
+] as const;
 const PREVIEW_LIMIT = 120;
 
 const normalizePreviewText = (value: string | null | undefined): string => {
@@ -17,15 +23,6 @@ const normalizePreviewText = (value: string | null | undefined): string => {
 	}
 
 	return value.replace(/\s+/g, ' ').trim().slice(0, PREVIEW_LIMIT);
-};
-
-const getStableDetailsTextPreview = (token: DetailsIdentityToken): string => {
-	const lines = (token.text ?? '')
-		.split(/\r?\n/)
-		.map((line) => normalizePreviewText(line))
-		.filter(Boolean);
-
-	return lines[0] ?? '';
 };
 
 export const getDetailsIdentityBase = (token: Token | undefined): string | null => {
@@ -43,26 +40,6 @@ export const getDetailsIdentityBase = (token: Token | undefined): string | null 
 		if (value) {
 			identityParts.push(`${key}:${value}`);
 		}
-	}
-
-	for (const key of IDENTITY_TEXT_ATTRIBUTE_KEYS) {
-		const value = normalizePreviewText(attributes[key]);
-
-		if (value) {
-			identityParts.push(`${key}:${value}`);
-		}
-	}
-
-	const textPreview = getStableDetailsTextPreview(detailsToken);
-
-	if (textPreview) {
-		identityParts.push(`text:${textPreview}`);
-	}
-
-	const summaryPreview = normalizePreviewText(detailsToken.summary);
-
-	if (summaryPreview && identityParts.length === 1 && !textPreview) {
-		identityParts.push(`summary:${summaryPreview}`);
 	}
 
 	return identityParts.join('|');

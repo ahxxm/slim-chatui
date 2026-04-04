@@ -1,0 +1,91 @@
+<script lang="ts">
+	import { type Snippet, getContext } from 'svelte';
+	import { SvelteMap } from 'svelte/reactivity';
+
+	import { markdownRenderContextKey, type MarkdownRenderContextState } from './context';
+	import DetailsHeader from './DetailsHeader.svelte';
+
+	import Collapsible from '$lib/components/common/Collapsible.svelte';
+	import ToolCallDisplay from '$lib/components/common/ToolCallDisplay.svelte';
+	import { settings } from '$lib/stores';
+
+	interface MarkdownDetailsBlockProps {
+		id: string;
+		openStateId: string;
+		title?: string | null;
+		attributes?: Record<string, string | undefined> | null;
+		hasContent?: boolean;
+		content?: Snippet;
+	}
+
+	let {
+		id,
+		openStateId,
+		title = null,
+		attributes = null,
+		hasContent = false,
+		content: body = undefined
+	}: MarkdownDetailsBlockProps = $props();
+
+	const markdownRenderContext =
+		getContext<MarkdownRenderContextState | null>(markdownRenderContextKey) ?? null;
+	const fallbackOpenStates = new SvelteMap<string, boolean>();
+
+	let effectiveDone = $derived(markdownRenderContext?.done ?? true);
+	let effectiveOpenStates = $derived(markdownRenderContext?.openStates ?? fallbackOpenStates);
+	let resolvedAttributes = $derived(
+		effectiveDone && attributes?.done !== 'true' ? { ...attributes, done: 'true' } : attributes
+	);
+
+	const getOpenState = (defaultOpen: boolean): boolean =>
+		effectiveOpenStates.get(openStateId) ?? defaultOpen;
+
+	const setOpenState = (nextOpen: boolean) => {
+		if (effectiveOpenStates.get(openStateId) !== nextOpen) {
+			effectiveOpenStates.set(openStateId, nextOpen);
+		}
+	};
+</script>
+
+{#if resolvedAttributes?.type === 'tool_calls'}
+	<ToolCallDisplay
+		id={`${id}-tc`}
+		attributes={resolvedAttributes}
+		open={getOpenState(false)}
+		className="w-full space-y-1"
+		onChange={setOpenState}
+	/>
+{:else if resolvedAttributes?.type === 'web_search'}
+	<Collapsible
+		open={getOpenState(false)}
+		chevron={true}
+		disabled={true}
+		className="w-full space-y-1"
+		onChange={setOpenState}
+	>
+		<DetailsHeader {title} attributes={resolvedAttributes} />
+	</Collapsible>
+{:else if hasContent}
+	<Collapsible
+		open={getOpenState($settings?.expandDetails ?? false)}
+		chevron={true}
+		className="w-full space-y-1"
+		onChange={setOpenState}
+	>
+		<DetailsHeader {title} attributes={resolvedAttributes} />
+
+		{#snippet content()}
+			{@render body?.()}
+		{/snippet}
+	</Collapsible>
+{:else}
+	<Collapsible
+		open={getOpenState(false)}
+		chevron={true}
+		disabled={true}
+		className="w-full space-y-1"
+		onChange={setOpenState}
+	>
+		<DetailsHeader {title} attributes={resolvedAttributes} />
+	</Collapsible>
+{/if}

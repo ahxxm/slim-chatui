@@ -330,7 +330,7 @@
 		></div>
 	{/if}
 
-	<Collapsible bind:open className="w-full" buttonClassName="w-full">
+	<Collapsible bind:open className="w-full" buttonClassName="w-full" stopPropagation={true}>
 		<div class="w-full group">
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<!-- svelte-ignore a11y_click_events_have_key_events -->

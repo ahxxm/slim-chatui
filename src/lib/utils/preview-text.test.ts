@@ -23,4 +23,15 @@ describe('toPreviewText', () => {
 
 		expect(toPreviewText(content)).toBe('See docs and diagram');
 	});
+
+	it('keeps details summaries and strips raw html tags', () => {
+		const content = [
+			'<details type="reasoning">',
+			'<summary>Thinking...</summary>',
+			'<div>Hello <strong>world</strong></div>',
+			'</details>'
+		].join('\n');
+
+		expect(toPreviewText(content)).toBe('Thinking... Hello world');
+	});
 });

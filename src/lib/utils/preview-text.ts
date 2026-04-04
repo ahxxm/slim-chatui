@@ -1,62 +1,89 @@
-const FENCE_OPENING_PATTERN = /^\s{0,3}(`{3,}|~{3,}).*$/;
+import { decode } from 'html-entities';
+import type { Token } from 'marked';
+
+import { chatMarked } from './marked/chat-marked';
+
 const HTML_TAG_PATTERN = /<\/?[a-zA-Z][^>]*>/g;
-const MARKDOWN_IMAGE_PATTERN = /!\[([^\]]*)\]\([^)]+\)/g;
-const MARKDOWN_INLINE_LINK_PATTERN = /\[([^\]]+)\]\([^)]+\)/g;
-const MARKDOWN_REFERENCE_LINK_PATTERN = /\[([^\]]+)\]\[[^\]]*\]/g;
-const INLINE_CODE_PATTERN = /`([^`\n]+)`/g;
-const STRONG_ASTERISK_PATTERN = /\*\*([^*\n]+)\*\*/g;
-const STRONG_UNDERSCORE_PATTERN = /__([^_\n]+)__/g;
-const STRIKETHROUGH_PATTERN = /~~([^~\n]+)~~/g;
-const EMPHASIS_ASTERISK_PATTERN = /(^|[^\w*])\*([^*\n]+)\*(?=[^\w*]|$)/g;
-const EMPHASIS_UNDERSCORE_PATTERN = /(^|[^\w_])_([^_\n]+)_(?=[^\w_]|$)/g;
-const TABLE_SEPARATOR_PATTERN = /^\s*\|?(?:\s*:?-+:?\s*\|)+\s*:?-+:?\s*\|?\s*$/;
 
-const stripFencedCodeBlocks = (markdown: string): string => {
-	const visibleLines: string[] = [];
-	const lines = markdown.split(/\r?\n/);
-	let activeFenceCharacter: '`' | '~' | null = null;
-	let activeFenceLength = 0;
+type PreviewToken = Token & Record<string, any>;
 
-	for (const line of lines) {
-		const trimmedLine = line.trimStart();
-
-		if (activeFenceCharacter) {
-			const closingFencePattern = activeFenceCharacter === '`' ? /^`{3,}\s*$/ : /^~{3,}\s*$/;
-
-			if (closingFencePattern.test(trimmedLine) && trimmedLine.trim().length >= activeFenceLength) {
-				activeFenceCharacter = null;
-				activeFenceLength = 0;
-			}
-
-			continue;
-		}
-
-		const openingFenceMatch = trimmedLine.match(FENCE_OPENING_PATTERN);
-		if (openingFenceMatch) {
-			activeFenceCharacter = openingFenceMatch[1][0] as '`' | '~';
-			activeFenceLength = openingFenceMatch[1].length;
-			continue;
-		}
-
-		visibleLines.push(line);
+const normalizePreviewText = (value: unknown): string => {
+	if (typeof value !== 'string' || value === '') {
+		return '';
 	}
 
-	return visibleLines.join('\n');
+	return decode(value).replace(HTML_TAG_PATTERN, ' ').replace(/\s+/g, ' ').trim();
 };
 
-const stripLineLevelMarkdown = (line: string): string => {
-	let nextLine = line
-		.replace(/^\s{0,3}#{1,6}\s+/, '')
-		.replace(/^\s{0,3}>\s?/, '')
-		.replace(/^\s*[-+*]\s+\[[ xX]\]\s+/, '')
-		.replace(/^\s*[-+*]\s+/, '')
-		.replace(/^\s*\d+\.\s+/, '');
+const appendPreviewText = (parts: string[], value: unknown) => {
+	const nextPart = normalizePreviewText(value);
 
-	if (TABLE_SEPARATOR_PATTERN.test(nextLine)) {
-		return ' ';
+	if (nextPart) {
+		parts.push(nextPart);
+	}
+};
+
+const appendTokensPreviewText = (parts: string[], tokens: PreviewToken[] | undefined) => {
+	for (const token of tokens ?? []) {
+		appendTokenPreviewText(parts, token);
+	}
+};
+
+const appendTablePreviewText = (parts: string[], token: PreviewToken) => {
+	for (const cell of token.header ?? []) {
+		if (Array.isArray(cell.tokens) && cell.tokens.length > 0) {
+			appendTokensPreviewText(parts, cell.tokens as PreviewToken[]);
+		} else {
+			appendPreviewText(parts, cell.text);
+		}
 	}
 
-	return nextLine;
+	for (const row of token.rows ?? []) {
+		for (const cell of row ?? []) {
+			if (Array.isArray(cell.tokens) && cell.tokens.length > 0) {
+				appendTokensPreviewText(parts, cell.tokens as PreviewToken[]);
+			} else {
+				appendPreviewText(parts, cell.text);
+			}
+		}
+	}
+};
+
+const appendTokenPreviewText = (parts: string[], token: PreviewToken) => {
+	switch (token.type) {
+		case 'code':
+		case 'hr':
+		case 'space':
+			return;
+		case 'br':
+			parts.push(' ');
+			return;
+		case 'details':
+			appendPreviewText(parts, token.summary);
+			appendTokensPreviewText(parts, token.tokens as PreviewToken[] | undefined);
+			return;
+		case 'list':
+			for (const item of token.items ?? []) {
+				appendTokensPreviewText(parts, item.tokens as PreviewToken[] | undefined);
+			}
+			return;
+		case 'table':
+			appendTablePreviewText(parts, token);
+			return;
+		case 'html':
+			appendPreviewText(parts, token.text ?? token.raw);
+			return;
+		case 'footnote':
+			appendPreviewText(parts, token.escapedText ?? token.text ?? token.raw);
+			return;
+	}
+
+	if (Array.isArray(token.tokens) && token.tokens.length > 0) {
+		appendTokensPreviewText(parts, token.tokens as PreviewToken[]);
+		return;
+	}
+
+	appendPreviewText(parts, token.text ?? token.raw);
 };
 
 export const toPreviewText = (content: unknown, limit = 320): string => {
@@ -64,24 +91,13 @@ export const toPreviewText = (content: unknown, limit = 320): string => {
 		return '';
 	}
 
-	return stripFencedCodeBlocks(content)
-		.replace(/&gt;/g, '>')
-		.replace(/&lt;/g, '<')
-		.replace(/&amp;/g, '&')
-		.replace(HTML_TAG_PATTERN, ' ')
-		.replace(MARKDOWN_IMAGE_PATTERN, '$1')
-		.replace(MARKDOWN_INLINE_LINK_PATTERN, '$1')
-		.replace(MARKDOWN_REFERENCE_LINK_PATTERN, '$1')
-		.replace(INLINE_CODE_PATTERN, '$1')
-		.replace(STRONG_ASTERISK_PATTERN, '$1')
-		.replace(STRONG_UNDERSCORE_PATTERN, '$1')
-		.replace(STRIKETHROUGH_PATTERN, '$1')
-		.replace(EMPHASIS_ASTERISK_PATTERN, '$1$2')
-		.replace(EMPHASIS_UNDERSCORE_PATTERN, '$1$2')
-		.split(/\r?\n/)
-		.map(stripLineLevelMarkdown)
-		.join(' ')
-		.replace(/\s+/g, ' ')
-		.trim()
-		.slice(0, limit);
+	const parts: string[] = [];
+
+	try {
+		appendTokensPreviewText(parts, chatMarked.lexer(content) as PreviewToken[]);
+	} catch {
+		appendPreviewText(parts, content);
+	}
+
+	return parts.join(' ').replace(/\s+/g, ' ').trim().slice(0, limit);
 };

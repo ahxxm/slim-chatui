@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Links, Token } from 'marked';
 	import DOMPurify from 'dompurify';
+	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
 
 	import { WEBUI_BASE_URL } from '$lib/constants';
@@ -21,6 +22,7 @@
 	import TextToken from './MarkdownInlineTokens/TextToken.svelte';
 	import CodespanToken from './MarkdownInlineTokens/CodespanToken.svelte';
 	import SourceToken from './SourceToken.svelte';
+	import { markdownRenderContextKey, type MarkdownRenderContextState } from './context';
 
 	type InlineToken = Token & Record<string, any>;
 
@@ -29,7 +31,7 @@
 		done?: boolean;
 		tokens?: InlineToken[];
 		source?: string | null;
-		sourceIds?: string[];
+		sourceIds?: string[] | undefined;
 		onSourceClick?: (value: unknown) => void;
 		links?: Links;
 		incremental?: boolean;
@@ -37,14 +39,25 @@
 
 	let {
 		id,
-		done = true,
+		done = undefined,
 		tokens = [],
 		source = null,
-		sourceIds = [],
-		onSourceClick = () => {},
-		links = EMPTY_LINKS,
-		incremental = false
+		sourceIds = undefined,
+		onSourceClick = undefined,
+		links = undefined,
+		incremental = undefined
 	}: MarkdownInlineTokensProps = $props();
+
+	const markdownRenderContext =
+		getContext<MarkdownRenderContextState | null>(markdownRenderContextKey) ?? null;
+
+	let effectiveDone = $derived(done ?? markdownRenderContext?.done ?? true);
+	let effectiveSourceIds = $derived(sourceIds ?? markdownRenderContext?.sourceIds ?? []);
+	let effectiveOnSourceClick = $derived(
+		onSourceClick ?? markdownRenderContext?.onSourceClick ?? (() => {})
+	);
+	let effectiveLinks = $derived(links ?? markdownRenderContext?.links ?? EMPTY_LINKS);
+	let effectiveIncremental = $derived(incremental ?? markdownRenderContext?.incremental ?? false);
 
 	function createStaticSegments(nextTokens: InlineToken[]): IncrementalTokenSegment[] {
 		return nextTokens.map((token, tokenIdx) => ({
@@ -60,8 +73,8 @@
 	$effect(() => {
 		const nextId = id;
 		const nextTokens = tokens ?? [];
-		const nextLinks = links ?? EMPTY_LINKS;
-		const useIncremental = incremental && source !== null;
+		const nextLinks = effectiveLinks;
+		const useIncremental = effectiveIncremental && source !== null;
 
 		if (!useIncremental) {
 			currentInlineId = nextId;
@@ -119,11 +132,6 @@
 						id={`${id}-${segment.id}-${tokenIdx}-a`}
 						source={token.text ?? ''}
 						tokens={token.tokens}
-						{onSourceClick}
-						{sourceIds}
-						{done}
-						{links}
-						{incremental}
 					/>
 				</a>
 			{:else if plainLinkTextToken}
@@ -134,7 +142,7 @@
 					title={token.title}
 					onclick={(e) => handleLinkClick(e, token.href)}
 				>
-					<TextToken token={plainLinkTextToken} {done} />
+					<TextToken token={plainLinkTextToken} done={effectiveDone} />
 				</a>
 			{:else}
 				<a
@@ -153,11 +161,6 @@
 					id={`${id}-${segment.id}-${tokenIdx}-strong`}
 					source={token.text ?? ''}
 					tokens={token.tokens}
-					{onSourceClick}
-					{sourceIds}
-					{done}
-					{links}
-					{incremental}
 				/>
 			</strong>
 		{:else if token.type === 'em'}
@@ -166,15 +169,10 @@
 					id={`${id}-${segment.id}-${tokenIdx}-em`}
 					source={token.text ?? ''}
 					tokens={token.tokens}
-					{onSourceClick}
-					{sourceIds}
-					{done}
-					{links}
-					{incremental}
 				/>
 			</em>
 		{:else if token.type === 'codespan'}
-			<CodespanToken token={token as InlineToken} {done} />
+			<CodespanToken token={token as InlineToken} done={effectiveDone} />
 		{:else if token.type === 'br'}
 			<br />
 		{:else if token.type === 'del'}
@@ -183,11 +181,6 @@
 					id={`${id}-${segment.id}-${tokenIdx}-del`}
 					source={token.text ?? ''}
 					tokens={token.tokens}
-					{onSourceClick}
-					{sourceIds}
-					{done}
-					{links}
-					{incremental}
 				/>
 			</del>
 		{:else if token.type === 'inlineKatex'}
@@ -216,13 +209,17 @@
 				`<sup class="footnote-ref footnote-ref-text">${token.escapedText}</sup>`
 			) || ''}
 		{:else if token.type === 'citation'}
-			{#if (sourceIds ?? []).length > 0}
-				<SourceToken token={token as InlineToken} {sourceIds} onClick={onSourceClick} />
+			{#if effectiveSourceIds.length > 0}
+				<SourceToken
+					token={token as InlineToken}
+					sourceIds={effectiveSourceIds}
+					onClick={effectiveOnSourceClick}
+				/>
 			{:else}
-				<TextToken token={token as InlineToken} {done} />
+				<TextToken token={token as InlineToken} done={effectiveDone} />
 			{/if}
 		{:else if token.type === 'text'}
-			<TextToken token={token as InlineToken} {done} />
+			<TextToken token={token as InlineToken} done={effectiveDone} />
 		{/if}
 	{/each}
 {/each}

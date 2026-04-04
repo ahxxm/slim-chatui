@@ -107,6 +107,7 @@
 				bind:open
 				className="w-full "
 				buttonClassName="w-full"
+				stopPropagation={true}
 				onChange={(state: boolean) => {
 					onchange(state);
 					localStorage.setItem(`${id}-folder-state`, `${state}`);

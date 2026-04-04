@@ -26,7 +26,6 @@
 		largeTextAsFile?: boolean;
 		insertPromptAsRichText?: boolean;
 		showFormattingToolbar?: boolean;
-		[key: string]: unknown;
 	}
 
 	const hasMarkdownValue = (value: unknown): value is MarkdownEditorValue =>
@@ -46,7 +45,12 @@
 		onpaste = (_event: ClipboardEvent) => {},
 		oncompositionstart = (_event: CompositionEvent) => {},
 		oncompositionend = (_event: CompositionEvent) => {},
-		...restProps
+		json = false,
+		messageInput = false,
+		shiftEnter = false,
+		largeTextAsFile = false,
+		insertPromptAsRichText = false,
+		showFormattingToolbar = true
 	}: AdaptiveTextInputProps = $props();
 
 	let inputElement = $state<any>(null);
@@ -136,7 +140,12 @@
 		{onpaste}
 		{oncompositionstart}
 		{oncompositionend}
-		{...restProps}
+		{json}
+		{messageInput}
+		{shiftEnter}
+		{largeTextAsFile}
+		{insertPromptAsRichText}
+		{showFormattingToolbar}
 	/>
 {:else}
 	<PlainTextInput

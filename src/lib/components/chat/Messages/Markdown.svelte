@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { setContext } from 'svelte';
 	import type { Links } from 'marked';
 	import { SvelteMap } from 'svelte/reactivity';
 
@@ -13,6 +14,7 @@
 	import { createIndexedDetailsStateIds } from '$lib/utils/marked/details-state';
 	import { user } from '$lib/stores';
 
+	import { markdownRenderContextKey, type MarkdownRenderContextState } from './Markdown/context';
 	import MarkdownTokens from './Markdown/MarkdownTokens.svelte';
 
 	interface MarkdownModel {
@@ -66,6 +68,22 @@
 	let renderSegments = $state<IncrementalTokenSegment[]>(getRenderSegments(blockState));
 	let renderSegmentMetadata = $state<RenderSegmentMetadata[]>([]);
 	let links = $state<Links>(EMPTY_LINKS);
+	const renderContext = $state<MarkdownRenderContextState>({
+		done: true,
+		save: false,
+		paragraphTag: 'p',
+		editCodeBlock: true,
+		topPadding: false,
+		sourceIds: [],
+		onSave: () => {},
+		onTaskClick: () => {},
+		onSourceClick: () => {},
+		links: EMPTY_LINKS,
+		openStates,
+		incremental: true
+	});
+
+	setContext(markdownRenderContextKey, renderContext);
 
 	const createRenderSegmentMetadata = (
 		messageId: string,
@@ -110,6 +128,25 @@
 		renderSegmentMetadata = createRenderSegmentMetadata(nextMessageId, nextRenderSegments);
 		links = blockState.links;
 	});
+
+	$effect(() => {
+		const nextRenderContext: MarkdownRenderContextState = {
+			done,
+			save,
+			paragraphTag,
+			editCodeBlock,
+			topPadding,
+			sourceIds,
+			onSave,
+			onTaskClick,
+			onSourceClick,
+			links,
+			openStates,
+			incremental: true
+		};
+
+		Object.assign(renderContext, nextRenderContext);
+	});
 </script>
 
 {#key id}
@@ -117,20 +154,8 @@
 		<MarkdownTokens
 			id={renderSegmentMetadata[segmentIndex]?.key ?? `${id}-${segmentIndex}`}
 			tokens={segment.tokens}
-			{done}
-			{save}
-			{paragraphTag}
-			{editCodeBlock}
-			{sourceIds}
-			{topPadding}
-			{onTaskClick}
-			{onSourceClick}
-			{onSave}
-			{links}
-			{openStates}
 			detailsScopeId={id}
 			rootDetailsStateId={renderSegmentMetadata[segmentIndex]?.rootDetailsStateId ?? null}
-			incremental={true}
 		/>
 	{/each}
 {/key}
