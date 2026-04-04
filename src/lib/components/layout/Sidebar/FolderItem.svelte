@@ -32,9 +32,9 @@
 	import ChatItem from './ChatItem.svelte';
 	import FolderMenu from './Folders/FolderMenu.svelte';
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
-	import FolderModal from './Folders/FolderModal.svelte';
 	import Emoji from '$lib/components/common/Emoji.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import { stopCollapsibleTriggerPropagation } from '$lib/utils/stop-collapsible-trigger-propagation';
 
 	const i18n = getContext('i18n');
 
@@ -65,6 +65,7 @@
 	let folderElement: HTMLDivElement;
 
 	let showFolderModal = $state(false);
+	let FolderModalComponent = $state<any>(null);
 	let showDeleteConfirm = $state(false);
 	let edit = $state(false);
 	let draggedOver = $state(false);
@@ -266,6 +267,20 @@
 		const blob = new Blob([JSON.stringify(chats)], { type: 'application/json' });
 		saveAs(blob, `folder-${folders[folderId].name}-export-${Date.now()}.json`);
 	};
+
+	const loadFolderModal = async () => {
+		if (FolderModalComponent) {
+			return;
+		}
+
+		const { default: FolderModal } = await import('./Folders/FolderModal.svelte');
+		FolderModalComponent = FolderModal;
+	};
+
+	const openFolderModal = async () => {
+		await loadFolderModal();
+		showFolderModal = true;
+	};
 </script>
 
 <ConfirmDialog
@@ -287,7 +302,14 @@
 	</div>
 </ConfirmDialog>
 
-<FolderModal bind:show={showFolderModal} edit={true} {folderId} onSubmit={updateHandler} />
+{#if showFolderModal && FolderModalComponent}
+	<FolderModalComponent
+		bind:show={showFolderModal}
+		edit={true}
+		{folderId}
+		onSubmit={updateHandler}
+	/>
+{/if}
 
 {#if dragged && x && y}
 	<DragGhost {x} {y}>
@@ -302,7 +324,12 @@
 	</DragGhost>
 {/if}
 
-<div bind:this={folderElement} class="relative {className}" draggable="true">
+<div
+	bind:this={folderElement}
+	use:stopCollapsibleTriggerPropagation
+	class="relative {className}"
+	draggable="true"
+>
 	{#if draggedOver}
 		<div
 			class="absolute top-0 left-0 w-full h-full rounded-xs bg-gray-100/50 dark:bg-gray-700/20 bg-opacity-50 dark:bg-opacity-10 z-50 pointer-events-none touch-none"
@@ -310,8 +337,9 @@
 	{/if}
 
 	<Collapsible bind:open className="w-full" buttonClassName="w-full">
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div class="w-full group">
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<div
 				id="folder-{folderId}-button"
 				class="relative w-full py-1 px-1.5 rounded-xl flex items-center gap-1.5 hover:bg-gray-100 dark:hover:bg-gray-900 transition {$selectedFolder?.id ===
@@ -400,12 +428,12 @@
 					{/if}
 				</div>
 
-				<button
+				<div
 					class="absolute z-10 right-2 invisible group-hover:visible self-center flex items-center dark:text-gray-300"
 				>
 					<FolderMenu
 						onEdit={() => {
-							showFolderModal = true;
+							void openFolderModal();
 						}}
 						onDelete={() => {
 							showDeleteConfirm = true;
@@ -418,32 +446,34 @@
 							<EllipsisHorizontal className="size-4" strokeWidth="2.5" />
 						</div>
 					</FolderMenu>
-				</button>
+				</div>
 			</div>
 		</div>
 
-		<div slot="content" class="w-full">
-			{#if (chats ?? []).length > 0}
-				<div
-					class="ml-3 pl-1 mt-[1px] flex flex-col overflow-y-auto scrollbar-hidden border-s border-gray-100 dark:border-gray-900"
-				>
-					{#each chats ?? [] as chat (chat.id)}
-						<ChatItem
-							id={chat.id}
-							title={chat.title}
-							createdAt={chat.created_at}
-							{shiftKey}
-							{onchange}
-						/>
-					{/each}
-				</div>
-			{/if}
+		{#snippet content()}
+			<div class="w-full">
+				{#if (chats ?? []).length > 0}
+					<div
+						class="ml-3 pl-1 mt-[1px] flex flex-col overflow-y-auto scrollbar-hidden border-s border-gray-100 dark:border-gray-900"
+					>
+						{#each chats ?? [] as chat (chat.id)}
+							<ChatItem
+								id={chat.id}
+								title={chat.title}
+								createdAt={chat.created_at}
+								{shiftKey}
+								{onchange}
+							/>
+						{/each}
+					</div>
+				{/if}
 
-			{#if chats === null}
-				<div class="flex justify-center items-center p-2">
-					<Spinner className="size-4 text-gray-500" />
-				</div>
-			{/if}
-		</div>
+				{#if chats === null}
+					<div class="flex justify-center items-center p-2">
+						<Spinner className="size-4 text-gray-500" />
+					</div>
+				{/if}
+			</div>
+		{/snippet}
 	</Collapsible>
 </div>

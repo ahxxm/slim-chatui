@@ -1,23 +1,17 @@
 <script lang="ts">
 	import { marked } from 'marked';
-	import { saveAs } from '$lib/utils';
-
 	import { onMount, getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
-	import { models as _models, settings, user } from '$lib/stores';
+	import { models as _models, user } from '$lib/stores';
 	import {
 		createNewModel,
 		getBaseModels,
 		toggleModelById,
-		updateModelById,
-		importModels
+		updateModelById
 	} from '$lib/apis/models';
 	import { copyToClipboard } from '$lib/utils';
 	import { page } from '$app/stores';
-	import { onDestroy } from 'svelte';
-	import { updateUserSettings } from '$lib/apis/users';
-
 	import { getModels } from '$lib/apis';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import Switch from '$lib/components/common/Switch.svelte';
@@ -34,13 +28,6 @@
 	import Dropdown from '$lib/components/common/Dropdown.svelte';
 	import AdminViewSelector from './Models/AdminViewSelector.svelte';
 	import Pagination from '$lib/components/common/Pagination.svelte';
-
-	let shiftKey = $state(false);
-	let onMountCleanup: (() => void) | null = null;
-
-	let modelsImportInProgress = $state(false);
-	let importFiles = $state();
-	let modelsImportInputElement: HTMLInputElement;
 
 	let models: any[] | null = $state(null);
 
@@ -61,8 +48,6 @@
 			.filter((m) => {
 				if (viewOption === 'enabled') return m?.is_active ?? true;
 				if (viewOption === 'disabled') return !(m?.is_active ?? true);
-				if (viewOption === 'visible') return !(m?.meta?.hidden ?? false);
-				if (viewOption === 'hidden') return m?.meta?.hidden === true;
 				return true;
 			})
 			.sort((a, b) => (a?.name ?? a?.id ?? '').localeCompare(b?.name ?? b?.id ?? ''))
@@ -90,13 +75,6 @@
 		await Promise.all(
 			modelsToDisable.map((model) => toggleModelById(localStorage.token, model.id))
 		);
-	};
-
-	const downloadModels = async (models) => {
-		let blob = new Blob([JSON.stringify(models)], {
-			type: 'application/json'
-		});
-		saveAs(blob, `models-export-${Date.now()}.json`);
 	};
 
 	const init = async () => {
@@ -170,27 +148,6 @@
 		_models.set(await getModels(localStorage.token));
 	};
 
-	const hideModelHandler = async (model) => {
-		model.meta = {
-			...model.meta,
-			hidden: !(model?.meta?.hidden ?? false)
-		};
-
-		console.debug(model);
-
-		toast.success(
-			model.meta.hidden
-				? $i18n.t(`Model {{name}} is now hidden`, {
-						name: model.id
-					})
-				: $i18n.t(`Model {{name}} is now visible`, {
-						name: model.id
-					})
-		);
-
-		upsertModelHandler(model);
-	};
-
 	const copyLinkHandler = async (model) => {
 		const baseUrl = window.location.origin;
 		const res = await copyToClipboard(`${baseUrl}/?model=${encodeURIComponent(model.id)}`);
@@ -202,26 +159,6 @@
 		}
 	};
 
-	const exportModelHandler = async (model) => {
-		let blob = new Blob([JSON.stringify([model])], {
-			type: 'application/json'
-		});
-		saveAs(blob, `${model.id}-${Date.now()}.json`);
-	};
-
-	const pinModelHandler = async (modelId) => {
-		let pinnedModels: string[] = $settings?.pinnedModels ?? [];
-
-		if (pinnedModels.includes(modelId)) {
-			pinnedModels = pinnedModels.filter((id) => id !== modelId);
-		} else {
-			pinnedModels = [...new Set([...pinnedModels, modelId])];
-		}
-
-		settings.set({ ...$settings, pinnedModels: pinnedModels });
-		await updateUserSettings(localStorage.token, { ui: $settings });
-	};
-
 	onMount(async () => {
 		await init();
 		const id = $page.url.searchParams.get('id');
@@ -229,36 +166,6 @@
 		if (id) {
 			selectedModelId = id;
 		}
-
-		const onKeyDown = (event) => {
-			if (event.key === 'Shift') {
-				shiftKey = true;
-			}
-		};
-
-		const onKeyUp = (event) => {
-			if (event.key === 'Shift') {
-				shiftKey = false;
-			}
-		};
-
-		const onBlur = () => {
-			shiftKey = false;
-		};
-
-		window.addEventListener('keydown', onKeyDown);
-		window.addEventListener('keyup', onKeyUp);
-		window.addEventListener('blur-sm', onBlur);
-
-		onMountCleanup = () => {
-			window.removeEventListener('keydown', onKeyDown);
-			window.removeEventListener('keyup', onKeyUp);
-			window.removeEventListener('blur-sm', onBlur);
-		};
-	});
-
-	onDestroy(() => {
-		onMountCleanup?.();
 	});
 </script>
 
@@ -278,69 +185,6 @@
 				</div>
 
 				<div class="flex w-full justify-end gap-1.5">
-					{#if $user?.role === 'admin'}
-						<input
-							id="models-import-input"
-							bind:this={modelsImportInputElement}
-							bind:files={importFiles}
-							type="file"
-							accept=".json"
-							hidden
-							onchange={() => {
-								if (importFiles.length > 0) {
-									const reader = new FileReader();
-									reader.onload = async (event) => {
-										modelsImportInProgress = true;
-
-										try {
-											const models = JSON.parse(String(event.target.result));
-											const res = await importModels(localStorage.token, models);
-
-											if (res) {
-												toast.success($i18n.t('Models imported successfully'));
-												await init();
-											} else {
-												toast.error($i18n.t('Failed to import models'));
-											}
-										} catch (e) {
-											toast.error(e?.detail ?? $i18n.t('Invalid JSON file'));
-											console.error(e);
-										}
-
-										modelsImportInProgress = false;
-									};
-									reader.readAsText(importFiles[0]);
-								}
-							}}
-						/>
-
-						<button
-							class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-gray-200 transition"
-							disabled={modelsImportInProgress}
-							onclick={() => {
-								modelsImportInputElement.click();
-							}}
-						>
-							{#if modelsImportInProgress}
-								<Spinner className="size-3" />
-							{/if}
-							<div class=" self-center font-medium line-clamp-1">
-								{$i18n.t('Import')}
-							</div>
-						</button>
-
-						<button
-							class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-gray-50 hover:bg-gray-100 dark:bg-gray-850 dark:hover:bg-gray-800 dark:text-gray-200 transition"
-							onclick={async () => {
-								downloadModels(models);
-							}}
-						>
-							<div class=" self-center font-medium line-clamp-1">
-								{$i18n.t('Export')}
-							</div>
-						</button>
-					{/if}
-
 					<button
 						class="flex text-xs items-center space-x-1 px-3 py-1.5 rounded-xl bg-black hover:bg-gray-900 text-white dark:bg-white dark:hover:bg-gray-100 dark:text-black transition font-medium"
 						type="button"
@@ -413,10 +257,7 @@
 				{#if filteredModels.length > 0}
 					{#each filteredModels.slice((currentPage - 1) * perPage, currentPage * perPage) as model, modelIdx (`${model.id}-${modelIdx}`)}
 						<div
-							class=" flex space-x-4 cursor-pointer w-full px-3 py-2 dark:hover:bg-white/5 hover:bg-black/5 rounded-xl transition {model
-								?.meta?.hidden
-								? 'opacity-50 dark:opacity-50'
-								: ''}"
+							class=" flex space-x-4 cursor-pointer w-full px-3 py-2 dark:hover:bg-white/5 hover:bg-black/5 rounded-xl transition"
 							id="model-item-{model.id}"
 						>
 							<button
@@ -464,85 +305,55 @@
 								</div>
 							</button>
 							<div class="flex flex-row gap-0.5 items-center self-center">
-								{#if shiftKey}
-									<Tooltip content={model?.meta?.hidden ? $i18n.t('Show') : $i18n.t('Hide')}>
-										<button
-											class="self-center w-fit text-sm px-2 py-2 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
-											type="button"
-											onclick={() => {
-												hideModelHandler(model);
-											}}
-										>
-											{#if model?.meta?.hidden}
-												<EyeSlash />
-											{:else}
-												<Eye />
-											{/if}
-										</button>
-									</Tooltip>
-								{:else}
+								<button
+									class="self-center w-fit text-sm px-2 py-2 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
+									type="button"
+									onclick={() => {
+										selectedModelId = model.id;
+									}}
+								>
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										fill="none"
+										viewBox="0 0 24 24"
+										stroke-width="1.5"
+										stroke="currentColor"
+										class="w-4 h-4"
+									>
+										<path
+											stroke-linecap="round"
+											stroke-linejoin="round"
+											d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
+										/>
+									</svg>
+								</button>
+
+								<ModelMenu
+									copyLinkHandler={() => {
+										copyLinkHandler(model);
+									}}
+									onClose={() => {}}
+								>
 									<button
-										class="self-center w-fit text-sm px-2 py-2 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
+										class="self-center w-fit text-sm p-1.5 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
 										type="button"
-										onclick={() => {
-											selectedModelId = model.id;
-										}}
 									>
-										<svg
-											xmlns="http://www.w3.org/2000/svg"
-											fill="none"
-											viewBox="0 0 24 24"
-											stroke-width="1.5"
-											stroke="currentColor"
-											class="w-4 h-4"
-										>
-											<path
-												stroke-linecap="round"
-												stroke-linejoin="round"
-												d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125"
-											/>
-										</svg>
+										<EllipsisHorizontal className="size-5" />
 									</button>
+								</ModelMenu>
 
-									<ModelMenu
-										{model}
-										exportHandler={() => {
-											exportModelHandler(model);
-										}}
-										hideHandler={() => {
-											hideModelHandler(model);
-										}}
-										pinModelHandler={() => {
-											pinModelHandler(model.id);
-										}}
-										copyLinkHandler={() => {
-											copyLinkHandler(model);
-										}}
-										onClose={() => {}}
+								<div class="ml-1">
+									<Tooltip
+										content={(model?.is_active ?? true) ? $i18n.t('Enabled') : $i18n.t('Disabled')}
 									>
-										<button
-											class="self-center w-fit text-sm p-1.5 dark:text-gray-300 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl"
-											type="button"
-										>
-											<EllipsisHorizontal className="size-5" />
-										</button>
-									</ModelMenu>
-
-									<div class="ml-1">
-										<Tooltip
-											content={(model?.is_active ?? true)
-												? $i18n.t('Enabled')
-												: $i18n.t('Disabled')}
-										>
-											<Switch
-												bind:state={model.is_active}
-												onchange={async () => {
-													toggleModelHandler(model);
-												}}
-											/>
-										</Tooltip>
-									</div>
-								{/if}
+										<Switch
+											bind:state={model.is_active}
+											onchange={async () => {
+												toggleModelHandler(model);
+											}}
+										/>
+									</Tooltip>
+								</div>
 							</div>
 						</div>
 					{/each}

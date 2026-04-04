@@ -93,16 +93,10 @@
 
 	let taskIds = $state<string[] | null>(null);
 
-	// Typewriter throttle: batch streaming tokens, emit to DOM N times per second.
-	// At 10 emits/sec (100ms): DeepSeek R1 (~24 t/s) batches ~2 tokens/emit,
-	// Opus 4.6 (~43 t/s) ~4, GPT-5.4 (~78 t/s) ~8, Gemini 3.1 Pro (~100 t/s) ~10.
-	// All land as unified/natural word-chunks like typewriter output.
-	// Technically, streamingBuffers holds plain (non-proxy) message objects
-	// so mutations don't trigger Svelte reactivity until we explicitly flush.
-	const TYPEWRITER_EMITS_PER_SEC = 23;
-	const EMIT_INTERVAL_MS = Math.round(1000 / TYPEWRITER_EMITS_PER_SEC);
+	// Streaming buffer: accumulate tokens in plain (non-proxy) objects,
+	// flush to Svelte reactive state once per display frame via requestAnimationFrame.
 	const streamingBuffers: Map<string, any> = new Map();
-	let renderTimer: ReturnType<typeof setTimeout> | null = null;
+	let renderFrame: number | null = null;
 
 	const getStreamingMessage = (messageId: string): any => {
 		let buf = streamingBuffers.get(messageId);
@@ -114,7 +108,7 @@
 	};
 
 	const flushPendingRender = () => {
-		renderTimer = null;
+		renderFrame = null;
 		for (const [id, message] of streamingBuffers) {
 			history.messages[id] = message;
 		}
@@ -122,25 +116,46 @@
 	};
 
 	const scheduleRender = () => {
-		if (!renderTimer) {
-			renderTimer = setTimeout(flushPendingRender, EMIT_INTERVAL_MS);
+		if (renderFrame === null) {
+			renderFrame = requestAnimationFrame(flushPendingRender);
 		}
 	};
 
-	const flushRenderNow = (id: string) => {
-		if (renderTimer) {
-			clearTimeout(renderTimer);
-			renderTimer = null;
+	const clearRenderIfIdle = () => {
+		if (renderFrame !== null && streamingBuffers.size === 0) {
+			cancelAnimationFrame(renderFrame);
+			renderFrame = null;
 		}
-		const buf = streamingBuffers.get(id);
-		if (buf) history.messages[id] = buf;
+	};
+
+	const dropStreamingMessage = (id: string | null | undefined) => {
+		if (!id) return null;
+
+		const bufferedMessage = streamingBuffers.get(id) ?? null;
 		streamingBuffers.delete(id);
+		clearRenderIfIdle();
+
+		delete streamingMessages[id];
+
+		return bufferedMessage;
+	};
+
+	const finishStreamingMessage = (id: string | null | undefined) => {
+		if (!id) return null;
+
+		const bufferedMessage = dropStreamingMessage(id);
+		if (bufferedMessage) {
+			history.messages[id] = bufferedMessage;
+			return bufferedMessage;
+		}
+
+		return history.messages[id] ?? null;
 	};
 
 	const resetStreamingState = () => {
-		if (renderTimer) {
-			clearTimeout(renderTimer);
-			renderTimer = null;
+		if (renderFrame !== null) {
+			cancelAnimationFrame(renderFrame);
+			renderFrame = null;
 		}
 		if (activeChatEmitter) {
 			clearInterval(activeChatEmitter);
@@ -321,8 +336,12 @@
 				} else if (type === 'chat:tasks:cancel') {
 					taskIds = null;
 					const responseMessage = history.messages[history.currentId];
-					for (const messageId of history.messages[responseMessage.parentId].childrenIds) {
-						delete streamingMessages[messageId];
+					const siblingMessageIds =
+						responseMessage?.parentId && history.messages[responseMessage.parentId]
+							? history.messages[responseMessage.parentId].childrenIds
+							: [];
+					for (const messageId of siblingMessageIds) {
+						finishStreamingMessage(messageId);
 					}
 				} else if (type === 'chat:message:delta' || type === 'message') {
 					const msg = getStreamingMessage(event.message_id);
@@ -405,7 +424,7 @@
 					eventConfirmationInputType = data?.type ?? '';
 				} else if (type === 'chat:active') {
 					if (!data?.active && event.message_id && event.message_id in streamingMessages) {
-						delete streamingMessages[event.message_id];
+						finishStreamingMessage(event.message_id);
 					}
 				} else {
 					console.log('Unknown message type', data);
@@ -575,9 +594,7 @@
 			}
 		}
 
-		const availableModels = $models
-			.filter((m) => !(m?.info?.meta?.hidden ?? false))
-			.map((m) => m.id);
+		const availableModels = $models.map((m) => m.id);
 
 		const defaultModels = $config?.default_models ? $config?.default_models.split(',') : [];
 
@@ -626,7 +643,6 @@
 				}
 			}
 
-			// Clear if selected model is unavailable or hidden
 			if (selectedModels[0] && !availableModels.includes(selectedModels[0])) {
 				selectedModels = [''];
 			}
@@ -944,7 +960,7 @@
 		// Guard: Responses API emits done:true twice per stream (see middleware.py).
 		// Content/output fields above update on both, but save+queue runs only on first.
 		if (done && message.id in streamingMessages) {
-			delete streamingMessages[message.id];
+			finishStreamingMessage(message.id);
 
 			eventTarget.dispatchEvent(
 				new CustomEvent('chat:finish', {
@@ -954,8 +970,6 @@
 					}
 				})
 			);
-
-			flushRenderNow(message.id);
 
 			await tick();
 			if (autoScroll) {
@@ -1170,7 +1184,7 @@
 		if (!saved && !$temporaryChatEnabled) {
 			// User navigated away — DB doesn't have this message.
 			// Sending the completion request would create an orphan in the DB.
-			delete streamingMessages[responseMessageId];
+			dropStreamingMessage(responseMessageId);
 			return;
 		}
 
@@ -1344,13 +1358,11 @@
 			}
 
 			toast.error(`${errorMessage}`);
-			responseMessage.error = {
+			const currentResponseMessage = finishStreamingMessage(responseMessageId) ?? responseMessage;
+			currentResponseMessage.error = {
 				content: error
 			};
-
-			delete streamingMessages[responseMessageId];
-
-			history.messages[responseMessageId] = responseMessage;
+			history.messages[responseMessageId] = currentResponseMessage;
 			history.currentId = responseMessageId;
 
 			return null;
@@ -1400,12 +1412,11 @@
 			errorMessage = innerError.message;
 		}
 
-		responseMessage.error = {
+		const currentResponseMessage = finishStreamingMessage(responseMessage.id) ?? responseMessage;
+		currentResponseMessage.error = {
 			content: $i18n.t(`Uh-oh! There was an issue with the response.`) + '\n' + errorMessage
 		};
-		delete streamingMessages[responseMessage.id];
-
-		history.messages[responseMessage.id] = responseMessage;
+		history.messages[responseMessage.id] = currentResponseMessage;
 	};
 
 	const stopResponse = async () => {
@@ -1419,7 +1430,7 @@
 			const responseMessage = history.messages[history.currentId];
 			if (responseMessage.parentId && history.messages[responseMessage.parentId]) {
 				for (const messageId of history.messages[responseMessage.parentId].childrenIds) {
-					delete streamingMessages[messageId];
+					finishStreamingMessage(messageId);
 				}
 			}
 

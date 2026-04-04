@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
+
 	import { settings } from '$lib/stores';
 
 	import Drawer from './Drawer.svelte';
@@ -7,16 +8,29 @@
 
 	const i18n = getContext('i18n');
 
-	export let id = 'input-modal';
+	interface InputContent {
+		html?: string | null;
+		json?: unknown;
+		md?: string | null;
+	}
 
-	export let show = false;
-	export let value = null;
-	export let inputContent = null;
+	interface InputModalProps {
+		id?: string;
+		show?: boolean;
+		value?: string | null;
+		inputContent?: InputContent | null;
+		onChange?: (content: InputContent) => void;
+		onClose?: () => void;
+	}
 
-	export let onChange = () => {};
-	export let onClose = () => {};
-
-	let inputElement;
+	let {
+		id = 'input-modal',
+		show = $bindable(false),
+		value = $bindable(null),
+		inputContent = $bindable(null),
+		onChange = () => {},
+		onClose = () => {}
+	}: InputModalProps = $props();
 </script>
 
 <Drawer bind:show>
@@ -51,17 +65,16 @@
 		<div class="flex w-full px-4 dark:text-gray-200 min-h-full flex-1">
 			<div class="flex-1 w-full min-h-full">
 				<RichTextInput
-					bind:this={inputElement}
 					{id}
-					onChange={(content) => {
-						value = content.md;
+					onChange={(content: InputContent) => {
+						value = content.md ?? '';
 						inputContent = content;
 
 						onChange(content);
 					}}
 					json={true}
-					value={inputContent?.json}
-					html={inputContent?.html}
+					value={inputContent?.json ?? value ?? ''}
+					html={inputContent?.html ?? value ?? ''}
 					richText={$settings?.richTextInput ?? true}
 					messageInput={true}
 					showFormattingToolbar={$settings?.showFormattingToolbar ?? false}

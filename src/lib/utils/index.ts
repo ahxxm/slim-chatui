@@ -3,12 +3,10 @@ import { decode } from 'html-entities';
 import { WEBUI_BASE_URL } from '$lib/constants';
 
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
 import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 
-dayjs.extend(relativeTime);
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 dayjs.extend(localizedFormat);
@@ -46,32 +44,24 @@ const replaceOutsideCode = (content: string, replacer: (str: string) => string) 
 };
 
 export const replaceTokens = (content: string, char: string, user: string) => {
-	const tokens = [
-		{ regex: /{{char}}/gi, replacement: char },
-		{ regex: /{{user}}/gi, replacement: user },
-		{
-			regex: /{{VIDEO_FILE_ID_([a-f0-9-]+)}}/gi,
-			replacement: (_: string, fileId: string) =>
-				`<video src="${WEBUI_BASE_URL}/api/v1/files/${fileId}/content" controls></video>`
-		},
-		{
-			regex: /{{HTML_FILE_ID_([a-f0-9-]+)}}/gi,
-			replacement: (_: string, fileId: string) => `<file type="html" id="${fileId}" />`
-		}
-	];
+	if (!content.includes('{{')) {
+		return content;
+	}
 
-	// Apply replacements
-	content = replaceOutsideCode(content, (segment) => {
-		tokens.forEach(({ regex, replacement }) => {
-			if (replacement !== undefined && replacement !== null) {
-				segment = segment.replace(regex, replacement);
-			}
-		});
-
-		return segment;
+	return replaceOutsideCode(content, (segment) => {
+		return segment
+			.replace(/{{char}}/gi, char)
+			.replace(/{{user}}/gi, user)
+			.replace(
+				/{{VIDEO_FILE_ID_([a-f0-9-]+)}}/gi,
+				(_: string, fileId: string) =>
+					`<video src="${WEBUI_BASE_URL}/api/v1/files/${fileId}/content" controls></video>`
+			)
+			.replace(
+				/{{HTML_FILE_ID_([a-f0-9-]+)}}/gi,
+				(_: string, fileId: string) => `<file type="html" id="${fileId}" />`
+			);
 	});
-
-	return content;
 };
 
 export const sanitizeResponseContent = (content: string) => {
@@ -86,6 +76,10 @@ export const sanitizeResponseContent = (content: string) => {
 };
 
 export const processResponseContent = (content: string) => {
+	if (!/\p{Script=Han}/u.test(content)) {
+		return content.trim();
+	}
+
 	content = processChineseContent(content);
 	return content.trim();
 };
@@ -243,7 +237,7 @@ export const copyToClipboard = async (
 	text: string,
 	html: string | null = null,
 	formatted = false
-) => {
+): Promise<boolean> => {
 	if (formatted) {
 		let styledHtml = '';
 		if (!html) {
@@ -264,8 +258,8 @@ export const copyToClipboard = async (
 			clipboardMarked.use(markedExtension({ throwOnError: false }));
 			clipboardMarked.use({
 				renderer: {
-					code({ text, lang }) {
-						const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+					code({ text, lang }: { text: string; lang?: string }) {
+						const language = lang && hljs.getLanguage(lang) ? lang : 'plaintext';
 						return `<pre><code class="hljs language-${language}">${hljs.highlight(text, { language }).value}</code></pre>`;
 					}
 				}
@@ -407,27 +401,7 @@ export const removeAllDetails = (content: string) => {
 };
 
 export const processDetails = (content: string) => {
-	content = removeDetails(content, ['reasoning', 'web_search']);
-
-	// This regex matches <details> tags with type="tool_calls" and captures their attributes to convert them to a string
-	const detailsRegex = /<details\s+type="tool_calls"([^>]*)>([\s\S]*?)<\/details>/gis;
-	const matches = content.match(detailsRegex);
-	if (matches) {
-		for (const match of matches) {
-			const attributesRegex = /(\w+)="([^"]*)"/g;
-			const attributes: Record<string, string> = {};
-			let attributeMatch;
-			while ((attributeMatch = attributesRegex.exec(match)) !== null) {
-				attributes[attributeMatch[1]] = attributeMatch[2];
-			}
-
-			if (attributes.result) {
-				content = content.replace(match, unescapeHtml(attributes.result));
-			}
-		}
-	}
-
-	return content;
+	return removeDetails(content, ['reasoning', 'web_search']);
 };
 
 export const getTimeRange = (timestamp: number) => {
@@ -523,19 +497,30 @@ export const createMessagesList = (
 	history: { messages: Record<string, any> },
 	messageId: string | null
 ): any[] => {
-	if (messageId === null) {
-		return [];
+	if (messageId === null) return [];
+
+	const messages: any[] = [];
+	const visitedMessageIds = new Set<string>();
+	let currentMessageId: string | null = messageId;
+
+	while (currentMessageId !== null) {
+		if (visitedMessageIds.has(currentMessageId)) {
+			console.warn('Circular dependency detected in message history', currentMessageId);
+			break;
+		}
+
+		visitedMessageIds.add(currentMessageId);
+
+		const currentMessage: Record<string, any> | undefined = history.messages[currentMessageId];
+		if (currentMessage === undefined) {
+			break;
+		}
+
+		messages.push(currentMessage);
+		currentMessageId = currentMessage.parentId ?? null;
 	}
 
-	const message = history.messages[messageId];
-	if (message === undefined) {
-		return [];
-	}
-	if (message?.parentId) {
-		return [...createMessagesList(history, message.parentId), message];
-	} else {
-		return [message];
-	}
+	return messages.reverse();
 };
 
 export const formatFileSize = (size: number | null | undefined) => {

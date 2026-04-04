@@ -14,17 +14,15 @@
 	let selectedIdx = $state(0);
 
 	let fuse = new Fuse(
-		$models
-			.filter((model) => !model?.info?.meta?.hidden)
-			.map((model) => {
-				const _item = {
-					...model,
-					modelName: model?.name,
-					tags: model?.info?.meta?.tags?.map((tag) => tag.name).join(' '),
-					desc: model?.info?.meta?.description
-				};
-				return _item;
-			}),
+		$models.map((model) => {
+			const _item = {
+				...model,
+				modelName: model?.name,
+				tags: model?.info?.meta?.tags?.map((tag) => tag.name).join(' '),
+				desc: model?.info?.meta?.description
+			};
+			return _item;
+		}),
 		{
 			keys: ['value', 'tags', 'modelName'],
 			threshold: 0.5
@@ -36,7 +34,7 @@
 			? fuse.search(query).map((e) => {
 					return e.item;
 				})
-			: $models.filter((model) => !model?.info?.meta?.hidden);
+			: $models;
 	});
 
 	$effect(() => {

@@ -1,180 +1,85 @@
 <script lang="ts">
-	import { getContext, untrack } from 'svelte';
-	const i18n = getContext('i18n');
-
-	import dayjs from '$lib/dayjs';
-	import duration from 'dayjs/plugin/duration';
-	import relativeTime from 'dayjs/plugin/relativeTime';
-
-	dayjs.extend(duration);
-	dayjs.extend(relativeTime);
-
-	async function loadLocale(locales) {
-		if (!locales || !Array.isArray(locales)) {
-			return;
-		}
-		for (const locale of locales) {
-			try {
-				dayjs.locale(locale);
-				break; // Stop after successfully loading the first available locale
-			} catch (error) {
-				console.error(`Could not load locale '${locale}':`, error);
-			}
-		}
-	}
-
-	$effect(() => {
-		const languages = $i18n.languages;
-		untrack(() => loadLocale(languages));
-	});
-
+	import { type Snippet, untrack } from 'svelte';
 	import { slide } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
 
 	import ChevronUp from '../icons/ChevronUp.svelte';
 	import ChevronDown from '../icons/ChevronDown.svelte';
-	import Spinner from './Spinner.svelte';
+
+	interface CollapsibleProps {
+		open?: boolean;
+		className?: string;
+		buttonClassName?: string;
+		chevron?: boolean;
+		disabled?: boolean;
+		onChange?: (open: boolean) => void;
+		children?: Snippet;
+		content?: Snippet;
+	}
 
 	let {
 		open = $bindable(false),
 		className = '',
 		buttonClassName = 'w-fit text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition',
-		id = '',
-		title = null,
-		attributes = null,
 		chevron = false,
-		grow = false,
 		disabled = false,
-		hide = false,
-		onChange = () => {}
-	} = $props();
+		onChange = () => {},
+		children = undefined,
+		content = undefined
+	}: CollapsibleProps = $props();
 
 	$effect(() => {
-		onChange(open);
+		const currentOpen = open;
+		untrack(() => onChange(currentOpen));
 	});
+
+	const toggleOpen = () => {
+		if (!disabled) {
+			open = !open;
+		}
+	};
+
+	const onTriggerKeydown = (event: KeyboardEvent) => {
+		if (event.key !== 'Enter' && event.key !== ' ') {
+			return;
+		}
+
+		event.preventDefault();
+		toggleOpen();
+	};
 </script>
 
-<div {id} class={className}>
-	{#if title !== null}
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div
-			class="{buttonClassName} {disabled ? '' : 'cursor-pointer'}"
-			onpointerup={() => {
-				if (!disabled) {
-					open = !open;
-				}
-			}}
-		>
-			<div
-				class=" w-full font-medium flex items-center justify-between gap-2 {attributes?.done &&
-				attributes?.done !== 'true'
-					? 'shimmer'
-					: ''}
-			"
-			>
-				{#if attributes?.done && attributes?.done !== 'true'}
-					<div>
-						<Spinner className="size-4" />
-					</div>
-				{/if}
+<div class={className}>
+	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+	<div
+		data-collapsible-trigger
+		class="{buttonClassName} {disabled ? '' : 'cursor-pointer'}"
+		role={disabled ? undefined : 'button'}
+		tabindex={disabled ? undefined : 0}
+		aria-expanded={disabled ? undefined : open}
+		onkeydown={onTriggerKeydown}
+		onpointerup={toggleOpen}
+	>
+		<div class="flex items-center justify-between">
+			<div class="min-w-0 flex-1">
+				{@render children?.()}
+			</div>
 
-				<div class="">
-					{#if attributes?.type === 'reasoning'}
-						{@const seconds = parseFloat(attributes?.duration)}
-						{#if attributes?.done === 'true' && seconds > 0}
-							{#if seconds < 60}
-								{$i18n.t('Thought for {{DURATION}} seconds', {
-									DURATION: seconds
-								})}
-							{:else}
-								{$i18n.t('Thought for {{DURATION}}', {
-									DURATION: dayjs.duration(seconds, 'seconds').humanize()
-								})}
-							{/if}
-						{:else if attributes?.done === 'true'}
-							{$i18n.t('Thought shortly')}
-						{:else}
-							{$i18n.t('Thinking...')}
-						{/if}
-					{:else if attributes?.type === 'web_search'}
-						{#if attributes?.done === 'true'}
-							{#if attributes?.action === 'open_page'}
-								{$i18n.t('Opened')} "{attributes?.url || ''}"
-							{:else if attributes?.action === 'find_in_page'}
-								{$i18n.t('Looked for')} "{attributes?.pattern || ''}" on {attributes?.url || ''}
-							{:else}
-								{$i18n.t('Searched')} "{attributes?.query || ''}"
-							{/if}
-						{:else}
-							{$i18n.t('Searching...')}
-						{/if}
+			{#if chevron && !disabled}
+				<div class="flex self-center translate-y-[1px]">
+					{#if open}
+						<ChevronUp strokeWidth="3.5" className="size-3.5" />
 					{:else}
-						{title}
+						<ChevronDown strokeWidth="3.5" className="size-3.5" />
 					{/if}
 				</div>
-
-				{#if !disabled}
-					<div class="flex self-center translate-y-[1px]">
-						{#if open}
-							<ChevronUp strokeWidth="3.5" className="size-3.5" />
-						{:else}
-							<ChevronDown strokeWidth="3.5" className="size-3.5" />
-						{/if}
-					</div>
-				{/if}
-			</div>
+			{/if}
 		</div>
-	{:else}
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
-		<div
-			class="{buttonClassName} cursor-pointer"
-			onclick={(e) => {
-				e.stopPropagation();
-			}}
-			onpointerup={() => {
-				if (!disabled) {
-					open = !open;
-				}
-			}}
-		>
-			<div>
-				<div class="flex items-start justify-between">
-					<slot />
+	</div>
 
-					{#if chevron}
-						<div class="flex self-start translate-y-1">
-							{#if open}
-								<ChevronUp strokeWidth="3.5" className="size-3.5" />
-							{:else}
-								<ChevronDown strokeWidth="3.5" className="size-3.5" />
-							{/if}
-						</div>
-					{/if}
-				</div>
-
-				{#if grow}
-					{#if open && !hide}
-						<div
-							transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}
-							onpointerup={() => {
-								e.stopPropagation();
-							}}
-						>
-							<slot name="content" />
-						</div>
-					{/if}
-				{/if}
-			</div>
+	{#if open}
+		<div transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}>
+			{@render content?.()}
 		</div>
-	{/if}
-
-	{#if !grow}
-		{#if open && !hide}
-			<div transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}>
-				<slot name="content" />
-			</div>
-		{/if}
 	{/if}
 </div>

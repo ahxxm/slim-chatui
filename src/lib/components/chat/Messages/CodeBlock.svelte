@@ -1,4 +1,4 @@
-<script lang="ts" context="module">
+<script lang="ts" module>
 	import type HljsType from 'highlight.js';
 
 	let hljsPromise: Promise<typeof HljsType> | null = null;
@@ -14,7 +14,7 @@
 </script>
 
 <script lang="ts">
-	import { onMount, getContext } from 'svelte';
+	import { getContext } from 'svelte';
 
 	import { copyToClipboard } from '$lib/utils';
 
@@ -22,34 +22,86 @@
 
 	const i18n = getContext('i18n');
 
+	interface CodeBlockProps {
+		id?: string;
+		edit?: boolean;
+		onSave?: (value: string) => void;
+		save?: boolean;
+		collapsed?: boolean;
+		done?: boolean;
+		lang?: string;
+		code?: string;
+		className?: string;
+		editorClassName?: string;
+		stickyButtonsClassName?: string;
+	}
+
 	let {
 		id = '',
 		edit = true,
-		onSave = (e) => {},
+		onSave = (_value: string) => {},
 		save = false,
 		collapsed = false,
+		done = true,
 		lang = '',
 		code = '',
 		className = '',
 		editorClassName = '',
 		stickyButtonsClassName = 'top-0'
-	} = $props();
+	}: CodeBlockProps = $props();
 
-	let _code = $state(code);
+	let _code = $state('');
+	let editing = $state(false);
+	let canEdit = $derived(edit && save);
+
 	$effect(() => {
-		_code = code;
+		if (!editing) {
+			_code = code;
+		}
 	});
 
 	let hljs: typeof HljsType | null = $state(null);
-	onMount(async () => {
-		hljs = await getHljs();
+
+	$effect(() => {
+		if (editing || collapsed || hljs) return;
+
+		let cancelled = false;
+		getHljs().then((instance) => {
+			if (!cancelled) {
+				hljs = instance;
+			}
+		});
+
+		return () => {
+			cancelled = true;
+		};
 	});
 
 	let copied = $state(false);
 	let saved = $state(false);
 
+	$effect(() => {
+		if (!canEdit && editing) {
+			editing = false;
+			_code = code;
+		}
+	});
+
 	const collapseCodeBlock = () => {
 		collapsed = !collapsed;
+	};
+
+	const startEditing = () => {
+		saved = false;
+		_code = code;
+		collapsed = false;
+		editing = true;
+	};
+
+	const cancelEditing = () => {
+		saved = false;
+		_code = code;
+		editing = false;
 	};
 
 	const saveCode = () => {
@@ -65,7 +117,7 @@
 
 	const copyCode = async () => {
 		copied = true;
-		await copyToClipboard(_code);
+		await copyToClipboard(editing ? _code : code);
 
 		setTimeout(() => {
 			copied = false;
@@ -101,13 +153,29 @@
 					</div>
 				</button>
 
-				{#if save}
-					<button
-						class="save-code-button bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
-						onclick={saveCode}
-					>
-						{saved ? $i18n.t('Saved') : $i18n.t('Save')}
-					</button>
+				{#if canEdit}
+					{#if editing}
+						<button
+							class="bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
+							onclick={cancelEditing}
+						>
+							{$i18n.t('Cancel')}
+						</button>
+
+						<button
+							class="save-code-button bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
+							onclick={saveCode}
+						>
+							{saved ? $i18n.t('Saved') : $i18n.t('Save')}
+						</button>
+					{:else}
+						<button
+							class="bg-none border-none transition rounded-md px-1.5 py-0.5 bg-white dark:bg-black"
+							onclick={startEditing}
+						>
+							{$i18n.t('Edit')}
+						</button>
+					{/if}
 				{/if}
 
 				<button
@@ -125,16 +193,16 @@
 			<div class=" pt-6.5 bg-white dark:bg-black"></div>
 
 			{#if !collapsed}
-				{#if edit}
+				{#if editing}
 					{#await import('$lib/components/common/CodeEditor.svelte') then { default: CodeEditor }}
 						<CodeEditor
-							value={code}
+							value={_code}
 							{id}
 							{lang}
 							onSave={() => {
 								saveCode();
 							}}
-							onChange={(value) => {
+							onChange={(value: string) => {
 								_code = value;
 							}}
 						/>
@@ -142,12 +210,16 @@
 				{:else}
 					<pre
 						class=" hljs p-4 px-5 overflow-x-auto"
-						style="border-top-left-radius: 0px; border-top-right-radius: 0px;"><code
-							class="language-{lang} rounded-t-none whitespace-pre text-sm"
-							>{@html hljs
-								? hljs.highlightAuto(code, hljs.getLanguage(lang)?.aliases).value || code
-								: code}</code
-						></pre>
+						style="border-top-left-radius: 0px; border-top-right-radius: 0px;">
+						{#if done && hljs}
+							<code class="language-{lang} rounded-t-none whitespace-pre text-sm"
+								>{@html hljs.highlightAuto(code, hljs.getLanguage(lang)?.aliases).value ||
+									code}</code
+							>
+						{:else}
+							<code class="language-{lang} rounded-t-none whitespace-pre text-sm">{code}</code>
+						{/if}
+					</pre>
 				{/if}
 			{:else}
 				<div

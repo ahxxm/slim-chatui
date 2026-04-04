@@ -6,6 +6,7 @@
 	import Collapsible from './Collapsible.svelte';
 	import Tooltip from './Tooltip.svelte';
 	import Plus from '../icons/Plus.svelte';
+	import { stopCollapsibleTriggerPropagation } from '$lib/utils/stop-collapsible-trigger-propagation';
 
 	let {
 		open = $bindable(true),
@@ -94,7 +95,7 @@
 	});
 </script>
 
-<div bind:this={folderElement} class="relative {className}">
+<div bind:this={folderElement} use:stopCollapsibleTriggerPropagation class="relative {className}">
 	{#if loaded}
 		{#if draggedOver}
 			<div
@@ -112,7 +113,7 @@
 					localStorage.setItem(`${id}-folder-state`, `${state}`);
 				}}
 			>
-				<!-- svelte-ignore a11y-no-static-element-interactions -->
+				<!-- svelte-ignore a11y_no_static_element_interactions -->
 				<div
 					id="sidebar-folder-button"
 					class=" w-full group rounded-xl relative flex items-center justify-between hover:bg-gray-100 dark:hover:bg-gray-900 transition {buttonClassName}"
@@ -134,31 +135,33 @@
 					</button>
 
 					{#if onAdd}
-						<button
+						<div
 							class="absolute z-10 right-2 invisible group-hover:visible self-center flex items-center dark:text-gray-300"
 							onpointerup={(e) => {
 								e.stopPropagation();
 							}}
-							onclick={(e) => {
-								e.stopPropagation();
-								onAdd();
-							}}
 						>
 							<Tooltip content={onAddLabel}>
 								<button
+									type="button"
 									class="p-0.5 dark:hover:bg-gray-850 rounded-lg touch-auto"
-									onclick={() => {}}
+									onclick={(e) => {
+										e.stopPropagation();
+										onAdd();
+									}}
 								>
 									<Plus className=" size-3" strokeWidth="2.5" />
 								</button>
 							</Tooltip>
-						</button>
+						</div>
 					{/if}
 				</div>
 
-				<div slot="content" class="w-full">
-					{@render children?.()}
-				</div>
+				{#snippet content()}
+					<div class="w-full">
+						{@render children?.()}
+					</div>
+				{/snippet}
 			</Collapsible>
 		{:else}
 			{@render children?.()}

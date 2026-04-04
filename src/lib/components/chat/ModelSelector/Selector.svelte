@@ -22,8 +22,6 @@
 	let show = $state(false);
 
 	let selectedModel = $derived(items.find((item) => item.value === value));
-
-	let visibleItems = $derived(items.filter((item) => !(item.model?.info?.meta?.hidden ?? false)));
 </script>
 
 <DropdownMenu.Root bind:open={show}>
@@ -66,7 +64,7 @@
 			onCloseAutoFocus={(e) => e.preventDefault()}
 		>
 			<div class="px-2.5">
-				{#if visibleItems.length === 0}
+				{#if items.length === 0}
 					{#if items.length === 0 && $user?.role === 'admin'}
 						<div class="flex flex-col items-start justify-center py-6 px-4 text-start">
 							<div class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
@@ -92,7 +90,7 @@
 					{/if}
 				{:else}
 					<div class="max-h-64 overflow-y-auto py-1">
-						{#each visibleItems as item (item.value)}
+						{#each items as item (item.value)}
 							<DropdownMenu.Item
 								class="flex w-full items-center rounded-xl py-2 pl-3 pr-2 text-sm text-gray-700 dark:text-gray-100 outline-hidden hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer {value ===
 								item.value

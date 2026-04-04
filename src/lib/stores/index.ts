@@ -5,8 +5,6 @@ import type { ChatListItem, FolderItem } from '$lib/types';
 import type { Socket } from 'socket.io-client';
 import { getChatList } from '$lib/apis/chats';
 
-import emojiShortCodes from '$lib/emoji-shortcodes.json';
-
 // Backend
 export const WEBUI_NAME = writable(APP_NAME);
 
@@ -19,26 +17,6 @@ export const mobile = writable(false);
 export const socket: Writable<null | Socket> = writable(null);
 export const activeChatIds: Writable<Set<string>> = writable(new Set());
 export const theme = writable('system');
-
-export const shortCodesToEmojis = writable(
-	Object.entries(emojiShortCodes).reduce(
-		(acc, [key, value]) => {
-			if (typeof value === 'string') {
-				acc[value] = key;
-			} else {
-				for (const v of value) {
-					acc[v] = key;
-				}
-			}
-			return acc;
-		},
-		{} as Record<string, string>
-	)
-);
-
-export function codePointToEmoji(hex: string): string {
-	return String.fromCodePoint(...hex.split('-').map((cp) => parseInt(cp, 16)));
-}
 
 export const chatId = writable('');
 export const chatTitle = writable('');
@@ -65,14 +43,16 @@ export const currentChatPage = writable(1);
 
 export const PAGE_SIZE = 60;
 
-/** Refetch pages 1..currentChatPage, stopping early on a short page.
- *  Deflates currentChatPage to the actual last page with data.
- *  Returns true if all data was loaded (last fetched page was short). */
-export async function refreshChatList(token: string, signal?: AbortSignal): Promise<boolean> {
+let activeRefreshChatList: Promise<boolean> | null = null;
+let queuedRefreshChatList = false;
+let queuedRefreshToken: string | null = null;
+
+const runRefreshChatList = async (token: string, signal?: AbortSignal): Promise<boolean> => {
 	const throughPage = get(currentChatPage);
 	const allChats: ChatListItem[] = [];
 	let lastPage = 0;
 	let allLoaded = false;
+
 	for (let p = 1; p <= throughPage; p++) {
 		const batch = await getChatList(token, p);
 		if (signal?.aborted) return false;
@@ -83,9 +63,44 @@ export async function refreshChatList(token: string, signal?: AbortSignal): Prom
 			break;
 		}
 	}
+
 	chats.set(allChats);
 	currentChatPage.set(lastPage || 1);
 	return allLoaded;
+};
+
+/** Refetch pages 1..currentChatPage, stopping early on a short page.
+ *  Deflates currentChatPage to the actual last page with data.
+ *  Returns true if all data was loaded (last fetched page was short). */
+export async function refreshChatList(token: string, signal?: AbortSignal): Promise<boolean> {
+	if (signal) {
+		return runRefreshChatList(token, signal);
+	}
+
+	queuedRefreshToken = token;
+
+	if (activeRefreshChatList) {
+		queuedRefreshChatList = true;
+		return activeRefreshChatList;
+	}
+
+	activeRefreshChatList = (async () => {
+		let allLoaded = await runRefreshChatList(queuedRefreshToken ?? token);
+
+		while (queuedRefreshChatList) {
+			queuedRefreshChatList = false;
+			allLoaded = await runRefreshChatList(queuedRefreshToken ?? token);
+		}
+
+		return allLoaded;
+	})();
+
+	try {
+		return await activeRefreshChatList;
+	} finally {
+		activeRefreshChatList = null;
+		queuedRefreshChatList = false;
+	}
 }
 
 export const isLastActiveTab = writable(true);
@@ -99,8 +114,6 @@ export type Model = {
 };
 
 type Settings = {
-	pinnedModels?: never[];
-
 	collapseCodeBlocks?: boolean;
 	expandDetails?: boolean;
 	notificationSound?: boolean;
