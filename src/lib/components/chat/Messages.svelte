@@ -5,6 +5,7 @@
 
 	import { toast } from 'svelte-sonner';
 	import { updateChatById } from '$lib/apis/chats';
+	import { createMessagesList } from '$lib/utils';
 
 	import Message from './Messages/Message.svelte';
 	import Loader from '../common/Loader.svelte';
@@ -38,25 +39,26 @@
 		scrollToBottom = () => {}
 	} = $props();
 
-	let messages: any[] = $derived.by(() => {
+	let messageIds: string[] = $derived.by(() => {
 		if (!history.currentId) return [];
 
-		let _messages = [];
+		let ids: string[] = [];
 		let message = history.messages[history.currentId];
 		const visitedMessageIds = new Set();
 
-		while (message && (messagesCount !== null ? _messages.length <= messagesCount : true)) {
+		while (message && (messagesCount !== null ? ids.length <= messagesCount : true)) {
 			if (visitedMessageIds.has(message.id)) {
 				console.warn('Circular dependency detected in message history', message.id);
 				break;
 			}
 			visitedMessageIds.add(message.id);
-			_messages.push({ ...message });
+			ids.push(message.id);
 			message = message.parentId !== null ? history.messages[message.parentId] : null;
 		}
 
-		return _messages.reverse();
+		return ids.reverse();
 	});
+	let firstMessage = $derived(messageIds.length > 0 ? history.messages[messageIds[0]] : null);
 	let messagesLoading = $state(false);
 
 	const loadMoreMessages = async () => {
@@ -82,7 +84,7 @@
 			await tick();
 			await updateChatById(localStorage.token, chatId, {
 				history: history,
-				messages: messages
+				messages: createMessagesList(history, history.currentId)
 			});
 
 			await refreshChatList(localStorage.token);
@@ -278,7 +280,7 @@
 			{#key chatId}
 				<section class="w-full" aria-labelledby="chat-conversation">
 					<h2 class="sr-only" id="chat-conversation">{$i18n.t('Chat Conversation')}</h2>
-					{#if messages.at(0)?.parentId !== null}
+					{#if firstMessage?.parentId !== null}
 						<Loader
 							onvisible={() => {
 								console.log('visible');
@@ -294,12 +296,12 @@
 						</Loader>
 					{/if}
 					<ul role="log" aria-live="polite" aria-relevant="additions" aria-atomic="false">
-						{#each messages as message, messageIdx (message.id)}
+						{#each messageIds as messageId, messageIdx (messageId)}
 							<Message
 								{chatId}
 								bind:history
 								{streamingMessages}
-								messageId={message.id}
+								{messageId}
 								idx={messageIdx}
 								{user}
 								{setInputText}

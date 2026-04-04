@@ -7,25 +7,45 @@
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 
 	import emojiGroups from '$lib/emoji-groups.json';
-	import emojiShortCodes from '$lib/emoji-shortcodes.json';
-
-	import { codePointToEmoji } from '$lib/stores';
+	import type { EmojiShortCodeMap } from '$lib/utils/emoji';
+	import { codePointToEmoji, emojiShortCodes } from '$lib/utils/emoji';
 
 	const i18n = getContext('i18n');
 
-	let { onClose = () => {}, onSubmit = (name) => {}, side = 'top', align = 'start' } = $props();
+	type DropdownSide = 'top' | 'bottom' | 'left' | 'right';
+	type DropdownAlign = 'start' | 'center' | 'end';
+	type EmojiGroupMap = Record<string, string[]>;
+	type EmojiSearchIndex = EmojiShortCodeMap;
+	type EmojiRowGroup = { type: 'group'; label: string };
+	type EmojiRowEmoji = { type: 'emoji'; name: string; shortCodes: string[] };
+	type EmojiRowItem = EmojiRowGroup | EmojiRowEmoji;
+	type EmojiRow = EmojiRowItem[];
+
+	const groupedEmojis: EmojiGroupMap = emojiGroups;
+
+	let {
+		onClose = () => {},
+		onSubmit = (_name: string) => {},
+		side = 'top',
+		align = 'start'
+	}: {
+		onClose?: () => void;
+		onSubmit?: (name: string) => void;
+		side?: DropdownSide;
+		align?: DropdownAlign;
+	} = $props();
 
 	let show = $state(false);
 	let search = $state('');
 
-	let emojis = $derived.by(() => {
+	let emojis: EmojiSearchIndex = $derived.by(() => {
 		if (search) {
-			return Object.keys(emojiShortCodes).reduce((acc, key) => {
+			return Object.keys(emojiShortCodes).reduce<EmojiSearchIndex>((acc, key) => {
 				if (key.includes(search.toLowerCase())) {
 					acc[key] = emojiShortCodes[key];
 				} else {
 					if (Array.isArray(emojiShortCodes[key])) {
-						const filtered = emojiShortCodes[key].filter((emoji) =>
+						const filtered = emojiShortCodes[key].filter((emoji: string) =>
 							emoji.includes(search.toLowerCase())
 						);
 						if (filtered.length) {
@@ -44,26 +64,28 @@
 		}
 	});
 
-	let emojiRows = $derived.by(() => {
-		let flattenedEmojis = [];
-		Object.keys(emojiGroups).forEach((group) => {
-			const groupEmojis = emojiGroups[group].filter((emoji) => emojis[emoji]);
+	let emojiRows: EmojiRow[] = $derived.by(() => {
+		let flattenedEmojis: EmojiRowItem[] = [];
+		Object.keys(groupedEmojis).forEach((group) => {
+			const groupEmojis = groupedEmojis[group].filter((emoji: string) => emojis[emoji]);
 			if (groupEmojis.length > 0) {
 				flattenedEmojis.push({ type: 'group', label: group });
 				flattenedEmojis.push(
-					...groupEmojis.map((emoji) => ({
-						type: 'emoji',
-						name: emoji,
-						shortCodes:
-							typeof emojiShortCodes[emoji] === 'string'
-								? [emojiShortCodes[emoji]]
-								: emojiShortCodes[emoji]
-					}))
+					...groupEmojis.map(
+						(emoji: string): EmojiRowEmoji => ({
+							type: 'emoji',
+							name: emoji,
+							shortCodes:
+								typeof emojiShortCodes[emoji] === 'string'
+									? [emojiShortCodes[emoji]]
+									: emojiShortCodes[emoji]
+						})
+					)
 				);
 			}
 		});
-		let rows = [];
-		let currentRow = [];
+		let rows: EmojiRow[] = [];
+		let currentRow: EmojiRowItem[] = [];
 		flattenedEmojis.forEach((item) => {
 			if (item.type === 'emoji') {
 				currentRow.push(item);
@@ -86,11 +108,14 @@
 	});
 	const ROW_HEIGHT = 48; // Approximate height for a row with multiple emojis
 	// Handle emoji selection
-	function selectEmoji(emoji) {
+	function selectEmoji(emoji: EmojiRowEmoji) {
 		const selectedCode = emoji.shortCodes[0];
 		onSubmit(selectedCode);
 		show = false;
 	}
+
+	const formatShortCodes = (shortCodes: string[]) =>
+		shortCodes.map((code) => `:${code}:`).join(', ');
 </script>
 
 <DropdownMenu.Root
@@ -145,10 +170,7 @@
 									<!-- Render emojis in a row -->
 									<div class="flex items-center gap-1.5 w-full">
 										{#each item as emojiItem}
-											<Tooltip
-												content={emojiItem.shortCodes.map((code) => `:${code}:`).join(', ')}
-												placement="top"
-											>
+											<Tooltip content={formatShortCodes(emojiItem.shortCodes)} placement="top">
 												<button
 													class="p-1.5 rounded-lg cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 transition"
 													onclick={() => selectEmoji(emojiItem)}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { getContext, onDestroy, onMount, tick, untrack } from 'svelte';
+	import { getContext, onDestroy, onMount, tick, type ComponentType, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import Modal from '$lib/components/common/Modal.svelte';
@@ -13,17 +13,42 @@
 	import calendar from 'dayjs/plugin/calendar';
 	import Loader from '../common/Loader.svelte';
 	import { createMessagesList } from '$lib/utils';
-	import { user, PAGE_SIZE } from '$lib/stores';
-	import Messages from '../chat/Messages.svelte';
+	import { toPreviewText } from '$lib/utils/preview-text';
+	import { PAGE_SIZE } from '$lib/stores';
 	import { goto } from '$app/navigation';
 	import PencilSquare from '../icons/PencilSquare.svelte';
+	import type { ChatListItem } from '$lib/types';
 	dayjs.extend(calendar);
 	dayjs.extend(localizedFormat);
+
+	type SearchAction = {
+		label: string;
+		onClick: () => Promise<void>;
+		icon: ComponentType;
+	};
+
+	type ChatPreviewMessage = {
+		id: string;
+		role: string;
+		modelName?: string;
+		text: string;
+	};
+
+	type ChatPreviewHistory = {
+		messages: Record<string, any>;
+		currentId: string | null;
+	};
+
+	type ChatPreviewResponse = {
+		chat?: {
+			history?: ChatPreviewHistory | null;
+		} | null;
+	};
 
 	let { show = $bindable(false), onClose = () => {} }: { show?: boolean; onClose?: () => void } =
 		$props();
 
-	let actions = [
+	let actions: SearchAction[] = [
 		{
 			label: $i18n.t('Start a new conversation'),
 			onClick: async () => {
@@ -38,75 +63,106 @@
 	let query = $state('');
 	let page = $state(1);
 
-	let chatList: any[] | null = $state(null);
+	let chatList = $state<ChatListItem[] | null>(null);
 
 	let chatListLoading = $state(false);
 	let allChatsLoaded = $state(false);
 
-	let searchDebounceTimeout;
+	let searchDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
-	let selectedIdx = $state(null);
-	let selectedChat: { id: string; [key: string]: any } | null = $state(null);
+	let selectedIdx = $state<number | null>(null);
+	let previewMessages = $state<ChatPreviewMessage[] | null>(null);
+	let previewLoading = $state(false);
+	let previewRequestId = 0;
 
-	let selectedModels = $state(['']);
-	let history = $state(null);
-	let messages = $state(null);
+	const getSearchInput = () => document.getElementById('search-input') as HTMLInputElement | null;
+	const getSelectedItem = () => document.querySelector<HTMLElement>(`[data-arrow-selected="true"]`);
+	const getMaxSelectableIndex = () => Math.max(actions.length + (chatList?.length ?? 0) - 1, 0);
+	const getNextSelectedIdx = (offset: number) => {
+		const baseIndex = selectedIdx ?? (offset > 0 ? -1 : 0);
+		return Math.min(Math.max(baseIndex + offset, 0), getMaxSelectableIndex());
+	};
+	const scrollSelectedItemIntoView = () => {
+		getSelectedItem()?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+	};
+	const clearSearchDebounce = () => {
+		if (searchDebounceTimeout) {
+			clearTimeout(searchDebounceTimeout);
+			searchDebounceTimeout = null;
+		}
+	};
+	const loadChatPage = async (searchQuery: string, pageNumber: number): Promise<ChatListItem[]> => {
+		if (searchQuery) {
+			return await getChatListBySearchText(localStorage.token, searchQuery, pageNumber);
+		}
+
+		return await getChatList(localStorage.token, pageNumber);
+	};
+	const buildPreviewMessages = (chat: ChatPreviewResponse): ChatPreviewMessage[] => {
+		const history = chat.chat?.history;
+		if (!history) {
+			return [];
+		}
+
+		return createMessagesList(history, history.currentId)
+			.slice(-12)
+			.map((message) => ({
+				id: message.id,
+				role: message.role,
+				modelName: message.modelName,
+				text: toPreviewText(message.merged?.content ?? message.content ?? '')
+			}));
+	};
 
 	$effect(() => {
 		if (!chatListLoading && chatList) {
+			if (selectedIdx === null && chatList.length > 0) {
+				selectedIdx = actions.length;
+			}
 			untrack(() => loadChatPreview(selectedIdx));
 		}
 	});
 
-	const loadChatPreview = async (selectedIdx) => {
+	const loadChatPreview = async (selectedIdx: number | null) => {
 		if (!chatList || chatList.length === 0 || selectedIdx === null) {
-			selectedChat = null;
-			messages = null;
-			history = null;
-			selectedModels = [''];
+			previewMessages = null;
+			previewLoading = false;
 			return;
 		}
 
 		const selectedChatIdx = selectedIdx - actions.length;
 		if (selectedChatIdx < 0 || selectedChatIdx >= chatList.length) {
-			selectedChat = null;
-			messages = null;
-			history = null;
-			selectedModels = [''];
+			previewMessages = null;
+			previewLoading = false;
 			return;
 		}
 
 		const chatId = chatList[selectedChatIdx].id;
+		const requestId = ++previewRequestId;
+		previewLoading = true;
 
 		const chat = await getChatById(localStorage.token, chatId).catch(() => null);
 
+		if (requestId !== previewRequestId) {
+			return;
+		}
+
 		if (chat) {
-			if (chat?.chat?.history) {
-				selectedModels =
-					(chat?.chat?.models ?? undefined) !== undefined
-						? chat?.chat?.models
-						: [chat?.chat?.models ?? ''];
+			previewMessages = chat.chat?.history ? buildPreviewMessages(chat) : [];
 
-				history = chat?.chat?.history;
-				messages = createMessagesList(chat?.chat?.history, chat?.chat?.history?.currentId);
-
-				// scroll to the bottom of the messages container
-				await tick();
-				const messagesContainerElement = document.getElementById('chat-preview');
-				if (messagesContainerElement) {
-					messagesContainerElement.scrollTop = messagesContainerElement.scrollHeight;
-				}
-			} else {
-				messages = [];
+			await tick();
+			const messagesContainerElement = document.getElementById('chat-preview');
+			if (messagesContainerElement) {
+				messagesContainerElement.scrollTop = messagesContainerElement.scrollHeight;
 			}
 		} else {
 			toast.error($i18n.t('Failed to load chat preview'));
-			selectedChat = null;
-			messages = null;
-			history = null;
-			selectedModels = [''];
+			previewMessages = null;
+			previewLoading = false;
 			return;
 		}
+
+		previewLoading = false;
 	};
 
 	const searchHandler = async () => {
@@ -114,46 +170,47 @@
 			return;
 		}
 
-		if (searchDebounceTimeout) {
-			clearTimeout(searchDebounceTimeout);
-		}
+		clearSearchDebounce();
 
 		page = 1;
 		chatList = null;
-		if (query === '') {
-			chatList = await getChatList(localStorage.token, page);
-		} else {
-			searchDebounceTimeout = setTimeout(async () => {
-				chatList = await getChatListBySearchText(localStorage.token, query, page);
+		selectedIdx = null;
+		allChatsLoaded = false;
+		previewMessages = null;
+		previewLoading = false;
 
-				allChatsLoaded = (chatList ?? []).length < PAGE_SIZE;
-			}, 500);
+		if (query === '') {
+			const nextChatList = await loadChatPage('', 1);
+			chatList = nextChatList;
+			allChatsLoaded = nextChatList.length < PAGE_SIZE;
+			return;
 		}
 
-		selectedChat = null;
-		messages = null;
-		history = null;
-		selectedModels = [''];
+		const nextQuery = query;
+		searchDebounceTimeout = setTimeout(async () => {
+			if (!show) {
+				searchDebounceTimeout = null;
+				return;
+			}
 
-		allChatsLoaded = (chatList ?? []).length < PAGE_SIZE;
+			const nextChatList = await loadChatPage(nextQuery, 1);
+			chatList = nextChatList;
+			allChatsLoaded = nextChatList.length < PAGE_SIZE;
+			searchDebounceTimeout = null;
+		}, 500);
 	};
 
 	const loadMoreChats = async () => {
 		chatListLoading = true;
-		page += 1;
+		const nextPage = page + 1;
+		page = nextPage;
 
-		let newChatList = [];
-
-		if (query) {
-			newChatList = await getChatListBySearchText(localStorage.token, query, page);
-		} else {
-			newChatList = await getChatList(localStorage.token, page);
-		}
+		const newChatList = await loadChatPage(query, nextPage);
 
 		allChatsLoaded = newChatList.length < PAGE_SIZE;
 
 		if (newChatList.length > 0) {
-			chatList = [...chatList, ...newChatList];
+			chatList = [...(chatList ?? []), ...newChatList];
 		}
 
 		chatListLoading = false;
@@ -165,7 +222,7 @@
 		}
 	});
 
-	const onKeyDown = (e) => {
+	const onKeyDown = (e: KeyboardEvent) => {
 		const searchOptions = document.getElementById('search-options-container');
 		if (searchOptions || !show) {
 			return;
@@ -175,15 +232,15 @@
 			show = false;
 			onClose();
 		} else if (e.code === 'Enter') {
-			const item = document.querySelector(`[data-arrow-selected="true"]`);
+			const item = getSelectedItem();
 			if (item) {
-				item?.click();
+				item.click();
 				show = false;
 			}
 
 			return;
 		} else if (e.code === 'ArrowDown') {
-			const searchInput = document.getElementById('search-input');
+			const searchInput = getSearchInput();
 
 			if (searchInput) {
 				// check if focused on the search input
@@ -194,10 +251,10 @@
 				}
 			}
 
-			selectedIdx = Math.min(selectedIdx + 1, (chatList ?? []).length - 1 + actions.length);
+			selectedIdx = getNextSelectedIdx(1);
 		} else if (e.code === 'ArrowUp') {
 			if (selectedIdx === 0) {
-				const searchInput = document.getElementById('search-input');
+				const searchInput = getSearchInput();
 
 				if (searchInput) {
 					// check if focused on the search input
@@ -209,11 +266,10 @@
 				}
 			}
 
-			selectedIdx = Math.max(selectedIdx - 1, 0);
+			selectedIdx = getNextSelectedIdx(-1);
 		}
 
-		const item = document.querySelector(`[data-arrow-selected="true"]`);
-		item?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+		scrollSelectedItemIntoView();
 	};
 
 	onMount(() => {
@@ -221,9 +277,7 @@
 	});
 
 	onDestroy(() => {
-		if (searchDebounceTimeout) {
-			clearTimeout(searchDebounceTimeout);
-		}
+		clearSearchDebounce();
 		document.removeEventListener('keydown', onKeyDown);
 	});
 </script>
@@ -236,31 +290,24 @@
 				onSearchInput={searchHandler}
 				placeholder={$i18n.t('Search')}
 				showClearButton={true}
-				onFocus={() => {
-					selectedIdx = null;
-					messages = null;
-				}}
-				onKeydown={(e) => {
-					console.log('e', e);
-
+				onKeydown={(e: KeyboardEvent) => {
 					if (e.code === 'Enter' && (chatList ?? []).length > 0) {
-						const item = document.querySelector(`[data-arrow-selected="true"]`);
+						const item = getSelectedItem();
 						if (item) {
-							item?.click();
+							item.click();
 						}
 
 						show = false;
 						return;
 					} else if (e.code === 'ArrowDown') {
-						selectedIdx = Math.min(selectedIdx + 1, (chatList ?? []).length - 1 + actions.length);
+						selectedIdx = getNextSelectedIdx(1);
 					} else if (e.code === 'ArrowUp') {
-						selectedIdx = Math.max(selectedIdx - 1, 0);
+						selectedIdx = getNextSelectedIdx(-1);
 					} else {
 						selectedIdx = 0;
 					}
 
-					const item = document.querySelector(`[data-arrow-selected="true"]`);
-					item?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: 'instant' });
+					scrollSelectedItemIntoView();
 				}}
 			/>
 		</div>
@@ -282,7 +329,7 @@
 							? 'bg-gray-50 dark:bg-gray-850'
 							: ''}"
 						data-arrow-selected={selectedIdx === idx ? 'true' : undefined}
-						dragabble="false"
+						draggable="false"
 						onmouseenter={() => {
 							selectedIdx = idx;
 						}}
@@ -291,7 +338,7 @@
 						}}
 					>
 						<div class="pr-2">
-							<svelte:component this={action.icon} />
+							<action.icon />
 						</div>
 						<div class=" flex-1 text-left">
 							<div class="text-ellipsis line-clamp-1 w-full">
@@ -312,12 +359,13 @@
 
 					{#each chatList as chat, idx (chat.id)}
 						{#if idx === 0 || (idx > 0 && chat.time_range !== chatList[idx - 1].time_range)}
+							{@const timeRange = chat.time_range ?? ''}
 							<div
 								class="w-full text-xs text-gray-500 dark:text-gray-500 font-medium {idx === 0
 									? ''
 									: 'pt-5'} pb-2 px-2"
 							>
-								{$i18n.t(chat.time_range)}
+								{$i18n.t(timeRange)}
 								<!-- localisation keys for time_range to be recognized from the i18next parser (so they don't get automatically removed):
 							{$i18n.t('Today')}
 							{$i18n.t('Yesterday')}
@@ -401,27 +449,42 @@
 				id="chat-preview"
 				class="hidden md:flex md:flex-1 w-full overflow-y-auto h-96 md:h-[40rem] scrollbar-hidden"
 			>
-				{#if messages === null}
+				{#if previewLoading}
+					<div class="w-full h-full flex justify-center items-center">
+						<Spinner className="size-5" />
+					</div>
+				{:else if previewMessages === null}
 					<div
 						class="w-full h-full flex justify-center items-center text-gray-500 dark:text-gray-400 text-sm"
 					>
 						{$i18n.t('Select a conversation to preview')}
 					</div>
 				{:else}
-					<div class="w-full h-full flex flex-col">
-						<Messages
-							className="h-full flex pt-4 pb-8 w-full"
-							chatId={`chat-preview-${selectedChat?.id ?? ''}`}
-							user={$user}
-							readOnly={true}
-							{selectedModels}
-							bind:history
-							bind:messages
-							autoScroll={true}
-							sendMessage={() => {}}
-							continueResponse={() => {}}
-							regenerateResponse={() => {}}
-						/>
+					<div class="w-full h-full flex flex-col gap-2 pr-2 py-1">
+						{#if previewMessages.length === 0}
+							<div
+								class="w-full h-full flex justify-center items-center text-gray-500 dark:text-gray-400 text-sm"
+							>
+								{$i18n.t('No messages')}
+							</div>
+						{:else}
+							{#each previewMessages as message (message.id)}
+								<div
+									class="rounded-2xl border border-gray-100 bg-white px-3 py-2 text-sm dark:border-gray-800 dark:bg-gray-900"
+								>
+									<div class="text-[11px] font-medium text-gray-500 dark:text-gray-400">
+										{message.role === 'user'
+											? $i18n.t('You')
+											: message.modelName || $i18n.t('Assistant')}
+									</div>
+									<div
+										class="mt-1 whitespace-pre-wrap break-words text-gray-700 dark:text-gray-200"
+									>
+										{message.text || $i18n.t('No text content')}
+									</div>
+								</div>
+							{/each}
+						{/if}
 					</div>
 				{/if}
 			</div>

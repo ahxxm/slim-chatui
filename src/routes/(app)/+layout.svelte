@@ -17,7 +17,6 @@
 	import { Shortcut, shortcuts } from '$lib/shortcuts';
 
 	import Sidebar from '$lib/components/layout/Sidebar.svelte';
-	import SettingsModal from '$lib/components/chat/SettingsModal.svelte';
 	import AccountPending from '$lib/components/layout/Overlay/AccountPending.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
@@ -25,6 +24,15 @@
 
 	let loaded = $state(false);
 	let keydownHandler: ((event: KeyboardEvent) => void) | null = null;
+	let SettingsModalComponent = $state<any>(null);
+
+	const loadSettingsModal = async () => {
+		if (SettingsModalComponent) return;
+
+		const { default: SettingsModal } = await import('$lib/components/chat/SettingsModal.svelte');
+		SettingsModalComponent = SettingsModal;
+	};
+
 	const clearChatInputStorage = () => {
 		const chatInputKeys = Object.keys(localStorage).filter((key) => key.startsWith('chat-input'));
 		if (chatInputKeys.length > 0) {
@@ -161,9 +169,17 @@
 	onDestroy(() => {
 		if (keydownHandler) document.removeEventListener('keydown', keydownHandler);
 	});
+
+	$effect(() => {
+		if ($showSettings && !SettingsModalComponent) {
+			void loadSettingsModal();
+		}
+	});
 </script>
 
-<SettingsModal bind:show={$showSettings} />
+{#if $showSettings && SettingsModalComponent}
+	<SettingsModalComponent bind:show={$showSettings} />
+{/if}
 
 {#if $user}
 	<div class="app relative">

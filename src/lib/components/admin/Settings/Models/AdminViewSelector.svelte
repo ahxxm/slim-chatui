@@ -14,9 +14,7 @@
 	const items = [
 		{ value: '', label: $i18n.t('All') },
 		{ value: 'enabled', label: $i18n.t('Enabled') },
-		{ value: 'disabled', label: $i18n.t('Disabled') },
-		{ value: 'visible', label: $i18n.t('Visible') },
-		{ value: 'hidden', label: $i18n.t('Hidden') }
+		{ value: 'disabled', label: $i18n.t('Disabled') }
 	];
 </script>
 
