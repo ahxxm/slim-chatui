@@ -140,9 +140,7 @@
 		streamingBuffers.delete(id);
 		clearRenderTimerIfIdle();
 
-		if (id in streamingMessages) {
-			delete streamingMessages[id];
-		}
+		delete streamingMessages[id];
 
 		return bufferedMessage;
 	};

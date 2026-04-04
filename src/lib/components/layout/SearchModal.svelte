@@ -110,7 +110,7 @@
 				id: message.id,
 				role: message.role,
 				modelName: message.modelName,
-				text: toPreviewText(message?.merged?.content ?? message?.content ?? '')
+				text: toPreviewText(message.merged?.content ?? message.content ?? '')
 			}));
 	};
 
@@ -148,7 +148,7 @@
 		}
 
 		if (chat) {
-			previewMessages = chat?.chat?.history ? buildPreviewMessages(chat) : [];
+			previewMessages = chat.chat?.history ? buildPreviewMessages(chat) : [];
 
 			await tick();
 			const messagesContainerElement = document.getElementById('chat-preview');

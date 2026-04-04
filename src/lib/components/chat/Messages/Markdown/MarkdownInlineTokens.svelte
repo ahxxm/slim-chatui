@@ -59,7 +59,7 @@
 
 	$effect(() => {
 		const nextId = id;
-		const nextTokens = tokens ?? [];
+		const nextTokens = tokens;
 		const nextLinks = renderLinks;
 		const useIncremental = source !== null;
 
@@ -75,7 +75,7 @@
 			inlineState = createIncrementalTokenState('inline', { seedLinks: nextLinks });
 		}
 
-		inlineState = updateIncrementalTokenState(inlineState, source ?? '', {
+		inlineState = updateIncrementalTokenState(inlineState, source, {
 			seedLinks: nextLinks
 		});
 		renderSegments = getRenderSegments(inlineState);

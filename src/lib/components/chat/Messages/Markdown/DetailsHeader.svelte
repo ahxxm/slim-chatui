@@ -16,9 +16,9 @@
 
 	const summaryText = $derived.by(() => {
 		if (attributes?.type === 'reasoning') {
-			const seconds = parseFloat(attributes?.duration ?? '0');
+			const seconds = parseFloat(attributes.duration ?? '0');
 
-			if (attributes?.done === 'true' && seconds > 0) {
+			if (attributes.done === 'true' && seconds > 0) {
 				if (seconds < 60) {
 					return $i18n.t('Thought for {{DURATION}} seconds', {
 						DURATION: seconds
@@ -30,7 +30,7 @@
 				});
 			}
 
-			if (attributes?.done === 'true') {
+			if (attributes.done === 'true') {
 				return $i18n.t('Thought shortly');
 			}
 
@@ -38,16 +38,16 @@
 		}
 
 		if (attributes?.type === 'web_search') {
-			if (attributes?.done === 'true') {
-				if (attributes?.action === 'open_page') {
-					return `${$i18n.t('Opened')} "${attributes?.url || ''}"`;
+			if (attributes.done === 'true') {
+				if (attributes.action === 'open_page') {
+					return `${$i18n.t('Opened')} "${attributes.url || ''}"`;
 				}
 
-				if (attributes?.action === 'find_in_page') {
-					return `${$i18n.t('Looked for')} "${attributes?.pattern || ''}" on ${attributes?.url || ''}`;
+				if (attributes.action === 'find_in_page') {
+					return `${$i18n.t('Looked for')} "${attributes.pattern || ''}" on ${attributes.url || ''}`;
 				}
 
-				return `${$i18n.t('Searched')} "${attributes?.query || ''}"`;
+				return `${$i18n.t('Searched')} "${attributes.query || ''}"`;
 			}
 
 			return $i18n.t('Searching...');
