@@ -331,8 +331,9 @@
 	{/if}
 
 	<Collapsible bind:open className="w-full" buttonClassName="w-full">
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div class="w-full group">
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<!-- svelte-ignore a11y_click_events_have_key_events -->
 			<div
 				id="folder-{folderId}-button"
 				class="relative w-full py-1 px-1.5 rounded-xl flex items-center gap-1.5 hover:bg-gray-100 dark:hover:bg-gray-900 transition {$selectedFolder?.id ===
@@ -421,7 +422,7 @@
 					{/if}
 				</div>
 
-				<button
+				<div
 					class="absolute z-10 right-2 invisible group-hover:visible self-center flex items-center dark:text-gray-300"
 				>
 					<FolderMenu
@@ -439,32 +440,34 @@
 							<EllipsisHorizontal className="size-4" strokeWidth="2.5" />
 						</div>
 					</FolderMenu>
-				</button>
+				</div>
 			</div>
 		</div>
 
-		<div slot="content" class="w-full">
-			{#if (chats ?? []).length > 0}
-				<div
-					class="ml-3 pl-1 mt-[1px] flex flex-col overflow-y-auto scrollbar-hidden border-s border-gray-100 dark:border-gray-900"
-				>
-					{#each chats ?? [] as chat (chat.id)}
-						<ChatItem
-							id={chat.id}
-							title={chat.title}
-							createdAt={chat.created_at}
-							{shiftKey}
-							{onchange}
-						/>
-					{/each}
-				</div>
-			{/if}
+		{#snippet content()}
+			<div class="w-full">
+				{#if (chats ?? []).length > 0}
+					<div
+						class="ml-3 pl-1 mt-[1px] flex flex-col overflow-y-auto scrollbar-hidden border-s border-gray-100 dark:border-gray-900"
+					>
+						{#each chats ?? [] as chat (chat.id)}
+							<ChatItem
+								id={chat.id}
+								title={chat.title}
+								createdAt={chat.created_at}
+								{shiftKey}
+								{onchange}
+							/>
+						{/each}
+					</div>
+				{/if}
 
-			{#if chats === null}
-				<div class="flex justify-center items-center p-2">
-					<Spinner className="size-4 text-gray-500" />
-				</div>
-			{/if}
-		</div>
+				{#if chats === null}
+					<div class="flex justify-center items-center p-2">
+						<Spinner className="size-4 text-gray-500" />
+					</div>
+				{/if}
+			</div>
+		{/snippet}
 	</Collapsible>
 </div>

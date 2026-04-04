@@ -444,26 +444,28 @@
 				className="w-full space-y-1"
 				onChange={(nextOpen: boolean) => setOpenState(openStateId, nextOpen)}
 			>
-				<div class=" mb-1.5" slot="content">
-					<MarkdownTokens
-						id={`${id}-${tokenIdx}-d`}
-						tokens={token.tokens}
-						{done}
-						{save}
-						{paragraphTag}
-						{editCodeBlock}
-						{topPadding}
-						{links}
-						{incremental}
-						{onSave}
-						{onTaskClick}
-						{sourceIds}
-						{onSourceClick}
-						{openStates}
-						detailsScopeId={openStateId}
-						rootDetailsStateId={null}
-					/>
-				</div>
+				{#snippet content()}
+					<div class=" mb-1.5">
+						<MarkdownTokens
+							id={`${id}-${tokenIdx}-d`}
+							tokens={token.tokens}
+							{done}
+							{save}
+							{paragraphTag}
+							{editCodeBlock}
+							{topPadding}
+							{links}
+							{incremental}
+							{onSave}
+							{onTaskClick}
+							{sourceIds}
+							{onSourceClick}
+							{openStates}
+							detailsScopeId={openStateId}
+							rootDetailsStateId={null}
+						/>
+					</div>
+				{/snippet}
 			</Collapsible>
 		{:else}
 			<Collapsible

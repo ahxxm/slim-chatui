@@ -11,8 +11,6 @@
 	import { deleteFolderById, getFolderById, updateFolderById } from '$lib/apis/folders';
 	import { getChatsByFolderId } from '$lib/apis/chats';
 
-	import FolderModal from '$lib/components/layout/Sidebar/Folders/FolderModal.svelte';
-
 	import Folder from '$lib/components/icons/Folder.svelte';
 	import FolderMenu from '$lib/components/layout/Sidebar/Folders/FolderMenu.svelte';
 	import EllipsisHorizontal from '$lib/components/icons/EllipsisHorizontal.svelte';
@@ -21,49 +19,91 @@
 
 	import type { FolderItem } from '$lib/types';
 
-	export let folder: FolderItem | null = null;
+	interface FolderTitleProps {
+		folder?: FolderItem | null;
+		onUpdate?: (folder: FolderItem | null) => void;
+		onDelete?: (folder: FolderItem | null) => void;
+	}
 
-	export let onUpdate: Function = (folderId) => {};
-	export let onDelete: Function = (folderId) => {};
+	interface FolderUpdatePayload {
+		name: string;
+		meta?: FolderItem['meta'];
+		data?: FolderItem['data'];
+	}
 
-	let showFolderModal = false;
-	let showDeleteConfirm = false;
-	let deleteFolderContents = true;
+	type FolderModalComponentType =
+		typeof import('$lib/components/layout/Sidebar/Folders/FolderModal.svelte').default;
 
-	const updateHandler = async ({ name, meta, data }) => {
+	let { folder = null, onUpdate = () => {}, onDelete = () => {} }: FolderTitleProps = $props();
+
+	let showFolderModal = $state(false);
+	let showDeleteConfirm = $state(false);
+	let deleteFolderContents = $state(true);
+	let FolderModalComponent = $state<FolderModalComponentType | null>(null);
+	let folderModalLoadPromise: Promise<void> | null = null;
+
+	const loadFolderModal = async () => {
+		if (FolderModalComponent) {
+			return;
+		}
+
+		if (!folderModalLoadPromise) {
+			folderModalLoadPromise = import('$lib/components/layout/Sidebar/Folders/FolderModal.svelte')
+				.then(({ default: FolderModal }) => {
+					FolderModalComponent = FolderModal;
+				})
+				.finally(() => {
+					folderModalLoadPromise = null;
+				});
+		}
+
+		await folderModalLoadPromise;
+	};
+
+	const openFolderModal = async () => {
+		await loadFolderModal();
+		showFolderModal = true;
+	};
+
+	const updateHandler = async ({ name, meta, data }: FolderUpdatePayload) => {
+		const currentFolder = folder;
+		if (!currentFolder) {
+			return;
+		}
+
 		if (name === '') {
 			toast.error($i18n.t('Folder name cannot be empty.'));
 			return;
 		}
 
-		const currentName = folder.name;
+		const currentName = currentFolder.name;
 
 		name = name.trim();
-		folder.name = name;
+		currentFolder.name = name;
 
-		const res = await updateFolderById(localStorage.token, folder.id, {
+		const res = await updateFolderById(localStorage.token, currentFolder.id, {
 			name,
 			...(meta ? { meta } : {}),
 			...(data ? { data } : {})
 		}).catch((error) => {
 			toast.error(`${error}`);
 
-			folder.name = currentName;
+			currentFolder.name = currentName;
 			return null;
 		});
 
 		if (res) {
-			folder.name = name;
+			currentFolder.name = name;
 			if (meta) {
-				folder.meta = meta;
+				currentFolder.meta = meta;
 			}
 			if (data) {
-				folder.data = data;
+				currentFolder.data = data;
 			}
 
 			toast.success($i18n.t('Folder updated successfully'));
 
-			const _folder = await getFolderById(localStorage.token, folder.id).catch((error) => {
+			const _folder = await getFolderById(localStorage.token, currentFolder.id).catch((error) => {
 				toast.error(`${error}`);
 				return null;
 			});
@@ -74,21 +114,33 @@
 	};
 
 	const deleteHandler = async () => {
-		const res = await deleteFolderById(localStorage.token, folder.id, deleteFolderContents).catch(
-			(error) => {
-				toast.error(`${error}`);
-				return null;
-			}
-		);
+		const currentFolder = folder;
+		if (!currentFolder) {
+			return;
+		}
+
+		const res = await deleteFolderById(
+			localStorage.token,
+			currentFolder.id,
+			deleteFolderContents
+		).catch((error) => {
+			toast.error(`${error}`);
+			return null;
+		});
 
 		if (res) {
 			toast.success($i18n.t('Folder deleted successfully'));
-			onDelete(folder);
+			onDelete(currentFolder);
 		}
 	};
 
 	const exportHandler = async () => {
-		const chats = await getChatsByFolderId(localStorage.token, folder.id).catch((error) => {
+		const currentFolder = folder;
+		if (!currentFolder) {
+			return;
+		}
+
+		const chats = await getChatsByFolderId(localStorage.token, currentFolder.id).catch((error) => {
 			toast.error(`${error}`);
 			return null;
 		});
@@ -100,17 +152,19 @@
 			type: 'application/json'
 		});
 
-		saveAs(blob, `folder-${folder.name}-export-${Date.now()}.json`);
+		saveAs(blob, `folder-${currentFolder.name}-export-${Date.now()}.json`);
 	};
 </script>
 
 {#if folder}
-	<FolderModal
-		bind:show={showFolderModal}
-		edit={true}
-		folderId={folder.id}
-		onSubmit={updateHandler}
-	/>
+	{#if showFolderModal && FolderModalComponent}
+		<FolderModalComponent
+			bind:show={showFolderModal}
+			edit={true}
+			folderId={folder.id}
+			onSubmit={updateHandler}
+		/>
+	{/if}
 
 	<DeleteConfirmDialog
 		bind:show={showDeleteConfirm}
@@ -155,7 +209,7 @@
 			<FolderMenu
 				align="end"
 				onEdit={() => {
-					showFolderModal = true;
+					void openFolderModal();
 				}}
 				onDelete={() => {
 					showDeleteConfirm = true;
@@ -164,13 +218,9 @@
 					exportHandler();
 				}}
 			>
-				<button
-					class="p-1.5 dark:hover:bg-gray-850 rounded-full touch-auto"
-					aria-label={$i18n.t('Folder options')}
-					on:click={() => {}}
-				>
+				<div class="p-1.5 dark:hover:bg-gray-850 rounded-full touch-auto">
 					<EllipsisHorizontal className="size-4" strokeWidth="2.5" />
-				</button>
+				</div>
 			</FolderMenu>
 		</div>
 	</div>

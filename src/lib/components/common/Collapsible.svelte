@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext, untrack } from 'svelte';
+	import { getContext, type Snippet, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import dayjs from '$lib/dayjs';
@@ -16,6 +16,22 @@
 	import ChevronDown from '../icons/ChevronDown.svelte';
 	import Spinner from './Spinner.svelte';
 
+	interface CollapsibleProps {
+		open?: boolean;
+		className?: string;
+		buttonClassName?: string;
+		id?: string;
+		title?: string | null;
+		attributes?: Record<string, string | undefined> | null;
+		chevron?: boolean;
+		grow?: boolean;
+		disabled?: boolean;
+		hide?: boolean;
+		onChange?: (open: boolean) => void;
+		children?: Snippet;
+		content?: Snippet;
+	}
+
 	let {
 		open = $bindable(false),
 		className = '',
@@ -27,26 +43,42 @@
 		grow = false,
 		disabled = false,
 		hide = false,
-		onChange = () => {}
-	} = $props();
+		onChange = () => {},
+		children = undefined,
+		content = undefined
+	}: CollapsibleProps = $props();
 
 	$effect(() => {
 		const currentOpen = open;
 		untrack(() => onChange(currentOpen));
 	});
+
+	const toggleOpen = () => {
+		if (!disabled) {
+			open = !open;
+		}
+	};
+
+	const onTriggerKeydown = (event: KeyboardEvent) => {
+		if (event.key !== 'Enter' && event.key !== ' ') {
+			return;
+		}
+
+		event.preventDefault();
+		toggleOpen();
+	};
 </script>
 
 <div {id} class={className}>
 	{#if title !== null}
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 		<div
 			class="{buttonClassName} {disabled ? '' : 'cursor-pointer'}"
-			onpointerup={() => {
-				if (!disabled) {
-					open = !open;
-				}
-			}}
+			role={disabled ? undefined : 'button'}
+			tabindex={disabled ? undefined : 0}
+			aria-expanded={disabled ? undefined : open}
+			onkeydown={onTriggerKeydown}
+			onpointerup={toggleOpen}
 		>
 			<div
 				class=" w-full font-medium flex items-center justify-between gap-2 {attributes?.done &&
@@ -63,7 +95,7 @@
 
 				<div class="">
 					{#if attributes?.type === 'reasoning'}
-						{@const seconds = parseFloat(attributes?.duration)}
+						{@const seconds = parseFloat(attributes?.duration ?? '0')}
 						{#if attributes?.done === 'true' && seconds > 0}
 							{#if seconds < 60}
 								{$i18n.t('Thought for {{DURATION}} seconds', {
@@ -108,22 +140,27 @@
 			</div>
 		</div>
 	{:else}
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
-		<!-- svelte-ignore a11y-click-events-have-key-events -->
+		<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 		<div
 			class="{buttonClassName} cursor-pointer"
+			role={disabled ? undefined : 'button'}
+			tabindex={disabled ? undefined : 0}
+			aria-expanded={disabled ? undefined : open}
 			onclick={(e) => {
 				e.stopPropagation();
 			}}
-			onpointerup={() => {
-				if (!disabled) {
-					open = !open;
-				}
+			onkeydown={(e) => {
+				e.stopPropagation();
+				onTriggerKeydown(e);
+			}}
+			onpointerup={(e) => {
+				e.stopPropagation();
+				toggleOpen();
 			}}
 		>
 			<div>
 				<div class="flex items-start justify-between">
-					<slot />
+					{@render children?.()}
 
 					{#if chevron}
 						<div class="flex self-start translate-y-1">
@@ -138,13 +175,14 @@
 
 				{#if grow}
 					{#if open && !hide}
+						<!-- svelte-ignore a11y_no_static_element_interactions -->
 						<div
 							transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}
 							onpointerup={(e) => {
 								e.stopPropagation();
 							}}
 						>
-							<slot name="content" />
+							{@render content?.()}
 						</div>
 					{/if}
 				{/if}
@@ -155,7 +193,7 @@
 	{#if !grow}
 		{#if open && !hide}
 			<div transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}>
-				<slot name="content" />
+				{@render content?.()}
 			</div>
 		{/if}
 	{/if}

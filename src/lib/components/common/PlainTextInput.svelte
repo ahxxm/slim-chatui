@@ -1,5 +1,24 @@
 <script lang="ts">
 	import { tick } from 'svelte';
+	import type { HTMLTextareaAttributes } from 'svelte/elements';
+
+	type TextareaEventHandler<Key extends keyof HTMLTextareaAttributes> = NonNullable<
+		HTMLTextareaAttributes[Key]
+	>;
+
+	interface PlainTextInputProps {
+		id?: string;
+		value?: string;
+		editable?: boolean;
+		placeholder?: string;
+		onChange?: (content: { html: string; json: string; md: string }) => void;
+		onkeydown?: TextareaEventHandler<'onkeydown'>;
+		onkeyup?: TextareaEventHandler<'onkeyup'>;
+		onfocus?: TextareaEventHandler<'onfocus'>;
+		onpaste?: TextareaEventHandler<'onpaste'>;
+		oncompositionstart?: TextareaEventHandler<'oncompositionstart'>;
+		oncompositionend?: TextareaEventHandler<'oncompositionend'>;
+	}
 
 	let {
 		id = '',
@@ -8,10 +27,12 @@
 		placeholder = '',
 		onChange = (_content: { html: string; json: string; md: string }) => {},
 		onkeydown = (_event: KeyboardEvent) => {},
+		onkeyup = (_event: KeyboardEvent) => {},
+		onfocus = (_event: FocusEvent) => {},
 		onpaste = (_event: ClipboardEvent) => {},
 		oncompositionstart = (_event: CompositionEvent) => {},
 		oncompositionend = (_event: CompositionEvent) => {}
-	} = $props();
+	}: PlainTextInputProps = $props();
 
 	let textareaElement = $state<HTMLTextAreaElement>();
 	let textValue = $state('');
@@ -89,8 +110,7 @@
 	}
 
 	export function setText(text = '') {
-		const normalizedText = text.replaceAll('\n\n', '\n');
-		replaceRange(normalizedText, normalizedText.length);
+		replaceRange(text, text.length);
 		focus();
 	}
 
@@ -132,7 +152,7 @@
 	{id}
 	rows="1"
 	value={textValue}
-	placeholder={placeholder}
+	{placeholder}
 	readonly={!editable}
 	class="w-full min-h-[1.75rem] resize-none overflow-hidden bg-transparent text-sm outline-hidden"
 	oninput={(event) => {
@@ -140,7 +160,9 @@
 		resizeToContent();
 		emitChange();
 	}}
+	onfocus={editable ? onfocus : undefined}
 	onkeydown={editable ? onkeydown : undefined}
+	onkeyup={editable ? onkeyup : undefined}
 	onpaste={editable ? onpaste : undefined}
 	oncompositionstart={editable ? oncompositionstart : undefined}
 	oncompositionend={editable ? oncompositionend : undefined}
