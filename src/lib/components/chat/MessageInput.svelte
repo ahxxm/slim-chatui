@@ -332,10 +332,12 @@
 
 	const onDrop = async (e) => {
 		e.preventDefault();
+		console.log(e);
 
 		if (e.dataTransfer?.files) {
 			const inputFiles = Array.from(e.dataTransfer?.files);
 			if (inputFiles && inputFiles.length > 0) {
+				console.log(inputFiles);
 				inputFilesHandler(inputFiles);
 			}
 		}
@@ -349,6 +351,7 @@
 		}
 
 		if (e.key === 'Escape') {
+			console.log('Escape');
 			dragged = false;
 		}
 	};
@@ -415,6 +418,7 @@
 	bind:value={prompt}
 	bind:inputContent
 	onChange={(content) => {
+		console.log(content);
 		chatInputElement?.setEditorContent(content);
 	}}
 	onClose={async () => {
@@ -602,6 +606,9 @@
 												modal={file?.type === 'file'}
 												on:dismiss={async () => {
 													files = files.filter((_, i) => i !== fileIdx);
+												}}
+												on:click={() => {
+													console.log(file);
 												}}
 											/>
 										{/if}

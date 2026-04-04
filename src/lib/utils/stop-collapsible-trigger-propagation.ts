@@ -2,23 +2,30 @@ const COLLAPSIBLE_TRIGGER_SELECTOR = '[data-collapsible-trigger]';
 const TRIGGER_EVENT_TYPES = ['click', 'keydown', 'pointerup'] as const;
 
 const eventComesFromCollapsibleTrigger = (
-	container: HTMLElement,
+	trigger: HTMLElement | null,
 	target: EventTarget | null
 ): boolean => {
-	const targetElement =
-		target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
-
-	if (!targetElement) {
+	if (!(target instanceof Node) || !trigger) {
 		return false;
 	}
 
-	const trigger = targetElement.closest<HTMLElement>(COLLAPSIBLE_TRIGGER_SELECTOR);
-	return trigger !== null && container.contains(trigger);
+	return trigger.contains(target);
 };
 
 export const stopCollapsibleTriggerPropagation = (node: HTMLElement) => {
+	let trigger: HTMLElement | null = node.querySelector<HTMLElement>(COLLAPSIBLE_TRIGGER_SELECTOR);
+
+	const getTrigger = () => {
+		if (trigger && node.contains(trigger)) {
+			return trigger;
+		}
+
+		trigger = node.querySelector<HTMLElement>(COLLAPSIBLE_TRIGGER_SELECTOR);
+		return trigger;
+	};
+
 	const stopPropagationWhenTriggerEvent = (event: Event) => {
-		if (eventComesFromCollapsibleTrigger(node, event.target)) {
+		if (eventComesFromCollapsibleTrigger(getTrigger(), event.target)) {
 			event.stopPropagation();
 		}
 	};

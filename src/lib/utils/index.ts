@@ -48,28 +48,19 @@ export const replaceTokens = (content: string, char: string, user: string) => {
 		return content;
 	}
 
-	const replacementSteps = [
-		(segment: string) => segment.replace(/{{char}}/gi, char),
-		(segment: string) => segment.replace(/{{user}}/gi, user),
-		(segment: string) =>
-			segment.replace(
+	return replaceOutsideCode(content, (segment) => {
+		return segment
+			.replace(/{{char}}/gi, char)
+			.replace(/{{user}}/gi, user)
+			.replace(
 				/{{VIDEO_FILE_ID_([a-f0-9-]+)}}/gi,
 				(_: string, fileId: string) =>
 					`<video src="${WEBUI_BASE_URL}/api/v1/files/${fileId}/content" controls></video>`
-			),
-		(segment: string) =>
-			segment.replace(
+			)
+			.replace(
 				/{{HTML_FILE_ID_([a-f0-9-]+)}}/gi,
 				(_: string, fileId: string) => `<file type="html" id="${fileId}" />`
-			)
-	];
-
-	return replaceOutsideCode(content, (segment) => {
-		for (const applyReplacement of replacementSteps) {
-			segment = applyReplacement(segment);
-		}
-
-		return segment;
+			);
 	});
 };
 

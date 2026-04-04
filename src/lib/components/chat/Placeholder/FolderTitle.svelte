@@ -65,9 +65,10 @@
 		showFolderModal = true;
 	};
 
-	const updateHandler = async ({ name, meta, data }: FolderUpdatePayload) => {
-		const activeFolder = folder!;
-
+	const updateHandler = async (
+		activeFolder: FolderItem,
+		{ name, meta, data }: FolderUpdatePayload
+	) => {
 		if (name === '') {
 			toast.error($i18n.t('Folder name cannot be empty.'));
 			return;
@@ -110,9 +111,7 @@
 		}
 	};
 
-	const deleteHandler = async () => {
-		const activeFolder = folder!;
-
+	const deleteHandler = async (activeFolder: FolderItem) => {
 		const res = await deleteFolderById(
 			localStorage.token,
 			activeFolder.id,
@@ -128,9 +127,7 @@
 		}
 	};
 
-	const exportHandler = async () => {
-		const activeFolder = folder!;
-
+	const exportHandler = async (activeFolder: FolderItem) => {
 		const chats = await getChatsByFolderId(localStorage.token, activeFolder.id).catch((error) => {
 			toast.error(`${error}`);
 			return null;
@@ -153,7 +150,7 @@
 			bind:show={showFolderModal}
 			edit={true}
 			folderId={folder.id}
-			onSubmit={updateHandler}
+			onSubmit={(payload: FolderUpdatePayload) => updateHandler(folder, payload)}
 		/>
 	{/if}
 
@@ -161,12 +158,12 @@
 		bind:show={showDeleteConfirm}
 		title={$i18n.t('Delete folder?')}
 		onConfirm={() => {
-			deleteHandler();
+			deleteHandler(folder);
 		}}
 	>
 		<div class=" text-sm text-gray-700 dark:text-gray-300 flex-1 line-clamp-3 mb-2">
 			{$i18n.t(`Are you sure you want to delete "{{NAME}}"?`, {
-				NAME: folder?.name
+				NAME: folder.name
 			})}
 		</div>
 
@@ -206,7 +203,7 @@
 					showDeleteConfirm = true;
 				}}
 				onExport={() => {
-					exportHandler();
+					exportHandler(folder);
 				}}
 			>
 				<div class="p-1.5 dark:hover:bg-gray-850 rounded-full touch-auto">
