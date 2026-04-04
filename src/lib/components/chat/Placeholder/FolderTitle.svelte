@@ -66,44 +66,41 @@
 	};
 
 	const updateHandler = async ({ name, meta, data }: FolderUpdatePayload) => {
-		const currentFolder = folder;
-		if (!currentFolder) {
-			return;
-		}
+		const activeFolder = folder!;
 
 		if (name === '') {
 			toast.error($i18n.t('Folder name cannot be empty.'));
 			return;
 		}
 
-		const currentName = currentFolder.name;
+		const currentName = activeFolder.name;
 
 		name = name.trim();
-		currentFolder.name = name;
+		activeFolder.name = name;
 
-		const res = await updateFolderById(localStorage.token, currentFolder.id, {
+		const res = await updateFolderById(localStorage.token, activeFolder.id, {
 			name,
 			...(meta ? { meta } : {}),
 			...(data ? { data } : {})
 		}).catch((error) => {
 			toast.error(`${error}`);
 
-			currentFolder.name = currentName;
+			activeFolder.name = currentName;
 			return null;
 		});
 
 		if (res) {
-			currentFolder.name = name;
+			activeFolder.name = name;
 			if (meta) {
-				currentFolder.meta = meta;
+				activeFolder.meta = meta;
 			}
 			if (data) {
-				currentFolder.data = data;
+				activeFolder.data = data;
 			}
 
 			toast.success($i18n.t('Folder updated successfully'));
 
-			const _folder = await getFolderById(localStorage.token, currentFolder.id).catch((error) => {
+			const _folder = await getFolderById(localStorage.token, activeFolder.id).catch((error) => {
 				toast.error(`${error}`);
 				return null;
 			});
@@ -114,14 +111,11 @@
 	};
 
 	const deleteHandler = async () => {
-		const currentFolder = folder;
-		if (!currentFolder) {
-			return;
-		}
+		const activeFolder = folder!;
 
 		const res = await deleteFolderById(
 			localStorage.token,
-			currentFolder.id,
+			activeFolder.id,
 			deleteFolderContents
 		).catch((error) => {
 			toast.error(`${error}`);
@@ -130,17 +124,14 @@
 
 		if (res) {
 			toast.success($i18n.t('Folder deleted successfully'));
-			onDelete(currentFolder);
+			onDelete(activeFolder);
 		}
 	};
 
 	const exportHandler = async () => {
-		const currentFolder = folder;
-		if (!currentFolder) {
-			return;
-		}
+		const activeFolder = folder!;
 
-		const chats = await getChatsByFolderId(localStorage.token, currentFolder.id).catch((error) => {
+		const chats = await getChatsByFolderId(localStorage.token, activeFolder.id).catch((error) => {
 			toast.error(`${error}`);
 			return null;
 		});
@@ -152,7 +143,7 @@
 			type: 'application/json'
 		});
 
-		saveAs(blob, `folder-${currentFolder.name}-export-${Date.now()}.json`);
+		saveAs(blob, `folder-${activeFolder.name}-export-${Date.now()}.json`);
 	};
 </script>
 

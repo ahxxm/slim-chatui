@@ -2,12 +2,6 @@
 	import { toast } from 'svelte-sonner';
 
 	import { v4 as uuidv4 } from 'uuid';
-	import dayjs from '$lib/dayjs';
-	import duration from 'dayjs/plugin/duration';
-	import relativeTime from 'dayjs/plugin/relativeTime';
-
-	dayjs.extend(duration);
-	dayjs.extend(relativeTime);
 
 	import { onMount, tick, getContext, untrack } from 'svelte';
 
@@ -338,12 +332,10 @@
 
 	const onDrop = async (e) => {
 		e.preventDefault();
-		console.log(e);
 
 		if (e.dataTransfer?.files) {
 			const inputFiles = Array.from(e.dataTransfer?.files);
 			if (inputFiles && inputFiles.length > 0) {
-				console.log(inputFiles);
 				inputFilesHandler(inputFiles);
 			}
 		}
@@ -357,7 +349,6 @@
 		}
 
 		if (e.key === 'Escape') {
-			console.log('Escape');
 			dragged = false;
 		}
 	};
@@ -424,7 +415,6 @@
 	bind:value={prompt}
 	bind:inputContent
 	onChange={(content) => {
-		console.log(content);
 		chatInputElement?.setEditorContent(content);
 	}}
 	onClose={async () => {
@@ -612,9 +602,6 @@
 												modal={file?.type === 'file'}
 												on:dismiss={async () => {
 													files = files.filter((_, i) => i !== fileIdx);
-												}}
-												on:click={() => {
-													console.log(file);
 												}}
 											/>
 										{/if}

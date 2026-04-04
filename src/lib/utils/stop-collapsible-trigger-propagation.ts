@@ -5,12 +5,15 @@ const eventComesFromCollapsibleTrigger = (
 	container: HTMLElement,
 	target: EventTarget | null
 ): boolean => {
-	if (!(target instanceof Node)) {
+	const targetElement =
+		target instanceof Element ? target : target instanceof Node ? target.parentElement : null;
+
+	if (!targetElement) {
 		return false;
 	}
 
-	const trigger = container.querySelector(COLLAPSIBLE_TRIGGER_SELECTOR);
-	return trigger?.contains(target) ?? false;
+	const trigger = targetElement.closest<HTMLElement>(COLLAPSIBLE_TRIGGER_SELECTOR);
+	return trigger !== null && container.contains(trigger);
 };
 
 export const stopCollapsibleTriggerPropagation = (node: HTMLElement) => {

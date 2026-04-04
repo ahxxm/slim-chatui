@@ -10,11 +10,8 @@
 		open?: boolean;
 		className?: string;
 		buttonClassName?: string;
-		id?: string;
 		chevron?: boolean;
-		grow?: boolean;
 		disabled?: boolean;
-		hide?: boolean;
 		onChange?: (open: boolean) => void;
 		children?: Snippet;
 		content?: Snippet;
@@ -24,11 +21,8 @@
 		open = $bindable(false),
 		className = '',
 		buttonClassName = 'w-fit text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 transition',
-		id = '',
 		chevron = false,
-		grow = false,
 		disabled = false,
-		hide = false,
 		onChange = () => {},
 		children = undefined,
 		content = undefined
@@ -53,13 +47,9 @@
 		event.preventDefault();
 		toggleOpen();
 	};
-
-	const onTriggerPointerUp = () => {
-		toggleOpen();
-	};
 </script>
 
-<div {id} class={className}>
+<div class={className}>
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
 		data-collapsible-trigger
@@ -68,7 +58,7 @@
 		tabindex={disabled ? undefined : 0}
 		aria-expanded={disabled ? undefined : open}
 		onkeydown={onTriggerKeydown}
-		onpointerup={onTriggerPointerUp}
+		onpointerup={toggleOpen}
 	>
 		<div class="flex items-start justify-between">
 			<div class="min-w-0 flex-1">
@@ -85,15 +75,9 @@
 				</div>
 			{/if}
 		</div>
-
-		{#if grow && open && !hide}
-			<div transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}>
-				{@render content?.()}
-			</div>
-		{/if}
 	</div>
 
-	{#if !grow && open && !hide}
+	{#if open}
 		<div transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}>
 			{@render content?.()}
 		</div>

@@ -21,7 +21,6 @@
 		placeholder?: string;
 		onChange?: (content: EditorContent) => void;
 		onkeydown?: (event: KeyboardEvent) => void;
-		onkeyup?: (event: KeyboardEvent) => void;
 		onfocus?: (event: FocusEvent) => void;
 		onpaste?: (event: ClipboardEvent) => void;
 		oncompositionstart?: (event: CompositionEvent) => void;
@@ -56,7 +55,6 @@
 		placeholder = '',
 		onChange = (_content: EditorContent) => {},
 		onkeydown = (_event: KeyboardEvent) => {},
-		onkeyup = (_event: KeyboardEvent) => {},
 		onfocus = (_event: FocusEvent) => {},
 		onpaste = (_event: ClipboardEvent) => {},
 		oncompositionstart = (_event: CompositionEvent) => {},
@@ -248,7 +246,6 @@
 		{placeholder}
 		{onChange}
 		{onkeydown}
-		{onkeyup}
 		{onfocus}
 		{onpaste}
 		{oncompositionstart}
@@ -276,7 +273,6 @@
 		}}
 		onfocus={editable ? onfocus : undefined}
 		onkeydown={editable ? onkeydown : undefined}
-		onkeyup={editable ? onkeyup : undefined}
 		onpaste={editable ? onpaste : undefined}
 		oncompositionstart={editable ? oncompositionstart : undefined}
 		oncompositionend={editable ? oncompositionend : undefined}

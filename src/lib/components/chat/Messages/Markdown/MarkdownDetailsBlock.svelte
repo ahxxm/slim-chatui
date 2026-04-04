@@ -8,7 +8,6 @@
 	import { settings } from '$lib/stores';
 
 	interface MarkdownDetailsBlockProps {
-		id: string;
 		openStateId: string;
 		title?: string | null;
 		attributes?: Record<string, string | undefined> | null;
@@ -17,7 +16,6 @@
 	}
 
 	let {
-		id,
 		openStateId,
 		title = null,
 		attributes = null,
@@ -49,17 +47,7 @@
 	};
 </script>
 
-{#if resolvedAttributes?.type === 'web_search'}
-	<Collapsible
-		open={getOpenState(false)}
-		chevron={true}
-		disabled={true}
-		className="w-full space-y-1"
-		onChange={setOpenState}
-	>
-		<DetailsHeader {title} attributes={resolvedAttributes} />
-	</Collapsible>
-{:else if hasContent}
+{#if hasContent}
 	<Collapsible
 		open={getOpenState($settings?.expandDetails ?? false)}
 		chevron={true}

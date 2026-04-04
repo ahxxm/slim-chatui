@@ -22,10 +22,24 @@
 
 	const i18n = getContext('i18n');
 
+	interface CodeBlockProps {
+		id?: string;
+		edit?: boolean;
+		onSave?: (value: string) => void;
+		save?: boolean;
+		collapsed?: boolean;
+		done?: boolean;
+		lang?: string;
+		code?: string;
+		className?: string;
+		editorClassName?: string;
+		stickyButtonsClassName?: string;
+	}
+
 	let {
 		id = '',
 		edit = true,
-		onSave = (e) => {},
+		onSave = (_value: string) => {},
 		save = false,
 		collapsed = false,
 		done = true,
@@ -34,7 +48,7 @@
 		className = '',
 		editorClassName = '',
 		stickyButtonsClassName = 'top-0'
-	} = $props();
+	}: CodeBlockProps = $props();
 
 	let _code = $state('');
 	let editing = $state(false);
@@ -78,8 +92,6 @@
 	};
 
 	const startEditing = () => {
-		if (!canEdit) return;
-
 		saved = false;
 		_code = code;
 		collapsed = false;
@@ -190,7 +202,7 @@
 							onSave={() => {
 								saveCode();
 							}}
-							onChange={(value) => {
+							onChange={(value: string) => {
 								_code = value;
 							}}
 						/>
@@ -198,12 +210,11 @@
 				{:else}
 					<pre
 						class=" hljs p-4 px-5 overflow-x-auto"
-						style="border-top-left-radius: 0px; border-top-right-radius: 0px;"
-					>
+						style="border-top-left-radius: 0px; border-top-right-radius: 0px;">
 						{#if done && hljs}
 							<code class="language-{lang} rounded-t-none whitespace-pre text-sm"
-								>{@html
-									hljs.highlightAuto(code, hljs.getLanguage(lang)?.aliases).value || code}</code
+								>{@html hljs.highlightAuto(code, hljs.getLanguage(lang)?.aliases).value ||
+									code}</code
 							>
 						{:else}
 							<code class="language-{lang} rounded-t-none whitespace-pre text-sm">{code}</code>

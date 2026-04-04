@@ -189,7 +189,6 @@
 			`${resolvedDetailsScopeId}::details::${tokenIdx}`}
 
 		<MarkdownDetailsBlock
-			id={`${id}-${tokenIdx}`}
 			{openStateId}
 			title={token.summary}
 			attributes={token.attributes}

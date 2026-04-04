@@ -92,12 +92,7 @@ export const toPreviewText = (content: unknown, limit = 320): string => {
 	}
 
 	const parts: string[] = [];
-
-	try {
-		appendTokensPreviewText(parts, chatMarked.lexer(content) as PreviewToken[]);
-	} catch {
-		appendPreviewText(parts, content);
-	}
+	appendTokensPreviewText(parts, chatMarked.lexer(content) as PreviewToken[]);
 
 	return parts.join(' ').replace(/\s+/g, ' ').trim().slice(0, limit);
 };

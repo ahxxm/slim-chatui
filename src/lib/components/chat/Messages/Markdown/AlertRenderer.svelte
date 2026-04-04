@@ -76,11 +76,9 @@
 
 	interface AlertRendererProps {
 		alert: AlertData;
-		id?: string;
-		tokenIdx?: number;
 	}
 
-	let { alert, id = '', tokenIdx = 0 }: AlertRendererProps = $props();
+	let { alert }: AlertRendererProps = $props();
 	let AlertIcon = $derived(alertStyles[alert.type].icon);
 </script>
 
@@ -110,6 +108,6 @@ Renders the following Markdown as alerts:
 		<span class=" font-medium">{alert.type}</span>
 	</div>
 	<div class="pb-2">
-		<MarkdownTokens id={`${id}-${tokenIdx}`} tokens={alert.tokens} />
+		<MarkdownTokens id="" tokens={alert.tokens} />
 	</div>
 </div>

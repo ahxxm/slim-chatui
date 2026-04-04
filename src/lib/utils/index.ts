@@ -3,12 +3,10 @@ import { decode } from 'html-entities';
 import { WEBUI_BASE_URL } from '$lib/constants';
 
 import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
 import isToday from 'dayjs/plugin/isToday';
 import isYesterday from 'dayjs/plugin/isYesterday';
 import localizedFormat from 'dayjs/plugin/localizedFormat';
 
-dayjs.extend(relativeTime);
 dayjs.extend(isToday);
 dayjs.extend(isYesterday);
 dayjs.extend(localizedFormat);
@@ -50,37 +48,29 @@ export const replaceTokens = (content: string, char: string, user: string) => {
 		return content;
 	}
 
-	const tokens: Array<{
-		regex: RegExp;
-		replacement: string | ((_: string, fileId: string) => string);
-	}> = [
-		{ regex: /{{char}}/gi, replacement: char },
-		{ regex: /{{user}}/gi, replacement: user },
-		{
-			regex: /{{VIDEO_FILE_ID_([a-f0-9-]+)}}/gi,
-			replacement: (_: string, fileId: string) =>
-				`<video src="${WEBUI_BASE_URL}/api/v1/files/${fileId}/content" controls></video>`
-		},
-		{
-			regex: /{{HTML_FILE_ID_([a-f0-9-]+)}}/gi,
-			replacement: (_: string, fileId: string) => `<file type="html" id="${fileId}" />`
-		}
+	const replacementSteps = [
+		(segment: string) => segment.replace(/{{char}}/gi, char),
+		(segment: string) => segment.replace(/{{user}}/gi, user),
+		(segment: string) =>
+			segment.replace(
+				/{{VIDEO_FILE_ID_([a-f0-9-]+)}}/gi,
+				(_: string, fileId: string) =>
+					`<video src="${WEBUI_BASE_URL}/api/v1/files/${fileId}/content" controls></video>`
+			),
+		(segment: string) =>
+			segment.replace(
+				/{{HTML_FILE_ID_([a-f0-9-]+)}}/gi,
+				(_: string, fileId: string) => `<file type="html" id="${fileId}" />`
+			)
 	];
 
-	// Apply replacements
-	content = replaceOutsideCode(content, (segment) => {
-		tokens.forEach(({ regex, replacement }) => {
-			if (typeof replacement === 'string') {
-				segment = segment.replace(regex, replacement);
-			} else {
-				segment = segment.replace(regex, replacement);
-			}
-		});
+	return replaceOutsideCode(content, (segment) => {
+		for (const applyReplacement of replacementSteps) {
+			segment = applyReplacement(segment);
+		}
 
 		return segment;
 	});
-
-	return content;
 };
 
 export const sanitizeResponseContent = (content: string) => {
