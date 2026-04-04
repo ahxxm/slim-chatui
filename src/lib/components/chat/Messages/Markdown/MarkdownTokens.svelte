@@ -33,6 +33,7 @@
 		text?: string | null;
 		tokens?: MarkdownTextFragment[];
 	};
+	const EMPTY_DETAILS_STATE_IDS = new Map<number, string>();
 
 	interface MarkdownTokensProps {
 		id: string;
@@ -75,7 +76,9 @@
 	}: MarkdownTokensProps = $props();
 
 	let detailsStateIds = $derived(
-		createIndexedDetailsStateIds(tokens, (token) => token as Token, detailsScopeId)
+		tokens.some((token) => token.type === 'details')
+			? createIndexedDetailsStateIds(tokens, (token) => token as Token, detailsScopeId)
+			: EMPTY_DETAILS_STATE_IDS
 	);
 
 	const getOpenState = (stateId: string, defaultOpen: boolean) =>

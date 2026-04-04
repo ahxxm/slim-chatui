@@ -24,13 +24,6 @@
 
 	type InlineToken = Token & Record<string, any>;
 
-	interface RenderUnit {
-		key: string;
-		segmentId: string;
-		tokenIndex: number;
-		token: InlineToken;
-	}
-
 	interface MarkdownInlineTokensProps {
 		id: string;
 		done?: boolean;
@@ -60,20 +53,9 @@
 		}));
 	}
 
-	function createRenderUnits(nextSegments: IncrementalTokenSegment[]): RenderUnit[] {
-		return nextSegments.flatMap((segment) =>
-			segment.tokens.map((token, tokenIdx) => ({
-				key: segment.tokens.length === 1 ? segment.id : `${segment.id}-${tokenIdx}-${token.type}`,
-				segmentId: segment.id,
-				tokenIndex: tokenIdx,
-				token: token as InlineToken
-			}))
-		);
-	}
-
 	let inlineState = createIncrementalTokenState('inline', { seedLinks: EMPTY_LINKS });
 	let currentInlineId = '';
-	let renderUnits = $state<RenderUnit[]>([]);
+	let renderSegments = $state<IncrementalTokenSegment[]>([]);
 
 	$effect(() => {
 		const nextId = id;
@@ -84,8 +66,7 @@
 		if (!useIncremental) {
 			currentInlineId = nextId;
 			inlineState = createIncrementalTokenState('inline', { seedLinks: nextLinks });
-			const nextRenderSegments = createStaticSegments(nextTokens);
-			renderUnits = createRenderUnits(nextRenderSegments);
+			renderSegments = createStaticSegments(nextTokens);
 			return;
 		}
 
@@ -97,8 +78,7 @@
 		inlineState = updateIncrementalTokenState(inlineState, source ?? '', {
 			seedLinks: nextLinks
 		});
-		const nextRenderSegments = getRenderSegments(inlineState);
-		renderUnits = createRenderUnits(nextRenderSegments);
+		renderSegments = getRenderSegments(inlineState);
 	});
 
 	/**
@@ -118,26 +98,59 @@
 	};
 </script>
 
-{#each renderUnits as renderUnit (renderUnit.key)}
-	{@const token = renderUnit.token}
-
-	{#if token.type === 'escape'}
-		{unescapeHtml(token.text)}
-	{:else if token.type === 'html'}
-		<HtmlToken {token} />
-	{:else if token.type === 'link'}
-		{@const plainLinkTextToken =
-			token.tokens?.length === 1 && token.tokens[0].type === 'text' ? token.tokens[0] : null}
-		{#if shouldRenderNestedLinkTokens(token)}
-			<a
-				href={token.href}
-				target="_blank"
-				rel="nofollow"
-				title={token.title}
-				onclick={(e) => handleLinkClick(e, token.href)}
-			>
+{#each renderSegments as segment (segment.id)}
+	{#each segment.tokens as token, tokenIdx}
+		{#if token.type === 'escape'}
+			{unescapeHtml(token.text)}
+		{:else if token.type === 'html'}
+			<HtmlToken token={token as InlineToken} />
+		{:else if token.type === 'link'}
+			{@const plainLinkTextToken =
+				token.tokens?.length === 1 && token.tokens[0].type === 'text' ? token.tokens[0] : null}
+			{#if shouldRenderNestedLinkTokens(token)}
+				<a
+					href={token.href}
+					target="_blank"
+					rel="nofollow"
+					title={token.title}
+					onclick={(e) => handleLinkClick(e, token.href)}
+				>
+					<MarkdownInlineTokens
+						id={`${id}-${segment.id}-${tokenIdx}-a`}
+						source={token.text ?? ''}
+						tokens={token.tokens}
+						{onSourceClick}
+						{sourceIds}
+						{done}
+						{links}
+						{incremental}
+					/>
+				</a>
+			{:else if plainLinkTextToken}
+				<a
+					href={token.href}
+					target="_blank"
+					rel="nofollow"
+					title={token.title}
+					onclick={(e) => handleLinkClick(e, token.href)}
+				>
+					<TextToken token={plainLinkTextToken} {done} />
+				</a>
+			{:else}
+				<a
+					href={token.href}
+					target="_blank"
+					rel="nofollow"
+					title={token.title}
+					onclick={(e) => handleLinkClick(e, token.href)}>{token.text}</a
+				>
+			{/if}
+		{:else if token.type === 'image'}
+			<Image src={token.href} alt={token.text} />
+		{:else if token.type === 'strong'}
+			<strong>
 				<MarkdownInlineTokens
-					id={`${id}-${renderUnit.segmentId}-${renderUnit.tokenIndex}-a`}
+					id={`${id}-${segment.id}-${tokenIdx}-strong`}
 					source={token.text ?? ''}
 					tokens={token.tokens}
 					{onSourceClick}
@@ -146,103 +159,70 @@
 					{links}
 					{incremental}
 				/>
-			</a>
-		{:else if plainLinkTextToken}
-			<a
-				href={token.href}
-				target="_blank"
-				rel="nofollow"
-				title={token.title}
-				onclick={(e) => handleLinkClick(e, token.href)}
-			>
-				<TextToken token={plainLinkTextToken} {done} />
-			</a>
-		{:else}
-			<a
-				href={token.href}
-				target="_blank"
-				rel="nofollow"
-				title={token.title}
-				onclick={(e) => handleLinkClick(e, token.href)}>{token.text}</a
-			>
-		{/if}
-	{:else if token.type === 'image'}
-		<Image src={token.href} alt={token.text} />
-	{:else if token.type === 'strong'}
-		<strong>
-			<MarkdownInlineTokens
-				id={`${id}-${renderUnit.segmentId}-${renderUnit.tokenIndex}-strong`}
-				source={token.text ?? ''}
-				tokens={token.tokens}
-				{onSourceClick}
-				{sourceIds}
-				{done}
-				{links}
-				{incremental}
-			/>
-		</strong>
-	{:else if token.type === 'em'}
-		<em>
-			<MarkdownInlineTokens
-				id={`${id}-${renderUnit.segmentId}-${renderUnit.tokenIndex}-em`}
-				source={token.text ?? ''}
-				tokens={token.tokens}
-				{onSourceClick}
-				{sourceIds}
-				{done}
-				{links}
-				{incremental}
-			/>
-		</em>
-	{:else if token.type === 'codespan'}
-		<CodespanToken {token} {done} />
-	{:else if token.type === 'br'}
-		<br />
-	{:else if token.type === 'del'}
-		<del>
-			<MarkdownInlineTokens
-				id={`${id}-${renderUnit.segmentId}-${renderUnit.tokenIndex}-del`}
-				source={token.text ?? ''}
-				tokens={token.tokens}
-				{onSourceClick}
-				{sourceIds}
-				{done}
-				{links}
-				{incremental}
-			/>
-		</del>
-	{:else if token.type === 'inlineKatex'}
-		{#if token.text}
-			<KatexRenderer content={token.text} displayMode={false} />
-		{/if}
-	{:else if token.type === 'iframe'}
-		<iframe
-			src="{WEBUI_BASE_URL}/api/v1/files/{token.fileId}/content"
-			title={token.fileId}
-			width="100%"
-			frameborder="0"
-			onload={(e) => {
-				const frame = e.currentTarget as HTMLIFrameElement;
-				try {
-					const bodyHeight = frame.contentWindow?.document.body.scrollHeight;
+			</strong>
+		{:else if token.type === 'em'}
+			<em>
+				<MarkdownInlineTokens
+					id={`${id}-${segment.id}-${tokenIdx}-em`}
+					source={token.text ?? ''}
+					tokens={token.tokens}
+					{onSourceClick}
+					{sourceIds}
+					{done}
+					{links}
+					{incremental}
+				/>
+			</em>
+		{:else if token.type === 'codespan'}
+			<CodespanToken token={token as InlineToken} {done} />
+		{:else if token.type === 'br'}
+			<br />
+		{:else if token.type === 'del'}
+			<del>
+				<MarkdownInlineTokens
+					id={`${id}-${segment.id}-${tokenIdx}-del`}
+					source={token.text ?? ''}
+					tokens={token.tokens}
+					{onSourceClick}
+					{sourceIds}
+					{done}
+					{links}
+					{incremental}
+				/>
+			</del>
+		{:else if token.type === 'inlineKatex'}
+			{#if token.text}
+				<KatexRenderer content={token.text} displayMode={false} />
+			{/if}
+		{:else if token.type === 'iframe'}
+			<iframe
+				src="{WEBUI_BASE_URL}/api/v1/files/{token.fileId}/content"
+				title={token.fileId}
+				width="100%"
+				frameborder="0"
+				onload={(e) => {
+					const frame = e.currentTarget as HTMLIFrameElement;
+					try {
+						const bodyHeight = frame.contentWindow?.document.body.scrollHeight;
 
-					if (typeof bodyHeight === 'number') {
-						frame.style.height = `${bodyHeight + 20}px`;
-					}
-				} catch {}
-			}}
-		></iframe>
-	{:else if token.type === 'footnote'}
-		{@html DOMPurify.sanitize(
-			`<sup class="footnote-ref footnote-ref-text">${token.escapedText}</sup>`
-		) || ''}
-	{:else if token.type === 'citation'}
-		{#if (sourceIds ?? []).length > 0}
-			<SourceToken {token} {sourceIds} onClick={onSourceClick} />
-		{:else}
-			<TextToken {token} {done} />
+						if (typeof bodyHeight === 'number') {
+							frame.style.height = `${bodyHeight + 20}px`;
+						}
+					} catch {}
+				}}
+			></iframe>
+		{:else if token.type === 'footnote'}
+			{@html DOMPurify.sanitize(
+				`<sup class="footnote-ref footnote-ref-text">${token.escapedText}</sup>`
+			) || ''}
+		{:else if token.type === 'citation'}
+			{#if (sourceIds ?? []).length > 0}
+				<SourceToken token={token as InlineToken} {sourceIds} onClick={onSourceClick} />
+			{:else}
+				<TextToken token={token as InlineToken} {done} />
+			{/if}
+		{:else if token.type === 'text'}
+			<TextToken token={token as InlineToken} {done} />
 		{/if}
-	{:else if token.type === 'text'}
-		<TextToken {token} {done} />
-	{/if}
+	{/each}
 {/each}

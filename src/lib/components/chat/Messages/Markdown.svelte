@@ -71,6 +71,13 @@
 		messageId: string,
 		segments: IncrementalTokenSegment[]
 	): RenderSegmentMetadata[] => {
+		if (!segments.some((segment) => segment.tokens[0]?.type === 'details')) {
+			return segments.map((segment) => ({
+				key: `${messageId}-${segment.id}`,
+				rootDetailsStateId: null
+			}));
+		}
+
 		const detailsStateIds = createIndexedDetailsStateIds(
 			segments,
 			(segment) => segment.tokens[0],

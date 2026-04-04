@@ -337,11 +337,7 @@ const shouldResetInlineStateForUnsafeBoundary = (state: IncrementalTokenState): 
 		return false;
 	}
 
-	return isUnsafeInlineBoundary(
-		previousToken,
-		nextToken,
-		joinInlineBoundaryAnalysisRaw(state.frozenSegments)
-	);
+	return isUnsafeInlineBoundary(previousToken, nextToken);
 };
 
 const buildResetInlineState = (
@@ -416,12 +412,15 @@ const getInlineMutableTokenStartIndex = (tokens: Token[]): number => {
 		return 0;
 	}
 
-	const prefixAnalysisRawByEndIndex: string[] = [];
-	let prefixAnalysisRaw = '';
+	const hasOpenBracketedInlineConstructByEndIndex: boolean[] = [];
+	let openBracketedInlineConstructs: OpenBracketedInlineConstruct[] = [];
 
 	for (const token of tokens) {
-		prefixAnalysisRaw += getInlineBoundaryTokenRaw(token);
-		prefixAnalysisRawByEndIndex.push(prefixAnalysisRaw);
+		openBracketedInlineConstructs = updateOpenBracketedInlineConstructs(
+			openBracketedInlineConstructs,
+			getInlineBoundaryTokenRaw(token)
+		);
+		hasOpenBracketedInlineConstructByEndIndex.push(openBracketedInlineConstructs.length > 0);
 	}
 
 	let startIndex = Math.max(0, tokens.length - 1);
@@ -431,7 +430,7 @@ const getInlineMutableTokenStartIndex = (tokens: Token[]): number => {
 		isUnsafeInlineBoundary(
 			tokens[startIndex - 1],
 			tokens[startIndex],
-			prefixAnalysisRawByEndIndex[startIndex - 1] ?? ''
+			hasOpenBracketedInlineConstructByEndIndex[startIndex - 1] ?? false
 		)
 	) {
 		startIndex -= 1;
@@ -443,9 +442,9 @@ const getInlineMutableTokenStartIndex = (tokens: Token[]): number => {
 const isUnsafeInlineBoundary = (
 	previousToken: Token,
 	nextToken: Token,
-	frozenBoundaryAnalysisRaw = ''
+	hasOpenBracketedInlineConstructInPrefix = false
 ): boolean => {
-	if (hasOpenBracketedInlineConstruct(frozenBoundaryAnalysisRaw)) {
+	if (hasOpenBracketedInlineConstructInPrefix) {
 		return true;
 	}
 
@@ -492,7 +491,7 @@ const isUnsafeInlineBoundary = (
 			previousToken.type === 'del') &&
 		nextToken.type === 'text'
 	) {
-		const expectedDelimiter = getInlineDelimiterSuffix(previousToken.raw ?? '');
+		const expectedDelimiter = getInlineDelimiterTriggerPrefix(previousToken.raw ?? '');
 		if (expectedDelimiter && getTokenRaw(nextToken).startsWith(expectedDelimiter)) {
 			return true;
 		}
@@ -513,12 +512,15 @@ const textTokenContainsPotentialInlineOpener = (raw: string): boolean =>
 	/\[[^\]\r\n]*$/.test(raw) ||
 	/\]\([^\)\r\n]*$/.test(raw);
 
-const hasOpenBracketedInlineConstruct = (raw: string): boolean => {
+const updateOpenBracketedInlineConstructs = (
+	openConstructs: OpenBracketedInlineConstruct[],
+	raw: string
+): OpenBracketedInlineConstruct[] => {
 	if (!raw) {
-		return false;
+		return openConstructs;
 	}
 
-	const openConstructs: OpenBracketedInlineConstruct[] = [];
+	const nextOpenConstructs = openConstructs.map((openConstruct) => ({ ...openConstruct }));
 	let index = 0;
 
 	while (index < raw.length) {
@@ -527,7 +529,7 @@ const hasOpenBracketedInlineConstruct = (raw: string): boolean => {
 			continue;
 		}
 
-		const activeConstruct = openConstructs.at(-1);
+		const activeConstruct = nextOpenConstructs.at(-1);
 
 		if (activeConstruct?.state === 'destination') {
 			if (raw[index] === '(') {
@@ -535,7 +537,7 @@ const hasOpenBracketedInlineConstruct = (raw: string): boolean => {
 			} else if (raw[index] === ')') {
 				activeConstruct.parenthesisDepth -= 1;
 				if (activeConstruct.parenthesisDepth === 0) {
-					openConstructs.pop();
+					nextOpenConstructs.pop();
 				}
 			}
 
@@ -549,7 +551,7 @@ const hasOpenBracketedInlineConstruct = (raw: string): boolean => {
 			} else if (raw[index] === ']') {
 				activeConstruct.bracketDepth -= 1;
 				if (activeConstruct.bracketDepth === 0) {
-					openConstructs.pop();
+					nextOpenConstructs.pop();
 				}
 			}
 
@@ -559,7 +561,7 @@ const hasOpenBracketedInlineConstruct = (raw: string): boolean => {
 
 		if (activeConstruct?.state === 'after-label') {
 			if (raw[index] === '(') {
-				openConstructs[openConstructs.length - 1] = {
+				nextOpenConstructs[nextOpenConstructs.length - 1] = {
 					state: 'destination',
 					parenthesisDepth: 1
 				};
@@ -568,7 +570,7 @@ const hasOpenBracketedInlineConstruct = (raw: string): boolean => {
 			}
 
 			if (raw[index] === '[') {
-				openConstructs[openConstructs.length - 1] = {
+				nextOpenConstructs[nextOpenConstructs.length - 1] = {
 					state: 'reference',
 					bracketDepth: 1
 				};
@@ -576,7 +578,7 @@ const hasOpenBracketedInlineConstruct = (raw: string): boolean => {
 				continue;
 			}
 
-			openConstructs.pop();
+			nextOpenConstructs.pop();
 			continue;
 		}
 
@@ -586,7 +588,7 @@ const hasOpenBracketedInlineConstruct = (raw: string): boolean => {
 			} else if (raw[index] === ']') {
 				activeConstruct.bracketDepth -= 1;
 				if (activeConstruct.bracketDepth === 0) {
-					openConstructs[openConstructs.length - 1] = {
+					nextOpenConstructs[nextOpenConstructs.length - 1] = {
 						state: 'after-label'
 					};
 				}
@@ -597,13 +599,13 @@ const hasOpenBracketedInlineConstruct = (raw: string): boolean => {
 		}
 
 		if (raw[index] === '!' && raw[index + 1] === '[') {
-			openConstructs.push({ state: 'label', bracketDepth: 1 });
+			nextOpenConstructs.push({ state: 'label', bracketDepth: 1 });
 			index += 2;
 			continue;
 		}
 
 		if (raw[index] === '[') {
-			openConstructs.push({ state: 'label', bracketDepth: 1 });
+			nextOpenConstructs.push({ state: 'label', bracketDepth: 1 });
 			index += 1;
 			continue;
 		}
@@ -611,12 +613,16 @@ const hasOpenBracketedInlineConstruct = (raw: string): boolean => {
 		index += 1;
 	}
 
-	return openConstructs.length > 0;
+	return nextOpenConstructs;
 };
 
-const getInlineDelimiterSuffix = (raw: string): string => {
+const getInlineDelimiterTriggerPrefix = (raw: string): string => {
 	if (raw.startsWith('**') && raw.endsWith('**')) {
 		return '*';
+	}
+
+	if (raw.startsWith('__') && raw.endsWith('__')) {
+		return '_';
 	}
 
 	if (raw.startsWith('~~') && raw.endsWith('~~')) {
@@ -644,11 +650,6 @@ const getInlineBoundaryTokenRaw = (token: Token): string => {
 
 	return getTokenRaw(token);
 };
-
-const joinInlineBoundaryAnalysisRaw = (segments: IncrementalTokenSegment[]): string =>
-	segments
-		.map((segment) => segment.tokens.map((token) => getInlineBoundaryTokenRaw(token)).join(''))
-		.join('');
 
 const getTokenRaw = (token: Token): string => token.raw ?? '';
 
