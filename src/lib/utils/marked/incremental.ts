@@ -51,13 +51,8 @@ export const createIncrementalTokenState = (
 	nextSegmentId: 0
 });
 
-export const getRenderSegments = (state: IncrementalTokenState): IncrementalTokenSegment[] => {
-	if (!state.mutableSegment) {
-		return state.frozenSegments;
-	}
-
-	return [...state.frozenSegments, state.mutableSegment];
-};
+export const getRenderSegments = (state: IncrementalTokenState): IncrementalTokenSegment[] =>
+	state.mutableSegment ? [...state.frozenSegments, state.mutableSegment] : state.frozenSegments;
 
 export const updateIncrementalTokenState = (
 	state: IncrementalTokenState,
@@ -66,13 +61,11 @@ export const updateIncrementalTokenState = (
 ): IncrementalTokenState => {
 	const nextSource = source ?? '';
 	const nextLinks = options.seedLinks ?? EMPTY_LINKS;
+	const reset = () =>
+		withTransition(resetIncrementalTokenState(state, nextSource, nextLinks), options, 'reset');
 
 	if (state.mode === 'inline' && state.links !== nextLinks) {
-		return withTransition(
-			resetIncrementalTokenState(state, nextSource, nextLinks),
-			options,
-			'reset'
-		);
+		return reset();
 	}
 
 	if (state.lastSource === nextSource) {
@@ -92,19 +85,11 @@ export const updateIncrementalTokenState = (
 	}
 
 	if (!nextSource.startsWith(state.lastSource)) {
-		return withTransition(
-			resetIncrementalTokenState(state, nextSource, nextLinks),
-			options,
-			'reset'
-		);
+		return reset();
 	}
 
 	if (state.mode === 'block' && state.mutableSegment?.tokens[0]?.type === 'def') {
-		return withTransition(
-			resetIncrementalTokenState(state, nextSource, nextLinks),
-			options,
-			'reset'
-		);
+		return reset();
 	}
 
 	const delta = nextSource.slice(state.lastSource.length);
@@ -114,11 +99,7 @@ export const updateIncrementalTokenState = (
 	}
 
 	if (state.mode === 'inline' && shouldResetInlineStateForUnsafeBoundary(state)) {
-		return withTransition(
-			resetIncrementalTokenState(state, nextSource, nextLinks),
-			options,
-			'reset'
-		);
+		return reset();
 	}
 
 	if (state.mode === 'block' && canDirectAppendBlockToken(state, delta)) {
@@ -136,11 +117,7 @@ export const updateIncrementalTokenState = (
 			: lexInlineTokens(nextMutableTailRaw, nextLinks);
 
 	if (state.mode === 'block' && hasDefinitionToken(tailTokens)) {
-		return withTransition(
-			resetIncrementalTokenState(state, nextSource, nextLinks),
-			options,
-			'reset'
-		);
+		return reset();
 	}
 
 	return withTransition(
@@ -163,6 +140,29 @@ const withTransition = <State>(
 	options.onTransition?.(transition);
 	return nextState;
 };
+
+const withSegmentState = (
+	state: IncrementalTokenState,
+	source: string,
+	links: Links,
+	{
+		frozenSegments = state.frozenSegments,
+		mutableSegment = state.mutableSegment,
+		nextSegmentId = state.nextSegmentId
+	}: {
+		frozenSegments?: IncrementalTokenSegment[];
+		mutableSegment?: IncrementalTokenSegment | null;
+		nextSegmentId?: number;
+	}
+): IncrementalTokenState => ({
+	...state,
+	frozenSegments,
+	mutableTailRaw: mutableSegment ? joinTokenRaw(mutableSegment.tokens) : '',
+	mutableSegment,
+	links,
+	lastSource: source,
+	nextSegmentId
+});
 
 const resetIncrementalTokenState = (
 	state: IncrementalTokenState,
@@ -199,29 +199,22 @@ const buildResetState = (
 	let nextSegmentId = state.nextSegmentId;
 	const nextSegments = tokens.map((token) => createSegment(token, nextSegmentId++));
 
-	return {
-		...state,
+	return withSegmentState(state, source, links, {
 		frozenSegments: nextSegments.slice(0, -1),
-		mutableTailRaw: nextSegments.at(-1)?.tokens[0]?.raw ?? '',
 		mutableSegment: nextSegments.at(-1) ?? null,
-		links,
-		lastSource: source,
 		nextSegmentId
-	};
+	});
 };
 
 const clearIncrementalTokenState = (
 	state: IncrementalTokenState,
 	source: string,
 	links: Links
-): IncrementalTokenState => ({
-	...state,
-	frozenSegments: [],
-	mutableTailRaw: '',
-	mutableSegment: null,
-	links,
-	lastSource: source
-});
+): IncrementalTokenState =>
+	withSegmentState(state, source, links, {
+		frozenSegments: [],
+		mutableSegment: null
+	});
 
 const applyTailTokens = (
 	state: IncrementalTokenState,
@@ -237,41 +230,27 @@ const applyTailTokens = (
 	const nextFrozenSegments = state.frozenSegments.slice();
 
 	if (tailTokens.length === 0) {
-		return {
-			...state,
-			mutableTailRaw: '',
+		return withSegmentState(state, source, links, {
 			mutableSegment: null,
-			links,
-			lastSource: source,
 			nextSegmentId
-		};
+		});
 	}
 
 	if (!state.mutableSegment) {
 		const nextSegments = tailTokens.map((token) => createSegment(token, nextSegmentId++));
 
-		return {
-			...state,
+		return withSegmentState(state, source, links, {
 			frozenSegments: nextSegments.slice(0, -1),
-			mutableTailRaw: nextSegments.at(-1)?.tokens[0]?.raw ?? '',
 			mutableSegment: nextSegments.at(-1) ?? null,
-			links,
-			lastSource: source,
 			nextSegmentId
-		};
+		});
 	}
 
 	if (tailTokens.length === 1) {
-		const mutableSegment = createSegmentWithId(state.mutableSegment.id, tailTokens[0]);
-
-		return {
-			...state,
-			mutableTailRaw: mutableSegment.tokens[0]?.raw ?? '',
-			mutableSegment,
-			links,
-			lastSource: source,
+		return withSegmentState(state, source, links, {
+			mutableSegment: createSegmentWithId(state.mutableSegment.id, tailTokens[0]),
 			nextSegmentId
-		};
+		});
 	}
 
 	nextFrozenSegments.push(createSegmentWithId(state.mutableSegment.id, tailTokens[0]));
@@ -282,15 +261,11 @@ const applyTailTokens = (
 
 	const mutableSegment = createSegment(tailTokens.at(-1) as Token, nextSegmentId++);
 
-	return {
-		...state,
+	return withSegmentState(state, source, links, {
 		frozenSegments: nextFrozenSegments,
-		mutableTailRaw: mutableSegment.tokens[0]?.raw ?? '',
 		mutableSegment,
-		links,
-		lastSource: source,
 		nextSegmentId
-	};
+	});
 };
 
 const canDirectAppendBlockToken = (state: IncrementalTokenState, delta: string): boolean => {
@@ -338,11 +313,7 @@ const shouldResetInlineStateForUnsafeBoundary = (state: IncrementalTokenState): 
 	const previousToken = state.frozenSegments.at(-1)?.tokens.at(-1);
 	const nextToken = state.mutableSegment?.tokens[0];
 
-	if (!previousToken || !nextToken) {
-		return false;
-	}
-
-	return isUnsafeInlineBoundary(previousToken, nextToken);
+	return Boolean(previousToken && nextToken && isUnsafeInlineBoundary(previousToken, nextToken));
 };
 
 const buildResetInlineState = (
@@ -361,15 +332,11 @@ const buildResetInlineState = (
 		? createSegmentGroup(`segment-${nextSegmentId++}`, mutableTokens)
 		: null;
 
-	return {
-		...state,
+	return withSegmentState(state, source, links, {
 		frozenSegments,
-		mutableTailRaw: joinTokenRaw(mutableTokens),
 		mutableSegment,
-		links,
-		lastSource: source,
 		nextSegmentId
-	};
+	});
 };
 
 const applyInlineTailTokens = (
@@ -382,14 +349,10 @@ const applyInlineTailTokens = (
 	const nextFrozenSegments = state.frozenSegments.slice();
 
 	if (tailTokens.length === 0) {
-		return {
-			...state,
-			mutableTailRaw: '',
+		return withSegmentState(state, source, links, {
 			mutableSegment: null,
-			links,
-			lastSource: source,
 			nextSegmentId
-		};
+		});
 	}
 
 	const mutableTokenStartIndex = getInlineMutableTokenStartIndex(tailTokens);
@@ -401,15 +364,11 @@ const applyInlineTailTokens = (
 	const mutableTokens = tailTokens.slice(mutableTokenStartIndex);
 	const mutableSegmentId = state.mutableSegment?.id ?? `segment-${nextSegmentId++}`;
 
-	return {
-		...state,
+	return withSegmentState(state, source, links, {
 		frozenSegments: nextFrozenSegments,
-		mutableTailRaw: joinTokenRaw(mutableTokens),
 		mutableSegment: createSegmentGroup(mutableSegmentId, mutableTokens),
-		links,
-		lastSource: source,
 		nextSegmentId
-	};
+	});
 };
 
 const joinTokenRaw = (tokens: Token[]): string =>
@@ -430,15 +389,11 @@ const createSegmentWithId = (id: string, token: Token): IncrementalTokenSegment 
 	tokens: [token]
 });
 
-const lexBlockTokens = (source: string, seedLinks?: Links): TokensList => {
-	const lexer = createLexer(seedLinks);
-	return lexer.lex(source);
-};
+const lexBlockTokens = (source: string, seedLinks?: Links): TokensList =>
+	createLexer(seedLinks).lex(source);
 
-const lexInlineTokens = (source: string, seedLinks?: Links): Token[] => {
-	const lexer = createLexer(seedLinks);
-	return lexer.inlineTokens(source);
-};
+const lexInlineTokens = (source: string, seedLinks?: Links): Token[] =>
+	createLexer(seedLinks).inlineTokens(source);
 
 const createLexer = (seedLinks?: Links) => {
 	const lexer = new chatMarked.Lexer(chatMarked.defaults);

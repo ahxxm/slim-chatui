@@ -17,35 +17,29 @@ type OpenBracketedInlineConstruct =
 	| { state: 'reference'; bracketDepth: number };
 
 export const getInlineMutableTokenStartIndex = (tokens: Token[]): number => {
-	if (tokens.length === 0) {
-		return 0;
-	}
-
-	const hasOpenBracketedInlineConstructByEndIndex: boolean[] = [];
+	let lastSafeBoundary = 0;
 	let openBracketedInlineConstructs: OpenBracketedInlineConstruct[] = [];
 
-	for (const token of tokens) {
+	for (let index = 0; index < tokens.length - 1; index += 1) {
+		const token = tokens[index];
+		const tokenRaw =
+			token.type === 'link' || token.type === 'image' || token.type === 'citation'
+				? ''
+				: getTokenRaw(token);
+
 		openBracketedInlineConstructs = updateOpenBracketedInlineConstructs(
 			openBracketedInlineConstructs,
-			getInlineBoundaryTokenRaw(token)
+			tokenRaw
 		);
-		hasOpenBracketedInlineConstructByEndIndex.push(openBracketedInlineConstructs.length > 0);
+
+		if (
+			!isUnsafeInlineBoundary(token, tokens[index + 1], openBracketedInlineConstructs.length > 0)
+		) {
+			lastSafeBoundary = index + 1;
+		}
 	}
 
-	let startIndex = Math.max(0, tokens.length - 1);
-
-	while (
-		startIndex > 0 &&
-		isUnsafeInlineBoundary(
-			tokens[startIndex - 1],
-			tokens[startIndex],
-			hasOpenBracketedInlineConstructByEndIndex[startIndex - 1] ?? false
-		)
-	) {
-		startIndex -= 1;
-	}
-
-	return startIndex;
+	return lastSafeBoundary;
 };
 
 export const isUnsafeInlineBoundary = (
@@ -227,33 +221,11 @@ const updateOpenBracketedInlineConstructs = (
  * on the next token is already enough to make the split unsafe.
  */
 const getInlineBoundaryTriggerPrefix = (raw: string): string => {
-	if (raw.startsWith('**') && raw.endsWith('**')) {
-		return '*';
-	}
-
-	if (raw.startsWith('__') && raw.endsWith('__')) {
-		return '_';
-	}
-
-	if (raw.startsWith('~~') && raw.endsWith('~~')) {
-		return '~';
-	}
-
-	if (raw.startsWith('*') && raw.endsWith('*')) {
-		return '*';
-	}
-
-	if (raw.startsWith('_') && raw.endsWith('_')) {
-		return '_';
+	for (const delimiter of ['**', '__', '~~', '*', '_'] as const) {
+		if (raw.startsWith(delimiter) && raw.endsWith(delimiter)) {
+			return delimiter[0];
+		}
 	}
 
 	return '';
-};
-
-const getInlineBoundaryTokenRaw = (token: Token): string => {
-	if (token.type === 'link' || token.type === 'image' || token.type === 'citation') {
-		return '';
-	}
-
-	return getTokenRaw(token);
 };
