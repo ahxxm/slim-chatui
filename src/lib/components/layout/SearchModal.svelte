@@ -116,6 +116,9 @@
 
 	$effect(() => {
 		if (!chatListLoading && chatList) {
+			if (selectedIdx === null && chatList.length > 0) {
+				selectedIdx = actions.length;
+			}
 			untrack(() => loadChatPreview(selectedIdx));
 		}
 	});
@@ -171,6 +174,7 @@
 
 		page = 1;
 		chatList = null;
+		selectedIdx = null;
 		allChatsLoaded = false;
 		previewMessages = null;
 		previewLoading = false;
@@ -286,11 +290,6 @@
 				onSearchInput={searchHandler}
 				placeholder={$i18n.t('Search')}
 				showClearButton={true}
-				onFocus={() => {
-					selectedIdx = null;
-					previewMessages = null;
-					previewLoading = false;
-				}}
 				onKeydown={(e: KeyboardEvent) => {
 					if (e.code === 'Enter' && (chatList ?? []).length > 0) {
 						const item = getSelectedItem();
