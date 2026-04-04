@@ -15,7 +15,6 @@
 		grow?: boolean;
 		disabled?: boolean;
 		hide?: boolean;
-		stopPropagation?: boolean;
 		onChange?: (open: boolean) => void;
 		children?: Snippet;
 		content?: Snippet;
@@ -30,7 +29,6 @@
 		grow = false,
 		disabled = false,
 		hide = false,
-		stopPropagation = false,
 		onChange = () => {},
 		children = undefined,
 		content = undefined
@@ -47,15 +45,7 @@
 		}
 	};
 
-	const stopEventPropagation = (event: Event) => {
-		if (stopPropagation) {
-			event.stopPropagation();
-		}
-	};
-
 	const onTriggerKeydown = (event: KeyboardEvent) => {
-		stopEventPropagation(event);
-
 		if (event.key !== 'Enter' && event.key !== ' ') {
 			return;
 		}
@@ -64,28 +54,19 @@
 		toggleOpen();
 	};
 
-	const onTriggerClick = (event: MouseEvent) => {
-		stopEventPropagation(event);
-	};
-
-	const onTriggerPointerUp = (event: PointerEvent) => {
-		stopEventPropagation(event);
+	const onTriggerPointerUp = () => {
 		toggleOpen();
-	};
-
-	const onContentPointerUp = (event: PointerEvent) => {
-		stopEventPropagation(event);
 	};
 </script>
 
 <div {id} class={className}>
 	<!-- svelte-ignore a11y_no_noninteractive_tabindex -->
 	<div
+		data-collapsible-trigger
 		class="{buttonClassName} {disabled ? '' : 'cursor-pointer'}"
 		role={disabled ? undefined : 'button'}
 		tabindex={disabled ? undefined : 0}
 		aria-expanded={disabled ? undefined : open}
-		onclick={onTriggerClick}
 		onkeydown={onTriggerKeydown}
 		onpointerup={onTriggerPointerUp}
 	>
@@ -106,11 +87,7 @@
 		</div>
 
 		{#if grow && open && !hide}
-			<!-- svelte-ignore a11y_no_static_element_interactions -->
-			<div
-				transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}
-				onpointerup={onContentPointerUp}
-			>
+			<div transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}>
 				{@render content?.()}
 			</div>
 		{/if}

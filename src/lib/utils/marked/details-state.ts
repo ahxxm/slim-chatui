@@ -11,9 +11,7 @@ const IDENTITY_ATTRIBUTE_KEYS = [
 	'action',
 	'query',
 	'pattern',
-	'url',
-	'arguments',
-	'files'
+	'url'
 ] as const;
 const PREVIEW_LIMIT = 120;
 

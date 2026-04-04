@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { type Snippet, getContext } from 'svelte';
-	import { SvelteMap } from 'svelte/reactivity';
 
 	import { markdownRenderContextKey, type MarkdownRenderContextState } from './context';
 	import DetailsHeader from './DetailsHeader.svelte';
@@ -27,22 +26,26 @@
 		content: body = undefined
 	}: MarkdownDetailsBlockProps = $props();
 
-	const markdownRenderContext =
-		getContext<MarkdownRenderContextState | null>(markdownRenderContextKey) ?? null;
-	const fallbackOpenStates = new SvelteMap<string, boolean>();
+	const markdownRenderContext = getContext<MarkdownRenderContextState | null>(
+		markdownRenderContextKey
+	);
 
-	let effectiveDone = $derived(markdownRenderContext?.done ?? true);
-	let effectiveOpenStates = $derived(markdownRenderContext?.openStates ?? fallbackOpenStates);
+	if (!markdownRenderContext) {
+		throw new Error('MarkdownDetailsBlock requires markdown render context');
+	}
+
+	let renderDone = $derived(markdownRenderContext.done);
+	let renderOpenStates = $derived(markdownRenderContext.openStates);
 	let resolvedAttributes = $derived(
-		effectiveDone && attributes?.done !== 'true' ? { ...attributes, done: 'true' } : attributes
+		renderDone && attributes?.done !== 'true' ? { ...attributes, done: 'true' } : attributes
 	);
 
 	const getOpenState = (defaultOpen: boolean): boolean =>
-		effectiveOpenStates.get(openStateId) ?? defaultOpen;
+		renderOpenStates.get(openStateId) ?? defaultOpen;
 
 	const setOpenState = (nextOpen: boolean) => {
-		if (effectiveOpenStates.get(openStateId) !== nextOpen) {
-			effectiveOpenStates.set(openStateId, nextOpen);
+		if (renderOpenStates.get(openStateId) !== nextOpen) {
+			renderOpenStates.set(openStateId, nextOpen);
 		}
 	};
 </script>

@@ -6,6 +6,7 @@
 	import Collapsible from './Collapsible.svelte';
 	import Tooltip from './Tooltip.svelte';
 	import Plus from '../icons/Plus.svelte';
+	import { stopCollapsibleTriggerPropagation } from '$lib/utils/stop-collapsible-trigger-propagation';
 
 	let {
 		open = $bindable(true),
@@ -94,7 +95,11 @@
 	});
 </script>
 
-<div bind:this={folderElement} class="relative {className}">
+<div
+	bind:this={folderElement}
+	use:stopCollapsibleTriggerPropagation
+	class="relative {className}"
+>
 	{#if loaded}
 		{#if draggedOver}
 			<div
@@ -107,7 +112,6 @@
 				bind:open
 				className="w-full "
 				buttonClassName="w-full"
-				stopPropagation={true}
 				onChange={(state: boolean) => {
 					onchange(state);
 					localStorage.setItem(`${id}-folder-state`, `${state}`);

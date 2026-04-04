@@ -84,4 +84,32 @@ describe('details state identity', () => {
 
 		expect(getDetailsIdentityBase(catSearch)).not.toBe(getDetailsIdentityBase(dogSearch));
 	});
+
+	it('ignores bulky tool call arguments and files when deriving identity', () => {
+		const initialToolCall = {
+			type: 'details',
+			raw: '<details>',
+			attributes: {
+				type: 'tool_calls',
+				name: 'search_docs',
+				arguments: '{"query":"render glitch"}',
+				files: '[{"id":"file-1"}]'
+			}
+		} as unknown as DetailsIdentityToken;
+
+		const streamedToolCall = {
+			type: 'details',
+			raw: '<details>',
+			attributes: {
+				type: 'tool_calls',
+				name: 'search_docs',
+				arguments: '{"query":"render glitch with more context"}',
+				files: '[{"id":"file-2"},{"id":"file-3"}]'
+			}
+		} as unknown as DetailsIdentityToken;
+
+		expect(getDetailsIdentityBase(initialToolCall)).toBe(
+			getDetailsIdentityBase(streamedToolCall)
+		);
+	});
 });

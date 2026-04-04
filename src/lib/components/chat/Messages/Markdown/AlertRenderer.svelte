@@ -23,6 +23,8 @@
 		tokens: Token[];
 	}
 
+	const ALERT_MARKER_PATTERN = /^(?:\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\])\s*?\n*/;
+
 	const alertStyles: Record<AlertType, AlertTheme> = {
 		NOTE: {
 			border: 'border-sky-500',
@@ -52,14 +54,12 @@
 	};
 
 	export function alertComponent(token: AlertToken): AlertData | false {
-		const regExpStr = `^(?:\\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\\])\\s*?\n*`;
-		const regExp = new RegExp(regExpStr);
 		const rawText = token.text ?? '';
-		const matches = rawText.match(regExp);
+		const matches = rawText.match(ALERT_MARKER_PATTERN);
 
 		if (matches && matches.length) {
 			const alertType = matches[1] as AlertType;
-			const newText = rawText.replace(regExp, '');
+			const newText = rawText.replace(ALERT_MARKER_PATTERN, '');
 			const newTokens = marked.lexer(newText);
 			return {
 				type: alertType,

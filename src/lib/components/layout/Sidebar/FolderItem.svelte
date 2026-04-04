@@ -34,6 +34,7 @@
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import Emoji from '$lib/components/common/Emoji.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
+	import { stopCollapsibleTriggerPropagation } from '$lib/utils/stop-collapsible-trigger-propagation';
 
 	const i18n = getContext('i18n');
 
@@ -323,14 +324,19 @@
 	</DragGhost>
 {/if}
 
-<div bind:this={folderElement} class="relative {className}" draggable="true">
+<div
+	bind:this={folderElement}
+	use:stopCollapsibleTriggerPropagation
+	class="relative {className}"
+	draggable="true"
+>
 	{#if draggedOver}
 		<div
 			class="absolute top-0 left-0 w-full h-full rounded-xs bg-gray-100/50 dark:bg-gray-700/20 bg-opacity-50 dark:bg-opacity-10 z-50 pointer-events-none touch-none"
 		></div>
 	{/if}
 
-	<Collapsible bind:open className="w-full" buttonClassName="w-full" stopPropagation={true}>
+	<Collapsible bind:open className="w-full" buttonClassName="w-full">
 		<div class="w-full group">
 			<!-- svelte-ignore a11y_no_static_element_interactions -->
 			<!-- svelte-ignore a11y_click_events_have_key_events -->
