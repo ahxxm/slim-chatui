@@ -95,11 +95,7 @@
 	});
 </script>
 
-<div
-	bind:this={folderElement}
-	use:stopCollapsibleTriggerPropagation
-	class="relative {className}"
->
+<div bind:this={folderElement} use:stopCollapsibleTriggerPropagation class="relative {className}">
 	{#if loaded}
 		{#if draggedOver}
 			<div

@@ -1,10 +1,7 @@
 <script lang="ts">
 	import { type Snippet, setContext, untrack } from 'svelte';
 
-	import {
-		markdownDetailsScopeContextKey,
-		type MarkdownDetailsScopeState
-	} from './context';
+	import { markdownDetailsScopeContextKey, type MarkdownDetailsScopeState } from './context';
 
 	interface MarkdownDetailsScopeProps {
 		scopeId: string;

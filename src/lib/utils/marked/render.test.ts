@@ -21,9 +21,9 @@ describe('shouldRenderNestedLinkTokens', () => {
 	});
 
 	it('skips nested rendering for partial streamed links before the closing parenthesis arrives', () => {
-		const token = chatMarked.Lexer.lexInline('First point with a [link](https://example.com/doc').find(
-			(candidate) => candidate.type === 'link'
-		) as any;
+		const token = chatMarked.Lexer.lexInline(
+			'First point with a [link](https://example.com/doc'
+		).find((candidate) => candidate.type === 'link') as any;
 
 		expect(token?.text).toBe('https://example.com/doc');
 		expect(shouldRenderNestedLinkTokens(token)).toBe(false);

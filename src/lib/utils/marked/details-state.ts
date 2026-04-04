@@ -5,13 +5,7 @@ export type DetailsIdentityToken = Token & {
 	attributes?: Record<string, string>;
 };
 
-const IDENTITY_ATTRIBUTE_KEYS = [
-	'name',
-	'action',
-	'query',
-	'pattern',
-	'url'
-] as const;
+const IDENTITY_ATTRIBUTE_KEYS = ['name', 'action', 'query', 'pattern', 'url'] as const;
 const PREVIEW_LIMIT = 120;
 
 const normalizePreviewText = (value: string | null | undefined): string => {

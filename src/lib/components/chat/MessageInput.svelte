@@ -13,8 +13,14 @@
 
 	import InputMenu from './MessageInput/InputMenu.svelte';
 	import FilesOverlay from './MessageInput/FilesOverlay.svelte';
-	type RichTextInputType =
-		typeof import('../common/RichTextInput.svelte').default;
+	import Tooltip from '../common/Tooltip.svelte';
+	import FileItem from '../common/FileItem.svelte';
+	import Image from '../common/Image.svelte';
+	import PlusAlt from '../icons/PlusAlt.svelte';
+	import InputModal from '../common/InputModal.svelte';
+	import Expand from '../icons/Expand.svelte';
+
+	type RichTextInputType = typeof import('../common/RichTextInput.svelte').default;
 	let RichTextInputComponent = $state<RichTextInputType | null>(null);
 
 	const loadRichTextInput = async () => {
@@ -22,12 +28,6 @@
 		const { default: mod } = await import('../common/RichTextInput.svelte');
 		RichTextInputComponent = mod;
 	};
-	import Tooltip from '../common/Tooltip.svelte';
-	import FileItem from '../common/FileItem.svelte';
-	import Image from '../common/Image.svelte';
-	import PlusAlt from '../icons/PlusAlt.svelte';
-	import InputModal from '../common/InputModal.svelte';
-	import Expand from '../icons/Expand.svelte';
 	import QueuedMessageItem from './MessageInput/QueuedMessageItem.svelte';
 
 	const i18n = getContext('i18n');
