@@ -6,7 +6,6 @@ export type DetailsIdentityToken = Token & {
 };
 
 const IDENTITY_ATTRIBUTE_KEYS = [
-	'id',
 	'name',
 	'action',
 	'query',

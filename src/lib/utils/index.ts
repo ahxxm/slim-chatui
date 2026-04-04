@@ -50,7 +50,10 @@ export const replaceTokens = (content: string, char: string, user: string) => {
 		return content;
 	}
 
-	const tokens = [
+	const tokens: Array<{
+		regex: RegExp;
+		replacement: string | ((_: string, fileId: string) => string);
+	}> = [
 		{ regex: /{{char}}/gi, replacement: char },
 		{ regex: /{{user}}/gi, replacement: user },
 		{
@@ -67,7 +70,9 @@ export const replaceTokens = (content: string, char: string, user: string) => {
 	// Apply replacements
 	content = replaceOutsideCode(content, (segment) => {
 		tokens.forEach(({ regex, replacement }) => {
-			if (replacement !== undefined && replacement !== null) {
+			if (typeof replacement === 'string') {
+				segment = segment.replace(regex, replacement);
+			} else {
 				segment = segment.replace(regex, replacement);
 			}
 		});
@@ -251,7 +256,7 @@ export const copyToClipboard = async (
 	text: string,
 	html: string | null = null,
 	formatted = false
-) => {
+): Promise<boolean> => {
 	if (formatted) {
 		let styledHtml = '';
 		if (!html) {
@@ -272,8 +277,8 @@ export const copyToClipboard = async (
 			clipboardMarked.use(markedExtension({ throwOnError: false }));
 			clipboardMarked.use({
 				renderer: {
-					code({ text, lang }) {
-						const language = hljs.getLanguage(lang) ? lang : 'plaintext';
+					code({ text, lang }: { text: string; lang?: string }) {
+						const language = lang && hljs.getLanguage(lang) ? lang : 'plaintext';
 						return `<pre><code class="hljs language-${language}">${hljs.highlight(text, { language }).value}</code></pre>`;
 					}
 				}
@@ -415,27 +420,7 @@ export const removeAllDetails = (content: string) => {
 };
 
 export const processDetails = (content: string) => {
-	content = removeDetails(content, ['reasoning', 'web_search']);
-
-	// This regex matches <details> tags with type="tool_calls" and captures their attributes to convert them to a string
-	const detailsRegex = /<details\s+type="tool_calls"([^>]*)>([\s\S]*?)<\/details>/gis;
-	const matches = content.match(detailsRegex);
-	if (matches) {
-		for (const match of matches) {
-			const attributesRegex = /(\w+)="([^"]*)"/g;
-			const attributes: Record<string, string> = {};
-			let attributeMatch;
-			while ((attributeMatch = attributesRegex.exec(match)) !== null) {
-				attributes[attributeMatch[1]] = attributeMatch[2];
-			}
-
-			if (attributes.result) {
-				content = content.replace(match, unescapeHtml(attributes.result));
-			}
-		}
-	}
-
-	return content;
+	return removeDetails(content, ['reasoning', 'web_search']);
 };
 
 export const getTimeRange = (timestamp: number) => {
@@ -545,13 +530,13 @@ export const createMessagesList = (
 
 		visitedMessageIds.add(currentMessageId);
 
-		const message = history.messages[currentMessageId];
-		if (message === undefined) {
+		const currentMessage: Record<string, any> | undefined = history.messages[currentMessageId];
+		if (currentMessage === undefined) {
 			break;
 		}
 
-		messages.push(message);
-		currentMessageId = message.parentId ?? null;
+		messages.push(currentMessage);
+		currentMessageId = currentMessage.parentId ?? null;
 	}
 
 	return messages.reverse();

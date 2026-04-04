@@ -5,7 +5,6 @@
 	import DetailsHeader from './DetailsHeader.svelte';
 
 	import Collapsible from '$lib/components/common/Collapsible.svelte';
-	import ToolCallDisplay from '$lib/components/common/ToolCallDisplay.svelte';
 	import { settings } from '$lib/stores';
 
 	interface MarkdownDetailsBlockProps {
@@ -50,15 +49,7 @@
 	};
 </script>
 
-{#if resolvedAttributes?.type === 'tool_calls'}
-	<ToolCallDisplay
-		id={`${id}-tc`}
-		attributes={resolvedAttributes}
-		open={getOpenState(false)}
-		className="w-full space-y-1"
-		onChange={setOpenState}
-	/>
-{:else if resolvedAttributes?.type === 'web_search'}
+{#if resolvedAttributes?.type === 'web_search'}
 	<Collapsible
 		open={getOpenState(false)}
 		chevron={true}

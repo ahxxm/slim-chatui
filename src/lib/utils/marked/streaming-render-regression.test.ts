@@ -117,47 +117,6 @@ describe('streaming markdown render regressions', () => {
 		expect(blockquotes).toEqual(['one', 'two']);
 	});
 
-	it('keeps a manually opened tool call block open when earlier content reparses and shifts segment positions', async () => {
-		const initialContent = [
-			'prefix stays one paragraph before the tool call block',
-			'',
-			'<details type="tool_calls" name="search_docs" arguments="{&quot;query&quot;:&quot;render glitch&quot;}" result="{&quot;status&quot;:&quot;ok&quot;}" done="true">',
-			'</details>'
-		].join('\n');
-
-		const updatedContent = [
-			'prefix becomes two paragraphs',
-			'',
-			'before the tool call block',
-			'',
-			'<details type="tool_calls" name="search_docs" arguments="{&quot;query&quot;:&quot;render glitch&quot;}" result="{&quot;status&quot;:&quot;ok&quot;}" done="true">',
-			'</details>'
-		].join('\n');
-
-		const view = render(Markdown, {
-			props: { content: initialContent, id: 'shifted-tool-call-md', done: true },
-			context: createContext()
-		});
-		await tick();
-
-		const toggle = view.container.querySelector('.cursor-pointer');
-		expect(toggle).toBeTruthy();
-		await fireEvent.pointerUp(toggle!);
-		await tick();
-
-		expect(view.container.textContent).toContain('Input');
-
-		await view.rerender({
-			content: updatedContent,
-			id: 'shifted-tool-call-md',
-			done: true
-		});
-		await tick();
-
-		expect(view.container.textContent).toContain('Input');
-		expect(view.container.textContent).toContain('render glitch');
-	});
-
 	it('re-renders a streamed partial markdown link into the final link instead of keeping stale text', async () => {
 		const view = render(Markdown, {
 			props: {
