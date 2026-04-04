@@ -93,15 +93,10 @@
 
 	let taskIds = $state<string[] | null>(null);
 
-	// Typewriter throttle: batch streaming tokens, emit to DOM at the original 23 Hz cap.
-	// At ~43ms between flushes this still smooths bursty streams, while keeping fast models
-	// visually closer to single-word steps than multi-word jumps.
-	// Technically, streamingBuffers holds plain (non-proxy) message objects
-	// so mutations don't trigger Svelte reactivity until we explicitly flush.
-	const TYPEWRITER_EMITS_PER_SEC = 23;
-	const EMIT_INTERVAL_MS = Math.round(1000 / TYPEWRITER_EMITS_PER_SEC);
+	// Streaming buffer: accumulate tokens in plain (non-proxy) objects,
+	// flush to Svelte reactive state once per display frame via requestAnimationFrame.
 	const streamingBuffers: Map<string, any> = new Map();
-	let renderTimer: ReturnType<typeof setTimeout> | null = null;
+	let renderFrame: number | null = null;
 
 	const getStreamingMessage = (messageId: string): any => {
 		let buf = streamingBuffers.get(messageId);
@@ -113,7 +108,7 @@
 	};
 
 	const flushPendingRender = () => {
-		renderTimer = null;
+		renderFrame = null;
 		for (const [id, message] of streamingBuffers) {
 			history.messages[id] = message;
 		}
@@ -121,15 +116,15 @@
 	};
 
 	const scheduleRender = () => {
-		if (!renderTimer) {
-			renderTimer = setTimeout(flushPendingRender, EMIT_INTERVAL_MS);
+		if (renderFrame === null) {
+			renderFrame = requestAnimationFrame(flushPendingRender);
 		}
 	};
 
-	const clearRenderTimerIfIdle = () => {
-		if (renderTimer && streamingBuffers.size === 0) {
-			clearTimeout(renderTimer);
-			renderTimer = null;
+	const clearRenderIfIdle = () => {
+		if (renderFrame !== null && streamingBuffers.size === 0) {
+			cancelAnimationFrame(renderFrame);
+			renderFrame = null;
 		}
 	};
 
@@ -138,7 +133,7 @@
 
 		const bufferedMessage = streamingBuffers.get(id) ?? null;
 		streamingBuffers.delete(id);
-		clearRenderTimerIfIdle();
+		clearRenderIfIdle();
 
 		delete streamingMessages[id];
 
@@ -158,9 +153,9 @@
 	};
 
 	const resetStreamingState = () => {
-		if (renderTimer) {
-			clearTimeout(renderTimer);
-			renderTimer = null;
+		if (renderFrame !== null) {
+			cancelAnimationFrame(renderFrame);
+			renderFrame = null;
 		}
 		if (activeChatEmitter) {
 			clearInterval(activeChatEmitter);
