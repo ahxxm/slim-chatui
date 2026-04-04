@@ -520,7 +520,6 @@ const updateOpenBracketedInlineConstructs = (
 		return openConstructs;
 	}
 
-	const nextOpenConstructs = openConstructs.map((openConstruct) => ({ ...openConstruct }));
 	let index = 0;
 
 	while (index < raw.length) {
@@ -529,7 +528,7 @@ const updateOpenBracketedInlineConstructs = (
 			continue;
 		}
 
-		const activeConstruct = nextOpenConstructs.at(-1);
+		const activeConstruct = openConstructs.at(-1);
 
 		if (activeConstruct?.state === 'destination') {
 			if (raw[index] === '(') {
@@ -537,7 +536,7 @@ const updateOpenBracketedInlineConstructs = (
 			} else if (raw[index] === ')') {
 				activeConstruct.parenthesisDepth -= 1;
 				if (activeConstruct.parenthesisDepth === 0) {
-					nextOpenConstructs.pop();
+					openConstructs.pop();
 				}
 			}
 
@@ -551,7 +550,7 @@ const updateOpenBracketedInlineConstructs = (
 			} else if (raw[index] === ']') {
 				activeConstruct.bracketDepth -= 1;
 				if (activeConstruct.bracketDepth === 0) {
-					nextOpenConstructs.pop();
+					openConstructs.pop();
 				}
 			}
 
@@ -561,7 +560,7 @@ const updateOpenBracketedInlineConstructs = (
 
 		if (activeConstruct?.state === 'after-label') {
 			if (raw[index] === '(') {
-				nextOpenConstructs[nextOpenConstructs.length - 1] = {
+				openConstructs[openConstructs.length - 1] = {
 					state: 'destination',
 					parenthesisDepth: 1
 				};
@@ -570,7 +569,7 @@ const updateOpenBracketedInlineConstructs = (
 			}
 
 			if (raw[index] === '[') {
-				nextOpenConstructs[nextOpenConstructs.length - 1] = {
+				openConstructs[openConstructs.length - 1] = {
 					state: 'reference',
 					bracketDepth: 1
 				};
@@ -578,7 +577,7 @@ const updateOpenBracketedInlineConstructs = (
 				continue;
 			}
 
-			nextOpenConstructs.pop();
+			openConstructs.pop();
 			continue;
 		}
 
@@ -588,7 +587,7 @@ const updateOpenBracketedInlineConstructs = (
 			} else if (raw[index] === ']') {
 				activeConstruct.bracketDepth -= 1;
 				if (activeConstruct.bracketDepth === 0) {
-					nextOpenConstructs[nextOpenConstructs.length - 1] = {
+					openConstructs[openConstructs.length - 1] = {
 						state: 'after-label'
 					};
 				}
@@ -599,13 +598,13 @@ const updateOpenBracketedInlineConstructs = (
 		}
 
 		if (raw[index] === '!' && raw[index + 1] === '[') {
-			nextOpenConstructs.push({ state: 'label', bracketDepth: 1 });
+			openConstructs.push({ state: 'label', bracketDepth: 1 });
 			index += 2;
 			continue;
 		}
 
 		if (raw[index] === '[') {
-			nextOpenConstructs.push({ state: 'label', bracketDepth: 1 });
+			openConstructs.push({ state: 'label', bracketDepth: 1 });
 			index += 1;
 			continue;
 		}
@@ -613,7 +612,7 @@ const updateOpenBracketedInlineConstructs = (
 		index += 1;
 	}
 
-	return nextOpenConstructs;
+	return openConstructs;
 };
 
 const getInlineDelimiterTriggerPrefix = (raw: string): string => {
