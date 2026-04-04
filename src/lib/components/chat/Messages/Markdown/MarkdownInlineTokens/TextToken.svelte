@@ -8,7 +8,5 @@
 {#if done}
 	{rawText}
 {:else}
-	{#key rawText}
-		<span transition:fade={{ duration: 100 }}>{rawText}</span>
-	{/key}
+	<span transition:fade={{ duration: 100 }}>{rawText}</span>
 {/if}

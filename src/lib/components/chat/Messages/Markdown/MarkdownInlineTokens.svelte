@@ -1,5 +1,5 @@
-<script>
-	// @ts-nocheck
+<script lang="ts">
+	import type { Links, Token } from 'marked';
 	import DOMPurify from 'dompurify';
 	import { goto } from '$app/navigation';
 
@@ -9,7 +9,8 @@
 		EMPTY_LINKS,
 		createIncrementalTokenState,
 		getRenderSegments,
-		updateIncrementalTokenState
+		updateIncrementalTokenState,
+		type IncrementalTokenSegment
 	} from '$lib/utils/marked/incremental';
 	import { shouldRenderNestedLinkTokens } from '$lib/utils/marked/render';
 
@@ -21,6 +22,26 @@
 	import CodespanToken from './MarkdownInlineTokens/CodespanToken.svelte';
 	import SourceToken from './SourceToken.svelte';
 
+	type InlineToken = Token & Record<string, any>;
+
+	interface RenderUnit {
+		key: string;
+		segmentId: string;
+		tokenIndex: number;
+		token: InlineToken;
+	}
+
+	interface MarkdownInlineTokensProps {
+		id: string;
+		done?: boolean;
+		tokens?: InlineToken[];
+		source?: string | null;
+		sourceIds?: string[];
+		onSourceClick?: (value: unknown) => void;
+		links?: Links;
+		incremental?: boolean;
+	}
+
 	let {
 		id,
 		done = true,
@@ -30,18 +51,29 @@
 		onSourceClick = () => {},
 		links = EMPTY_LINKS,
 		incremental = false
-	} = $props();
+	}: MarkdownInlineTokensProps = $props();
 
-	function createStaticSegments(nextTokens) {
+	function createStaticSegments(nextTokens: InlineToken[]): IncrementalTokenSegment[] {
 		return nextTokens.map((token, tokenIdx) => ({
 			id: `static-${tokenIdx}`,
 			tokens: [token]
 		}));
 	}
 
+	function createRenderUnits(nextSegments: IncrementalTokenSegment[]): RenderUnit[] {
+		return nextSegments.flatMap((segment) =>
+			segment.tokens.map((token, tokenIdx) => ({
+				key: segment.tokens.length === 1 ? segment.id : `${segment.id}-${tokenIdx}-${token.type}`,
+				segmentId: segment.id,
+				tokenIndex: tokenIdx,
+				token: token as InlineToken
+			}))
+		);
+	}
+
 	let inlineState = createIncrementalTokenState('inline', { seedLinks: EMPTY_LINKS });
 	let currentInlineId = '';
-	let renderSegments = $state([]);
+	let renderUnits = $state<RenderUnit[]>([]);
 
 	$effect(() => {
 		const nextId = id;
@@ -52,7 +84,8 @@
 		if (!useIncremental) {
 			currentInlineId = nextId;
 			inlineState = createIncrementalTokenState('inline', { seedLinks: nextLinks });
-			renderSegments = createStaticSegments(nextTokens);
+			const nextRenderSegments = createStaticSegments(nextTokens);
+			renderUnits = createRenderUnits(nextRenderSegments);
 			return;
 		}
 
@@ -64,13 +97,14 @@
 		inlineState = updateIncrementalTokenState(inlineState, source ?? '', {
 			seedLinks: nextLinks
 		});
-		renderSegments = getRenderSegments(inlineState);
+		const nextRenderSegments = getRenderSegments(inlineState);
+		renderUnits = createRenderUnits(nextRenderSegments);
 	});
 
 	/**
 	 * Handle link clicks - intercept same-origin app URLs for in-app navigation
 	 */
-	const handleLinkClick = (e, href) => {
+	const handleLinkClick = (e: MouseEvent, href: string) => {
 		try {
 			const url = new URL(href, window.location.origin);
 			// Check if same origin and an in-app route
@@ -82,11 +116,10 @@
 			// Invalid URL, let browser handle it
 		}
 	};
-
 </script>
 
-{#each renderSegments as segment (segment.id)}
-	{@const token = segment.tokens[0]}
+{#each renderUnits as renderUnit (renderUnit.key)}
+	{@const token = renderUnit.token}
 
 	{#if token.type === 'escape'}
 		{unescapeHtml(token.text)}
@@ -104,7 +137,7 @@
 				onclick={(e) => handleLinkClick(e, token.href)}
 			>
 				<MarkdownInlineTokens
-					id={`${id}-${segment.id}-a`}
+					id={`${id}-${renderUnit.segmentId}-${renderUnit.tokenIndex}-a`}
 					source={token.text ?? ''}
 					tokens={token.tokens}
 					{onSourceClick}
@@ -138,7 +171,7 @@
 	{:else if token.type === 'strong'}
 		<strong>
 			<MarkdownInlineTokens
-				id={`${id}-${segment.id}-strong`}
+				id={`${id}-${renderUnit.segmentId}-${renderUnit.tokenIndex}-strong`}
 				source={token.text ?? ''}
 				tokens={token.tokens}
 				{onSourceClick}
@@ -151,7 +184,7 @@
 	{:else if token.type === 'em'}
 		<em>
 			<MarkdownInlineTokens
-				id={`${id}-${segment.id}-em`}
+				id={`${id}-${renderUnit.segmentId}-${renderUnit.tokenIndex}-em`}
 				source={token.text ?? ''}
 				tokens={token.tokens}
 				{onSourceClick}
@@ -168,7 +201,7 @@
 	{:else if token.type === 'del'}
 		<del>
 			<MarkdownInlineTokens
-				id={`${id}-${segment.id}-del`}
+				id={`${id}-${renderUnit.segmentId}-${renderUnit.tokenIndex}-del`}
 				source={token.text ?? ''}
 				tokens={token.tokens}
 				{onSourceClick}
@@ -189,9 +222,13 @@
 			width="100%"
 			frameborder="0"
 			onload={(e) => {
+				const frame = e.currentTarget as HTMLIFrameElement;
 				try {
-					e.currentTarget.style.height =
-						e.currentTarget.contentWindow.document.body.scrollHeight + 20 + 'px';
+					const bodyHeight = frame.contentWindow?.document.body.scrollHeight;
+
+					if (typeof bodyHeight === 'number') {
+						frame.style.height = `${bodyHeight + 20}px`;
+					}
 				} catch {}
 			}}
 		></iframe>

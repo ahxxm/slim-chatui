@@ -2,7 +2,7 @@
 	import { decode } from 'html-entities';
 	import { v4 as uuidv4 } from 'uuid';
 
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import { slide } from 'svelte/transition';
@@ -15,6 +15,15 @@
 	import WrenchSolid from '../icons/WrenchSolid.svelte';
 	import CheckCircle from '../icons/CheckCircle.svelte';
 	import Image from './Image.svelte';
+
+	type ToolCallFile =
+		| string
+		| {
+				type?: string;
+				content_type?: string;
+				url?: string;
+		  };
+
 	let {
 		id = '',
 		attributes = {} as {
@@ -49,7 +58,8 @@
 		onChange?: (open: boolean) => void;
 	} = $props();
 
-	const componentId = id || uuidv4();
+	const fallbackComponentId = uuidv4();
+	let componentId = $derived(id || fallbackComponentId);
 
 	function parseJSONString(str: string) {
 		try {
@@ -86,7 +96,12 @@
 
 	let args = $derived(decode(attributes?.arguments ?? ''));
 	let result = $derived(decode(attributes?.result ?? ''));
-	let files = $derived(parseJSONString(decode(attributes?.files ?? '')));
+	let files = $derived(
+		(() => {
+			const parsedFiles = parseJSONString(decode(attributes?.files ?? ''));
+			return Array.isArray(parsedFiles) ? (parsedFiles as ToolCallFile[]) : [];
+		})()
+	);
 	let isDone = $derived(attributes?.done === 'true');
 	let isExecuting = $derived(attributes?.done && attributes?.done !== 'true');
 
@@ -94,7 +109,8 @@
 	let parsedResult = $derived(parseJSONString(result));
 
 	$effect(() => {
-		onChange(open);
+		const currentOpen = open;
+		untrack(() => onChange(currentOpen));
 	});
 </script>
 
@@ -222,15 +238,15 @@
 
 	<!-- Files display (images etc.) when done -->
 	{#if isDone}
-		{#if typeof files === 'object'}
-			{#each files ?? [] as file, idx}
+		{#if files.length > 0}
+			{#each files as file, idx}
 				{#if typeof file === 'string'}
 					{#if file.startsWith('data:image/')}
-						<Image id={`${componentId}-tool-call-result-${idx}`} src={file} alt="Image" />
+						<Image src={file} alt="Image" />
 					{/if}
 				{:else if typeof file === 'object'}
 					{#if (file.type === 'image' || (file?.content_type ?? '').startsWith('image/')) && file.url}
-						<Image id={`${componentId}-tool-call-result-${idx}`} src={file.url} alt="Image" />
+						<Image src={file.url} alt="Image" />
 					{/if}
 				{/if}
 			{/each}

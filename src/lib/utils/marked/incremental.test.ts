@@ -115,25 +115,91 @@ describe('incremental markdown token state', () => {
 		expect((nextSegments[2].tokens[0] as any).text).toBe(' gamma delta');
 	});
 
-	it('falls back to a full inline reset when an appended link closes across the frozen boundary', () => {
+	it('keeps append-only link closure on the tail-lex path instead of resetting inline state', () => {
 		let state = createIncrementalTokenState('inline', { seedLinks: EMPTY_LINKS });
 		state = updateIncrementalTokenState(state, 'Start [link](https://example.com/do', {
 			seedLinks: EMPTY_LINKS
 		});
 
-		expect(getRenderSegments(state).map((segment) => segment.tokens[0].type)).toEqual(['text', 'link']);
+		expect(
+			getRenderSegments(state)
+				.flatMap((segment) => segment.tokens)
+				.map((token) => token.type)
+		).toEqual(['text', 'link']);
 
+		let transition = 'noop';
 		state = updateIncrementalTokenState(state, 'Start [link](https://example.com/docs) end', {
-			seedLinks: EMPTY_LINKS
+			seedLinks: EMPTY_LINKS,
+			onTransition(nextTransition) {
+				transition = nextTransition;
+			}
 		});
 
 		const nextSegments = getRenderSegments(state);
 		const [prefix, link, suffix] = nextSegments.map((segment) => segment.tokens[0] as any);
 
+		expect(transition).toBe('tail-lex');
 		expect(nextSegments.map((segment) => segment.tokens[0].type)).toEqual(['text', 'link', 'text']);
 		expect(prefix.text).toBe('Start ');
 		expect(link.text).toBe('link');
 		expect(link.href).toBe('https://example.com/docs');
 		expect(suffix.text).toBe(' end');
+	});
+
+	it('keeps a formatted markdown link label mutable until the destination closes', () => {
+		let state = createIncrementalTokenState('inline', { seedLinks: EMPTY_LINKS });
+		state = updateIncrementalTokenState(state, 'combo [**label**](https://example.com/do', {
+			seedLinks: EMPTY_LINKS
+		});
+
+		expect(state.frozenSegments).toHaveLength(0);
+		expect(
+			getRenderSegments(state)
+				.flatMap((segment) => segment.tokens)
+				.map((token) => token.type)
+		).toEqual(['text', 'strong', 'text', 'link']);
+
+		let transition = 'noop';
+		state = updateIncrementalTokenState(state, 'combo [**label**](https://example.com/docs)', {
+			seedLinks: EMPTY_LINKS,
+			onTransition(nextTransition) {
+				transition = nextTransition;
+			}
+		});
+
+		const nextTokens = getRenderSegments(state).flatMap((segment) => segment.tokens) as any[];
+
+		expect(transition).toBe('tail-lex');
+		expect(nextTokens.map((token) => token.type)).toEqual(['text', 'link']);
+		expect(nextTokens[0].text).toBe('combo ');
+		expect(nextTokens[1].text).toBe('**label**');
+		expect(nextTokens[1].href).toBe('https://example.com/docs');
+		expect(nextTokens[1].tokens?.[0]?.type).toBe('strong');
+	});
+
+	it('keeps a formatted markdown image label mutable until the destination closes', () => {
+		let state = createIncrementalTokenState('inline', { seedLinks: EMPTY_LINKS });
+		state = updateIncrementalTokenState(state, 'combo ![**alt**](https://example.com/image.pn', {
+			seedLinks: EMPTY_LINKS
+		});
+
+		expect(state.frozenSegments).toHaveLength(0);
+
+		let transition = 'noop';
+		state = updateIncrementalTokenState(state, 'combo ![**alt**](https://example.com/image.png)', {
+			seedLinks: EMPTY_LINKS,
+			onTransition(nextTransition) {
+				transition = nextTransition;
+			}
+		});
+
+		const nextTokens = getRenderSegments(state).flatMap((segment) => segment.tokens) as any[];
+
+		expect(transition).toBe('tail-lex');
+		expect(nextTokens.map((token) => token.type)).toEqual(['text', 'image']);
+		expect(nextTokens[0].text).toBe('combo ');
+		expect(nextTokens[1].text).toBe('**alt**');
+		expect(nextTokens[1].href).toBe('https://example.com/image.png');
+		expect(nextTokens[1].tokens?.[0]?.type).toBe('strong');
 	});
 });

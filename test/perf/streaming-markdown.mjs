@@ -47,6 +47,11 @@ function summarize(times) {
 	};
 }
 
+function summarizeMaybe(times) {
+	if (times.length === 0) return null;
+	return summarize(times);
+}
+
 function speedup(left, right) {
 	if (right === 0) return Number.POSITIVE_INFINITY;
 	return left / right;
@@ -250,26 +255,45 @@ function updateInlineRenderTree(
 	shouldRenderNestedLinkTokens,
 	createIncrementalTokenState,
 	updateIncrementalTokenState,
-	getRenderSegments
+	getRenderSegments,
+	resetMetrics
 ) {
 	const previousInlineState =
 		previousInlineStates.get(rootInlineSource.id) ??
 		createIncrementalTokenState('inline', { seedLinks: links });
-	const nextInlineState = updateIncrementalTokenState(previousInlineState, rootInlineSource.source, {
-		seedLinks: links
-	});
+	let transition = 'noop';
+	const updateStart = performance.now();
+	const nextInlineState = updateIncrementalTokenState(
+		previousInlineState,
+		rootInlineSource.source,
+		{
+			seedLinks: links,
+			onTransition(nextTransition) {
+				transition = nextTransition;
+			}
+		}
+	);
+	const updateDuration = performance.now() - updateStart;
+
+	if (transition === 'reset') {
+		resetMetrics.inlineResetCalls += 1;
+		resetMetrics.inlineResetUpdateTimes.push(updateDuration);
+		resetMetrics.hadInlineReset = true;
+	}
 
 	nextInlineStates.set(rootInlineSource.id, nextInlineState);
 
 	const childInlineSources = [];
 
 	getRenderSegments(nextInlineState).forEach((segment) => {
-		collectNestedInlineSources(
-			segment.tokens[0],
-			`${rootInlineSource.id}-${segment.id}`,
-			shouldRenderNestedLinkTokens,
-			childInlineSources
-		);
+		segment.tokens.forEach((token, tokenIndex) => {
+			collectNestedInlineSources(
+				token,
+				`${rootInlineSource.id}-${segment.id}-${tokenIndex}`,
+				shouldRenderNestedLinkTokens,
+				childInlineSources
+			);
+		});
 	});
 
 	childInlineSources.forEach((childInlineSource) => {
@@ -281,7 +305,8 @@ function updateInlineRenderTree(
 			shouldRenderNestedLinkTokens,
 			createIncrementalTokenState,
 			updateIncrementalTokenState,
-			getRenderSegments
+			getRenderSegments,
+			resetMetrics
 		);
 	});
 }
@@ -299,9 +324,18 @@ function benchmarkIncrementalRenderPath(
 	const blockUpdateTimes = [];
 	const inlineUpdateTimes = [];
 	const totalTimes = [];
+	const inlineResetUpdateTimes = [];
+	const flushTimesWithInlineReset = [];
+	const flushTimesWithoutInlineReset = [];
+	let inlineResetCalls = 0;
 
 	for (const content of normalizedFlushes) {
 		const totalStart = performance.now();
+		const resetMetrics = {
+			hadInlineReset: false,
+			inlineResetCalls: 0,
+			inlineResetUpdateTimes: []
+		};
 
 		const blockStart = performance.now();
 		blockState = updateIncrementalTokenState(blockState, content);
@@ -325,19 +359,36 @@ function benchmarkIncrementalRenderPath(
 				shouldRenderNestedLinkTokens,
 				createIncrementalTokenState,
 				updateIncrementalTokenState,
-				getRenderSegments
+				getRenderSegments,
+				resetMetrics
 			);
 		});
 
 		inlineStates = nextInlineStates;
 		inlineUpdateTimes.push(performance.now() - inlineStart);
-		totalTimes.push(performance.now() - totalStart);
+		const totalDuration = performance.now() - totalStart;
+		totalTimes.push(totalDuration);
+		inlineResetCalls += resetMetrics.inlineResetCalls;
+		inlineResetUpdateTimes.push(...resetMetrics.inlineResetUpdateTimes);
+
+		if (resetMetrics.hadInlineReset) {
+			flushTimesWithInlineReset.push(totalDuration);
+		} else {
+			flushTimesWithoutInlineReset.push(totalDuration);
+		}
 	}
 
 	return {
 		block: summarize(blockUpdateTimes),
 		inline: summarize(inlineUpdateTimes),
-		total: summarize(totalTimes)
+		total: summarize(totalTimes),
+		resets: {
+			inlineResetCalls,
+			inlineResetFlushes: flushTimesWithInlineReset.length,
+			inlineResetUpdates: summarizeMaybe(inlineResetUpdateTimes),
+			inlineResetFlushTimes: summarizeMaybe(flushTimesWithInlineReset),
+			inlineNonResetFlushTimes: summarizeMaybe(flushTimesWithoutInlineReset)
+		}
 	};
 }
 
@@ -464,6 +515,8 @@ try {
 		`Markdown stage only: normalized content is precomputed, then full reparse is compared against the actual incremental block+inline update path. steadyStateAvgMs uses the last ${STEADY_STATE_FLUSH_WINDOW} flushes.`
 	);
 
+	const formatSummary = (summary, field = 'average') => (summary ? summary[field].toFixed(2) : '-');
+
 	console.table(
 		results.map((result) => ({
 			scenario: result.scenario,
@@ -478,12 +531,25 @@ try {
 				result.fullReparse.steadyStateAverage,
 				result.incremental.total.steadyStateAverage
 			).toFixed(2),
+			inlineResetCalls: result.incremental.resets.inlineResetCalls,
+			inlineResetFlushes: `${result.incremental.resets.inlineResetFlushes}/${result.flushes}`,
+			inlineResetUpdateAvgMs: formatSummary(result.incremental.resets.inlineResetUpdates),
+			inlineResetUpdateP95Ms: formatSummary(result.incremental.resets.inlineResetUpdates, 'p95'),
+			inlineResetFlushAvgMs: formatSummary(result.incremental.resets.inlineResetFlushTimes),
+			inlineResetFlushP95Ms: formatSummary(result.incremental.resets.inlineResetFlushTimes, 'p95'),
+			inlineNoResetFlushAvgMs: formatSummary(result.incremental.resets.inlineNonResetFlushTimes),
 			incrementalBlockAvgMs: result.incremental.block.average.toFixed(2),
 			incrementalInlineAvgMs: result.incremental.inline.average.toFixed(2),
 			incrementalBlockSteadyStateAvgMs: result.incremental.block.steadyStateAverage.toFixed(2),
 			incrementalInlineSteadyStateAvgMs: result.incremental.inline.steadyStateAverage.toFixed(2)
 		}))
 	);
+
+	if (results.every((result) => result.incremental.resets.inlineResetCalls === 0)) {
+		console.log(
+			'No current benchmark scenario triggered inline reset transitions. The table above measures steady append-only streaming, not reset-path latency.'
+		);
+	}
 } finally {
 	await vite.close();
 }

@@ -1,7 +1,8 @@
-<script>
-	// @ts-nocheck
+<script lang="ts">
+	import type { Links, Token } from 'marked';
 	import { decode } from 'html-entities';
 	import { getContext } from 'svelte';
+	import { SvelteMap } from 'svelte/reactivity';
 	const i18n = getContext('i18n');
 
 	import { saveAs } from '$lib/utils';
@@ -11,9 +12,11 @@
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { settings } from '$lib/stores';
 	import { EMPTY_LINKS } from '$lib/utils/marked/incremental';
+	import { createIndexedDetailsStateIds } from '$lib/utils/marked/details-state';
 
 	import CodeBlock from '$lib/components/chat/Messages/CodeBlock.svelte';
 	import MarkdownInlineTokens from '$lib/components/chat/Messages/Markdown/MarkdownInlineTokens.svelte';
+	import MarkdownTokens from '$lib/components/chat/Messages/Markdown/MarkdownTokens.svelte';
 	import KatexRenderer from './KatexRenderer.svelte';
 	import AlertRenderer, { alertComponent } from './AlertRenderer.svelte';
 	import Collapsible from '$lib/components/common/Collapsible.svelte';
@@ -24,51 +27,84 @@
 	import HtmlToken from './HTMLToken.svelte';
 	import Clipboard from '$lib/components/icons/Clipboard.svelte';
 
-	export let id;
-	export let tokens = [];
-	export let top = true;
-	export let sourceIds = [];
-
-	export let done = true;
-
-	export let save = false;
-
-	export let paragraphTag = 'p';
-
-	export let editCodeBlock = true;
-	export let topPadding = false;
-	export let links = EMPTY_LINKS;
-	export let incremental = false;
-
-	export let onSave = () => {};
-
-	export let onTaskClick = () => {};
-	export let onSourceClick = () => {};
-
-	const openStates = new Map();
-
-	const getOpenState = (stateId, defaultOpen) => openStates.get(stateId) ?? defaultOpen;
-	const setOpenState = (stateId, nextOpen) => {
-		openStates.set(stateId, nextOpen);
+	type MarkdownToken = Token & Record<string, any>;
+	type MarkdownTextFragment = { text?: string | null };
+	type MarkdownTableCell = {
+		text?: string | null;
+		tokens?: MarkdownTextFragment[];
 	};
 
-	const headerComponent = (depth) => {
+	interface MarkdownTokensProps {
+		id: string;
+		tokens?: MarkdownToken[];
+		top?: boolean;
+		sourceIds?: string[];
+		done?: boolean;
+		save?: boolean;
+		paragraphTag?: 'p' | 'span';
+		editCodeBlock?: boolean;
+		topPadding?: boolean;
+		links?: Links;
+		incremental?: boolean;
+		onSave?: (value: unknown) => void;
+		onTaskClick?: (value: unknown) => void;
+		onSourceClick?: (value: unknown) => void;
+		openStates?: SvelteMap<string, boolean>;
+		detailsScopeId?: string;
+		rootDetailsStateId?: string | null;
+	}
+
+	let {
+		id,
+		tokens = [],
+		top = true,
+		sourceIds = [],
+		done = true,
+		save = false,
+		paragraphTag = 'p',
+		editCodeBlock = true,
+		topPadding = false,
+		links = EMPTY_LINKS,
+		incremental = false,
+		onSave = () => {},
+		onTaskClick = () => {},
+		onSourceClick = () => {},
+		openStates = new SvelteMap<string, boolean>(),
+		detailsScopeId = id,
+		rootDetailsStateId = null
+	}: MarkdownTokensProps = $props();
+
+	let detailsStateIds = $derived(
+		createIndexedDetailsStateIds(tokens, (token) => token as Token, detailsScopeId)
+	);
+
+	const getOpenState = (stateId: string, defaultOpen: boolean) =>
+		openStates.get(stateId) ?? defaultOpen;
+	const setOpenState = (stateId: string, nextOpen: boolean) => {
+		if (openStates.get(stateId) !== nextOpen) {
+			openStates.set(stateId, nextOpen);
+		}
+	};
+
+	const headerComponent = (depth: number) => {
 		return 'h' + depth;
 	};
 
-	const exportTableToCSVHandler = (token, tokenIdx = 0) => {
+	const exportTableToCSVHandler = (token: MarkdownToken, tokenIdx = 0) => {
 		console.log('Exporting table to CSV');
 
 		// Extract header row text, decode HTML entities, and escape for CSV.
-		const header = token.header.map(
-			(headerCell) => `"${decode(headerCell.text).replace(/"/g, '""')}"`
+		const header = (token.header ?? []).map(
+			(headerCell: MarkdownTableCell) => `"${decode(headerCell.text ?? '').replace(/"/g, '""')}"`
 		);
 
 		// Create an array for rows that will hold the mapped cell text.
-		const rows = token.rows.map((row) =>
-			row.map((cell) => {
+		const rows = (token.rows ?? []).map((row: MarkdownTableCell[]) =>
+			row.map((cell: MarkdownTableCell) => {
 				// Map tokens into a single text
-				const cellContent = cell.tokens.map((token) => token.text).join('');
+				const cellContent = (cell.tokens ?? [])
+					.map((childToken: MarkdownTextFragment) => childToken.text ?? '')
+					.join('');
 				// Decode HTML entities and escape double quotes, wrap in double quotes
 				return `"${decode(cellContent).replace(/"/g, '""')}"`;
 			})
@@ -123,7 +159,7 @@
 				{save}
 				edit={editCodeBlock}
 				stickyButtonsClassName={topPadding ? 'top-10' : 'top-0'}
-				onSave={(value) => {
+				onSave={(value: unknown) => {
 					onSave({
 						raw: token.raw,
 						oldContent: token.text,
@@ -205,7 +241,7 @@
 				<Tooltip content={$i18n.t('Copy')}>
 					<button
 						class="p-1 rounded-lg bg-transparent transition"
-						on:click={(e) => {
+						onclick={(e) => {
 							e.stopPropagation();
 							copyToClipboard(token.raw.trim(), null, $settings?.copyFormatted ?? false);
 						}}
@@ -217,7 +253,7 @@
 				<Tooltip content={$i18n.t('Export to CSV')}>
 					<button
 						class="p-1 rounded-lg bg-transparent transition"
-						on:click={(e) => {
+						onclick={(e) => {
 							e.stopPropagation();
 							exportTableToCSVHandler(token, tokenIdx);
 						}}
@@ -233,7 +269,7 @@
 			<AlertRenderer {alert} />
 		{:else}
 			<blockquote dir="auto">
-				<svelte:self
+				<MarkdownTokens
 					id={`${id}-${tokenIdx}`}
 					tokens={token.tokens}
 					{done}
@@ -247,6 +283,9 @@
 					{onTaskClick}
 					{sourceIds}
 					{onSourceClick}
+					{openStates}
+					{detailsScopeId}
+					rootDetailsStateId={null}
 				/>
 			</blockquote>
 		{/if}
@@ -260,20 +299,20 @@
 								class=" translate-y-[1px] -translate-x-1"
 								type="checkbox"
 								checked={item.checked}
-								on:change={(e) => {
+								onchange={(e) => {
 									onTaskClick({
 										id: id,
 										token: token,
 										tokenIdx: tokenIdx,
 										item: item,
 										itemIdx: itemIdx,
-										checked: e.target.checked
+										checked: e.currentTarget.checked
 									});
 								}}
 							/>
 						{/if}
 
-						<svelte:self
+						<MarkdownTokens
 							id={`${id}-${tokenIdx}-${itemIdx}`}
 							tokens={item.tokens}
 							top={token.loose}
@@ -288,6 +327,9 @@
 							{onTaskClick}
 							{sourceIds}
 							{onSourceClick}
+							{openStates}
+							{detailsScopeId}
+							rootDetailsStateId={null}
 						/>
 					</li>
 				{/each}
@@ -301,20 +343,20 @@
 								class=""
 								type="checkbox"
 								checked={item.checked}
-								on:change={(e) => {
+								onchange={(e) => {
 									onTaskClick({
 										id: id,
 										token: token,
 										tokenIdx: tokenIdx,
 										item: item,
 										itemIdx: itemIdx,
-										checked: e.target.checked
+										checked: e.currentTarget.checked
 									});
 								}}
 							/>
 
 							<div>
-								<svelte:self
+								<MarkdownTokens
 									id={`${id}-${tokenIdx}-${itemIdx}`}
 									tokens={item.tokens}
 									top={token.loose}
@@ -329,10 +371,13 @@
 									{onTaskClick}
 									{sourceIds}
 									{onSourceClick}
+									{openStates}
+									{detailsScopeId}
+									rootDetailsStateId={null}
 								/>
 							</div>
 						{:else}
-							<svelte:self
+							<MarkdownTokens
 								id={`${id}-${tokenIdx}-${itemIdx}`}
 								tokens={item.tokens}
 								top={token.loose}
@@ -347,6 +392,9 @@
 								{onTaskClick}
 								{sourceIds}
 								{onSourceClick}
+								{openStates}
+								{detailsScopeId}
+								rootDetailsStateId={null}
 							/>
 						{/if}
 					</li>
@@ -355,7 +403,10 @@
 		{/if}
 	{:else if token.type === 'details'}
 		{@const hasContent = (token.tokens?.length ?? 0) > 0}
-		{@const openStateId = `${id}-${tokenIdx}-details`}
+		{@const openStateId =
+			rootDetailsStateId ??
+			detailsStateIds.get(tokenIdx) ??
+			`${detailsScopeId}::details::${tokenIdx}`}
 		<!-- token.attributes.done is baked into the HTML by the backend during streaming;
 			 when cancelled, message-level done is true but the HTML still says done="false",
 			 so override it here to stop the Collapsible spinner -->
@@ -371,7 +422,7 @@
 				attributes={attrs}
 				open={getOpenState(openStateId, false)}
 				className="w-full space-y-1"
-				onChange={(nextOpen) => setOpenState(openStateId, nextOpen)}
+				onChange={(nextOpen: boolean) => setOpenState(openStateId, nextOpen)}
 			/>
 		{:else if attrs?.type === 'web_search'}
 			<Collapsible
@@ -380,7 +431,7 @@
 				disabled={true}
 				attributes={attrs}
 				className="w-full space-y-1"
-				onChange={(nextOpen) => setOpenState(openStateId, nextOpen)}
+				onChange={(nextOpen: boolean) => setOpenState(openStateId, nextOpen)}
 			/>
 		{:else if hasContent}
 			<Collapsible
@@ -388,13 +439,12 @@
 				open={getOpenState(openStateId, $settings?.expandDetails ?? false)}
 				attributes={attrs}
 				className="w-full space-y-1"
-				onChange={(nextOpen) => setOpenState(openStateId, nextOpen)}
+				onChange={(nextOpen: boolean) => setOpenState(openStateId, nextOpen)}
 			>
 				<div class=" mb-1.5" slot="content">
-					<svelte:self
+					<MarkdownTokens
 						id={`${id}-${tokenIdx}-d`}
 						tokens={token.tokens}
-						attributes={attrs}
 						{done}
 						{save}
 						{paragraphTag}
@@ -406,6 +456,9 @@
 						{onTaskClick}
 						{sourceIds}
 						{onSourceClick}
+						{openStates}
+						detailsScopeId={openStateId}
+						rootDetailsStateId={null}
 					/>
 				</div>
 			</Collapsible>
@@ -416,7 +469,7 @@
 				disabled={true}
 				attributes={attrs}
 				className="w-full space-y-1"
-				onChange={(nextOpen) => setOpenState(openStateId, nextOpen)}
+				onChange={(nextOpen: boolean) => setOpenState(openStateId, nextOpen)}
 			/>
 		{/if}
 	{:else if token.type === 'html'}
@@ -427,10 +480,14 @@
 			title={token.fileId}
 			width="100%"
 			frameborder="0"
-			on:load={(e) => {
+			onload={(e) => {
+				const frame = e.currentTarget as HTMLIFrameElement;
 				try {
-					e.currentTarget.style.height =
-						e.currentTarget.contentWindow.document.body.scrollHeight + 20 + 'px';
+					const bodyHeight = frame.contentWindow?.document.body.scrollHeight;
+
+					if (typeof bodyHeight === 'number') {
+						frame.style.height = `${bodyHeight + 20}px`;
+					}
 				} catch {}
 			}}
 		></iframe>

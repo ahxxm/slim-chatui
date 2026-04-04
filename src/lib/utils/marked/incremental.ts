@@ -19,8 +19,16 @@ export interface IncrementalTokenState {
 	nextSegmentId: number;
 }
 
+export type IncrementalTokenTransitionKind =
+	| 'noop'
+	| 'clear'
+	| 'reset'
+	| 'direct-append'
+	| 'tail-lex';
+
 interface IncrementalTokenUpdateOptions {
 	seedLinks?: Links;
+	onTransition?: (transition: IncrementalTokenTransitionKind) => void;
 }
 
 export const EMPTY_LINKS = Object.freeze(Object.create(null)) as Links;
@@ -55,37 +63,65 @@ export const updateIncrementalTokenState = (
 	const nextLinks = options.seedLinks ?? EMPTY_LINKS;
 
 	if (state.mode === 'inline' && state.links !== nextLinks) {
-		return resetIncrementalTokenState(state, nextSource, nextLinks);
+		return withTransition(
+			resetIncrementalTokenState(state, nextSource, nextLinks),
+			options,
+			'reset'
+		);
 	}
 
 	if (state.lastSource === nextSource) {
-		return state;
+		return withTransition(state, options, 'noop');
 	}
 
 	if (!nextSource) {
-		return clearIncrementalTokenState(state, nextSource, state.mode === 'inline' ? nextLinks : EMPTY_LINKS);
+		return withTransition(
+			clearIncrementalTokenState(
+				state,
+				nextSource,
+				state.mode === 'inline' ? nextLinks : EMPTY_LINKS
+			),
+			options,
+			'clear'
+		);
 	}
 
 	if (!nextSource.startsWith(state.lastSource)) {
-		return resetIncrementalTokenState(state, nextSource, nextLinks);
+		return withTransition(
+			resetIncrementalTokenState(state, nextSource, nextLinks),
+			options,
+			'reset'
+		);
 	}
 
 	if (state.mode === 'block' && state.mutableSegment?.tokens[0]?.type === 'def') {
-		return resetIncrementalTokenState(state, nextSource, nextLinks);
+		return withTransition(
+			resetIncrementalTokenState(state, nextSource, nextLinks),
+			options,
+			'reset'
+		);
 	}
 
 	const delta = nextSource.slice(state.lastSource.length);
 
 	if (!delta) {
-		return state;
+		return withTransition(state, options, 'noop');
 	}
 
-	if (state.mode === 'inline' && shouldResetInlineStateForRetroactiveBoundaryChange(state)) {
-		return resetIncrementalTokenState(state, nextSource, nextLinks);
+	if (state.mode === 'inline' && shouldResetInlineStateForUnsafeBoundary(state)) {
+		return withTransition(
+			resetIncrementalTokenState(state, nextSource, nextLinks),
+			options,
+			'reset'
+		);
 	}
 
 	if (state.mode === 'block' && canDirectAppendBlockToken(state, delta)) {
-		return extendMutableBlockToken(state, nextSource, delta);
+		return withTransition(
+			extendMutableBlockToken(state, nextSource, delta),
+			options,
+			'direct-append'
+		);
 	}
 
 	const nextMutableTailRaw = `${state.mutableTailRaw}${delta}`;
@@ -95,15 +131,32 @@ export const updateIncrementalTokenState = (
 			: lexInlineTokens(nextMutableTailRaw, nextLinks);
 
 	if (state.mode === 'block' && hasDefinitionToken(tailTokens)) {
-		return resetIncrementalTokenState(state, nextSource, nextLinks);
+		return withTransition(
+			resetIncrementalTokenState(state, nextSource, nextLinks),
+			options,
+			'reset'
+		);
 	}
 
-	return applyTailTokens(
-		state,
-		nextSource,
-		tailTokens,
-		state.mode === 'inline' ? nextLinks : state.links
+	return withTransition(
+		applyTailTokens(
+			state,
+			nextSource,
+			tailTokens,
+			state.mode === 'inline' ? nextLinks : state.links
+		),
+		options,
+		'tail-lex'
 	);
+};
+
+const withTransition = <State>(
+	nextState: State,
+	options: IncrementalTokenUpdateOptions,
+	transition: IncrementalTokenTransitionKind
+): State => {
+	options.onTransition?.(transition);
+	return nextState;
 };
 
 const resetIncrementalTokenState = (
@@ -112,7 +165,11 @@ const resetIncrementalTokenState = (
 	seedLinks: Links
 ): IncrementalTokenState => {
 	if (!source) {
-		return clearIncrementalTokenState(state, source, state.mode === 'inline' ? seedLinks : EMPTY_LINKS);
+		return clearIncrementalTokenState(
+			state,
+			source,
+			state.mode === 'inline' ? seedLinks : EMPTY_LINKS
+		);
 	}
 
 	if (state.mode === 'block') {
@@ -130,6 +187,10 @@ const buildResetState = (
 	tokens: Token[],
 	links: Links
 ): IncrementalTokenState => {
+	if (state.mode === 'inline') {
+		return buildResetInlineState(state, source, tokens, links);
+	}
+
 	let nextSegmentId = state.nextSegmentId;
 	const nextSegments = tokens.map((token) => createSegment(token, nextSegmentId++));
 
@@ -163,6 +224,10 @@ const applyTailTokens = (
 	tailTokens: Token[],
 	links: Links
 ): IncrementalTokenState => {
+	if (state.mode === 'inline') {
+		return applyInlineTailTokens(state, source, tailTokens, links);
+	}
+
 	let nextSegmentId = state.nextSegmentId;
 	const nextFrozenSegments = state.frozenSegments.slice();
 
@@ -246,7 +311,7 @@ const extendMutableBlockToken = (
 	}
 
 	const raw = `${currentToken.raw ?? ''}${delta}`;
-	const text = `${'text' in currentToken ? currentToken.text ?? '' : ''}${delta}`;
+	const text = `${'text' in currentToken ? (currentToken.text ?? '') : ''}${delta}`;
 	const nextToken = {
 		...currentToken,
 		raw,
@@ -261,38 +326,340 @@ const extendMutableBlockToken = (
 	};
 };
 
-const hasDefinitionToken = (tokens: Token[]): boolean => tokens.some((token) => token.type === 'def');
+const hasDefinitionToken = (tokens: Token[]): boolean =>
+	tokens.some((token) => token.type === 'def');
 
-const shouldResetInlineStateForRetroactiveBoundaryChange = (
-	state: IncrementalTokenState
-): boolean => {
-	const frozenTextToken = state.frozenSegments.at(-1)?.tokens[0] as
-		| (Token & { text?: string; raw?: string })
-		| undefined;
-	const mutableLinkToken = state.mutableSegment?.tokens[0] as
-		| (Token & { text?: string; raw?: string; href?: string })
-		| undefined;
+const shouldResetInlineStateForUnsafeBoundary = (state: IncrementalTokenState): boolean => {
+	const previousToken = state.frozenSegments.at(-1)?.tokens.at(-1);
+	const nextToken = state.mutableSegment?.tokens[0];
 
-	if (frozenTextToken?.type !== 'text' || mutableLinkToken?.type !== 'link') {
+	if (!previousToken || !nextToken) {
 		return false;
 	}
 
-	const raw = mutableLinkToken.raw ?? '';
-	const text = mutableLinkToken.text ?? '';
-	const href = mutableLinkToken.href ?? '';
-
-	if (raw !== text || raw !== href) {
-		return false;
-	}
-
-	const frozenText = frozenTextToken.text ?? frozenTextToken.raw ?? '';
-
-	return /(?:!?\[[^\]\r\n]*\]\(|<)$/.test(frozenText);
+	return isUnsafeInlineBoundary(
+		previousToken,
+		nextToken,
+		joinInlineBoundaryAnalysisRaw(state.frozenSegments)
+	);
 };
+
+const buildResetInlineState = (
+	state: IncrementalTokenState,
+	source: string,
+	tokens: Token[],
+	links: Links
+): IncrementalTokenState => {
+	let nextSegmentId = state.nextSegmentId;
+	const mutableTokenStartIndex = getInlineMutableTokenStartIndex(tokens);
+	const frozenSegments = tokens
+		.slice(0, mutableTokenStartIndex)
+		.map((token) => createSegment(token, nextSegmentId++));
+	const mutableTokens = tokens.slice(mutableTokenStartIndex);
+	const mutableSegment = mutableTokens.length
+		? createSegmentGroup(`segment-${nextSegmentId++}`, mutableTokens)
+		: null;
+
+	return {
+		...state,
+		frozenSegments,
+		mutableTailRaw: joinTokenRaw(mutableTokens),
+		mutableSegment,
+		links,
+		lastSource: source,
+		nextSegmentId
+	};
+};
+
+const applyInlineTailTokens = (
+	state: IncrementalTokenState,
+	source: string,
+	tailTokens: Token[],
+	links: Links
+): IncrementalTokenState => {
+	let nextSegmentId = state.nextSegmentId;
+	const nextFrozenSegments = state.frozenSegments.slice();
+
+	if (tailTokens.length === 0) {
+		return {
+			...state,
+			mutableTailRaw: '',
+			mutableSegment: null,
+			links,
+			lastSource: source,
+			nextSegmentId
+		};
+	}
+
+	const mutableTokenStartIndex = getInlineMutableTokenStartIndex(tailTokens);
+
+	for (const token of tailTokens.slice(0, mutableTokenStartIndex)) {
+		nextFrozenSegments.push(createSegment(token, nextSegmentId++));
+	}
+
+	const mutableTokens = tailTokens.slice(mutableTokenStartIndex);
+	const mutableSegmentId = state.mutableSegment?.id ?? `segment-${nextSegmentId++}`;
+
+	return {
+		...state,
+		frozenSegments: nextFrozenSegments,
+		mutableTailRaw: joinTokenRaw(mutableTokens),
+		mutableSegment: createSegmentGroup(mutableSegmentId, mutableTokens),
+		links,
+		lastSource: source,
+		nextSegmentId
+	};
+};
+
+const getInlineMutableTokenStartIndex = (tokens: Token[]): number => {
+	if (tokens.length === 0) {
+		return 0;
+	}
+
+	const prefixAnalysisRawByEndIndex: string[] = [];
+	let prefixAnalysisRaw = '';
+
+	for (const token of tokens) {
+		prefixAnalysisRaw += getInlineBoundaryTokenRaw(token);
+		prefixAnalysisRawByEndIndex.push(prefixAnalysisRaw);
+	}
+
+	let startIndex = Math.max(0, tokens.length - 1);
+
+	while (
+		startIndex > 0 &&
+		isUnsafeInlineBoundary(
+			tokens[startIndex - 1],
+			tokens[startIndex],
+			prefixAnalysisRawByEndIndex[startIndex - 1] ?? ''
+		)
+	) {
+		startIndex -= 1;
+	}
+
+	return startIndex;
+};
+
+const isUnsafeInlineBoundary = (
+	previousToken: Token,
+	nextToken: Token,
+	frozenBoundaryAnalysisRaw = ''
+): boolean => {
+	if (hasOpenBracketedInlineConstruct(frozenBoundaryAnalysisRaw)) {
+		return true;
+	}
+
+	if (previousToken.type === 'br' || nextToken.type === 'br') {
+		return true;
+	}
+
+	if (previousToken.type === 'text') {
+		const previousRaw = getTokenRaw(previousToken);
+
+		if (nextToken.type !== 'text' && textTokenContainsPotentialInlineOpener(previousRaw)) {
+			return true;
+		}
+
+		if (nextToken.type === 'link' && /(?:!?\[[^\]\r\n]*\]\(|<)$/.test(previousRaw)) {
+			return true;
+		}
+
+		if (
+			(nextToken.type === 'em' || nextToken.type === 'strong' || nextToken.type === 'del') &&
+			textTokenContainsPotentialInlineOpener(previousRaw)
+		) {
+			return true;
+		}
+	}
+
+	if (previousToken.type === 'link' && nextToken.type === 'text') {
+		const previousRaw = getTokenRaw(previousToken);
+		const previousText = 'text' in previousToken ? (previousToken.text ?? '') : '';
+		const previousHref = 'href' in previousToken ? (previousToken.href ?? '') : '';
+
+		if (
+			previousRaw === previousText &&
+			previousRaw === previousHref &&
+			/^[A-Za-z0-9._~:/?#[\]@!$&'()*+,;=%-]/.test(getTokenRaw(nextToken))
+		) {
+			return true;
+		}
+	}
+
+	if (
+		(previousToken.type === 'em' ||
+			previousToken.type === 'strong' ||
+			previousToken.type === 'del') &&
+		nextToken.type === 'text'
+	) {
+		const expectedDelimiter = getInlineDelimiterSuffix(previousToken.raw ?? '');
+		if (expectedDelimiter && getTokenRaw(nextToken).startsWith(expectedDelimiter)) {
+			return true;
+		}
+	}
+
+	return false;
+};
+
+type OpenBracketedInlineConstruct =
+	| { state: 'label'; bracketDepth: number }
+	| { state: 'after-label' }
+	| { state: 'destination'; parenthesisDepth: number }
+	| { state: 'reference'; bracketDepth: number };
+
+const textTokenContainsPotentialInlineOpener = (raw: string): boolean =>
+	/[*_~`$<\\\n]/.test(raw) ||
+	/!\[[^\]\r\n]*$/.test(raw) ||
+	/\[[^\]\r\n]*$/.test(raw) ||
+	/\]\([^\)\r\n]*$/.test(raw);
+
+const hasOpenBracketedInlineConstruct = (raw: string): boolean => {
+	if (!raw) {
+		return false;
+	}
+
+	const openConstructs: OpenBracketedInlineConstruct[] = [];
+	let index = 0;
+
+	while (index < raw.length) {
+		if (raw[index] === '\\') {
+			index += 2;
+			continue;
+		}
+
+		const activeConstruct = openConstructs.at(-1);
+
+		if (activeConstruct?.state === 'destination') {
+			if (raw[index] === '(') {
+				activeConstruct.parenthesisDepth += 1;
+			} else if (raw[index] === ')') {
+				activeConstruct.parenthesisDepth -= 1;
+				if (activeConstruct.parenthesisDepth === 0) {
+					openConstructs.pop();
+				}
+			}
+
+			index += 1;
+			continue;
+		}
+
+		if (activeConstruct?.state === 'reference') {
+			if (raw[index] === '[') {
+				activeConstruct.bracketDepth += 1;
+			} else if (raw[index] === ']') {
+				activeConstruct.bracketDepth -= 1;
+				if (activeConstruct.bracketDepth === 0) {
+					openConstructs.pop();
+				}
+			}
+
+			index += 1;
+			continue;
+		}
+
+		if (activeConstruct?.state === 'after-label') {
+			if (raw[index] === '(') {
+				openConstructs[openConstructs.length - 1] = {
+					state: 'destination',
+					parenthesisDepth: 1
+				};
+				index += 1;
+				continue;
+			}
+
+			if (raw[index] === '[') {
+				openConstructs[openConstructs.length - 1] = {
+					state: 'reference',
+					bracketDepth: 1
+				};
+				index += 1;
+				continue;
+			}
+
+			openConstructs.pop();
+			continue;
+		}
+
+		if (activeConstruct?.state === 'label') {
+			if (raw[index] === '[') {
+				activeConstruct.bracketDepth += 1;
+			} else if (raw[index] === ']') {
+				activeConstruct.bracketDepth -= 1;
+				if (activeConstruct.bracketDepth === 0) {
+					openConstructs[openConstructs.length - 1] = {
+						state: 'after-label'
+					};
+				}
+			}
+
+			index += 1;
+			continue;
+		}
+
+		if (raw[index] === '!' && raw[index + 1] === '[') {
+			openConstructs.push({ state: 'label', bracketDepth: 1 });
+			index += 2;
+			continue;
+		}
+
+		if (raw[index] === '[') {
+			openConstructs.push({ state: 'label', bracketDepth: 1 });
+			index += 1;
+			continue;
+		}
+
+		index += 1;
+	}
+
+	return openConstructs.length > 0;
+};
+
+const getInlineDelimiterSuffix = (raw: string): string => {
+	if (raw.startsWith('**') && raw.endsWith('**')) {
+		return '*';
+	}
+
+	if (raw.startsWith('~~') && raw.endsWith('~~')) {
+		return '~';
+	}
+
+	if (raw.startsWith('*') && raw.endsWith('*')) {
+		return '*';
+	}
+
+	if (raw.startsWith('_') && raw.endsWith('_')) {
+		return '_';
+	}
+
+	return '';
+};
+
+const joinTokenRaw = (tokens: Token[]): string =>
+	tokens.map((token) => getTokenRaw(token)).join('');
+
+const getInlineBoundaryTokenRaw = (token: Token): string => {
+	if (token.type === 'link' || token.type === 'image' || token.type === 'citation') {
+		return '';
+	}
+
+	return getTokenRaw(token);
+};
+
+const joinInlineBoundaryAnalysisRaw = (segments: IncrementalTokenSegment[]): string =>
+	segments
+		.map((segment) => segment.tokens.map((token) => getInlineBoundaryTokenRaw(token)).join(''))
+		.join('');
+
+const getTokenRaw = (token: Token): string => token.raw ?? '';
 
 const createSegment = (token: Token, id: number): IncrementalTokenSegment => ({
 	id: `segment-${id}`,
 	tokens: [token]
+});
+
+const createSegmentGroup = (id: string, tokens: Token[]): IncrementalTokenSegment => ({
+	id,
+	tokens
 });
 
 const createSegmentWithId = (id: string, token: Token): IncrementalTokenSegment => ({

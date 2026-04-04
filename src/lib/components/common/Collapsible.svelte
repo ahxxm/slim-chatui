@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getContext } from 'svelte';
+	import { getContext, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import dayjs from '$lib/dayjs';
@@ -31,7 +31,8 @@
 	} = $props();
 
 	$effect(() => {
-		onChange(open);
+		const currentOpen = open;
+		untrack(() => onChange(currentOpen));
 	});
 </script>
 
@@ -139,7 +140,7 @@
 					{#if open && !hide}
 						<div
 							transition:slide={{ duration: 300, easing: quintOut, axis: 'y' }}
-							onpointerup={() => {
+							onpointerup={(e) => {
 								e.stopPropagation();
 							}}
 						>
