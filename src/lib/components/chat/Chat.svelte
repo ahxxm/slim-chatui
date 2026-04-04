@@ -599,9 +599,7 @@
 			}
 		}
 
-		const availableModels = $models
-			.filter((m) => !(m?.info?.meta?.hidden ?? false))
-			.map((m) => m.id);
+		const availableModels = $models.map((m) => m.id);
 
 		const defaultModels = $config?.default_models ? $config?.default_models.split(',') : [];
 
@@ -650,7 +648,6 @@
 				}
 			}
 
-			// Clear if selected model is unavailable or hidden
 			if (selectedModels[0] && !availableModels.includes(selectedModels[0])) {
 				selectedModels = [''];
 			}

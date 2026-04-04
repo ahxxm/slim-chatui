@@ -8,7 +8,6 @@
 	import {
 		user,
 		chats,
-		settings,
 		chatId,
 		folders as _folders,
 		showSidebar,
@@ -19,7 +18,6 @@
 		currentChatPage,
 		temporaryChatEnabled,
 		socket,
-		models,
 		selectedFolder,
 		WEBUI_NAME,
 		sidebarWidth,
@@ -68,9 +66,7 @@
 	let showCreateFolderModal = $state(false);
 	let SearchModalComponent = $state<any>(null);
 	let FolderModalComponent = $state<any>(null);
-	let PinnedModelListComponent = $state<any>(null);
 
-	let showPinnedModels = $derived(($settings?.pinnedModels ?? []).length > 0);
 	let showFolders = $state(false);
 
 	let folders = $state<Record<string, any>>({});
@@ -461,13 +457,6 @@
 		FolderModalComponent = FolderModal;
 	};
 
-	const loadPinnedModelList = async () => {
-		if (PinnedModelListComponent) return;
-
-		const { default: PinnedModelList } = await import('./Sidebar/PinnedModelList.svelte');
-		PinnedModelListComponent = PinnedModelList;
-	};
-
 	$effect(() => {
 		if ($showSearch && !SearchModalComponent) {
 			void loadSearchModal();
@@ -477,12 +466,6 @@
 	$effect(() => {
 		if (showCreateFolderModal && !FolderModalComponent) {
 			void loadFolderModal();
-		}
-	});
-
-	$effect(() => {
-		if (showPinnedModels && !PinnedModelListComponent) {
-			void loadPinnedModelList();
 		}
 	});
 </script>
@@ -766,21 +749,6 @@
 						</button>
 					</div>
 				</div>
-
-				{#if ($models ?? []).length > 0 && ($settings?.pinnedModels ?? []).length > 0}
-					<Folder
-						id="sidebar-models"
-						bind:open={showPinnedModels}
-						className="px-2 mt-0.5"
-						name={$i18n.t('Models')}
-						chevron={false}
-						dragAndDrop={false}
-					>
-						{#if PinnedModelListComponent}
-							<PinnedModelListComponent bind:selectedChatId {shiftKey} />
-						{/if}
-					</Folder>
-				{/if}
 
 				<Folder
 					id="sidebar-folders"

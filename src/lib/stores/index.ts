@@ -114,8 +114,6 @@ export type Model = {
 };
 
 type Settings = {
-	pinnedModels?: string[];
-
 	collapseCodeBlocks?: boolean;
 	expandDetails?: boolean;
 	notificationSound?: boolean;
