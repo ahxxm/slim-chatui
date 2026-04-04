@@ -60,13 +60,13 @@
 		onkeydown={onTriggerKeydown}
 		onpointerup={toggleOpen}
 	>
-		<div class="flex items-start justify-between">
+		<div class="flex items-center justify-between">
 			<div class="min-w-0 flex-1">
 				{@render children?.()}
 			</div>
 
 			{#if chevron && !disabled}
-				<div class="flex self-start translate-y-1">
+				<div class="flex self-center translate-y-[1px]">
 					{#if open}
 						<ChevronUp strokeWidth="3.5" className="size-3.5" />
 					{:else}
