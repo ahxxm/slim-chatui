@@ -13,7 +13,15 @@
 
 	import InputMenu from './MessageInput/InputMenu.svelte';
 	import FilesOverlay from './MessageInput/FilesOverlay.svelte';
-	import AdaptiveTextInput from '../common/AdaptiveTextInput.svelte';
+	type RichTextInputType =
+		typeof import('../common/RichTextInput.svelte').default;
+	let RichTextInputComponent = $state<RichTextInputType | null>(null);
+
+	const loadRichTextInput = async () => {
+		if (RichTextInputComponent) return;
+		const { default: mod } = await import('../common/RichTextInput.svelte');
+		RichTextInputComponent = mod;
+	};
 	import Tooltip from '../common/Tooltip.svelte';
 	import FileItem from '../common/FileItem.svelte';
 	import Image from '../common/Image.svelte';
@@ -373,6 +381,7 @@
 		let dropzoneElement: HTMLElement | null = null;
 
 		loaded = true;
+		void loadRichTextInput();
 
 		window.setTimeout(() => {
 			const chatInput = document.getElementById('chat-input');
@@ -419,7 +428,7 @@
 	bind:inputContent
 	onChange={(content) => {
 		console.log(content);
-		chatInputElement?.setEditorContent(content);
+		chatInputElement?.setContent(content?.json ?? null);
 	}}
 	onClose={async () => {
 		await tick();
@@ -641,8 +650,8 @@
 										</div>
 									{/if}
 
-									{#if loaded}
-										<AdaptiveTextInput
+									{#if loaded && RichTextInputComponent}
+										<RichTextInputComponent
 											bind:this={chatInputElement}
 											id="chat-input"
 											value={inputContent?.json ?? prompt ?? ''}

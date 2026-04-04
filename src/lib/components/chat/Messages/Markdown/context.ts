@@ -20,5 +20,4 @@ export interface MarkdownRenderContextState {
 	onSourceClick: (value: unknown) => void;
 	links: Links;
 	openStates: SvelteMap<string, boolean>;
-	incremental: boolean;
 }

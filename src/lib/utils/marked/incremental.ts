@@ -22,6 +22,7 @@ export interface IncrementalTokenState {
 	links: Links;
 	lastSource: string;
 	nextSegmentId: number;
+	renderSegments: IncrementalTokenSegment[];
 }
 
 export type IncrementalTokenTransitionKind =
@@ -38,21 +39,24 @@ interface IncrementalTokenUpdateOptions {
 
 export const EMPTY_LINKS = Object.freeze(Object.create(null)) as Links;
 
+const EMPTY_SEGMENTS: IncrementalTokenSegment[] = [];
+
 export const createIncrementalTokenState = (
 	mode: IncrementalTokenMode,
 	options: IncrementalTokenUpdateOptions = {}
 ): IncrementalTokenState => ({
 	mode,
-	frozenSegments: [],
+	frozenSegments: EMPTY_SEGMENTS,
 	mutableTailRaw: '',
 	mutableSegment: null,
 	links: options.seedLinks ?? EMPTY_LINKS,
 	lastSource: '',
-	nextSegmentId: 0
+	nextSegmentId: 0,
+	renderSegments: EMPTY_SEGMENTS
 });
 
 export const getRenderSegments = (state: IncrementalTokenState): IncrementalTokenSegment[] =>
-	state.mutableSegment ? [...state.frozenSegments, state.mutableSegment] : state.frozenSegments;
+	state.renderSegments;
 
 export const updateIncrementalTokenState = (
 	state: IncrementalTokenState,
@@ -161,7 +165,8 @@ const withSegmentState = (
 	mutableSegment,
 	links,
 	lastSource: source,
-	nextSegmentId
+	nextSegmentId,
+	renderSegments: mutableSegment ? [...frozenSegments, mutableSegment] : frozenSegments
 });
 
 const resetIncrementalTokenState = (
@@ -300,11 +305,14 @@ const extendMutableBlockToken = (
 		text
 	} as Token;
 
+	const nextMutableSegment = makeSegment(currentMutableSegment.id, [nextToken]);
+
 	return {
 		...state,
 		mutableTailRaw: raw,
-		mutableSegment: makeSegment(currentMutableSegment.id, [nextToken]),
-		lastSource: source
+		mutableSegment: nextMutableSegment,
+		lastSource: source,
+		renderSegments: [...state.frozenSegments, nextMutableSegment]
 	};
 };
 

@@ -45,7 +45,6 @@
 	let renderSourceIds = $derived(markdownRenderContext.sourceIds);
 	let renderOnSourceClick = $derived(markdownRenderContext.onSourceClick);
 	let renderLinks = $derived(markdownRenderContext.links);
-	let renderIncremental = $derived(markdownRenderContext.incremental);
 
 	function createStaticSegments(nextTokens: InlineToken[]): IncrementalTokenSegment[] {
 		return nextTokens.map((token, tokenIdx) => ({
@@ -62,7 +61,7 @@
 		const nextId = id;
 		const nextTokens = tokens ?? [];
 		const nextLinks = renderLinks;
-		const useIncremental = renderIncremental && source !== null;
+		const useIncremental = source !== null;
 
 		if (!useIncremental) {
 			currentInlineId = nextId;

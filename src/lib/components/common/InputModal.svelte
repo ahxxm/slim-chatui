@@ -4,7 +4,13 @@
 	import { settings } from '$lib/stores';
 
 	import Drawer from './Drawer.svelte';
-	import AdaptiveTextInput from './AdaptiveTextInput.svelte';
+
+	type RichTextInputType = typeof import('./RichTextInput.svelte').default;
+	let RichTextInputComponent = $state<RichTextInputType | null>(null);
+
+	void import('./RichTextInput.svelte').then(({ default: mod }) => {
+		RichTextInputComponent = mod;
+	});
 
 	const i18n = getContext('i18n');
 
@@ -64,22 +70,24 @@
 
 		<div class="flex w-full px-4 dark:text-gray-200 min-h-full flex-1">
 			<div class="flex-1 w-full min-h-full">
-				<AdaptiveTextInput
-					{id}
-					onChange={(content: InputContent) => {
-						value = content.md ?? '';
-						inputContent = content;
+				{#if RichTextInputComponent}
+					<RichTextInputComponent
+						{id}
+						onChange={(content: InputContent) => {
+							value = content.md ?? '';
+							inputContent = content;
 
-						onChange(content);
-					}}
-					json={true}
-					value={inputContent?.json ?? value ?? ''}
-					html={inputContent?.html ?? value ?? ''}
-					richText={$settings?.richTextInput ?? true}
-					messageInput={true}
-					showFormattingToolbar={$settings?.showFormattingToolbar ?? false}
-					insertPromptAsRichText={$settings?.insertPromptAsRichText ?? false}
-				/>
+							onChange(content);
+						}}
+						json={true}
+						value={inputContent?.json ?? value ?? ''}
+						html={inputContent?.html ?? value ?? ''}
+						richText={$settings?.richTextInput ?? true}
+						messageInput={true}
+						showFormattingToolbar={$settings?.showFormattingToolbar ?? false}
+						insertPromptAsRichText={$settings?.insertPromptAsRichText ?? false}
+					/>
+				{/if}
 			</div>
 		</div>
 	</div>

@@ -80,8 +80,7 @@
 		onTaskClick: () => {},
 		onSourceClick: () => {},
 		links: EMPTY_LINKS,
-		openStates,
-		incremental: true
+		openStates
 	});
 
 	setContext(markdownRenderContextKey, renderContext);
@@ -130,23 +129,22 @@
 		links = blockState.links;
 	});
 
+	// Volatile: changes every streaming flush
 	$effect(() => {
-		const nextRenderContext: MarkdownRenderContextState = {
-			done,
-			save,
-			paragraphTag,
-			editCodeBlock,
-			topPadding,
-			sourceIds,
-			onSave,
-			onTaskClick,
-			onSourceClick,
-			links,
-			openStates,
-			incremental: true
-		};
+		renderContext.done = done;
+		renderContext.links = links;
+	});
 
-		Object.assign(renderContext, nextRenderContext);
+	// Stable: changes only when parent provides different props
+	$effect(() => {
+		renderContext.save = save;
+		renderContext.paragraphTag = paragraphTag;
+		renderContext.editCodeBlock = editCodeBlock;
+		renderContext.topPadding = topPadding;
+		renderContext.sourceIds = sourceIds;
+		renderContext.onSave = onSave;
+		renderContext.onTaskClick = onTaskClick;
+		renderContext.onSourceClick = onSourceClick;
 	});
 </script>
 
