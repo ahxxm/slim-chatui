@@ -197,7 +197,7 @@ const buildResetState = (
 	}
 
 	let nextSegmentId = state.nextSegmentId;
-	const nextSegments = tokens.map((token) => createSegment(token, nextSegmentId++));
+	const nextSegments = tokens.map((token) => makeSegment(`segment-${nextSegmentId++}`, [token]));
 
 	return withSegmentState(state, source, links, {
 		frozenSegments: nextSegments.slice(0, -1),
@@ -237,7 +237,9 @@ const applyTailTokens = (
 	}
 
 	if (!state.mutableSegment) {
-		const nextSegments = tailTokens.map((token) => createSegment(token, nextSegmentId++));
+		const nextSegments = tailTokens.map((token) =>
+			makeSegment(`segment-${nextSegmentId++}`, [token])
+		);
 
 		return withSegmentState(state, source, links, {
 			frozenSegments: nextSegments.slice(0, -1),
@@ -248,18 +250,18 @@ const applyTailTokens = (
 
 	if (tailTokens.length === 1) {
 		return withSegmentState(state, source, links, {
-			mutableSegment: createSegmentWithId(state.mutableSegment.id, tailTokens[0]),
+			mutableSegment: makeSegment(state.mutableSegment.id, [tailTokens[0]]),
 			nextSegmentId
 		});
 	}
 
-	nextFrozenSegments.push(createSegmentWithId(state.mutableSegment.id, tailTokens[0]));
+	nextFrozenSegments.push(makeSegment(state.mutableSegment.id, [tailTokens[0]]));
 
 	for (const token of tailTokens.slice(1, -1)) {
-		nextFrozenSegments.push(createSegment(token, nextSegmentId++));
+		nextFrozenSegments.push(makeSegment(`segment-${nextSegmentId++}`, [token]));
 	}
 
-	const mutableSegment = createSegment(tailTokens.at(-1) as Token, nextSegmentId++);
+	const mutableSegment = makeSegment(`segment-${nextSegmentId++}`, [tailTokens.at(-1) as Token]);
 
 	return withSegmentState(state, source, links, {
 		frozenSegments: nextFrozenSegments,
@@ -301,7 +303,7 @@ const extendMutableBlockToken = (
 	return {
 		...state,
 		mutableTailRaw: raw,
-		mutableSegment: createSegmentWithId(currentMutableSegment.id, nextToken),
+		mutableSegment: makeSegment(currentMutableSegment.id, [nextToken]),
 		lastSource: source
 	};
 };
@@ -326,10 +328,10 @@ const buildResetInlineState = (
 	const mutableTokenStartIndex = getInlineMutableTokenStartIndex(tokens);
 	const frozenSegments = tokens
 		.slice(0, mutableTokenStartIndex)
-		.map((token) => createSegment(token, nextSegmentId++));
+		.map((token) => makeSegment(`segment-${nextSegmentId++}`, [token]));
 	const mutableTokens = tokens.slice(mutableTokenStartIndex);
 	const mutableSegment = mutableTokens.length
-		? createSegmentGroup(`segment-${nextSegmentId++}`, mutableTokens)
+		? makeSegment(`segment-${nextSegmentId++}`, mutableTokens)
 		: null;
 
 	return withSegmentState(state, source, links, {
@@ -358,7 +360,7 @@ const applyInlineTailTokens = (
 	const mutableTokenStartIndex = getInlineMutableTokenStartIndex(tailTokens);
 
 	for (const token of tailTokens.slice(0, mutableTokenStartIndex)) {
-		nextFrozenSegments.push(createSegment(token, nextSegmentId++));
+		nextFrozenSegments.push(makeSegment(`segment-${nextSegmentId++}`, [token]));
 	}
 
 	const mutableTokens = tailTokens.slice(mutableTokenStartIndex);
@@ -366,7 +368,7 @@ const applyInlineTailTokens = (
 
 	return withSegmentState(state, source, links, {
 		frozenSegments: nextFrozenSegments,
-		mutableSegment: createSegmentGroup(mutableSegmentId, mutableTokens),
+		mutableSegment: makeSegment(mutableSegmentId, mutableTokens),
 		nextSegmentId
 	});
 };
@@ -374,20 +376,7 @@ const applyInlineTailTokens = (
 const joinTokenRaw = (tokens: Token[]): string =>
 	tokens.map((token) => getTokenRaw(token)).join('');
 
-const createSegment = (token: Token, id: number): IncrementalTokenSegment => ({
-	id: `segment-${id}`,
-	tokens: [token]
-});
-
-const createSegmentGroup = (id: string, tokens: Token[]): IncrementalTokenSegment => ({
-	id,
-	tokens
-});
-
-const createSegmentWithId = (id: string, token: Token): IncrementalTokenSegment => ({
-	id,
-	tokens: [token]
-});
+const makeSegment = (id: string, tokens: Token[]): IncrementalTokenSegment => ({ id, tokens });
 
 const lexBlockTokens = (source: string, seedLinks?: Links): TokensList =>
 	createLexer(seedLinks).lex(source);
@@ -397,16 +386,6 @@ const lexInlineTokens = (source: string, seedLinks?: Links): Token[] =>
 
 const createLexer = (seedLinks?: Links) => {
 	const lexer = new chatMarked.Lexer(chatMarked.defaults);
-	lexer.tokens.links = cloneLinks(seedLinks);
+	lexer.tokens.links = Object.assign(Object.create(null) as Links, seedLinks);
 	return lexer;
-};
-
-const cloneLinks = (links?: Links): Links => {
-	const nextLinks = Object.create(null) as Links;
-
-	if (links) {
-		Object.assign(nextLinks, links);
-	}
-
-	return nextLinks;
 };

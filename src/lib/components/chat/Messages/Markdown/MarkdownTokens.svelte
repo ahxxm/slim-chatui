@@ -1,13 +1,11 @@
 <script lang="ts">
-	import type { Links, Token } from 'marked';
-	import { getContext, setContext } from 'svelte';
-	import { SvelteMap } from 'svelte/reactivity';
+	import type { Token } from 'marked';
+	import { getContext } from 'svelte';
 
 	import { unescapeHtml } from '$lib/utils';
 
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { settings } from '$lib/stores';
-	import { EMPTY_LINKS } from '$lib/utils/marked/incremental';
 	import { createIndexedDetailsStateIds } from '$lib/utils/marked/details-state';
 
 	import CodeBlock from '$lib/components/chat/Messages/CodeBlock.svelte';
@@ -15,11 +13,17 @@
 	import MarkdownTokens from '$lib/components/chat/Messages/Markdown/MarkdownTokens.svelte';
 	import KatexRenderer from './KatexRenderer.svelte';
 	import AlertRenderer, { alertComponent } from './AlertRenderer.svelte';
+	import MarkdownDetailsScope from './MarkdownDetailsScope.svelte';
 	import MarkdownDetailsBlock from './MarkdownDetailsBlock.svelte';
 	import MarkdownTable from './MarkdownTable.svelte';
 
 	import HtmlToken from './HTMLToken.svelte';
-	import { markdownRenderContextKey, type MarkdownRenderContextState } from './context';
+	import {
+		markdownDetailsScopeContextKey,
+		markdownRenderContextKey,
+		type MarkdownDetailsScopeState,
+		type MarkdownRenderContextState
+	} from './context';
 
 	type MarkdownToken = Token & Record<string, any>;
 	const EMPTY_DETAILS_STATE_IDS = new Map<number, string>();
@@ -28,112 +32,40 @@
 		id: string;
 		tokens?: MarkdownToken[];
 		top?: boolean;
-		sourceIds?: string[] | undefined;
-		done?: boolean;
-		save?: boolean;
-		paragraphTag?: 'p' | 'span';
-		editCodeBlock?: boolean;
-		topPadding?: boolean;
-		links?: Links;
-		incremental?: boolean;
-		onSave?: (value: unknown) => void;
-		onTaskClick?: (value: unknown) => void;
-		onSourceClick?: (value: unknown) => void;
-		openStates?: SvelteMap<string, boolean>;
-		detailsScopeId?: string;
 		rootDetailsStateId?: string | null;
 	}
 
-	let {
-		id,
-		tokens = [],
-		top = true,
-		sourceIds = undefined,
-		done = undefined,
-		save = undefined,
-		paragraphTag = undefined,
-		editCodeBlock = undefined,
-		topPadding = undefined,
-		links = undefined,
-		incremental = undefined,
-		onSave = undefined,
-		onTaskClick = undefined,
-		onSourceClick = undefined,
-		openStates = undefined,
-		detailsScopeId = undefined,
-		rootDetailsStateId = null
-	}: MarkdownTokensProps = $props();
+	let { id, tokens = [], top = true, rootDetailsStateId = null }: MarkdownTokensProps = $props();
 
-	const markdownRenderContext =
-		getContext<MarkdownRenderContextState | null>(markdownRenderContextKey) ?? null;
-	const fallbackOpenStates = new SvelteMap<string, boolean>();
-	const localRenderContext = $state<MarkdownRenderContextState>({
-		done: true,
-		save: false,
-		paragraphTag: 'p',
-		editCodeBlock: true,
-		topPadding: false,
-		sourceIds: [],
-		onSave: () => {},
-		onTaskClick: () => {},
-		onSourceClick: () => {},
-		links: EMPTY_LINKS,
-		openStates: fallbackOpenStates,
-		incremental: false
-	});
+	const markdownRenderContext = getContext<MarkdownRenderContextState | null>(
+		markdownRenderContextKey
+	);
+	const markdownDetailsScope = getContext<MarkdownDetailsScopeState | null>(
+		markdownDetailsScopeContextKey
+	);
 
-	setContext(markdownRenderContextKey, localRenderContext);
+	if (!markdownRenderContext) {
+		throw new Error('MarkdownTokens requires markdown render context');
+	}
 
-	let effectiveSourceIds = $derived(sourceIds ?? markdownRenderContext?.sourceIds ?? []);
-	let effectiveDone = $derived(done ?? markdownRenderContext?.done ?? true);
-	let effectiveSave = $derived(save ?? markdownRenderContext?.save ?? false);
-	let effectiveParagraphTag = $derived(paragraphTag ?? markdownRenderContext?.paragraphTag ?? 'p');
-	let effectiveEditCodeBlock = $derived(
-		editCodeBlock ?? markdownRenderContext?.editCodeBlock ?? true
-	);
-	let effectiveTopPadding = $derived(topPadding ?? markdownRenderContext?.topPadding ?? false);
-	let effectiveLinks = $derived(links ?? markdownRenderContext?.links ?? EMPTY_LINKS);
-	let effectiveIncremental = $derived(incremental ?? markdownRenderContext?.incremental ?? false);
-	let effectiveOnSave = $derived(onSave ?? markdownRenderContext?.onSave ?? (() => {}));
-	let effectiveOnTaskClick = $derived(
-		onTaskClick ?? markdownRenderContext?.onTaskClick ?? (() => {})
-	);
-	let effectiveOnSourceClick = $derived(
-		onSourceClick ?? markdownRenderContext?.onSourceClick ?? (() => {})
-	);
-	let effectiveOpenStates = $derived(
-		openStates ?? markdownRenderContext?.openStates ?? fallbackOpenStates
-	);
-	let effectiveDetailsScopeId = $derived(detailsScopeId ?? id);
+	let renderDone = $derived(markdownRenderContext.done);
+	let renderSave = $derived(markdownRenderContext.save);
+	let renderParagraphTag = $derived(markdownRenderContext.paragraphTag);
+	let renderEditCodeBlock = $derived(markdownRenderContext.editCodeBlock);
+	let renderTopPadding = $derived(markdownRenderContext.topPadding);
+	let renderOnSave = $derived(markdownRenderContext.onSave);
+	let renderOnTaskClick = $derived(markdownRenderContext.onTaskClick);
+	let resolvedDetailsScopeId = $derived(markdownDetailsScope?.id ?? id);
 
 	let detailsStateIds = $derived(
 		tokens.some((token) => token.type === 'details')
-			? createIndexedDetailsStateIds(tokens, (token) => token as Token, effectiveDetailsScopeId)
+			? createIndexedDetailsStateIds(tokens, (token) => token as Token, resolvedDetailsScopeId)
 			: EMPTY_DETAILS_STATE_IDS
 	);
 
 	const headerComponent = (depth: number) => {
 		return 'h' + depth;
 	};
-
-	$effect(() => {
-		const nextRenderContext: MarkdownRenderContextState = {
-			done: effectiveDone,
-			save: effectiveSave,
-			paragraphTag: effectiveParagraphTag,
-			editCodeBlock: effectiveEditCodeBlock,
-			topPadding: effectiveTopPadding,
-			sourceIds: effectiveSourceIds,
-			onSave: effectiveOnSave,
-			onTaskClick: effectiveOnTaskClick,
-			onSourceClick: effectiveOnSourceClick,
-			links: effectiveLinks,
-			openStates: effectiveOpenStates,
-			incremental: effectiveIncremental
-		};
-
-		Object.assign(localRenderContext, nextRenderContext);
-	});
 </script>
 
 {#each tokens as token, tokenIdx (tokenIdx)}
@@ -152,14 +84,14 @@
 			<CodeBlock
 				id={`${id}-${tokenIdx}`}
 				collapsed={$settings?.collapseCodeBlocks ?? false}
-				done={effectiveDone}
+				done={renderDone}
 				lang={token?.lang ?? ''}
 				code={token?.text ?? ''}
-				save={effectiveSave}
-				edit={effectiveEditCodeBlock}
-				stickyButtonsClassName={effectiveTopPadding ? 'top-10' : 'top-0'}
+				save={renderSave}
+				edit={renderEditCodeBlock}
+				stickyButtonsClassName={renderTopPadding ? 'top-10' : 'top-0'}
 				onSave={(value: unknown) => {
-					effectiveOnSave({
+					renderOnSave({
 						raw: token.raw,
 						oldContent: token.text,
 						newContent: value
@@ -177,12 +109,7 @@
 			<AlertRenderer {alert} />
 		{:else}
 			<blockquote dir="auto">
-				<MarkdownTokens
-					id={`${id}-${tokenIdx}`}
-					tokens={token.tokens}
-					detailsScopeId={effectiveDetailsScopeId}
-					rootDetailsStateId={null}
-				/>
+				<MarkdownTokens id={`${id}-${tokenIdx}`} tokens={token.tokens} />
 			</blockquote>
 		{/if}
 	{:else if token.type === 'list'}
@@ -196,7 +123,7 @@
 								type="checkbox"
 								checked={item.checked}
 								onchange={(e) => {
-									effectiveOnTaskClick({
+									renderOnTaskClick({
 										id: id,
 										token: token,
 										tokenIdx: tokenIdx,
@@ -212,8 +139,6 @@
 							id={`${id}-${tokenIdx}-${itemIdx}`}
 							tokens={item.tokens}
 							top={token.loose}
-							detailsScopeId={effectiveDetailsScopeId}
-							rootDetailsStateId={null}
 						/>
 					</li>
 				{/each}
@@ -228,7 +153,7 @@
 								type="checkbox"
 								checked={item.checked}
 								onchange={(e) => {
-									effectiveOnTaskClick({
+									renderOnTaskClick({
 										id: id,
 										token: token,
 										tokenIdx: tokenIdx,
@@ -244,8 +169,6 @@
 									id={`${id}-${tokenIdx}-${itemIdx}`}
 									tokens={item.tokens}
 									top={token.loose}
-									detailsScopeId={effectiveDetailsScopeId}
-									rootDetailsStateId={null}
 								/>
 							</div>
 						{:else}
@@ -253,8 +176,6 @@
 								id={`${id}-${tokenIdx}-${itemIdx}`}
 								tokens={item.tokens}
 								top={token.loose}
-								detailsScopeId={effectiveDetailsScopeId}
-								rootDetailsStateId={null}
 							/>
 						{/if}
 					</li>
@@ -265,7 +186,7 @@
 		{@const openStateId =
 			rootDetailsStateId ??
 			detailsStateIds.get(tokenIdx) ??
-			`${effectiveDetailsScopeId}::details::${tokenIdx}`}
+			`${resolvedDetailsScopeId}::details::${tokenIdx}`}
 
 		<MarkdownDetailsBlock
 			id={`${id}-${tokenIdx}`}
@@ -275,14 +196,13 @@
 			hasContent={(token.tokens?.length ?? 0) > 0}
 		>
 			{#snippet content()}
-				<div class="mb-1.5">
-					<MarkdownTokens
-						id={`${id}-${tokenIdx}-d`}
-						tokens={token.tokens}
-						detailsScopeId={openStateId}
-						rootDetailsStateId={null}
-					/>
-				</div>
+				<MarkdownDetailsScope scopeId={openStateId}>
+					{#snippet children()}
+						<div class="mb-1.5">
+							<MarkdownTokens id={`${id}-${tokenIdx}-d`} tokens={token.tokens} />
+						</div>
+					{/snippet}
+				</MarkdownDetailsScope>
 			{/snippet}
 		</MarkdownDetailsBlock>
 	{:else if token.type === 'html'}
@@ -305,7 +225,7 @@
 			}}
 		></iframe>
 	{:else if token.type === 'paragraph'}
-		{#if effectiveParagraphTag == 'span'}
+		{#if renderParagraphTag == 'span'}
 			<span dir="auto">
 				<MarkdownInlineTokens
 					id={`${id}-${tokenIdx}-p`}

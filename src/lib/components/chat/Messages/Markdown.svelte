@@ -15,6 +15,7 @@
 	import { user } from '$lib/stores';
 
 	import { markdownRenderContextKey, type MarkdownRenderContextState } from './Markdown/context';
+	import MarkdownDetailsScope from './Markdown/MarkdownDetailsScope.svelte';
 	import MarkdownTokens from './Markdown/MarkdownTokens.svelte';
 
 	interface MarkdownModel {
@@ -150,12 +151,15 @@
 </script>
 
 {#key id}
-	{#each renderSegments as segment, segmentIndex (renderSegmentMetadata[segmentIndex]?.key ?? `${id}-${segmentIndex}`)}
-		<MarkdownTokens
-			id={renderSegmentMetadata[segmentIndex]?.key ?? `${id}-${segmentIndex}`}
-			tokens={segment.tokens}
-			detailsScopeId={id}
-			rootDetailsStateId={renderSegmentMetadata[segmentIndex]?.rootDetailsStateId ?? null}
-		/>
-	{/each}
+	<MarkdownDetailsScope scopeId={id}>
+		{#snippet children()}
+			{#each renderSegments as segment, segmentIndex (renderSegmentMetadata[segmentIndex]?.key ?? `${id}-${segmentIndex}`)}
+				<MarkdownTokens
+					id={renderSegmentMetadata[segmentIndex]?.key ?? `${id}-${segmentIndex}`}
+					tokens={segment.tokens}
+					rootDetailsStateId={renderSegmentMetadata[segmentIndex]?.rootDetailsStateId ?? null}
+				/>
+			{/each}
+		{/snippet}
+	</MarkdownDetailsScope>
 {/key}

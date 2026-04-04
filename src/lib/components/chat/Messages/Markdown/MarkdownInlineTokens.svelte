@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Links, Token } from 'marked';
+	import type { Token } from 'marked';
 	import DOMPurify from 'dompurify';
 	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -7,7 +7,6 @@
 	import { WEBUI_BASE_URL } from '$lib/constants';
 	import { unescapeHtml } from '$lib/utils';
 	import {
-		EMPTY_LINKS,
 		createIncrementalTokenState,
 		getRenderSegments,
 		updateIncrementalTokenState,
@@ -28,36 +27,25 @@
 
 	interface MarkdownInlineTokensProps {
 		id: string;
-		done?: boolean;
 		tokens?: InlineToken[];
 		source?: string | null;
-		sourceIds?: string[] | undefined;
-		onSourceClick?: (value: unknown) => void;
-		links?: Links;
-		incremental?: boolean;
 	}
 
-	let {
-		id,
-		done = undefined,
-		tokens = [],
-		source = null,
-		sourceIds = undefined,
-		onSourceClick = undefined,
-		links = undefined,
-		incremental = undefined
-	}: MarkdownInlineTokensProps = $props();
+	let { id, tokens = [], source = null }: MarkdownInlineTokensProps = $props();
 
-	const markdownRenderContext =
-		getContext<MarkdownRenderContextState | null>(markdownRenderContextKey) ?? null;
-
-	let effectiveDone = $derived(done ?? markdownRenderContext?.done ?? true);
-	let effectiveSourceIds = $derived(sourceIds ?? markdownRenderContext?.sourceIds ?? []);
-	let effectiveOnSourceClick = $derived(
-		onSourceClick ?? markdownRenderContext?.onSourceClick ?? (() => {})
+	const markdownRenderContext = getContext<MarkdownRenderContextState | null>(
+		markdownRenderContextKey
 	);
-	let effectiveLinks = $derived(links ?? markdownRenderContext?.links ?? EMPTY_LINKS);
-	let effectiveIncremental = $derived(incremental ?? markdownRenderContext?.incremental ?? false);
+
+	if (!markdownRenderContext) {
+		throw new Error('MarkdownInlineTokens requires markdown render context');
+	}
+
+	let renderDone = $derived(markdownRenderContext.done);
+	let renderSourceIds = $derived(markdownRenderContext.sourceIds);
+	let renderOnSourceClick = $derived(markdownRenderContext.onSourceClick);
+	let renderLinks = $derived(markdownRenderContext.links);
+	let renderIncremental = $derived(markdownRenderContext.incremental);
 
 	function createStaticSegments(nextTokens: InlineToken[]): IncrementalTokenSegment[] {
 		return nextTokens.map((token, tokenIdx) => ({
@@ -66,15 +54,15 @@
 		}));
 	}
 
-	let inlineState = createIncrementalTokenState('inline', { seedLinks: EMPTY_LINKS });
+	let inlineState = createIncrementalTokenState('inline');
 	let currentInlineId = '';
 	let renderSegments = $state<IncrementalTokenSegment[]>([]);
 
 	$effect(() => {
 		const nextId = id;
 		const nextTokens = tokens ?? [];
-		const nextLinks = effectiveLinks;
-		const useIncremental = effectiveIncremental && source !== null;
+		const nextLinks = renderLinks;
+		const useIncremental = renderIncremental && source !== null;
 
 		if (!useIncremental) {
 			currentInlineId = nextId;
@@ -142,7 +130,7 @@
 					title={token.title}
 					onclick={(e) => handleLinkClick(e, token.href)}
 				>
-					<TextToken token={plainLinkTextToken} done={effectiveDone} />
+					<TextToken token={plainLinkTextToken} done={renderDone} />
 				</a>
 			{:else}
 				<a
@@ -172,7 +160,7 @@
 				/>
 			</em>
 		{:else if token.type === 'codespan'}
-			<CodespanToken token={token as InlineToken} done={effectiveDone} />
+			<CodespanToken token={token as InlineToken} done={renderDone} />
 		{:else if token.type === 'br'}
 			<br />
 		{:else if token.type === 'del'}
@@ -209,17 +197,17 @@
 				`<sup class="footnote-ref footnote-ref-text">${token.escapedText}</sup>`
 			) || ''}
 		{:else if token.type === 'citation'}
-			{#if effectiveSourceIds.length > 0}
+			{#if renderSourceIds.length > 0}
 				<SourceToken
 					token={token as InlineToken}
-					sourceIds={effectiveSourceIds}
-					onClick={effectiveOnSourceClick}
+					sourceIds={renderSourceIds}
+					onClick={renderOnSourceClick}
 				/>
 			{:else}
-				<TextToken token={token as InlineToken} done={effectiveDone} />
+				<TextToken token={token as InlineToken} done={renderDone} />
 			{/if}
 		{:else if token.type === 'text'}
-			<TextToken token={token as InlineToken} done={effectiveDone} />
+			<TextToken token={token as InlineToken} done={renderDone} />
 		{/if}
 	{/each}
 {/each}
