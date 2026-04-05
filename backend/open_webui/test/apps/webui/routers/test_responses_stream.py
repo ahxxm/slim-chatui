@@ -65,7 +65,7 @@ class TestResponsesStream:
         output, metadata = replay_stream(events)
         html = serialize_output(output)
 
-        assert metadata.get("done") is True, "stream should complete"
+        assert metadata.get("usage"), "stream should have usage from response.completed"
         assert '<details type="reasoning"' in html, "expect reasoning details"
         assert '<details type="web_search"' in html, "expect web search details"
         assert (

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { v4 as uuidv4 } from 'uuid';
+	import { v7 as uuidv7 } from 'uuid';
 	import { toast } from 'svelte-sonner';
 
 	import { getContext, onMount, tick, untrack } from 'svelte';
@@ -811,8 +811,8 @@
 		const messages = createMessagesList(history, history.currentId);
 		const parentMessage = messages.length !== 0 ? messages.at(-1) : null;
 
-		const userMessageId = uuidv4();
-		const responseMessageId = uuidv4();
+		const userMessageId = uuidv7();
+		const responseMessageId = uuidv7();
 
 		const userMessage = {
 			id: userMessageId,
@@ -862,7 +862,7 @@
 		let parentMessage = history.messages[parentId];
 		let currentParentId = parentMessage ? parentMessage.id : null;
 		for (const message of messages) {
-			let messageId = uuidv4();
+			let messageId = uuidv7();
 
 			if (message.role === 'user') {
 				const userMessage = {
@@ -1016,7 +1016,7 @@
 				messageQueue = [
 					...messageQueue,
 					{
-						id: uuidv4(),
+						id: uuidv7(),
 						prompt: userPrompt,
 						files: _files
 					}
@@ -1066,7 +1066,7 @@
 		messageInput?.setText('');
 
 		// Create user message
-		let userMessageId = uuidv4();
+		let userMessageId = uuidv7();
 		let userMessage = {
 			id: userMessageId,
 			parentId: messages.length !== 0 ? messages.at(-1).id : null,
@@ -1126,7 +1126,7 @@
 			return;
 		}
 
-		let responseMessageId = uuidv4();
+		let responseMessageId = uuidv7();
 		let responseMessage = {
 			parentId: parentId,
 			id: responseMessageId,
@@ -1454,7 +1454,7 @@
 
 	const submitMessage = async (parentId, prompt) => {
 		let userPrompt = prompt;
-		let userMessageId = uuidv4();
+		let userMessageId = uuidv7();
 
 		let userMessage = {
 			id: userMessageId,
@@ -1694,7 +1694,7 @@
 							const savedChat = await createNewChat(
 								localStorage.token,
 								{
-									id: uuidv4(),
+									id: uuidv7(),
 									title: title.length > 50 ? `${title.slice(0, 50)}...` : title,
 									models: selectedModels,
 									history: history,

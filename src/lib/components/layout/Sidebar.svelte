@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
-	import { v4 as uuidv4 } from 'uuid';
+	import { v7 as uuidv7 } from 'uuid';
 
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
@@ -101,7 +101,7 @@
 			name = `${name} ${i}`;
 		}
 
-		const tempId = uuidv4();
+		const tempId = uuidv7();
 		folders = {
 			...folders,
 			tempId: {
