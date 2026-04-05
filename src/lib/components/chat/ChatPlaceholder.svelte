@@ -7,7 +7,6 @@
 
 	import { fade } from 'svelte/transition';
 
-	import Suggestions from './Suggestions.svelte';
 	import { sanitizeResponseContent } from '$lib/utils';
 	import Tooltip from '$lib/components/common/Tooltip.svelte';
 	import EyeSlash from '$lib/components/icons/EyeSlash.svelte';
@@ -93,16 +92,6 @@
 					{/if}
 				</div>
 			</div>
-		</div>
-
-		<div class=" w-full font-primary" in:fade={{ duration: 200, delay: 300 }}>
-			<Suggestions
-				className="grid grid-cols-2"
-				suggestionPrompts={model?.info?.meta?.suggestion_prompts ??
-					$config?.default_prompt_suggestions ??
-					[]}
-				{onSelect}
-			/>
 		</div>
 	</div>
 {/key}

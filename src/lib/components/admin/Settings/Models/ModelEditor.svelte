@@ -9,8 +9,6 @@
 	import Capabilities from './Capabilities.svelte';
 	import Textarea from '$lib/components/common/Textarea.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
-	import PromptSuggestions from './PromptSuggestions.svelte';
-
 	const i18n = getContext('i18n');
 
 	let { onSubmit, onBack = null, model = null, edit = false, preset = true } = $props();
@@ -44,7 +42,6 @@
 		name: '',
 		meta: {
 			description: '',
-			suggestion_prompts: null,
 			tags: [] as { name: string }[]
 		},
 		params: {
@@ -318,40 +315,6 @@
 					</div>
 
 					<hr class=" border-gray-100/30 dark:border-gray-850/30 my-2" />
-
-					<div class="my-2">
-						<div class="flex w-full justify-between items-center">
-							<div class="flex w-full justify-between items-center">
-								<div class=" self-center text-xs font-medium text-gray-500">
-									{$i18n.t('Prompts')}
-								</div>
-
-								<button
-									class="p-1 text-xs flex rounded-sm transition"
-									type="button"
-									onclick={() => {
-										if ((info?.meta?.suggestion_prompts ?? null) === null) {
-											info.meta.suggestion_prompts = [{ content: '', title: ['', ''] }];
-										} else {
-											info.meta.suggestion_prompts = null;
-										}
-									}}
-								>
-									{#if (info?.meta?.suggestion_prompts ?? null) === null}
-										<span class="ml-2 self-center">{$i18n.t('Default')}</span>
-									{:else}
-										<span class="ml-2 self-center">{$i18n.t('Custom')}</span>
-									{/if}
-								</button>
-							</div>
-						</div>
-
-						{#if info?.meta?.suggestion_prompts}
-							<PromptSuggestions bind:promptSuggestions={info.meta.suggestion_prompts} />
-						{/if}
-					</div>
-
-					<hr class=" border-gray-100/30 dark:border-gray-850/30 my-4" />
 
 					<div class="my-4">
 						<Capabilities bind:capabilities />
