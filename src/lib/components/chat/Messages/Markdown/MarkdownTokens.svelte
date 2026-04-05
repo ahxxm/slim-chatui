@@ -49,11 +49,10 @@
 	}
 
 	let renderDone = $derived(markdownRenderContext.done);
-	let renderSave = $derived(markdownRenderContext.save);
+
 	let renderParagraphTag = $derived(markdownRenderContext.paragraphTag);
-	let renderEditCodeBlock = $derived(markdownRenderContext.editCodeBlock);
+
 	let renderTopPadding = $derived(markdownRenderContext.topPadding);
-	let renderOnSave = $derived(markdownRenderContext.onSave);
 	let renderOnTaskClick = $derived(markdownRenderContext.onTaskClick);
 	let resolvedDetailsScopeId = $derived(markdownDetailsScope?.id ?? id);
 
@@ -87,16 +86,7 @@
 				done={renderDone}
 				lang={token?.lang ?? ''}
 				code={token?.text ?? ''}
-				save={renderSave}
-				edit={renderEditCodeBlock}
 				stickyButtonsClassName={renderTopPadding ? 'top-10' : 'top-0'}
-				onSave={(value: unknown) => {
-					renderOnSave({
-						raw: token.raw,
-						oldContent: token.text,
-						newContent: value
-					});
-				}}
 			/>
 		{:else}
 			{token.text}

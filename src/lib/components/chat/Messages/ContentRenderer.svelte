@@ -12,11 +12,8 @@
 		done = true,
 		model = null as any,
 		sources = null as any[] | null,
-		save = false,
 		floatingButtons = true,
-		editCodeBlock = true,
 		topPadding = false,
-		onSave = (e) => {},
 		onSourceClick = (e) => {},
 		onTaskClick = (e) => {},
 		onAddMessages = (e) => {}
@@ -138,19 +135,7 @@
 </script>
 
 <div bind:this={contentContainerElement}>
-	<Markdown
-		{id}
-		{content}
-		{model}
-		{save}
-		{done}
-		{editCodeBlock}
-		{topPadding}
-		{sourceIds}
-		{onSourceClick}
-		{onTaskClick}
-		{onSave}
-	/>
+	<Markdown {id} {content} {model} {done} {topPadding} {sourceIds} {onSourceClick} {onTaskClick} />
 </div>
 
 {#if floatingButtons && model}

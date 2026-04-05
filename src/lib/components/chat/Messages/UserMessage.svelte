@@ -33,7 +33,6 @@
 		deleteMessage,
 		isFirstMessage,
 		readOnly,
-		editCodeBlock = true,
 		topPadding = false
 	} = $props();
 
@@ -352,12 +351,7 @@
 								: ' w-full'}"
 						>
 							{#if message.content}
-								<Markdown
-									id={`${chatId}-${message.id}`}
-									content={message.content}
-									{editCodeBlock}
-									{topPadding}
-								/>
+								<Markdown id={`${chatId}-${message.id}`} content={message.content} {topPadding} />
 							{/if}
 						</div>
 					</div>
