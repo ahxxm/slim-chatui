@@ -10,12 +10,9 @@ export interface MarkdownDetailsScopeState {
 
 export interface MarkdownRenderContextState {
 	done: boolean;
-	save: boolean;
 	paragraphTag: 'p' | 'span';
-	editCodeBlock: boolean;
 	topPadding: boolean;
 	sourceIds: string[];
-	onSave: (value: unknown) => void;
 	onTaskClick: (value: unknown) => void;
 	onSourceClick: (value: unknown) => void;
 	links: Links;

@@ -30,7 +30,6 @@
 		submitMessage = () => {},
 		addMessages = () => {},
 		readOnly = false,
-		editCodeBlock = true,
 		topPadding = false,
 		bottomPadding = false,
 		autoScroll = $bindable(undefined),
@@ -315,7 +314,6 @@
 								{continueResponse}
 								{addMessages}
 								{readOnly}
-								{editCodeBlock}
 								{topPadding}
 							/>
 						{/each}

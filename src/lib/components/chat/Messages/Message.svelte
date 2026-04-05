@@ -15,7 +15,6 @@
 		setInputText = () => {},
 		showPreviousMessage,
 		showNextMessage,
-		updateChat,
 		editMessage,
 		deleteMessage,
 		submitMessage,
@@ -23,7 +22,6 @@
 		continueResponse,
 		addMessages,
 		readOnly = false,
-		editCodeBlock = true,
 		topPadding = false
 	} = $props();
 
@@ -61,7 +59,6 @@
 				{editMessage}
 				{deleteMessage}
 				{readOnly}
-				{editCodeBlock}
 				{topPadding}
 			/>
 		{:else}
@@ -76,7 +73,6 @@
 				{setInputText}
 				{showPreviousMessage}
 				{showNextMessage}
-				{updateChat}
 				{editMessage}
 				{submitMessage}
 				{deleteMessage}
@@ -84,7 +80,6 @@
 				{regenerateResponse}
 				{addMessages}
 				{readOnly}
-				{editCodeBlock}
 				{topPadding}
 			/>
 		{/if}

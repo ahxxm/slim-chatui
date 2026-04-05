@@ -32,12 +32,9 @@
 		content?: string | null;
 		done?: boolean;
 		model?: MarkdownModel | null;
-		save?: boolean;
 		paragraphTag?: 'p' | 'span';
-		editCodeBlock?: boolean;
 		topPadding?: boolean;
 		sourceIds?: string[];
-		onSave?: (value: unknown) => void;
 		onSourceClick?: (value: unknown) => void;
 		onTaskClick?: (value: unknown) => void;
 	}
@@ -47,12 +44,9 @@
 		content,
 		done = true,
 		model = null,
-		save = false,
 		paragraphTag = 'p',
-		editCodeBlock = true,
 		topPadding = false,
 		sourceIds = [],
-		onSave = () => {},
 		onSourceClick = () => {},
 		onTaskClick = () => {}
 	}: MarkdownProps = $props();
@@ -71,12 +65,9 @@
 	let links = $state<Links>(EMPTY_LINKS);
 	const renderContext = $state<MarkdownRenderContextState>({
 		done: true,
-		save: false,
 		paragraphTag: 'p',
-		editCodeBlock: true,
 		topPadding: false,
 		sourceIds: [],
-		onSave: () => {},
 		onTaskClick: () => {},
 		onSourceClick: () => {},
 		links: EMPTY_LINKS,
@@ -137,12 +128,9 @@
 
 	// Stable: changes only when parent provides different props
 	$effect(() => {
-		renderContext.save = save;
 		renderContext.paragraphTag = paragraphTag;
-		renderContext.editCodeBlock = editCodeBlock;
 		renderContext.topPadding = topPadding;
 		renderContext.sourceIds = sourceIds;
-		renderContext.onSave = onSave;
 		renderContext.onTaskClick = onTaskClick;
 		renderContext.onSourceClick = onSourceClick;
 	});

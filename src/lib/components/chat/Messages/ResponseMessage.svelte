@@ -43,7 +43,6 @@
 		setInputText = () => {},
 		showPreviousMessage,
 		showNextMessage,
-		updateChat,
 		editMessage,
 		deleteMessage,
 		submitMessage,
@@ -52,7 +51,6 @@
 		addMessages,
 		isLastMessage = true,
 		readOnly = false,
-		editCodeBlock = true,
 		topPadding = false
 	} = $props();
 
@@ -379,8 +377,6 @@
 									floatingButtons={messageDone &&
 										!readOnly &&
 										($settings?.showFloatingActionButtons ?? true)}
-									save={!readOnly}
-									{editCodeBlock}
 									{topPadding}
 									done={($settings?.chatFadeStreamingText ?? true) ? messageDone : true}
 									{model}
@@ -395,12 +391,6 @@
 									}}
 									onAddMessages={({ modelId, parentId, messages }) => {
 										addMessages({ modelId, parentId, messages });
-									}}
-									onSave={({ raw, oldContent, newContent }) => {
-										history.messages[message.id].content = history.messages[
-											message.id
-										].content.replace(raw, raw.replace(oldContent, newContent));
-										updateChat();
 									}}
 								/>
 							{/if}
