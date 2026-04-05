@@ -4,6 +4,7 @@
 	const i18n = getContext('i18n');
 
 	import dayjs from 'dayjs';
+	import calendar from 'dayjs/plugin/calendar';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
 	import { getTimeRange } from '$lib/utils';
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
@@ -11,6 +12,7 @@
 	import Loader from '$lib/components/common/Loader.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
 
+	dayjs.extend(calendar);
 	dayjs.extend(localizedFormat);
 
 	let {

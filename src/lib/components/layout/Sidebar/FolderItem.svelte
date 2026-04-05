@@ -34,7 +34,6 @@
 	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
 	import Emoji from '$lib/components/common/Emoji.svelte';
 	import Spinner from '$lib/components/common/Spinner.svelte';
-	import { stopCollapsibleTriggerPropagation } from '$lib/utils/stop-collapsible-trigger-propagation';
 
 	const i18n = getContext('i18n');
 
@@ -74,7 +73,6 @@
 	let x = $state(0);
 	let y = $state(0);
 
-	let clickTimer: ReturnType<typeof setTimeout> | null = null;
 	let isExpandedUpdateTimeout: ReturnType<typeof setTimeout>;
 
 	/** @type {{id: string; title: string; created_at: number}[] | null} */
@@ -183,7 +181,6 @@
 			folderElement.removeEventListener('drag', onDragMove);
 			folderElement.removeEventListener('dragend', onDragEnd);
 			clearTimeout(isExpandedUpdateTimeout);
-			if (clickTimer) clearTimeout(clickTimer);
 		};
 	});
 
@@ -324,12 +321,7 @@
 	</DragGhost>
 {/if}
 
-<div
-	bind:this={folderElement}
-	use:stopCollapsibleTriggerPropagation
-	class="relative {className}"
-	draggable="true"
->
+<div bind:this={folderElement} class="relative {className}" draggable="true">
 	{#if draggedOver}
 		<div
 			class="absolute top-0 left-0 w-full h-full rounded-xs bg-gray-100/50 dark:bg-gray-700/20 bg-opacity-50 dark:bg-opacity-10 z-50 pointer-events-none touch-none"
@@ -346,27 +338,12 @@
 				folderId
 					? 'bg-gray-100 dark:bg-gray-900 selected'
 					: ''}"
-				ondblclick={() => {
-					if (clickTimer) {
-						clearTimeout(clickTimer);
-						clickTimer = null;
-					}
-					renameHandler();
-				}}
-				onclick={(e) => {
+				onclick={async (e) => {
 					e.stopPropagation();
-					if (clickTimer) {
-						clearTimeout(clickTimer);
-						clickTimer = null;
-					}
-
-					clickTimer = setTimeout(async () => {
-						const folder = await getFolderById(localStorage.token, folderId).catch(() => null);
-						if (folder) await selectedFolder.set(folder);
-						await goto('/');
-						if ($mobile) showSidebar.set(!$showSidebar);
-						clickTimer = null;
-					}, 100);
+					const folder = await getFolderById(localStorage.token, folderId).catch(() => null);
+					if (folder) await selectedFolder.set(folder);
+					await goto('/');
+					if ($mobile) showSidebar.set(!$showSidebar);
 				}}
 				onpointerup={(e) => e.stopPropagation()}
 			>
@@ -374,7 +351,6 @@
 					class="text-gray-500 dark:text-gray-500 transition-all p-1 hover:bg-gray-200 dark:hover:bg-gray-850 rounded-lg"
 					onclick={(e) => {
 						e.stopPropagation();
-						e.stopImmediatePropagation();
 						open = !open;
 						isExpandedUpdateDebounced();
 						setFolderItems();
