@@ -56,10 +56,8 @@
 
 	let scrollTop = $state(0);
 
-	let navElement = $state<HTMLElement | undefined>();
 	let shiftKey = $state(false);
 
-	let selectedChatId = $state<string | null>(null);
 	let chatListLoading = $state(false);
 	let allChatsLoaded = $state(false);
 
@@ -265,7 +263,6 @@
 
 	const onBlur = () => {
 		shiftKey = false;
-		selectedChatId = null;
 	};
 
 	const MIN_WIDTH = 220;
@@ -429,7 +426,6 @@
 	});
 
 	const newChatHandler = async () => {
-		selectedChatId = null;
 		selectedFolder.set(null);
 
 		await temporaryChatEnabled.set(false);
@@ -631,7 +627,6 @@
 
 {#if $showSidebar}
 	<div
-		bind:this={navElement}
 		id="sidebar"
 		class="h-screen max-h-[100dvh] min-h-screen select-none {$showSidebar
 			? `${$mobile ? 'bg-gray-50 dark:bg-gray-950' : 'bg-gray-50/70 dark:bg-gray-950/70'} z-50`
@@ -850,13 +845,6 @@
 												title={chat.title}
 												createdAt={chat.created_at}
 												{shiftKey}
-												selected={selectedChatId === chat.id}
-												onselect={() => {
-													selectedChatId = chat.id;
-												}}
-												onunselect={() => {
-													selectedChatId = null;
-												}}
 												onchange={() => {
 													initChatList();
 												}}
@@ -907,13 +895,6 @@
 										title={chat.title}
 										createdAt={chat.created_at}
 										{shiftKey}
-										selected={selectedChatId === chat.id}
-										onselect={() => {
-											selectedChatId = chat.id;
-										}}
-										onunselect={() => {
-											selectedChatId = null;
-										}}
 										onchange={() => {
 											initChatList();
 										}}

@@ -957,8 +957,6 @@
 			message.usage = usage;
 		}
 
-		// Guard: Responses API emits done:true twice per stream (see middleware.py).
-		// Content/output fields above update on both, but save+queue runs only on first.
 		if (done && message.id in streamingMessages) {
 			finishStreamingMessage(message.id);
 

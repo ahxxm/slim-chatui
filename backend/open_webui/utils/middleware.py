@@ -662,10 +662,8 @@ async def streaming_chat_response_handler(
             },
         )
 
-        # Responses API emits done:True in-loop on response.completed
-        # (the only signal if the task is cancelled mid-stream).
-        # This second done:True carries the post-processed output
-        # (stripped whitespace, closed reasoning blocks, completed statuses).
+        # Single done:True after finalization (post-processed output with
+        # stripped whitespace, closed reasoning blocks, completed statuses).
         await event_emitter({"type": "chat:completion", "data": done_data})
         await background_tasks_handler(ctx)
 

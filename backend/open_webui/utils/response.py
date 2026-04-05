@@ -510,7 +510,7 @@ def _responses_completed(
             )
         ordinal += 1
 
-    return new_output, {"usage": response_data.get("usage"), "done": True}
+    return new_output, {"usage": response_data.get("usage")}
 
 
 # ---------------------------------------------------------------------------
