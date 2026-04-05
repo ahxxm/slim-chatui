@@ -7,7 +7,7 @@
 	import { models, config as _config } from '$lib/stores';
 	import { DEFAULT_CAPABILITIES } from '$lib/constants';
 	import { deleteAllModels } from '$lib/apis/models';
-	import { getModelsConfig, setModelsConfig, setDefaultPromptSuggestions } from '$lib/apis/configs';
+	import { getModelsConfig, setModelsConfig } from '$lib/apis/configs';
 	import { getBackendConfig } from '$lib/apis';
 
 	import Modal from '$lib/components/common/Modal.svelte';
@@ -17,8 +17,6 @@
 	import XMark from '$lib/components/icons/XMark.svelte';
 	import ModelSelector from './ModelSelector.svelte';
 	import Capabilities from './Capabilities.svelte';
-	import PromptSuggestions from './PromptSuggestions.svelte';
-
 	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
 	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
 
@@ -31,11 +29,7 @@
 	let loading = $state(false);
 	let showResetModal = $state(false);
 	let showDefaultCapabilities = $state(false);
-	let showDefaultPromptSuggestions = $state(false);
-
 	let defaultCapabilities = $state({});
-
-	let promptSuggestions: { content: string; title: string[] }[] = $state([]);
 
 	$effect(() => {
 		if (show) {
@@ -58,7 +52,6 @@
 		} else {
 			defaultCapabilities = { ...DEFAULT_CAPABILITIES };
 		}
-		promptSuggestions = $_config?.default_prompt_suggestions ?? [];
 	};
 	const submitHandler = async () => {
 		loading = true;
@@ -73,8 +66,6 @@
 		});
 
 		if (res) {
-			promptSuggestions = promptSuggestions.filter((p) => p.content !== '');
-			promptSuggestions = await setDefaultPromptSuggestions(localStorage.token, promptSuggestions);
 			await _config.set(await getBackendConfig());
 
 			toast.success($i18n.t('Models configuration saved successfully'));
@@ -138,43 +129,6 @@
 										models={$models}
 										bind:modelIds={defaultModelIds}
 									/>
-
-									<hr class=" border-gray-50 dark:border-gray-800/10 my-2.5 w-full" />
-
-									<div>
-										<button
-											class="flex w-full justify-between items-center"
-											type="button"
-											onclick={() => {
-												showDefaultPromptSuggestions = !showDefaultPromptSuggestions;
-											}}
-										>
-											<div class="text-xs text-gray-500 font-medium">
-												{$i18n.t('Prompt Suggestions')}
-											</div>
-											<div>
-												{#if showDefaultPromptSuggestions}
-													<ChevronUp className="size-3" />
-												{:else}
-													<ChevronDown className="size-3" />
-												{/if}
-											</div>
-										</button>
-
-										{#if showDefaultPromptSuggestions}
-											<div class="mt-2">
-												<PromptSuggestions bind:promptSuggestions />
-
-												{#if promptSuggestions.length > 0}
-													<div class="text-xs text-left w-full mt-2 text-gray-500">
-														{$i18n.t(
-															'Adjusting these settings will apply changes universally to all users.'
-														)}
-													</div>
-												{/if}
-											</div>
-										{/if}
-									</div>
 
 									<hr class=" border-gray-50 dark:border-gray-800/10 my-2.5 w-full" />
 

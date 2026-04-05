@@ -68,7 +68,6 @@ from open_webui.config import (
     JWT_EXPIRES_IN,
     ENABLE_SIGNUP,
     DEFAULT_USER_ROLE,
-    DEFAULT_PROMPT_SUGGESTIONS,
     DEFAULT_MODELS,
     DEFAULT_MODEL_METADATA,
     # Misc
@@ -254,7 +253,6 @@ app.state.config.DEFAULT_MODELS = DEFAULT_MODELS
 app.state.config.DEFAULT_MODEL_METADATA = DEFAULT_MODEL_METADATA
 
 
-app.state.config.DEFAULT_PROMPT_SUGGESTIONS = DEFAULT_PROMPT_SUGGESTIONS
 app.state.config.DEFAULT_USER_ROLE = DEFAULT_USER_ROLE
 
 
@@ -634,7 +632,6 @@ async def get_app_config(request: Request):
         **(
             {
                 "default_models": app.state.config.DEFAULT_MODELS,
-                "default_prompt_suggestions": app.state.config.DEFAULT_PROMPT_SUGGESTIONS,
                 "user_count": user_count,
                 "file": {
                     "image_compression": {

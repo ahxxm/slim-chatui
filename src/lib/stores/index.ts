@@ -169,7 +169,6 @@ type Config = {
 	name: string;
 	version: string;
 	default_models: string;
-	default_prompt_suggestions: PromptSuggestion[];
 	features: {
 		auth: boolean;
 		enable_signup: boolean;
@@ -187,11 +186,6 @@ type Config = {
 		};
 	};
 	user_count?: number;
-};
-
-type PromptSuggestion = {
-	content: string;
-	title: [string, string];
 };
 
 type SessionUser = {

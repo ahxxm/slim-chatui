@@ -63,24 +63,3 @@ async def set_models_config(
         "DEFAULT_MODELS": request.app.state.config.DEFAULT_MODELS,
         "DEFAULT_MODEL_METADATA": request.app.state.config.DEFAULT_MODEL_METADATA,
     }
-
-
-class PromptSuggestion(BaseModel):
-    title: list[str]
-    content: str
-
-
-class SetDefaultSuggestionsForm(BaseModel):
-    suggestions: list[PromptSuggestion]
-
-
-@router.post("/suggestions", response_model=list[PromptSuggestion])
-async def set_default_suggestions(
-    request: Request,
-    form_data: SetDefaultSuggestionsForm,
-    user=Depends(get_admin_user),
-):
-    data = form_data.model_dump()
-    request.app.state.config.DEFAULT_PROMPT_SUGGESTIONS = data["suggestions"]
-    request.app.state.config.persist()
-    return request.app.state.config.DEFAULT_PROMPT_SUGGESTIONS

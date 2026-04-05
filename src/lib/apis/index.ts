@@ -233,7 +233,6 @@ interface ModelMeta {
 	capabilities?: object;
 	hidden?: boolean;
 	user?: Record<string, any>;
-	suggestion_prompts?: { content: string }[];
 	tags?: { name: string }[];
 }
 
