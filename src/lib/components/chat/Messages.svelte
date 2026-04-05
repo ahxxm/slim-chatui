@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { v4 as uuidv4 } from 'uuid';
+	import { v7 as uuidv7 } from 'uuid';
 	import { settings, user as _user, temporaryChatEnabled, refreshChatList } from '$lib/stores';
 	import { tick, getContext, untrack } from 'svelte';
 
@@ -174,7 +174,7 @@
 		if (history.messages[messageId].role === 'user') {
 			if (submit) {
 				let userPrompt = content;
-				let userMessageId = uuidv4();
+				let userMessageId = uuidv7();
 
 				let userMessage = {
 					id: userMessageId,
@@ -208,7 +208,7 @@
 			}
 		} else {
 			if (submit) {
-				const responseMessageId = uuidv4();
+				const responseMessageId = uuidv7();
 				const message = history.messages[messageId];
 				const parentId = message.parentId;
 

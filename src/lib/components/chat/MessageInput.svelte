@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 
-	import { v4 as uuidv4 } from 'uuid';
+	import { v7 as uuidv7 } from 'uuid';
 
 	import { onMount, tick, getContext, untrack } from 'svelte';
 
@@ -195,7 +195,7 @@
 			return null;
 		}
 
-		const itemId = uuidv4();
+		const itemId = uuidv7();
 		const placeholder = {
 			type: 'file',
 			file: '',
@@ -258,7 +258,7 @@
 				status: 'uploaded',
 				type: 'text',
 				content: content,
-				id: uuidv4()
+				id: uuidv7()
 			};
 			files = files.map((f) => (isMe(f) ? completed : f));
 			return completed;

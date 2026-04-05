@@ -1,3 +1,27 @@
+export const Shortcut = {
+	NEW_CHAT: 'newChat',
+	NEW_TEMPORARY_CHAT: 'newTemporaryChat',
+	DELETE_CHAT: 'deleteChat',
+	OPEN_MODEL_SELECTOR: 'openModelSelector',
+	SEARCH: 'search',
+	OPEN_SETTINGS: 'openSettings',
+	SHOW_SHORTCUTS: 'showShortcuts',
+	TOGGLE_SIDEBAR: 'toggleSidebar',
+	CLOSE_MODAL: 'closeModal',
+	FOCUS_INPUT: 'focusInput',
+	ACCEPT_AUTOCOMPLETE: 'acceptAutocomplete',
+	PREVENT_FILE_CREATION: 'preventFileCreation',
+	NAVIGATE_PROMPT_HISTORY_UP: 'navigatePromptHistoryUp',
+	TALK_TO_MODEL: 'talkToModel',
+	GENERATE_MESSAGE_PAIR: 'generateMessagePair',
+	REGENERATE_RESPONSE: 'regenerateResponse',
+	COPY_LAST_CODE_BLOCK: 'copyLastCodeBlock',
+	COPY_LAST_RESPONSE: 'copyLastResponse',
+	STOP_GENERATING: 'stopGenerating'
+} as const;
+
+export type Shortcut = (typeof Shortcut)[keyof typeof Shortcut];
+
 type ShortcutRegistry = {
 	[key in Shortcut]?: {
 		name: string;
@@ -10,34 +34,6 @@ type ShortcutRegistry = {
 		};
 	};
 };
-
-export enum Shortcut {
-	//Chat
-	NEW_CHAT = 'newChat',
-	NEW_TEMPORARY_CHAT = 'newTemporaryChat',
-	DELETE_CHAT = 'deleteChat',
-	OPEN_MODEL_SELECTOR = 'openModelSelector',
-	//Global
-	SEARCH = 'search',
-	OPEN_SETTINGS = 'openSettings',
-	SHOW_SHORTCUTS = 'showShortcuts',
-	TOGGLE_SIDEBAR = 'toggleSidebar',
-	CLOSE_MODAL = 'closeModal',
-
-	//Input
-	FOCUS_INPUT = 'focusInput',
-	ACCEPT_AUTOCOMPLETE = 'acceptAutocomplete',
-	PREVENT_FILE_CREATION = 'preventFileCreation',
-	NAVIGATE_PROMPT_HISTORY_UP = 'navigatePromptHistoryUp',
-	TALK_TO_MODEL = 'talkToModel',
-
-	//Message
-	GENERATE_MESSAGE_PAIR = 'generateMessagePair',
-	REGENERATE_RESPONSE = 'regenerateResponse',
-	COPY_LAST_CODE_BLOCK = 'copyLastCodeBlock',
-	COPY_LAST_RESPONSE = 'copyLastResponse',
-	STOP_GENERATING = 'stopGenerating'
-}
 
 export const shortcuts: ShortcutRegistry = {
 	//Chat
