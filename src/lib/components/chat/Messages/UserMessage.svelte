@@ -114,10 +114,10 @@
 	style="scroll-margin-top: 3rem;"
 >
 	{#if !($settings?.chatBubble ?? true)}
-		<div class={`shrink-0 ltr:mr-3 rtl:ml-3 mt-1`}>
+		<div class="shrink-0 ltr:mr-3 rtl:ml-3 mt-1">
 			<ProfileImage
 				src={`${WEBUI_BASE_URL}/user.png`}
-				className={'size-8 user-message-profile-image'}
+				className="size-8 user-message-profile-image"
 			/>
 		</div>
 	{/if}

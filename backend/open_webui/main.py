@@ -192,7 +192,8 @@ async def lifespan(app: FastAPI):
 
     background_tasks = [
         asyncio.create_task(periodic_session_pool_cleanup()),
-        asyncio.create_task(periodic_orphan_file_cleanup()),
+        # TODO: upload-but-not-sent, folder
+        # asyncio.create_task(periodic_orphan_file_cleanup()),
     ]
 
     yield

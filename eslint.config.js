@@ -16,7 +16,7 @@ const tsRules = {
 };
 
 export default [
-	{ ignores: ['.svelte-kit/**', 'build/**', 'static/**', 'backend/**'] },
+	{ ignores: ['.svelte-kit/**', 'build/**', 'static/**', 'backend/**', '.venv/**'] },
 	js.configs.recommended,
 	{
 		files: ['**/*.{js,ts}'],
