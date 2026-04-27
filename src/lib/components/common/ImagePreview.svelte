@@ -68,7 +68,7 @@
 						show = false;
 					}}
 				>
-					<XMark className={'size-6'} />
+					<XMark className="size-6" />
 				</button>
 			</div>
 

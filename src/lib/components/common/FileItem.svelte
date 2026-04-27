@@ -171,7 +171,7 @@
 					dispatch('dismiss');
 				}}
 			>
-				<XMark className={'size-4'} />
+				<XMark className="size-4" />
 			</button>
 		</div>
 	{/if}
