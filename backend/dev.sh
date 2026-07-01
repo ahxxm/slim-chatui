@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-export CORS_ALLOW_ORIGIN="*"
+export CORS_ALLOW_ORIGIN="http://localhost:5173;http://localhost:8080"
 export WEBUI_AUTH=false
 PORT="${PORT:-8080}"
 BACKEND_DIR="$(cd "$(dirname "$0")" && pwd)"

@@ -27,9 +27,6 @@
 	let notificationSound = $state($settings?.notificationSound ?? true);
 	let notificationSoundAlways = $state($settings?.notificationSoundAlways ?? false);
 	let highContrastMode = $state($settings?.highContrastMode ?? false);
-	let richTextInput = $state($settings?.richTextInput ?? true);
-	let showFormattingToolbar = $state($settings?.showFormattingToolbar ?? false);
-	let insertPromptAsRichText = $state($settings?.insertPromptAsRichText ?? false);
 	let largeTextAsFile = $state($settings?.largeTextAsFile ?? false);
 	let insertSuggestionPrompt = $state($settings?.insertSuggestionPrompt ?? false);
 	let keepFollowUpPrompts = $state($settings?.keepFollowUpPrompts ?? false);
@@ -626,65 +623,6 @@
 					</button>
 				</div>
 			</div>
-
-			<div>
-				<div class=" py-0.5 flex w-full justify-between">
-					<div id="rich-input-label" class=" self-center text-xs">
-						{$i18n.t('Rich Text Input for Chat')}
-					</div>
-
-					<div class="flex items-center gap-2 p-1">
-						<Switch
-							tooltip={true}
-							ariaLabelledbyId="rich-input-label"
-							bind:state={richTextInput}
-							onchange={() => {
-								saveSettings({ richTextInput });
-							}}
-						/>
-					</div>
-				</div>
-			</div>
-
-			{#if richTextInput}
-				<div>
-					<div class=" py-0.5 flex w-full justify-between">
-						<div id="show-formatting-toolbar-label" class=" self-center text-xs">
-							{$i18n.t('Show Formatting Toolbar')}
-						</div>
-
-						<div class="flex items-center gap-2 p-1">
-							<Switch
-								ariaLabelledbyId="show-formatting-toolbar-label"
-								tooltip={true}
-								bind:state={showFormattingToolbar}
-								onchange={() => {
-									saveSettings({ showFormattingToolbar });
-								}}
-							/>
-						</div>
-					</div>
-				</div>
-
-				<div>
-					<div class=" py-0.5 flex w-full justify-between">
-						<div id="insert-prompt-as-rich-text-label" class=" self-center text-xs">
-							{$i18n.t('Insert Prompt as Rich Text')}
-						</div>
-
-						<div class="flex items-center gap-2 p-1">
-							<Switch
-								ariaLabelledbyId="insert-prompt-as-rich-text-label"
-								tooltip={true}
-								bind:state={insertPromptAsRichText}
-								onchange={() => {
-									saveSettings({ insertPromptAsRichText });
-								}}
-							/>
-						</div>
-					</div>
-				</div>
-			{/if}
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
