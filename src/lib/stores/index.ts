@@ -124,7 +124,6 @@ type Settings = {
 	textScale?: number;
 	widescreenMode?: null;
 	largeTextAsFile?: boolean;
-	richTextInput?: boolean;
 	autoFollowUps?: boolean;
 	splitLargeChunks?: boolean;
 	landingPageMode?: string;
@@ -149,12 +148,10 @@ type Settings = {
 	insertSuggestionPrompt?: boolean;
 	insertFollowUpPrompt?: boolean;
 	keepFollowUpPrompts?: boolean;
-	insertPromptAsRichText?: boolean;
 	enableMessageQueue?: boolean;
 	chatFadeStreamingText?: boolean;
 	floatingActionButtons?: boolean;
 	showFloatingActionButtons?: boolean;
-	showFormattingToolbar?: boolean;
 	regenerateMenu?: boolean;
 };
 

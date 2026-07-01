@@ -13,7 +13,7 @@
 
 	import InputMenu from './MessageInput/InputMenu.svelte';
 	import FilesOverlay from './MessageInput/FilesOverlay.svelte';
-	import RichTextInput from '../common/RichTextInput.svelte';
+	import TextInput from '../common/TextInput.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
 	import FileItem from '../common/FileItem.svelte';
 	import Image from '../common/Image.svelte';
@@ -47,8 +47,6 @@
 
 	let activeModelId = $derived(selectedModels[0]);
 
-	let inputContent = $state(null);
-
 	$effect(() => {
 		untrack(() => onChange)({
 			prompt,
@@ -64,61 +62,9 @@
 	});
 
 	export const setText = async (text?: string, cb?: (text: string) => void) => {
-		const chatInput = document.getElementById('chat-input');
-
-		if (chatInput) {
-			chatInputElement?.setText(text);
-			chatInputElement?.focus();
-
-			await tick();
-			if (cb) await cb(text);
-		}
+		await chatInputElement?.setText(text ?? '');
+		if (cb) await cb(text);
 	};
-
-	const getCommand = () => {
-		const chatInput = document.getElementById('chat-input');
-		let word = '';
-
-		if (chatInput) {
-			word = chatInputElement?.getWordAtDocPos();
-		}
-
-		return word;
-	};
-
-	const replaceCommandWithText = (text) => {
-		const chatInput = document.getElementById('chat-input');
-		if (!chatInput) return;
-
-		chatInputElement?.replaceCommandWithText(text);
-	};
-
-	const insertTextAtCursor = async (text: string) => {
-		const chatInput = document.getElementById('chat-input');
-		if (!chatInput) return;
-
-		if (command) {
-			replaceCommandWithText(text);
-		} else {
-			chatInputElement?.insertContent(text);
-		}
-
-		await tick();
-
-		const chatInputContainer = document.getElementById('chat-input-container');
-		if (chatInputContainer) {
-			chatInputContainer.scrollTop = chatInputContainer.scrollHeight;
-		}
-
-		await tick();
-		if (chatInput) {
-			chatInput.focus();
-			chatInput.dispatchEvent(new Event('input'));
-			chatInput.scrollTop = chatInput.scrollHeight;
-		}
-	};
-
-	let command = $state('');
 
 	let loaded = $state(false);
 	let isComposing = $state(false);
@@ -416,11 +362,6 @@
 <InputModal
 	bind:show={showInputModal}
 	bind:value={prompt}
-	bind:inputContent
-	onChange={(content) => {
-		console.log(content);
-		chatInputElement?.setContent(content?.json ?? null);
-	}}
 	onClose={async () => {
 		await tick();
 		chatInputElement?.focus();
@@ -642,31 +583,13 @@
 									{/if}
 
 									{#if loaded}
-										<RichTextInput
+										<TextInput
 											bind:this={chatInputElement}
 											id="chat-input"
-											value={inputContent?.json ?? prompt ?? ''}
-											html={inputContent?.html ?? prompt ?? ''}
+											bind:value={prompt}
 											editable={!showInputModal}
-											onChange={(content) => {
-												prompt = content.md;
-												inputContent = content;
-												command = getCommand();
-											}}
-											json={true}
-											richText={$settings?.richTextInput ?? true}
 											messageInput={true}
-											showFormattingToolbar={$settings?.showFormattingToolbar ?? false}
-											insertPromptAsRichText={$settings?.insertPromptAsRichText ?? false}
-											shiftEnter={!($settings?.ctrlEnterToSend ?? false) &&
-												!$mobile &&
-												!(
-													'ontouchstart' in window ||
-													navigator.maxTouchPoints > 0 ||
-													navigator.msMaxTouchPoints > 0
-												)}
 											placeholder={placeholder ? placeholder : $i18n.t('Send a Message')}
-											largeTextAsFile={($settings?.largeTextAsFile ?? false) && !shiftKey}
 											oncompositionstart={() => (isComposing = true)}
 											oncompositionend={(e) => {
 												compositionEndedAt = e.timeStamp;

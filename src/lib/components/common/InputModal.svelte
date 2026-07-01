@@ -1,34 +1,22 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 
-	import { settings } from '$lib/stores';
-
 	import Drawer from './Drawer.svelte';
-	import RichTextInput from './RichTextInput.svelte';
+	import TextInput from './TextInput.svelte';
 
 	const i18n = getContext('i18n');
-
-	interface InputContent {
-		html?: string | null;
-		json?: unknown;
-		md?: string | null;
-	}
 
 	interface InputModalProps {
 		id?: string;
 		show?: boolean;
-		value?: string | null;
-		inputContent?: InputContent | null;
-		onChange?: (content: InputContent) => void;
+		value?: string;
 		onClose?: () => void;
 	}
 
 	let {
 		id = 'input-modal',
 		show = $bindable(false),
-		value = $bindable(null),
-		inputContent = $bindable(null),
-		onChange = () => {},
+		value = $bindable(''),
 		onClose = () => {}
 	}: InputModalProps = $props();
 </script>
@@ -64,21 +52,11 @@
 
 		<div class="flex w-full px-4 dark:text-gray-200 min-h-full flex-1">
 			<div class="flex-1 w-full min-h-full">
-				<RichTextInput
+				<TextInput
 					{id}
-					onChange={(content: InputContent) => {
-						value = content.md ?? '';
-						inputContent = content;
-
-						onChange(content);
-					}}
-					json={true}
-					value={inputContent?.json ?? value ?? ''}
-					html={inputContent?.html ?? value ?? ''}
-					richText={$settings?.richTextInput ?? true}
+					bind:value
 					messageInput={true}
-					showFormattingToolbar={$settings?.showFormattingToolbar ?? false}
-					insertPromptAsRichText={$settings?.insertPromptAsRichText ?? false}
+					className="w-full min-h-full resize-none bg-transparent outline-hidden placeholder:text-[#676767]"
 				/>
 			</div>
 		</div>
