@@ -26,11 +26,7 @@ export interface IncrementalTokenState {
 }
 
 export type IncrementalTokenTransitionKind =
-	| 'noop'
-	| 'clear'
-	| 'reset'
-	| 'direct-append'
-	| 'tail-lex';
+	'noop' | 'clear' | 'reset' | 'direct-append' | 'tail-lex';
 
 interface IncrementalTokenUpdateOptions {
 	seedLinks?: Links;

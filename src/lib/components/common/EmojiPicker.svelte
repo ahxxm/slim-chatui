@@ -71,16 +71,14 @@
 			if (groupEmojis.length > 0) {
 				flattenedEmojis.push({ type: 'group', label: group });
 				flattenedEmojis.push(
-					...groupEmojis.map(
-						(emoji: string): EmojiRowEmoji => ({
-							type: 'emoji',
-							name: emoji,
-							shortCodes:
-								typeof emojiShortCodes[emoji] === 'string'
-									? [emojiShortCodes[emoji]]
-									: emojiShortCodes[emoji]
-						})
-					)
+					...groupEmojis.map((emoji: string): EmojiRowEmoji => ({
+						type: 'emoji',
+						name: emoji,
+						shortCodes:
+							typeof emojiShortCodes[emoji] === 'string'
+								? [emojiShortCodes[emoji]]
+								: emojiShortCodes[emoji]
+					}))
 				);
 			}
 		});
