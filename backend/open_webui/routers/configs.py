@@ -1,7 +1,5 @@
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
-
-from typing import Optional
 
 from open_webui.utils.auth import get_admin_user
 from open_webui.config import get_config, save_config
@@ -32,34 +30,3 @@ async def import_config(form_data: ImportConfigForm, user=Depends(get_admin_user
 @router.get("/export", response_model=dict)
 async def export_config(user=Depends(get_admin_user)):
     return get_config()
-
-
-############################
-# SetDefaultModels
-############################
-class ModelsConfigForm(BaseModel):
-    DEFAULT_MODELS: Optional[str]
-    DEFAULT_MODEL_METADATA: Optional[dict] = None
-
-
-@router.get("/models", response_model=ModelsConfigForm)
-async def get_models_config(request: Request, user=Depends(get_admin_user)):
-    return {
-        "DEFAULT_MODELS": request.app.state.config.DEFAULT_MODELS,
-        "DEFAULT_MODEL_METADATA": request.app.state.config.DEFAULT_MODEL_METADATA,
-    }
-
-
-@router.post("/models", response_model=ModelsConfigForm)
-async def set_models_config(
-    request: Request,
-    form_data: ModelsConfigForm,
-    user=Depends(get_admin_user),
-):
-    request.app.state.config.DEFAULT_MODELS = form_data.DEFAULT_MODELS
-    request.app.state.config.DEFAULT_MODEL_METADATA = form_data.DEFAULT_MODEL_METADATA
-    request.app.state.config.persist()
-    return {
-        "DEFAULT_MODELS": request.app.state.config.DEFAULT_MODELS,
-        "DEFAULT_MODEL_METADATA": request.app.state.config.DEFAULT_MODEL_METADATA,
-    }

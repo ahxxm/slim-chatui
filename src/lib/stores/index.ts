@@ -165,7 +165,6 @@ type Config = {
 	status: boolean;
 	name: string;
 	version: string;
-	default_models: string;
 	features: {
 		auth: boolean;
 		enable_signup: boolean;

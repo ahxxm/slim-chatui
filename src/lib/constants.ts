@@ -12,14 +12,6 @@ export const OPENAI_API_BASE_URL = `${WEBUI_BASE_URL}/openai`;
 export const WEBUI_VERSION = APP_VERSION;
 export const WEBUI_BUILD_HASH = APP_BUILD_HASH;
 
-export const DEFAULT_CAPABILITIES = {
-	vision: true,
-	file_upload: true,
-	citations: true,
-	status_updates: true,
-	usage: true
-};
-
 export const PASTED_TEXT_CHARACTER_LIMIT = 1000;
 
 // Source: https://kit.svelte.dev/docs/modules#$env-static-public

@@ -345,17 +345,6 @@ ENABLE_SIGNUP = PersistentConfig(
 )
 
 
-DEFAULT_MODELS = PersistentConfig(
-    "DEFAULT_MODELS", "ui.default_models", os.environ.get("DEFAULT_MODELS", None)
-)
-
-DEFAULT_MODEL_METADATA = PersistentConfig(
-    "DEFAULT_MODEL_METADATA",
-    "models.default_metadata",
-    {},
-)
-
-
 DEFAULT_USER_ROLE = PersistentConfig(
     "DEFAULT_USER_ROLE",
     "ui.default_user_role",

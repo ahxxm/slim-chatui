@@ -18,7 +18,7 @@
 	let { onsave }: { onsave: () => void } = $props();
 
 	const getModels = async () => {
-		const models = await _getModels(localStorage.token, false, true);
+		const models = await _getModels(localStorage.token, true);
 		return models;
 	};
 
