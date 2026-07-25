@@ -7,17 +7,14 @@ export const getModels = async (token: string = '', refresh: boolean = false) =>
 	}
 
 	let error = null;
-	const res = await fetch(
-		`${WEBUI_BASE_URL}/api/models?${searchParams.toString()}`,
-		{
-			method: 'GET',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				...(token && { authorization: `Bearer ${token}` })
-			}
+	const res = await fetch(`${WEBUI_BASE_URL}/api/models?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
 		}
-	)
+	})
 		.then(async (res) => {
 			if (!res.ok) throw await res.json();
 			return res.json();

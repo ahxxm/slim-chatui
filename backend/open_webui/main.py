@@ -243,9 +243,6 @@ app.state.config.JWT_EXPIRES_IN = JWT_EXPIRES_IN
 app.state.config.ADMIN_EMAIL = ADMIN_EMAIL
 
 
-
-
-
 app.state.config.DEFAULT_USER_ROLE = DEFAULT_USER_ROLE
 
 

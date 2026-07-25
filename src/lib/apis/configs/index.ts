@@ -56,5 +56,3 @@ export const exportConfig = async (token: string) => {
 
 	return res;
 };
-
-
