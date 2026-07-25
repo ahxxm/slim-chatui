@@ -41,7 +41,6 @@ from open_webui.routers import (
     folders,
     configs,
     files,
-    models,
     users,
     utils,
 )
@@ -68,8 +67,6 @@ from open_webui.config import (
     JWT_EXPIRES_IN,
     ENABLE_SIGNUP,
     DEFAULT_USER_ROLE,
-    DEFAULT_MODELS,
-    DEFAULT_MODEL_METADATA,
     # Misc
     CACHE_DIR,
     STATIC_DIR,
@@ -96,10 +93,7 @@ from open_webui.env import (
 )
 
 
-from open_webui.utils.models import (
-    get_all_models,
-    get_all_base_models,
-)
+from open_webui.utils.models import get_all_models
 from open_webui.routers.openai import (
     generate_chat_completion as chat_completion_handler,
 )
@@ -111,7 +105,6 @@ from open_webui.utils.middleware import (
 from open_webui.utils.auth import (
     get_http_authorization_cred,
     decode_token,
-    get_admin_user,
     get_verified_user,
     create_admin_user,
 )
@@ -250,8 +243,7 @@ app.state.config.JWT_EXPIRES_IN = JWT_EXPIRES_IN
 app.state.config.ADMIN_EMAIL = ADMIN_EMAIL
 
 
-app.state.config.DEFAULT_MODELS = DEFAULT_MODELS
-app.state.config.DEFAULT_MODEL_METADATA = DEFAULT_MODEL_METADATA
+
 
 
 app.state.config.DEFAULT_USER_ROLE = DEFAULT_USER_ROLE
@@ -370,7 +362,6 @@ app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 
 app.include_router(chats.router, prefix="/api/v1/chats", tags=["chats"])
 
-app.include_router(models.router, prefix="/api/v1/models", tags=["models"])
 app.include_router(folders.router, prefix="/api/v1/folders", tags=["folders"])
 app.include_router(files.router, prefix="/api/v1/files", tags=["files"])
 app.include_router(utils.router, prefix="/api/v1/utils", tags=["utils"])
@@ -390,12 +381,6 @@ async def get_models(request: Request, user=Depends(get_verified_user)):
     log.debug(
         f"/api/models returned filtered models accessible to the user: {json.dumps([model.get('id') for model in models])}"
     )
-    return {"data": models}
-
-
-@app.get("/api/models/base")
-async def get_base_models(request: Request, user=Depends(get_admin_user)):
-    models = await get_all_base_models(request, user=user)
     return {"data": models}
 
 
@@ -632,7 +617,6 @@ async def get_app_config(request: Request):
         },
         **(
             {
-                "default_models": app.state.config.DEFAULT_MODELS,
                 "user_count": user_count,
                 "file": {
                     "image_compression": {

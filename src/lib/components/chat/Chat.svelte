@@ -596,8 +596,6 @@
 
 		const availableModels = $models.map((m) => m.id);
 
-		const defaultModels = $config?.default_models ? $config?.default_models.split(',') : [];
-
 		if ($page.url.searchParams.get('models') || $page.url.searchParams.get('model')) {
 			const urlModels = (
 				$page.url.searchParams.get('models') ||
@@ -634,11 +632,7 @@
 					sessionStorage.removeItem('selectedModels');
 				} else {
 					if ($settings?.models) {
-						// Set from user settings
 						selectedModels = $settings?.models;
-					} else if (defaultModels && defaultModels.length > 0) {
-						// Set from default models
-						selectedModels = defaultModels;
 					}
 				}
 			}
@@ -651,8 +645,7 @@
 		// Ensure a model is selected
 		if (!selectedModels[0]) {
 			if (availableModels.length > 0) {
-				const defaultMatch = defaultModels.filter((id) => availableModels.includes(id));
-				selectedModels = defaultMatch[0] ? [defaultMatch[0]] : [availableModels[0]];
+				selectedModels = [availableModels[0]];
 			} else {
 				selectedModels = [''];
 			}
