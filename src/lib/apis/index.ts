@@ -1,10 +1,6 @@
 import { WEBUI_BASE_URL } from '$lib/constants';
 
-export const getModels = async (
-	token: string = '',
-	base: boolean = false,
-	refresh: boolean = false
-) => {
+export const getModels = async (token: string = '', refresh: boolean = false) => {
 	const searchParams = new URLSearchParams();
 	if (refresh) {
 		searchParams.append('refresh', 'true');
@@ -12,7 +8,7 @@ export const getModels = async (
 
 	let error = null;
 	const res = await fetch(
-		`${WEBUI_BASE_URL}/api/models${base ? '/base' : ''}?${searchParams.toString()}`,
+		`${WEBUI_BASE_URL}/api/models?${searchParams.toString()}`,
 		{
 			method: 'GET',
 			headers: {
@@ -224,14 +220,12 @@ export interface ModelConfig {
 	id: string;
 	name: string;
 	meta: ModelMeta;
-	base_model_id?: string;
 	params: ModelParams;
 }
 
 interface ModelMeta {
 	description?: string;
 	capabilities?: object;
-	hidden?: boolean;
 	user?: Record<string, any>;
 	tags?: { name: string }[];
 }
