@@ -72,5 +72,5 @@ dev = [
     "pytest>=9.1.1",
     "pytest-asyncio>=1.0.0",
     "pytest-cov",
-    "httpx",
+    "httpx2",
 ]

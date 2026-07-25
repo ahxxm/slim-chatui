@@ -9,7 +9,6 @@
 
 	import General from './Settings/General.svelte';
 	import Interface from './Settings/Interface.svelte';
-	import Models from './Settings/Models.svelte';
 	import Connections from './Settings/Connections.svelte';
 
 	const i18n = getContext('i18n');
@@ -19,7 +18,7 @@
 	$effect(() => {
 		const pathParts = $page.url.pathname.split('/');
 		const tabFromPath = pathParts[pathParts.length - 1];
-		selectedTab = ['general', 'connections', 'models', 'interface', 'db'].includes(tabFromPath)
+		selectedTab = ['general', 'connections', 'interface', 'db'].includes(tabFromPath)
 			? tabFromPath
 			: 'general';
 	});
@@ -40,7 +39,6 @@
 	const settings = [
 		{ id: 'general', title: 'General', route: '/admin/settings/general' },
 		{ id: 'connections', title: 'Connections', route: '/admin/settings/connections' },
-		{ id: 'models', title: 'Models', route: '/admin/settings/models' },
 		{ id: 'interface', title: 'Interface', route: '/admin/settings/interface' },
 		{ id: 'db', title: 'Database', route: '/admin/settings/db' }
 	];
@@ -108,19 +106,6 @@
 								d="M1 9.5A3.5 3.5 0 0 0 4.5 13H12a3 3 0 0 0 .917-5.857 2.503 2.503 0 0 0-3.198-3.019 3.5 3.5 0 0 0-6.628 2.171A3.5 3.5 0 0 0 1 9.5Z"
 							/>
 						</svg>
-					{:else if tab.id === 'models'}
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 20 20"
-							fill="currentColor"
-							class="w-4 h-4"
-						>
-							<path
-								fill-rule="evenodd"
-								d="M10 1c3.866 0 7 1.79 7 4s-3.134 4-7 4-7-1.79-7-4 3.134-4 7-4zm5.694 8.13c.464-.264.91-.583 1.306-.952V10c0 2.21-3.134 4-7 4s-7-1.79-7-4V8.178c.396.37.842.688 1.306.953C5.838 10.006 7.854 10.5 10 10.5s4.162-.494 5.694-1.37zM3 13.179V15c0 2.21 3.134 4 7 4s7-1.79 7-4v-1.822c-.396.37-.842.688-1.306.953-1.532.875-3.548 1.369-5.694 1.369s-4.162-.494-5.694-1.37A7.009 7.009 0 013 13.179z"
-								clip-rule="evenodd"
-							/>
-						</svg>
 					{:else if tab.id === 'interface'}
 						<svg
 							xmlns="http://www.w3.org/2000/svg"
@@ -174,8 +159,6 @@
 					toast.success($i18n.t('Settings saved successfully!'));
 				}}
 			/>
-		{:else if selectedTab === 'models'}
-			<Models />
 		{:else if selectedTab === 'interface'}
 			<Interface
 				onsave={() => {

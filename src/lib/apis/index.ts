@@ -1,27 +1,20 @@
 import { WEBUI_BASE_URL } from '$lib/constants';
 
-export const getModels = async (
-	token: string = '',
-	base: boolean = false,
-	refresh: boolean = false
-) => {
+export const getModels = async (token: string = '', refresh: boolean = false) => {
 	const searchParams = new URLSearchParams();
 	if (refresh) {
 		searchParams.append('refresh', 'true');
 	}
 
 	let error = null;
-	const res = await fetch(
-		`${WEBUI_BASE_URL}/api/models${base ? '/base' : ''}?${searchParams.toString()}`,
-		{
-			method: 'GET',
-			headers: {
-				Accept: 'application/json',
-				'Content-Type': 'application/json',
-				...(token && { authorization: `Bearer ${token}` })
-			}
+	const res = await fetch(`${WEBUI_BASE_URL}/api/models?${searchParams.toString()}`, {
+		method: 'GET',
+		headers: {
+			Accept: 'application/json',
+			'Content-Type': 'application/json',
+			...(token && { authorization: `Bearer ${token}` })
 		}
-	)
+	})
 		.then(async (res) => {
 			if (!res.ok) throw await res.json();
 			return res.json();
@@ -224,14 +217,12 @@ export interface ModelConfig {
 	id: string;
 	name: string;
 	meta: ModelMeta;
-	base_model_id?: string;
 	params: ModelParams;
 }
 
 interface ModelMeta {
 	description?: string;
 	capabilities?: object;
-	hidden?: boolean;
 	user?: Record<string, any>;
 	tags?: { name: string }[];
 }
