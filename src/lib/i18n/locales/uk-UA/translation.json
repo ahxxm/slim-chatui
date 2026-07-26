@@ -187,7 +187,7 @@
 	"Folders": "Теки",
 	"Follow up": "Додаткові питання",
 	"Follow Up Generation": "Генерація додаткових питань",
-	"Follow Up Generation Prompt": "Промт для генерування додаткових питань",
+	"Follow Up Generation Prompt": "Промпт для генерування додаткових питань",
 	"Follow up: {{question}}": "Додаткове питання: {{question}}",
 	"Follow-Up Auto-Generation": "Автогенерація додаткових питань",
 	"Formatting may be inconsistent from source.": "Форматування може відрізнятися від оригіналу.",

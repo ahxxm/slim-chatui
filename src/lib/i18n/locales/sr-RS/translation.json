@@ -430,7 +430,7 @@
 	"View source: {{name}}": "Прикажи извор: {{name}}",
 	"View source: {{title}}": "Прикажи извор: {{title}}",
 	"Warning": "Упозорење",
-	"WebUI Settings": "Подешавања веб интерфејса",
+	"WebUI Settings": "Подешавања WebUI-ја",
 	"WebUI URL": "WebUI адреса",
 	"WebUI will make requests to \"{{url}}/chat/completions\"": "WebUI ће слати захтеве на \"{{url}}/chat/completions\"",
 	"Widescreen Mode": "Режим широког екрана",
