@@ -26,7 +26,7 @@
 	"Admin Contact Email": "Administraatori kontakt-e-post",
 	"Admin Panel": "Administraatori paneel",
 	"Admin Settings": "Administraatori seaded",
-	"Already have an account?": "Kas teil on juba konto?",
+	"Already have an account?": "Kas sul on juba konto?",
 	"Always Collapse Code Blocks": "Ahenda koodiplokid alati",
 	"Always Expand Details": "Laienda üksikasjad alati",
 	"Always Play Notification Sound": "Mängi teavituse heli alati",
@@ -204,7 +204,7 @@
 	"Hide": "Peida",
 	"High Contrast Mode": "Kõrge kontrastsuse režiim",
 	"Home": "Avaleht",
-	"How can I help you today?": "Kuidas saan teid täna aidata?",
+	"How can I help you today?": "Kuidas saan sind täna aidata?",
 	"iframe Sandbox Allow Forms": "iframe liivakast: luba vormid",
 	"iframe Sandbox Allow Same Origin": "iframe liivakast: luba sama päritolu",
 	"Iframe Security": "Iframe'i turvalisus",
@@ -216,7 +216,7 @@
 	"Import Chats": "Impordi vestlused",
 	"Import Config": "Impordi konfiguratsioon",
 	"Input": "Sisend",
-	"Insert Follow-Up Prompt to Input": "Sisesta järelküsimuse vihje sisendisse",
+	"Insert Follow-Up Prompt to Input": "Sisesta järelküsimus sisendisse",
 	"Insert Suggestion Prompt to Input": "Sisesta soovitusvihje sisendisse",
 	"Interface": "Kasutajaliides",
 	"Invalid file format.": "Vigane failiformaat.",
@@ -439,8 +439,8 @@
 	"Yesterday": "Eile",
 	"Yesterday at {{LOCALIZED_TIME}}": "Eile kell {{LOCALIZED_TIME}}",
 	"You": "Sina",
-	"You cannot upload an empty file.": "Te ei saa üles laadida tühja faili.",
-	"You're now logged in.": "Olete nüüd sisse logitud.",
+	"You cannot upload an empty file.": "Sa ei saa tühja faili üles laadida.",
+	"You're now logged in.": "Oled nüüd sisse logitud.",
 	"Your Account": "Sinu konto",
-	"Your account status is currently pending activation.": "Teie konto staatus on praegu aktiveerimise ootel."
+	"Your account status is currently pending activation.": "Sinu konto ootab praegu aktiveerimist."
 }

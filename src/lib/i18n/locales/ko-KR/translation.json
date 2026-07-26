@@ -431,7 +431,7 @@
 	"View source: {{title}}": "소스 보기: {{title}}",
 	"Warning": "경고",
 	"WebUI Settings": "WebUI 설정",
-	"WebUI URL": "",
+	"WebUI URL": "WebUI URL",
 	"WebUI will make requests to \"{{url}}/chat/completions\"": "WebUI가 \"{{url}}/chat/completions\"로 요청을 보냅니다",
 	"Widescreen Mode": "와이드스크린 모드",
 	"Width": "너비",
