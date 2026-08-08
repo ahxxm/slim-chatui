@@ -25,7 +25,7 @@
 </script>
 
 {#key mounted}
-	<div class="m-auto w-full max-w-6xl px-8 lg:px-20">
+	<div class="m-auto w-full max-w-5xl px-8 lg:px-20">
 		<div class="flex justify-start">
 			<div class="mb-0.5" in:fade={{ duration: 200 }}>
 				{#if model}
