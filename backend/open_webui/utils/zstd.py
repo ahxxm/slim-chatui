@@ -52,7 +52,7 @@ class ZstdResponder(IdentityResponder):
         else:
             await super().send_with_compression(message)
 
-    def apply_compression(self, body: bytes, *, more_body: bool) -> bytes:
+    async def apply_compression(self, body: bytes, *, more_body: bool) -> bytes:
         out = self.compressor.compress(body)
         # FLUSH_BLOCK: emit a decodable block so the client can decompress
         # incrementally (SSE / streaming chat). FLUSH_FRAME: close the
