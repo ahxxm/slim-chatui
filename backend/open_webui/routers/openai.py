@@ -476,7 +476,8 @@ def convert_to_responses_payload(payload: dict) -> dict:
             input_items.extend(stored_output)
             continue
 
-        if role == "system":
+        # after fix_openai_system_role we got `developer` message to process
+        if role in ("system", "developer"):
             if isinstance(content, str):
                 system_content = content
             elif isinstance(content, list):

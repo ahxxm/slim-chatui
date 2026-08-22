@@ -30,6 +30,8 @@ TASK_CONFIG_FIELDS = (
     "FOLLOW_UP_GENERATION_PROMPT_TEMPLATE",
 )
 
+TITLE_FOLLOW_UP_WRITE_PROMPT = "You write directly and briefly."
+
 
 async def _run_task(
     request: Request,
@@ -38,6 +40,7 @@ async def _run_task(
     *,
     task_type: TASKS,
     content: str,
+    system_prompt: str,
 ):
     models = request.app.state.MODELS
 
@@ -50,9 +53,14 @@ async def _run_task(
 
     log.debug(f"generating {task_type} using model {model_id} for {user.email}")
 
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": content},
+    ]
+
     payload = {
         "model": model_id,
-        "messages": [{"role": "user", "content": content}],
+        "messages": messages,
         "stream": False,
         "metadata": {
             **(request.state.metadata if hasattr(request.state, "metadata") else {}),
@@ -137,6 +145,7 @@ async def generate_title(
         user,
         task_type=TASKS.TITLE_GENERATION,
         content=content,
+        system_prompt=TITLE_FOLLOW_UP_WRITE_PROMPT,
     )
 
     title = parse_task_json(response, "title", "")
@@ -170,4 +179,5 @@ async def generate_follow_ups(
         user,
         task_type=TASKS.FOLLOW_UP_GENERATION,
         content=content,
+        system_prompt=TITLE_FOLLOW_UP_WRITE_PROMPT,
     )
