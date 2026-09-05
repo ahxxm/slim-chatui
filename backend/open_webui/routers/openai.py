@@ -321,7 +321,7 @@ async def get_all_models_responses(request: Request) -> list:
 
 
 @cached(
-    ttl=60,
+    ttl=10,
     key=lambda _, user: f"openai_all_models_{user.id}" if user else "openai_all_models",
 )
 async def get_all_models(request: Request, user: UserModel) -> dict[str, list]:
