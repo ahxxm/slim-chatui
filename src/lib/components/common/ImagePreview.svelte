@@ -2,9 +2,9 @@
 	import { getContext } from 'svelte';
 	import panzoom, { type PanZoom } from 'panzoom';
 
-	import { saveAs } from '$lib/utils';
+	import { saveAs } from '#lib/utils/index.js';
 
-	import XMark from '$lib/components/icons/XMark.svelte';
+	import XMark from '#lib/components/icons/XMark.svelte';
 
 	let { show = $bindable(false), src = '', alt = '' } = $props();
 

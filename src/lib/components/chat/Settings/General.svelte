@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { onMount, getContext } from 'svelte';
-	import { getLanguages, changeLanguage } from '$lib/i18n';
+	import { getLanguages, changeLanguage } from '#lib/i18n/index.js';
 
-	import { settings, theme } from '$lib/stores';
-	import { applyCjkFont } from '$lib/utils/cjk-font';
+	import { settings, theme } from '#lib/stores/index.js';
+	import { applyCjkFont } from '#lib/utils/cjk-font.js';
 
 	const i18n = getContext('i18n');
 
-	import Textarea from '$lib/components/common/Textarea.svelte';
+	import Textarea from '#lib/components/common/Textarea.svelte';
 
 	let {
 		saveSettings,

@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
-	import { WEBUI_NAME } from '$lib/stores';
+	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '#lib/constants.js';
+	import { WEBUI_NAME } from '#lib/stores/index.js';
 	import { getContext } from 'svelte';
 
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
 
 	const i18n = getContext('i18n');
 </script>

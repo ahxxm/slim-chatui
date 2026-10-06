@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { settings } from '$lib/stores';
-	import type { ChatHistory } from '$lib/types';
+	import { settings } from '#lib/stores/index.js';
+	import type { ChatHistory } from '#lib/types/index.js';
 
 	import ResponseMessage from './ResponseMessage.svelte';
 	import UserMessage from './UserMessage.svelte';

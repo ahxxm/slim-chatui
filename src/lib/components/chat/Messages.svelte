@@ -1,11 +1,16 @@
 <script lang="ts">
 	import { v7 as uuidv7 } from 'uuid';
-	import { settings, user as _user, temporaryChatEnabled, refreshChatList } from '$lib/stores';
+	import {
+		settings,
+		user as _user,
+		temporaryChatEnabled,
+		refreshChatList
+	} from '#lib/stores/index.js';
 	import { tick, getContext, untrack } from 'svelte';
 
 	import { toast } from 'svelte-sonner';
-	import { updateChatById } from '$lib/apis/chats';
-	import { createMessagesList, deleteMessage as deleteMessageInHistory } from '$lib/utils';
+	import { updateChatById } from '#lib/apis/chats/index.js';
+	import { createMessagesList, deleteMessage as deleteMessageInHistory } from '#lib/utils/index.js';
 
 	import Message from './Messages/Message.svelte';
 	import Loader from '../common/Loader.svelte';

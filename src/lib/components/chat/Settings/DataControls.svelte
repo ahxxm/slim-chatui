@@ -1,19 +1,24 @@
 <script lang="ts">
-	import { saveAs } from '$lib/utils';
+	import { saveAs } from '#lib/utils/index.js';
 
 	import {
 		scrollPaginationEnabled,
 		currentChatPage,
 		pinnedChats,
 		refreshChatList
-	} from '$lib/stores';
+	} from '#lib/stores/index.js';
 
-	import { deleteAllChats, getAllChats, getPinnedChatList, importChats } from '$lib/apis/chats';
+	import {
+		deleteAllChats,
+		getAllChats,
+		getPinnedChatList,
+		importChats
+	} from '#lib/apis/chats/index.js';
 	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
-	import FilesModal from '$lib/components/layout/FilesModal.svelte';
-	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
+	import FilesModal from '#lib/components/layout/FilesModal.svelte';
+	import ConfirmDialog from '#lib/components/common/ConfirmDialog.svelte';
 
 	const i18n = getContext('i18n');
 

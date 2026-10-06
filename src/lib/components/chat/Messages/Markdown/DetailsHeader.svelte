@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 
-	import dayjs from '$lib/dayjs';
+	import dayjs from '#lib/dayjs.js';
 
-	import Spinner from '$lib/components/common/Spinner.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
 
 	const i18n = getContext('i18n');
 

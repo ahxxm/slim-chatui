@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 
 	import { goto } from '$app/navigation';
-	import { user } from '$lib/stores';
+	import { user } from '#lib/stores/index.js';
 
 	import UserList from './Users/UserList.svelte';
 

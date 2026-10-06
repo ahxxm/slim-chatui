@@ -10,8 +10,8 @@
 		getChatById,
 		updateChatById,
 		updateChatFolderIdById
-	} from '$lib/apis/chats';
-	import { createMessagesList, DRAG_GHOST } from '$lib/utils';
+	} from '#lib/apis/chats/index.js';
+	import { createMessagesList, DRAG_GHOST } from '#lib/utils/index.js';
 	import {
 		chatId,
 		chatTitle as _chatTitle,
@@ -19,16 +19,16 @@
 		showSidebar,
 		selectedFolder,
 		activeChatIds
-	} from '$lib/stores';
+	} from '#lib/stores/index.js';
 
 	import ChatMenu from './ChatMenu.svelte';
-	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
-	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import DragGhost from '$lib/components/common/DragGhost.svelte';
-	import Document from '$lib/components/icons/Document.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
-	import { generateTitle } from '$lib/apis';
+	import DeleteConfirmDialog from '#lib/components/common/ConfirmDialog.svelte';
+	import GarbageBin from '#lib/components/icons/GarbageBin.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import DragGhost from '#lib/components/common/DragGhost.svelte';
+	import Document from '#lib/components/icons/Document.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
+	import { generateTitle } from '#lib/apis/index.js';
 
 	let {
 		className = '',

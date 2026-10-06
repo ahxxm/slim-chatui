@@ -2,16 +2,16 @@
 	import { DropdownMenu } from 'bits-ui';
 	import { getContext, tick } from 'svelte';
 
-	import { userSignOut } from '$lib/apis/auths';
+	import { userSignOut } from '#lib/apis/auths/index.js';
 
-	import { showSettings, mobile, showSidebar, showShortcuts, user } from '$lib/stores';
+	import { showSettings, mobile, showSidebar, showShortcuts, user } from '#lib/stores/index.js';
 
-	import Keyboard from '$lib/components/icons/Keyboard.svelte';
-	import ShortcutsModal from '$lib/components/chat/ShortcutsModal.svelte';
-	import Settings from '$lib/components/icons/Settings.svelte';
+	import Keyboard from '#lib/components/icons/Keyboard.svelte';
+	import ShortcutsModal from '#lib/components/chat/ShortcutsModal.svelte';
+	import Settings from '#lib/components/icons/Settings.svelte';
 
-	import UserGroup from '$lib/components/icons/UserGroup.svelte';
-	import SignOut from '$lib/components/icons/SignOut.svelte';
+	import UserGroup from '#lib/components/icons/UserGroup.svelte';
+	import SignOut from '#lib/components/icons/SignOut.svelte';
 
 	const i18n = getContext('i18n');
 

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { untrack } from 'svelte';
-	import { showSidebar } from '$lib/stores';
-	import AddFilesPlaceholder from '$lib/components/AddFilesPlaceholder.svelte';
+	import { showSidebar } from '#lib/stores/index.js';
+	import AddFilesPlaceholder from '#lib/components/AddFilesPlaceholder.svelte';
 
 	let { show = false } = $props();
 	let overlayElement = $state(null);

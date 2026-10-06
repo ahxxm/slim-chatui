@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
-	import EditPencil from '$lib/components/icons/EditPencil.svelte';
-	import ArrowForward from '$lib/components/icons/ArrowForward.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import GarbageBin from '#lib/components/icons/GarbageBin.svelte';
+	import EditPencil from '#lib/components/icons/EditPencil.svelte';
+	import ArrowForward from '#lib/components/icons/ArrowForward.svelte';
 
 	const i18n = getContext('i18n');
 

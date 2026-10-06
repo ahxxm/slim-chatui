@@ -10,12 +10,12 @@
  */
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { get } from 'svelte/store';
-import { signIn, installFetchProxy } from '$lib/test/backend';
+import { signIn, installFetchProxy } from '#lib/test/backend.js';
 
-vi.mock('$app/environment', () => ({ browser: true, dev: false }));
+vi.mock('$app/env', () => ({ browser: true, dev: false, building: false, version: 'test' }));
 
-import { chats, currentChatPage, refreshChatList } from '$lib/stores';
-import { getChatList } from '$lib/apis/chats';
+import { chats, currentChatPage, refreshChatList } from '#lib/stores/index.js';
+import { getChatList } from '#lib/apis/chats/index.js';
 
 async function seedChats(n: number): Promise<void> {
 	for (let i = 0; i < n; i++) {

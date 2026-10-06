@@ -8,28 +8,28 @@
 
 	const i18n = getContext<Writable<i18nType>>('i18n');
 
-	import { models, settings } from '$lib/stores';
+	import { models, settings } from '#lib/stores/index.js';
 	import {
 		copyToClipboard as _copyToClipboard,
 		sanitizeResponseContent,
 		formatDate,
 		removeAllDetails
-	} from '$lib/utils';
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	} from '#lib/utils/index.js';
+	import { WEBUI_BASE_URL } from '#lib/constants.js';
 
 	import Name from './Name.svelte';
 	import ProfileImage from './ProfileImage.svelte';
 	import Skeleton from './Skeleton.svelte';
-	import Image from '$lib/components/common/Image.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import Image from '#lib/components/common/Image.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
 
-	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
+	import DeleteConfirmDialog from '#lib/components/common/ConfirmDialog.svelte';
 
 	import Error from './Error.svelte';
 	import Citations from './Citations.svelte';
 	import ContentRenderer from './ContentRenderer.svelte';
 
-	import FileItem from '$lib/components/common/FileItem.svelte';
+	import FileItem from '#lib/components/common/FileItem.svelte';
 	import FollowUps from './ResponseMessage/FollowUps.svelte';
 	import { fade } from 'svelte/transition';
 	import RegenerateMenu from './ResponseMessage/RegenerateMenu.svelte';

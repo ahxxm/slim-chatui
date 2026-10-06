@@ -11,12 +11,12 @@
 		temporaryChatEnabled,
 		selectedFolder,
 		refreshChatList
-	} from '$lib/stores';
-	import { sanitizeResponseContent } from '$lib/utils';
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	} from '#lib/stores/index.js';
+	import { sanitizeResponseContent } from '#lib/utils/index.js';
+	import { WEBUI_BASE_URL } from '#lib/constants.js';
 
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import EyeSlash from '$lib/components/icons/EyeSlash.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import EyeSlash from '#lib/components/icons/EyeSlash.svelte';
 	import MessageInput from './MessageInput.svelte';
 	import FolderPlaceholder from './Placeholder/FolderPlaceholder.svelte';
 	import FolderTitle from './Placeholder/FolderTitle.svelte';

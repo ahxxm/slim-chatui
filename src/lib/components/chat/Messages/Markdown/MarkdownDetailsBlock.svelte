@@ -4,8 +4,8 @@
 	import { markdownRenderContextKey, type MarkdownRenderContextState } from './context';
 	import DetailsHeader from './DetailsHeader.svelte';
 
-	import Collapsible from '$lib/components/common/Collapsible.svelte';
-	import { settings } from '$lib/stores';
+	import Collapsible from '#lib/components/common/Collapsible.svelte';
+	import { settings } from '#lib/stores/index.js';
 
 	interface MarkdownDetailsBlockProps {
 		openStateId: string;

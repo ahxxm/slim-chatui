@@ -1,11 +1,11 @@
 <script lang="ts">
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import { settings, playingNotificationSound, isLastActiveTab } from '$lib/stores';
+	import { WEBUI_BASE_URL } from '#lib/constants.js';
+	import { settings, playingNotificationSound, isLastActiveTab } from '#lib/stores/index.js';
 	import DOMPurify from 'dompurify';
 
 	import { marked } from 'marked';
 	import { onMount } from 'svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
+	import XMark from '#lib/components/icons/XMark.svelte';
 
 	let {
 		onClick = () => {},

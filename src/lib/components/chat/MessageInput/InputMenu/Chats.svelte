@@ -2,13 +2,13 @@
 	import dayjs from 'dayjs';
 	import { onMount, tick, getContext } from 'svelte';
 
-	import { decodeString } from '$lib/utils';
-	import { getChatList } from '$lib/apis/chats';
+	import { decodeString } from '#lib/utils/index.js';
+	import { getChatList } from '#lib/apis/chats/index.js';
 
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
-	import Loader from '$lib/components/common/Loader.svelte';
-	import { chatId } from '$lib/stores';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
+	import Loader from '#lib/components/common/Loader.svelte';
+	import { chatId } from '#lib/stores/index.js';
 
 	const i18n = getContext('i18n');
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { getEmojiForShortCode } from '$lib/utils/emoji';
+	import { getEmojiForShortCode } from '#lib/utils/emoji.js';
 
 	let { shortCode, className = 'size-4' }: { shortCode: string; className?: string } = $props();
 

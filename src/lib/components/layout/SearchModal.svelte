@@ -3,21 +3,21 @@
 	import { getContext, onDestroy, onMount, tick, type ComponentType, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
-	import Modal from '$lib/components/common/Modal.svelte';
+	import Modal from '#lib/components/common/Modal.svelte';
 	import SearchInput from './Sidebar/SearchInput.svelte';
-	import { getChatById, getChatList, getChatListBySearchText } from '$lib/apis/chats';
+	import { getChatById, getChatList, getChatListBySearchText } from '#lib/apis/chats/index.js';
 	import Spinner from '../common/Spinner.svelte';
 
-	import dayjs from '$lib/dayjs';
+	import dayjs from '#lib/dayjs.js';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
 	import calendar from 'dayjs/plugin/calendar';
 	import Loader from '../common/Loader.svelte';
-	import { createMessagesList } from '$lib/utils';
-	import { toPreviewText } from '$lib/utils/preview-text';
-	import { PAGE_SIZE } from '$lib/stores';
+	import { createMessagesList } from '#lib/utils/index.js';
+	import { toPreviewText } from '#lib/utils/preview-text.js';
+	import { PAGE_SIZE } from '#lib/stores/index.js';
 	import { goto } from '$app/navigation';
 	import PencilSquare from '../icons/PencilSquare.svelte';
-	import type { ChatListItem } from '$lib/types';
+	import type { ChatListItem } from '#lib/types/index.js';
 	dayjs.extend(calendar);
 	dayjs.extend(localizedFormat);
 

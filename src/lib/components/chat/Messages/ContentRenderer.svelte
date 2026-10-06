@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { tick } from 'svelte';
 	import Markdown from './Markdown.svelte';
-	import { mobile, settings } from '$lib/stores';
+	import { mobile, settings } from '#lib/stores/index.js';
 	import FloatingButtons from '../ContentRenderer/FloatingButtons.svelte';
 
 	let {

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 
-	import { flyAndScale } from '$lib/utils/transitions';
+	import { flyAndScale } from '#lib/utils/transitions/index.js';
 	import * as FocusTrap from 'focus-trap';
 	let {
 		show = $bindable(true),

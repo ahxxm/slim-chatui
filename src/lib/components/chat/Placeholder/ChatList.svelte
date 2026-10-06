@@ -6,11 +6,11 @@
 	import dayjs from 'dayjs';
 	import calendar from 'dayjs/plugin/calendar';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
-	import { getTimeRange } from '$lib/utils';
-	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
-	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
-	import Loader from '$lib/components/common/Loader.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
+	import { getTimeRange } from '#lib/utils/index.js';
+	import ChevronUp from '#lib/components/icons/ChevronUp.svelte';
+	import ChevronDown from '#lib/components/icons/ChevronDown.svelte';
+	import Loader from '#lib/components/common/Loader.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
 
 	dayjs.extend(calendar);
 	dayjs.extend(localizedFormat);

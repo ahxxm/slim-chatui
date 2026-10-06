@@ -6,10 +6,10 @@
 
 	dayjs.extend(localizedFormat);
 
-	import { getChatListByUserId } from '$lib/apis/chats';
-	import { PAGE_SIZE } from '$lib/stores';
+	import { getChatListByUserId } from '#lib/apis/chats/index.js';
+	import { PAGE_SIZE } from '#lib/stores/index.js';
 
-	import ChatsModal from '$lib/components/layout/ChatsModal.svelte';
+	import ChatsModal from '#lib/components/layout/ChatsModal.svelte';
 
 	const i18n = getContext('i18n');
 

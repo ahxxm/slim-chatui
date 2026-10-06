@@ -13,10 +13,10 @@ import { writable } from 'svelte/store';
 import { tick } from 'svelte';
 import { render } from '@testing-library/svelte';
 
-vi.mock('$app/environment', () => ({ browser: true, dev: false }));
+vi.mock('$app/env', () => ({ browser: true, dev: false, building: false, version: 'test' }));
 
-import { settings, user } from '$lib/stores';
-import Markdown from '$lib/components/chat/Messages/Markdown.svelte';
+import { settings, user } from '#lib/stores/index.js';
+import Markdown from '#lib/components/chat/Messages/Markdown.svelte';
 
 beforeEach(() => {
 	user.set({ id: '1', name: 'Test', email: 'test@test', role: 'user' } as any);

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import type { Snippet } from 'svelte';
-	import { WEBUI_NAME, showSidebar, mobile } from '$lib/stores';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Sidebar from '$lib/components/icons/Sidebar.svelte';
+	import { WEBUI_NAME, showSidebar, mobile } from '#lib/stores/index.js';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import Sidebar from '#lib/components/icons/Sidebar.svelte';
 
 	let { children }: { children: Snippet } = $props();
 

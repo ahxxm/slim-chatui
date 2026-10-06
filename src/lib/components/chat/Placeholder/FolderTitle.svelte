@@ -2,22 +2,22 @@
 	import { getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
-	import { saveAs } from '$lib/utils';
+	import { saveAs } from '#lib/utils/index.js';
 
 	import { toast } from 'svelte-sonner';
 
-	import { selectedFolder } from '$lib/stores';
+	import { selectedFolder } from '#lib/stores/index.js';
 
-	import { deleteFolderById, getFolderById, updateFolderById } from '$lib/apis/folders';
-	import { getChatsByFolderId } from '$lib/apis/chats';
+	import { deleteFolderById, getFolderById, updateFolderById } from '#lib/apis/folders/index.js';
+	import { getChatsByFolderId } from '#lib/apis/chats/index.js';
 
-	import Folder from '$lib/components/icons/Folder.svelte';
-	import FolderMenu from '$lib/components/layout/Sidebar/Folders/FolderMenu.svelte';
-	import EllipsisHorizontal from '$lib/components/icons/EllipsisHorizontal.svelte';
-	import DeleteConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
-	import Emoji from '$lib/components/common/Emoji.svelte';
+	import Folder from '#lib/components/icons/Folder.svelte';
+	import FolderMenu from '#lib/components/layout/Sidebar/Folders/FolderMenu.svelte';
+	import EllipsisHorizontal from '#lib/components/icons/EllipsisHorizontal.svelte';
+	import DeleteConfirmDialog from '#lib/components/common/ConfirmDialog.svelte';
+	import Emoji from '#lib/components/common/Emoji.svelte';
 
-	import type { FolderItem } from '$lib/types';
+	import type { FolderItem } from '#lib/types/index.js';
 
 	interface FolderTitleProps {
 		folder?: FolderItem | null;
@@ -32,7 +32,7 @@
 	}
 
 	type FolderModalComponentType =
-		typeof import('$lib/components/layout/Sidebar/Folders/FolderModal.svelte').default;
+		typeof import('#lib/components/layout/Sidebar/Folders/FolderModal.svelte').default;
 
 	let { folder = null, onUpdate = () => {}, onDelete = () => {} }: FolderTitleProps = $props();
 
@@ -48,7 +48,7 @@
 		}
 
 		if (!folderModalLoadPromise) {
-			folderModalLoadPromise = import('$lib/components/layout/Sidebar/Folders/FolderModal.svelte')
+			folderModalLoadPromise = import('#lib/components/layout/Sidebar/Folders/FolderModal.svelte')
 				.then(({ default: FolderModal }) => {
 					FolderModalComponent = FolderModal;
 				})

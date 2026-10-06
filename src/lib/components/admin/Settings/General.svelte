@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { getBackendConfig } from '$lib/apis';
-	import { getAdminConfig, updateAdminConfig } from '$lib/apis/auths';
-	import Switch from '$lib/components/common/Switch.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '$lib/constants';
-	import { config } from '$lib/stores';
+	import { getBackendConfig } from '#lib/apis/index.js';
+	import { getAdminConfig, updateAdminConfig } from '#lib/apis/auths/index.js';
+	import Switch from '#lib/components/common/Switch.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '#lib/constants.js';
+	import { config } from '#lib/stores/index.js';
 
 	import { onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';

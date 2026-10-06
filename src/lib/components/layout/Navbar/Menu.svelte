@@ -3,15 +3,15 @@
 	import { DropdownMenu } from 'bits-ui';
 	import { getContext, untrack } from 'svelte';
 
-	import { saveAs, copyToClipboard, createMessagesList } from '$lib/utils';
+	import { saveAs, copyToClipboard, createMessagesList } from '#lib/utils/index.js';
 
-	import { temporaryChatEnabled, folders } from '$lib/stores';
-	import { getChatById } from '$lib/apis/chats';
+	import { temporaryChatEnabled, folders } from '#lib/stores/index.js';
+	import { getChatById } from '#lib/apis/chats/index.js';
 
-	import Dropdown from '$lib/components/common/Dropdown.svelte';
-	import Clipboard from '$lib/components/icons/Clipboard.svelte';
-	import Folder from '$lib/components/icons/Folder.svelte';
-	import Download from '$lib/components/icons/Download.svelte';
+	import Dropdown from '#lib/components/common/Dropdown.svelte';
+	import Clipboard from '#lib/components/icons/Clipboard.svelte';
+	import Folder from '#lib/components/icons/Folder.svelte';
+	import Download from '#lib/components/icons/Download.svelte';
 
 	const i18n = getContext('i18n');
 

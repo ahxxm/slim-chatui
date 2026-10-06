@@ -1,5 +1,5 @@
 <script>
-	import XMark from '$lib/components/icons/XMark.svelte';
+	import XMark from '#lib/components/icons/XMark.svelte';
 
 	export let tag;
 	export let disabled = false;

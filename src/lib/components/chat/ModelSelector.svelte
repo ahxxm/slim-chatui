@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { models, settings } from '$lib/stores';
+	import { models, settings } from '#lib/stores/index.js';
 	import { getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	import Selector from './ModelSelector/Selector.svelte';
 
-	import { updateUserSettings } from '$lib/apis/users';
+	import { updateUserSettings } from '#lib/apis/users/index.js';
 	const i18n = getContext('i18n');
 
 	let { selectedModels = $bindable(['']) } = $props();

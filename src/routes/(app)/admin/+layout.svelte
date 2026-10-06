@@ -3,11 +3,11 @@
 	import type { Snippet } from 'svelte';
 	import { goto } from '$app/navigation';
 
-	import { WEBUI_NAME, mobile, showSidebar, user } from '$lib/stores';
+	import { WEBUI_NAME, mobile, showSidebar, user } from '#lib/stores/index.js';
 	import { page } from '$app/state';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
 
-	import Sidebar from '$lib/components/icons/Sidebar.svelte';
+	import Sidebar from '#lib/components/icons/Sidebar.svelte';
 
 	let { children }: { children: Snippet } = $props();
 

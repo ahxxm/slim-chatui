@@ -1,14 +1,21 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
-	import { chatId, mobile, settings, showSidebar, temporaryChatEnabled, user } from '$lib/stores';
 
-	import { page } from '$app/stores';
-	import { goto, replaceState } from '$app/navigation';
+	import {
+		chatId,
+		mobile,
+		settings,
+		showSidebar,
+		temporaryChatEnabled,
+		user
+	} from '#lib/stores/index.js';
 
+	import { page } from '$app/state';
+	import { goto } from '$app/navigation';
 	import ModelSelector from '../chat/ModelSelector.svelte';
 	import Tooltip from '../common/Tooltip.svelte';
-	import Menu from '$lib/components/layout/Navbar/Menu.svelte';
-	import UserMenu from '$lib/components/layout/Sidebar/UserMenu.svelte';
+	import Menu from '#lib/components/layout/Navbar/Menu.svelte';
+	import UserMenu from '#lib/components/layout/Sidebar/UserMenu.svelte';
 
 	import Sidebar from '../icons/Sidebar.svelte';
 
@@ -18,7 +25,7 @@
 	import EllipsisHorizontal from '../icons/EllipsisHorizontal.svelte';
 	import ChatPlus from '../icons/ChatPlus.svelte';
 	import ChatCheck from '../icons/ChatCheck.svelte';
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	import { WEBUI_BASE_URL } from '#lib/constants.js';
 
 	const i18n = getContext('i18n');
 
@@ -38,7 +45,7 @@
 		initNewChat();
 	}}
 	aria-label="New Chat"
-/>
+></button>
 
 <nav
 	class="sticky top-0 z-30 w-full {chat?.id
@@ -98,15 +105,15 @@
 										await temporaryChatEnabled.set(!$temporaryChatEnabled);
 									}
 
-									if ($page.url.pathname !== '/') {
+									if (page.url.pathname !== '/') {
 										await goto('/');
 									}
 
 									// add 'temporary-chat=true' to the URL
 									if ($temporaryChatEnabled) {
-										replaceState('?temporary-chat=true', {});
+										await goto('?temporary-chat=true', { shallow: true, replace: true });
 									} else {
-										replaceState(location.pathname, {});
+										await goto(location.pathname, { shallow: true, replace: true });
 									}
 								}}
 							>

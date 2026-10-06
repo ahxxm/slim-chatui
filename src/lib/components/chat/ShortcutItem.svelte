@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getContext, onMount } from 'svelte';
 	import Tooltip from '../common/Tooltip.svelte';
-	import type { Shortcut } from '$lib/shortcuts';
+	import type { Shortcut } from '#lib/shortcuts.js';
 
 	export let shortcut: Shortcut;
 	export let isMac: boolean;

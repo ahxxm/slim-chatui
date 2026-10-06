@@ -1,4 +1,4 @@
-import { WEBUI_API_BASE_URL } from '$lib/constants';
+import { WEBUI_API_BASE_URL } from '#lib/constants.js';
 
 export const uploadFile = async (token: string, file: File, metadata?: object | null) => {
 	const data = new FormData();

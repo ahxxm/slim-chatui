@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { untrack, getContext } from 'svelte';
-	import { addUser } from '$lib/apis/auths';
+	import { addUser } from '#lib/apis/auths/index.js';
 
-	import Spinner from '$lib/components/common/Spinner.svelte';
-	import Modal from '$lib/components/common/Modal.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
-	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
+	import Modal from '#lib/components/common/Modal.svelte';
+	import XMark from '#lib/components/icons/XMark.svelte';
+	import SensitiveInput from '#lib/components/common/SensitiveInput.svelte';
 
 	const i18n = getContext('i18n');
 

@@ -5,11 +5,11 @@
 
 	import { onMount, tick, getContext, untrack } from 'svelte';
 
-	import { mobile, settings, models, config, temporaryChatEnabled } from '$lib/stores';
+	import { mobile, settings, models, config, temporaryChatEnabled } from '#lib/stores/index.js';
 
-	import { compressImage, extractContentFromFile } from '$lib/utils';
-	import { uploadFile } from '$lib/apis/files';
-	import { WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '$lib/constants';
+	import { compressImage, extractContentFromFile } from '#lib/utils/index.js';
+	import { uploadFile } from '#lib/apis/files/index.js';
+	import { WEBUI_API_BASE_URL, PASTED_TEXT_CHARACTER_LIMIT } from '#lib/constants.js';
 
 	import InputMenu from './MessageInput/InputMenu.svelte';
 	import FilesOverlay from './MessageInput/FilesOverlay.svelte';

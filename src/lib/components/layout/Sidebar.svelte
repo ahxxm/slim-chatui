@@ -3,7 +3,7 @@
 	import { v7 as uuidv7 } from 'uuid';
 
 	import { goto } from '$app/navigation';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { get } from 'svelte/store';
 	import {
 		user,
@@ -24,7 +24,7 @@
 		activeChatIds,
 		refreshChatList,
 		PAGE_SIZE
-	} from '$lib/stores';
+	} from '#lib/stores/index.js';
 	import { onMount, getContext, tick, untrack } from 'svelte';
 
 	const i18n = getContext('i18n');
@@ -36,10 +36,10 @@
 		getChatById,
 		updateChatFolderIdById,
 		importChats
-	} from '$lib/apis/chats';
-	import { createNewFolder, getFolders } from '$lib/apis/folders';
-	import { checkActiveChats } from '$lib/apis/tasks';
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	} from '#lib/apis/chats/index.js';
+	import { createNewFolder, getFolders } from '#lib/apis/folders/index.js';
+	import { checkActiveChats } from '#lib/apis/tasks/index.js';
+	import { WEBUI_BASE_URL } from '#lib/constants.js';
 
 	import UserMenu from './Sidebar/UserMenu.svelte';
 	import ChatItem from './Sidebar/ChatItem.svelte';
@@ -106,7 +106,7 @@
 			...folders,
 			tempId: {
 				id: tempId,
-				name: name,
+				name,
 				created_at: Date.now(),
 				updated_at: Date.now()
 			}
@@ -179,7 +179,7 @@
 					{
 						chat: item.chat,
 						meta: item?.meta ?? {},
-						pinned: pinned,
+						pinned,
 						folder_id: folderId,
 						created_at: item?.created_at ?? null,
 						updated_at: item?.updated_at ?? null
@@ -484,7 +484,7 @@
 		onmousedown={() => {
 			showSidebar.set(!$showSidebar);
 		}}
-	/>
+	></div>
 {/if}
 
 {#if $showSearch && SearchModalComponent}
@@ -505,7 +505,7 @@
 		goto('/');
 		newChatHandler();
 	}}
-/>
+></button>
 
 <svelte:window
 	onmousemove={(e) => {
@@ -966,7 +966,7 @@
 		>
 			<div
 				class=" absolute -left-1.5 -right-1.5 -top-0 -bottom-0 z-20 cursor-col-resize bg-transparent"
-			/>
+			></div>
 		</div>
 	{/if}
 {/if}
