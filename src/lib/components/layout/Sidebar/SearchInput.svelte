@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { folders } from '$lib/stores';
+	import { folders } from '#lib/stores/index.js';
 	import { untrack, getContext, tick } from 'svelte';
 	import { fade } from 'svelte/transition';
-	import Search from '$lib/components/icons/Search.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
+	import Search from '#lib/components/icons/Search.svelte';
+	import XMark from '#lib/components/icons/XMark.svelte';
 
 	const i18n = getContext('i18n');
 

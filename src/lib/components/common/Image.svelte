@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	import { WEBUI_BASE_URL } from '#lib/constants.js';
 
-	import { settings } from '$lib/stores';
+	import { settings } from '#lib/stores/index.js';
 	import ImagePreview from './ImagePreview.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
+	import XMark from '#lib/components/icons/XMark.svelte';
 	import { getContext } from 'svelte';
 
 	let {

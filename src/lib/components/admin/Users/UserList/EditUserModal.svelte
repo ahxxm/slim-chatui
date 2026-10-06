@@ -3,12 +3,12 @@
 	import dayjs from 'dayjs';
 	import { untrack, getContext } from 'svelte';
 
-	import { updateUserById } from '$lib/apis/users';
+	import { updateUserById } from '#lib/apis/users/index.js';
 
-	import Modal from '$lib/components/common/Modal.svelte';
+	import Modal from '#lib/components/common/Modal.svelte';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
-	import XMark from '$lib/components/icons/XMark.svelte';
-	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
+	import XMark from '#lib/components/icons/XMark.svelte';
+	import SensitiveInput from '#lib/components/common/SensitiveInput.svelte';
 
 	const i18n = getContext('i18n');
 	dayjs.extend(localizedFormat);

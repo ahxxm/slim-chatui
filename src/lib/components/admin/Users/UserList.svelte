@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import { user } from '$lib/stores';
+	import { WEBUI_BASE_URL } from '#lib/constants.js';
+	import { user } from '#lib/stores/index.js';
 	import { getContext, untrack } from 'svelte';
 
 	import dayjs from 'dayjs';
@@ -9,23 +9,23 @@
 
 	import { toast } from 'svelte-sonner';
 
-	import { getUsers, deleteUserById } from '$lib/apis/users';
+	import { getUsers, deleteUserById } from '#lib/apis/users/index.js';
 
-	import Pagination from '$lib/components/common/Pagination.svelte';
-	import ChatBubbles from '$lib/components/icons/ChatBubbles.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import Pagination from '#lib/components/common/Pagination.svelte';
+	import ChatBubbles from '#lib/components/icons/ChatBubbles.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
 
-	import EditUserModal from '$lib/components/admin/Users/UserList/EditUserModal.svelte';
-	import UserChatsModal from '$lib/components/admin/Users/UserList/UserChatsModal.svelte';
-	import AddUserModal from '$lib/components/admin/Users/UserList/AddUserModal.svelte';
+	import EditUserModal from '#lib/components/admin/Users/UserList/EditUserModal.svelte';
+	import UserChatsModal from '#lib/components/admin/Users/UserList/UserChatsModal.svelte';
+	import AddUserModal from '#lib/components/admin/Users/UserList/AddUserModal.svelte';
 
-	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
+	import ConfirmDialog from '#lib/components/common/ConfirmDialog.svelte';
 
-	import Badge from '$lib/components/common/Badge.svelte';
-	import Plus from '$lib/components/icons/Plus.svelte';
-	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
-	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
+	import Badge from '#lib/components/common/Badge.svelte';
+	import Plus from '#lib/components/icons/Plus.svelte';
+	import ChevronUp from '#lib/components/icons/ChevronUp.svelte';
+	import ChevronDown from '#lib/components/icons/ChevronDown.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
 
 	const i18n = getContext('i18n');
 

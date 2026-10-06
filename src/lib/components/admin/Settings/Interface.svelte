@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { getTaskConfig, updateTaskConfig } from '$lib/apis';
+	import { getTaskConfig, updateTaskConfig } from '#lib/apis/index.js';
 	import { onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Switch from '$lib/components/common/Switch.svelte';
-	import Textarea from '$lib/components/common/Textarea.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import Switch from '#lib/components/common/Switch.svelte';
+	import Textarea from '#lib/components/common/Textarea.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
 
 	let { onsave }: { onsave: () => void } = $props();
 

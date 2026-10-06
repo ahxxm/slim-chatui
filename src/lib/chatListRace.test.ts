@@ -6,31 +6,17 @@
  */
 import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { writable, get } from 'svelte/store';
-import { signIn, installFetchProxy, flushFetches } from '$lib/test/backend';
+import { signIn, installFetchProxy, flushFetches } from '#lib/test/backend.js';
 
 // ── SvelteKit stubs (virtual modules not available in vitest) ────────────────
 
-vi.mock('$app/environment', () => ({ browser: true, dev: false }));
+vi.mock('$app/env', () => ({ browser: true, dev: false, building: false, version: 'test' }));
 vi.mock('$app/navigation', () => ({ goto: vi.fn(), afterNavigate: vi.fn() }));
-vi.mock('$app/stores', () => ({
-	page: {
-		subscribe: vi.fn((cb: any) => {
-			cb({ url: new URL('http://localhost'), params: {} });
-			return () => {};
-		})
-	},
-	navigating: {
-		subscribe: vi.fn((cb: any) => {
-			cb(null);
-			return () => {};
-		})
-	}
-}));
 
 // Sidebar imports these but they're not relevant to the chat list race.
 // Browser mode uses native ESM with sealed module namespaces, so the mock
 // must provide every named export the component tree imports.
-vi.mock('$lib/apis/folders', () => ({
+vi.mock('#lib/apis/folders/index.js', () => ({
 	createNewFolder: vi.fn(),
 	getFolders: vi.fn().mockResolvedValue([]),
 	getFolderById: vi.fn(),
@@ -38,12 +24,12 @@ vi.mock('$lib/apis/folders', () => ({
 	updateFolderIsExpandedById: vi.fn(),
 	deleteFolderById: vi.fn()
 }));
-vi.mock('$lib/apis/tasks', () => ({
+vi.mock('#lib/apis/tasks/index.js', () => ({
 	checkActiveChats: vi.fn().mockResolvedValue({ active_chat_ids: [] })
 }));
 
 import { render, fireEvent, cleanup } from '@testing-library/svelte';
-import { delay, waitFor } from '$lib/test/async';
+import { delay, waitFor } from '#lib/test/async.js';
 import {
 	chats,
 	pinnedChats,
@@ -51,7 +37,7 @@ import {
 	scrollPaginationEnabled,
 	showSidebar,
 	user
-} from '$lib/stores';
+} from '#lib/stores/index.js';
 
 // Artificial per-request delay so initChatList's multi-fetch chain takes
 // long enough for IntersectionObserver ticks (100ms) to interleave
@@ -145,7 +131,7 @@ describe('Sidebar: shift-delete race', () => {
 	});
 
 	it('shift-delete 2 of 70 → should still show 68 chats across both pages', async () => {
-		const { default: Sidebar } = await import('$lib/components/layout/Sidebar.svelte');
+		const { default: Sidebar } = await import('#lib/components/layout/Sidebar.svelte');
 		const { container } = render(Sidebar, {
 			context: new Map([['i18n', writable({ t: (k: string) => k })]])
 		});

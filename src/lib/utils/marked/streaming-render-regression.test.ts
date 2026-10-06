@@ -4,10 +4,10 @@ import { writable } from 'svelte/store';
 import { tick } from 'svelte';
 import { fireEvent, render } from '@testing-library/svelte';
 
-vi.mock('$app/environment', () => ({ browser: true, dev: false }));
+vi.mock('$app/env', () => ({ browser: true, dev: false, building: false, version: 'test' }));
 
-import { settings, user } from '$lib/stores';
-import Markdown from '$lib/components/chat/Messages/Markdown.svelte';
+import { settings, user } from '#lib/stores/index.js';
+import Markdown from '#lib/components/chat/Messages/Markdown.svelte';
 
 const createContext = () => new Map([['i18n', writable({ t: (key: string) => key })]]);
 

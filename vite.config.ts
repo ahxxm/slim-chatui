@@ -1,3 +1,5 @@
+import adapter from '@sveltejs/adapter-static';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import { svelteTesting } from '@testing-library/svelte/vite';
@@ -10,7 +12,27 @@ import { defaultClientConditions } from 'vite';
 const browserTests = !!process.env.VITEST_BROWSER;
 
 export default defineConfig({
-	plugins: [tailwindcss(), sveltekit(), svelteTesting()],
+	plugins: [
+		tailwindcss(),
+		sveltekit({
+			// Consult https://kit.svelte.dev/docs/integrations#preprocessors
+			// for more information about preprocessors
+			preprocess: vitePreprocess(),
+			onwarn: (warning, handler) => {
+				const { code } = warning;
+
+				if (code === 'css-unused-selector') return;
+
+				handler(warning);
+			},
+			adapter: adapter({ pages: 'build', assets: 'build', fallback: 'index.html' }),
+			// SvelteKit 3 polls for new versions by default (one hour). Preserve the
+			// pre-3 behaviour of no polling: nothing reads `updated.current`.
+			version: { pollInterval: 0 }
+		}),
+		svelteTesting()
+	],
+
 	// svelteTesting() assigns resolve.conditions = [], which stops
 	// vite-plugin-svelte from filling in the client defaults; without the
 	// 'browser' condition the browser server resolves svelte to its server

@@ -3,13 +3,13 @@
 	import { getContext } from 'svelte';
 	import { fly } from 'svelte/transition';
 
-	import Dropdown from '$lib/components/common/Dropdown.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Camera from '$lib/components/icons/Camera.svelte';
-	import Clip from '$lib/components/icons/Clip.svelte';
-	import ClockRotateRight from '$lib/components/icons/ClockRotateRight.svelte';
-	import ChevronRight from '$lib/components/icons/ChevronRight.svelte';
-	import ChevronLeft from '$lib/components/icons/ChevronLeft.svelte';
+	import Dropdown from '#lib/components/common/Dropdown.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import Camera from '#lib/components/icons/Camera.svelte';
+	import Clip from '#lib/components/icons/Clip.svelte';
+	import ClockRotateRight from '#lib/components/icons/ClockRotateRight.svelte';
+	import ChevronRight from '#lib/components/icons/ChevronRight.svelte';
+	import ChevronLeft from '#lib/components/icons/ChevronLeft.svelte';
 	import Chats from './InputMenu/Chats.svelte';
 
 	const i18n = getContext('i18n');

@@ -2,24 +2,24 @@
 	import { DropdownMenu } from 'bits-ui';
 	import { getContext, untrack } from 'svelte';
 
-	import { saveAs } from '$lib/utils';
+	import { saveAs } from '#lib/utils/index.js';
 
-	import Dropdown from '$lib/components/common/Dropdown.svelte';
-	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
-	import Sparkles from '$lib/components/icons/Sparkles.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import DocumentDuplicate from '$lib/components/icons/DocumentDuplicate.svelte';
-	import Bookmark from '$lib/components/icons/Bookmark.svelte';
-	import BookmarkSlash from '$lib/components/icons/BookmarkSlash.svelte';
+	import Dropdown from '#lib/components/common/Dropdown.svelte';
+	import GarbageBin from '#lib/components/icons/GarbageBin.svelte';
+	import Sparkles from '#lib/components/icons/Sparkles.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import DocumentDuplicate from '#lib/components/icons/DocumentDuplicate.svelte';
+	import Bookmark from '#lib/components/icons/Bookmark.svelte';
+	import BookmarkSlash from '#lib/components/icons/BookmarkSlash.svelte';
 	import {
 		getChatById,
 		getChatPinnedStatusById,
 		toggleChatPinnedStatusById
-	} from '$lib/apis/chats';
-	import { folders } from '$lib/stores';
-	import { createMessagesList } from '$lib/utils';
-	import Download from '$lib/components/icons/Download.svelte';
-	import Folder from '$lib/components/icons/Folder.svelte';
+	} from '#lib/apis/chats/index.js';
+	import { folders } from '#lib/stores/index.js';
+	import { createMessagesList } from '#lib/utils/index.js';
+	import Download from '#lib/components/icons/Download.svelte';
+	import Folder from '#lib/components/icons/Folder.svelte';
 
 	const i18n = getContext('i18n');
 

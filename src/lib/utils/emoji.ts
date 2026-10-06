@@ -1,4 +1,4 @@
-import emojiShortCodesJson from '$lib/emoji-shortcodes.json';
+import emojiShortCodesJson from '#lib/emoji-shortcodes.json';
 
 export type EmojiShortCodeMap = Record<string, string | string[]>;
 

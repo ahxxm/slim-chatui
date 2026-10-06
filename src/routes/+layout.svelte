@@ -18,20 +18,20 @@
 		isLastActiveTab,
 		playingNotificationSound,
 		refreshChatList
-	} from '$lib/stores';
-	import i18n, { initI18n, getLanguages, changeLanguage } from '$lib/i18n';
-	import { getBackendConfig, getBuildInfo } from '$lib/apis';
-	import { getSessionUser, userSignOut } from '$lib/apis/auths';
-	import { getUserSettings } from '$lib/apis/users';
-	import { WEBUI_BASE_URL, WEBUI_BUILD_HASH } from '$lib/constants';
-	import { setDayjsLocale } from '$lib/dayjs';
-	import { bestMatchingLanguage } from '$lib/utils';
-	import { setTextScale } from '$lib/utils/text-scale';
-	import { applyCjkFont } from '$lib/utils/cjk-font';
+	} from '#lib/stores/index.js';
+	import i18n, { initI18n, getLanguages, changeLanguage } from '#lib/i18n/index.js';
+	import { getBackendConfig, getBuildInfo } from '#lib/apis/index.js';
+	import { getSessionUser, userSignOut } from '#lib/apis/auths/index.js';
+	import { getUserSettings } from '#lib/apis/users/index.js';
+	import { WEBUI_BASE_URL, WEBUI_BUILD_HASH } from '#lib/constants.js';
+	import { setDayjsLocale } from '#lib/dayjs.js';
+	import { bestMatchingLanguage } from '#lib/utils/index.js';
+	import { setTextScale } from '#lib/utils/text-scale.js';
+	import { applyCjkFont } from '#lib/utils/cjk-font.js';
 
 	import { io } from 'socket.io-client';
-	import NotificationToast from '$lib/components/NotificationToast.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
+	import NotificationToast from '#lib/components/NotificationToast.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
 
 	import '../tailwind.css';
 	import '../app.css';

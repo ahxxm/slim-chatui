@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { copyToClipboard, unescapeHtml } from '$lib/utils';
+	import { copyToClipboard, unescapeHtml } from '#lib/utils/index.js';
 	import { toast } from 'svelte-sonner';
 	import { fade } from 'svelte/transition';
 

@@ -2,9 +2,9 @@
 	import { getContext } from 'svelte';
 	import dayjs from 'dayjs';
 	import calendar from 'dayjs/plugin/calendar';
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import Spinner from '$lib/components/common/Spinner.svelte';
-	import Loader from '$lib/components/common/Loader.svelte';
+	import { WEBUI_BASE_URL } from '#lib/constants.js';
+	import Spinner from '#lib/components/common/Spinner.svelte';
+	import Loader from '#lib/components/common/Loader.svelte';
 
 	dayjs.extend(calendar);
 

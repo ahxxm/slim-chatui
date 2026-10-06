@@ -1,9 +1,9 @@
-import { APP_NAME } from '$lib/constants';
+import { APP_NAME } from '#lib/constants.js';
 import { type Writable, writable, get } from 'svelte/store';
-import type { ModelConfig } from '$lib/apis';
-import type { ChatListItem, FolderItem } from '$lib/types';
+import type { ModelConfig } from '#lib/apis/index.js';
+import type { ChatListItem, FolderItem } from '#lib/types/index.js';
 import type { Socket } from 'socket.io-client';
-import { getChatList } from '$lib/apis/chats';
+import { getChatList } from '#lib/apis/chats/index.js';
 
 // Backend
 export const WEBUI_NAME = writable(APP_NAME);

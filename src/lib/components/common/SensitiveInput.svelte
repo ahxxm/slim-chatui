@@ -1,7 +1,7 @@
 <script lang="ts">
 	const i18n = getContext('i18n');
 	import { getContext } from 'svelte';
-	import { settings } from '$lib/stores';
+	import { settings } from '#lib/stores/index.js';
 	export let id = 'password-input';
 	export let value: string = '';
 	export let placeholder = '';

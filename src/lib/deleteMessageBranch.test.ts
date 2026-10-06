@@ -15,8 +15,8 @@
 import { vi, describe, it, expect, afterEach } from 'vitest';
 import { writable } from 'svelte/store';
 import { render, fireEvent, cleanup, within } from '@testing-library/svelte';
-import { delay, waitFor } from '$lib/test/async';
-import type { ChatHistory } from '$lib/types';
+import { delay, waitFor } from '#lib/test/async.js';
+import type { ChatHistory } from '#lib/types/index.js';
 
 // jsdom lacks layout info, so focus-trap throws on dialog open
 vi.mock('focus-trap', () => ({
@@ -60,7 +60,7 @@ describe('Messages: deleting a branched user message deletes its whole subtree',
 		};
 
 		const history = seedHistory();
-		const { default: Messages } = await import('$lib/components/chat/Messages.svelte');
+		const { default: Messages } = await import('#lib/components/chat/Messages.svelte');
 		render(Messages, {
 			context: new Map([['i18n', writable({ t: (key: string) => key })]]),
 			props: {

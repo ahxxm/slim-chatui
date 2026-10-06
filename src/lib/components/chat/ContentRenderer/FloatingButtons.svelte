@@ -4,14 +4,14 @@
 	import { getContext, tick, onDestroy } from 'svelte';
 	const i18n = getContext('i18n');
 
-	import { chatCompletion } from '$lib/apis/openai';
-	import { createMessagesList } from '$lib/utils';
+	import { chatCompletion } from '#lib/apis/openai/index.js';
+	import { createMessagesList } from '#lib/utils/index.js';
 
-	import ChatBubble from '$lib/components/icons/ChatBubble.svelte';
-	import LightBulb from '$lib/components/icons/LightBulb.svelte';
+	import ChatBubble from '#lib/components/icons/ChatBubble.svelte';
+	import LightBulb from '#lib/components/icons/LightBulb.svelte';
 	import Markdown from '../Messages/Markdown.svelte';
 	import Skeleton from '../Messages/Skeleton.svelte';
-	import { chatId, settings, socket } from '$lib/stores';
+	import { chatId, settings, socket } from '#lib/stores/index.js';
 
 	const DEFAULT_ACTIONS = [
 		{

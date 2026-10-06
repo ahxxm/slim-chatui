@@ -1,15 +1,15 @@
 <script lang="ts">
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	import { WEBUI_BASE_URL } from '#lib/constants.js';
 	import { marked } from 'marked';
 
-	import { config, user, models as _models, temporaryChatEnabled } from '$lib/stores';
+	import { config, user, models as _models, temporaryChatEnabled } from '#lib/stores/index.js';
 	import { onMount, getContext } from 'svelte';
 
 	import { fade } from 'svelte/transition';
 
-	import { sanitizeResponseContent } from '$lib/utils';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import EyeSlash from '$lib/components/icons/EyeSlash.svelte';
+	import { sanitizeResponseContent } from '#lib/utils/index.js';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import EyeSlash from '#lib/components/icons/EyeSlash.svelte';
 
 	const i18n = getContext('i18n');
 

@@ -4,17 +4,17 @@
 	import { getContext } from 'svelte';
 	import { goto } from '$app/navigation';
 
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import { unescapeHtml } from '$lib/utils';
+	import { WEBUI_BASE_URL } from '#lib/constants.js';
+	import { unescapeHtml } from '#lib/utils/index.js';
 	import {
 		createIncrementalTokenState,
 		getRenderSegments,
 		updateIncrementalTokenState,
 		type IncrementalTokenSegment
-	} from '$lib/utils/marked/incremental';
-	import { shouldRenderNestedLinkTokens } from '$lib/utils/marked/render';
+	} from '#lib/utils/marked/incremental.js';
+	import { shouldRenderNestedLinkTokens } from '#lib/utils/marked/render.js';
 
-	import Image from '$lib/components/common/Image.svelte';
+	import Image from '#lib/components/common/Image.svelte';
 	import KatexRenderer from './KatexRenderer.svelte';
 	import HtmlToken from './HTMLToken.svelte';
 	import MarkdownInlineTokens from './MarkdownInlineTokens.svelte';

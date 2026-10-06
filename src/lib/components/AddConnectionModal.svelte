@@ -3,17 +3,17 @@
 	import { getContext, onMount, untrack } from 'svelte';
 	const i18n = getContext('i18n');
 
-	import { settings } from '$lib/stores';
-	import { verifyOpenAIConnection } from '$lib/apis/openai';
+	import { settings } from '#lib/stores/index.js';
+	import { verifyOpenAIConnection } from '#lib/apis/openai/index.js';
 
-	import Modal from '$lib/components/common/Modal.svelte';
-	import Plus from '$lib/components/icons/Plus.svelte';
-	import Minus from '$lib/components/icons/Minus.svelte';
-	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Switch from '$lib/components/common/Switch.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
+	import Modal from '#lib/components/common/Modal.svelte';
+	import Plus from '#lib/components/icons/Plus.svelte';
+	import Minus from '#lib/components/icons/Minus.svelte';
+	import SensitiveInput from '#lib/components/common/SensitiveInput.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import Switch from '#lib/components/common/Switch.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
+	import XMark from '#lib/components/icons/XMark.svelte';
 	import Textarea from './common/Textarea.svelte';
 
 	let {

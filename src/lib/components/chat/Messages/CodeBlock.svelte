@@ -5,7 +5,7 @@
 	function getHljs(): Promise<typeof HljsType> {
 		if (!hljsPromise) {
 			hljsPromise = Promise.all([
-				import('$lib/highlight'),
+				import('#lib/highlight.js'),
 				import('highlight.js/styles/github.min.css')
 			]).then(([m]) => m.default);
 		}
@@ -16,9 +16,9 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 
-	import { copyToClipboard } from '$lib/utils';
+	import { copyToClipboard } from '#lib/utils/index.js';
 
-	import ChevronUpDown from '$lib/components/icons/ChevronUpDown.svelte';
+	import ChevronUpDown from '#lib/components/icons/ChevronUpDown.svelte';
 
 	const i18n = getContext('i18n');
 

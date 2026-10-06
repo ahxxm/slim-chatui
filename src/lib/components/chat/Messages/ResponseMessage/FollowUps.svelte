@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
 	import { getContext } from 'svelte';
 
 	const i18n = getContext('i18n');

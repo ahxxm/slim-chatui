@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { shortcuts } from '$lib/shortcuts';
+	import { shortcuts } from '#lib/shortcuts.js';
 
 	export let name: string;
 	export let className = '';

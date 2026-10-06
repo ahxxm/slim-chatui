@@ -6,17 +6,17 @@
 
 	import { onMount, getContext, tick } from 'svelte';
 	import { goto } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { page } from '$app/state';
 
-	import { getBackendConfig } from '$lib/apis';
-	import { userSignIn, userSignUp } from '$lib/apis/auths';
+	import { getBackendConfig } from '#lib/apis/index.js';
+	import { userSignIn, userSignUp } from '#lib/apis/auths/index.js';
 
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import { WEBUI_NAME, config, user, socket } from '$lib/stores';
+	import { WEBUI_BASE_URL } from '#lib/constants.js';
+	import { WEBUI_NAME, config, user, socket } from '#lib/stores/index.js';
 
-	import Spinner from '$lib/components/common/Spinner.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
 
-	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
+	import SensitiveInput from '#lib/components/common/SensitiveInput.svelte';
 	const i18n = getContext('i18n');
 
 	let loaded = false;
@@ -40,7 +40,7 @@
 			await config.set(await getBackendConfig());
 
 			if (!redirectPath) {
-				redirectPath = $page.url.searchParams.get('redirect') || '/';
+				redirectPath = page.url.searchParams.get('redirect') || '/';
 			}
 
 			goto(redirectPath);
@@ -105,7 +105,7 @@
 	}
 
 	onMount(async () => {
-		const redirectPath = $page.url.searchParams.get('redirect');
+		const redirectPath = page.url.searchParams.get('redirect');
 		if ($user !== undefined) {
 			goto(redirectPath || '/');
 		} else {
@@ -114,7 +114,7 @@
 			}
 		}
 
-		const error = $page.url.searchParams.get('error');
+		const error = page.url.searchParams.get('error');
 		if (error) {
 			toast.error(error);
 		}
@@ -140,7 +140,7 @@
 <div class="w-full h-screen max-h-[100dvh] text-white relative" id="auth-page">
 	<div class="w-full h-full absolute top-0 left-0 bg-white dark:bg-black"></div>
 
-	<div class="w-full absolute top-0 left-0 right-0 h-8 drag-region" />
+	<div class="w-full absolute top-0 left-0 right-0 h-8 drag-region"></div>
 
 	{#if loaded}
 		<div

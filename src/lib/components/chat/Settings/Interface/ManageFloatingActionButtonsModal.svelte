@@ -2,11 +2,11 @@
 	import { getContext, onMount } from 'svelte';
 	const i18n = getContext('i18n');
 
-	import Modal from '$lib/components/common/Modal.svelte';
-	import Plus from '$lib/components/icons/Plus.svelte';
-	import Minus from '$lib/components/icons/Minus.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
-	import Textarea from '$lib/components/common/Textarea.svelte';
+	import Modal from '#lib/components/common/Modal.svelte';
+	import Plus from '#lib/components/icons/Plus.svelte';
+	import Minus from '#lib/components/icons/Minus.svelte';
+	import XMark from '#lib/components/icons/XMark.svelte';
+	import Textarea from '#lib/components/common/Textarea.svelte';
 
 	let { show = $bindable(false), onSave = () => {}, floatingActionButtons = null } = $props();
 

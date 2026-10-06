@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { updateUserPassword } from '$lib/apis/auths';
-	import SensitiveInput from '$lib/components/common/SensitiveInput.svelte';
+	import { updateUserPassword } from '#lib/apis/auths/index.js';
+	import SensitiveInput from '#lib/components/common/SensitiveInput.svelte';
 
 	const i18n = getContext('i18n');
 

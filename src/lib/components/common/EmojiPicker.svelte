@@ -4,11 +4,11 @@
 
 	import { getContext } from 'svelte';
 
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
 
-	import emojiGroups from '$lib/emoji-groups.json';
-	import type { EmojiShortCodeMap } from '$lib/utils/emoji';
-	import { codePointToEmoji, emojiShortCodes } from '$lib/utils/emoji';
+	import emojiGroups from '#lib/emoji-groups.json';
+	import type { EmojiShortCodeMap } from '#lib/utils/emoji.js';
+	import { codePointToEmoji, emojiShortCodes } from '#lib/utils/emoji.js';
 
 	const i18n = getContext('i18n');
 

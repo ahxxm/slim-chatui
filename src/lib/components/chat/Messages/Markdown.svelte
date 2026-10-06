@@ -3,16 +3,16 @@
 	import type { Links } from 'marked';
 	import { SvelteMap } from 'svelte/reactivity';
 
-	import { replaceTokens, processResponseContent } from '$lib/utils';
+	import { replaceTokens, processResponseContent } from '#lib/utils/index.js';
 	import {
 		EMPTY_LINKS,
 		createIncrementalTokenState,
 		getRenderSegments,
 		updateIncrementalTokenState,
 		type IncrementalTokenSegment
-	} from '$lib/utils/marked/incremental';
-	import { createIndexedDetailsStateIds } from '$lib/utils/marked/details-state';
-	import { user } from '$lib/stores';
+	} from '#lib/utils/marked/incremental.js';
+	import { createIndexedDetailsStateIds } from '#lib/utils/marked/details-state.js';
+	import { user } from '#lib/stores/index.js';
 
 	import { markdownRenderContextKey, type MarkdownRenderContextState } from './Markdown/context';
 	import MarkdownDetailsScope from './Markdown/MarkdownDetailsScope.svelte';

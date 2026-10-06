@@ -2,9 +2,9 @@
 	import { untrack } from 'svelte';
 
 	import ChatList from './ChatList.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
-	import { getChatListByFolderId } from '$lib/apis/chats';
-	import { PAGE_SIZE } from '$lib/stores';
+	import Spinner from '#lib/components/common/Spinner.svelte';
+	import { getChatListByFolderId } from '#lib/apis/chats/index.js';
+	import { PAGE_SIZE } from '#lib/stores/index.js';
 
 	let { folder = null } = $props();
 

@@ -1,4 +1,4 @@
-import { WEBUI_API_BASE_URL } from '$lib/constants';
+import { WEBUI_API_BASE_URL } from '#lib/constants.js';
 
 export const downloadDatabase = async (token: string) => {
 	let error = null;

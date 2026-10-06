@@ -778,8 +778,9 @@ class ChatTable:
                 ")"
             )
             query = query.filter(
-                or_(Chat.title.ilike(bindparam("title_key")), text(content_sql)).params(
-                    title_key=f"%{search_text}%", content_key=search_text
+                or_(
+                    Chat.title.ilike(bindparam("title_key", value=f"%{search_text}%")),
+                    text(content_sql).bindparams(content_key=search_text),
                 )
             )
 

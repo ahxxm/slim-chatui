@@ -1,12 +1,12 @@
 <script lang="ts">
-	import { saveAs } from '$lib/utils';
+	import { saveAs } from '#lib/utils/index.js';
 
-	import { downloadDatabase } from '$lib/apis/utils';
+	import { downloadDatabase } from '#lib/apis/utils/index.js';
 	import { getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { getAllUserChats } from '$lib/apis/chats';
-	import { getAllUsers } from '$lib/apis/users';
-	import { exportConfig, importConfig } from '$lib/apis/configs';
+	import { getAllUserChats } from '#lib/apis/chats/index.js';
+	import { getAllUsers } from '#lib/apis/users/index.js';
+	import { exportConfig, importConfig } from '#lib/apis/configs/index.js';
 
 	const i18n = getContext('i18n');
 

@@ -4,17 +4,17 @@
 	import type { Writable } from 'svelte/store';
 	import dayjs from 'dayjs';
 
-	import { searchFiles, deleteFileById } from '$lib/apis/files';
-	import Modal from '$lib/components/common/Modal.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Loader from '$lib/components/common/Loader.svelte';
-	import GarbageBin from '$lib/components/icons/GarbageBin.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
-	import ChevronUp from '$lib/components/icons/ChevronUp.svelte';
-	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
-	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
-	import FileItemModal from '$lib/components/common/FileItemModal.svelte';
+	import { searchFiles, deleteFileById } from '#lib/apis/files/index.js';
+	import Modal from '#lib/components/common/Modal.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import Loader from '#lib/components/common/Loader.svelte';
+	import GarbageBin from '#lib/components/icons/GarbageBin.svelte';
+	import XMark from '#lib/components/icons/XMark.svelte';
+	import ChevronUp from '#lib/components/icons/ChevronUp.svelte';
+	import ChevronDown from '#lib/components/icons/ChevronDown.svelte';
+	import ConfirmDialog from '#lib/components/common/ConfirmDialog.svelte';
+	import FileItemModal from '#lib/components/common/FileItemModal.svelte';
 
 	const i18n: Writable<any> = getContext('i18n');
 

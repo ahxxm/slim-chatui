@@ -2,9 +2,9 @@
 	import { getContext, tick } from 'svelte';
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { models, settings, user } from '$lib/stores';
-	import { updateUserSettings } from '$lib/apis/users';
-	import { getModels as _getModels } from '$lib/apis';
+	import { models, settings, user } from '#lib/stores/index.js';
+	import { updateUserSettings } from '#lib/apis/users/index.js';
+	import { getModels as _getModels } from '#lib/apis/index.js';
 	import { goto } from '$app/navigation';
 
 	import Modal from '../common/Modal.svelte';

@@ -1,4 +1,4 @@
-import { WEBUI_BASE_URL } from '$lib/constants';
+import { WEBUI_BASE_URL } from '#lib/constants.js';
 
 export const getModels = async (token: string = '', refresh: boolean = false) => {
 	const searchParams = new URLSearchParams();

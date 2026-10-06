@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { getContext, onMount, tick, untrack } from 'svelte';
 
-	import { formatFileSize, getLineCount } from '$lib/utils';
-	import { WEBUI_API_BASE_URL } from '$lib/constants';
-	import { settings } from '$lib/stores';
-	import { getFileById } from '$lib/apis/files';
+	import { formatFileSize, getLineCount } from '#lib/utils/index.js';
+	import { WEBUI_API_BASE_URL } from '#lib/constants.js';
+	import { settings } from '#lib/stores/index.js';
+	import { getFileById } from '#lib/apis/files/index.js';
 
-	import CodeBlock from '$lib/components/chat/Messages/CodeBlock.svelte';
-	import Markdown from '$lib/components/chat/Messages/Markdown.svelte';
+	import CodeBlock from '#lib/components/chat/Messages/CodeBlock.svelte';
+	import Markdown from '#lib/components/chat/Messages/Markdown.svelte';
 
 	const i18n = getContext('i18n');
 

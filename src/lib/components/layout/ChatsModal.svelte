@@ -9,12 +9,12 @@
 	dayjs.extend(localizedFormat);
 	dayjs.extend(calendar);
 
-	import { deleteChatById } from '$lib/apis/chats';
-	import { WEBUI_BASE_URL } from '$lib/constants';
+	import { deleteChatById } from '#lib/apis/chats/index.js';
+	import { WEBUI_BASE_URL } from '#lib/constants.js';
 
-	import Modal from '$lib/components/common/Modal.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
+	import Modal from '#lib/components/common/Modal.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import ConfirmDialog from '#lib/components/common/ConfirmDialog.svelte';
 
 	import Spinner from '../common/Spinner.svelte';
 	import Loader from '../common/Loader.svelte';

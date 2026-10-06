@@ -2,11 +2,11 @@
 	import { DropdownMenu } from 'bits-ui';
 	import { getContext } from 'svelte';
 
-	import { user, models, mobile, settings } from '$lib/stores';
-	import { getModels } from '$lib/apis';
+	import { user, models, mobile, settings } from '#lib/stores/index.js';
+	import { getModels } from '#lib/apis/index.js';
 
-	import ChevronDown from '$lib/components/icons/ChevronDown.svelte';
-	import Check from '$lib/components/icons/Check.svelte';
+	import ChevronDown from '#lib/components/icons/ChevronDown.svelte';
+	import Check from '#lib/components/icons/Check.svelte';
 
 	const i18n = getContext('i18n');
 

@@ -1,39 +1,39 @@
 <script lang="ts">
 	import { getContext, onMount, tick, untrack } from 'svelte';
 
-	import { saveAs, DRAG_GHOST } from '$lib/utils';
+	import { saveAs, DRAG_GHOST } from '#lib/utils/index.js';
 
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
 
-	import { mobile, selectedFolder, showSidebar } from '$lib/stores';
+	import { mobile, selectedFolder, showSidebar } from '#lib/stores/index.js';
 
 	import {
 		deleteFolderById,
 		updateFolderIsExpandedById,
 		updateFolderById,
 		getFolderById
-	} from '$lib/apis/folders';
+	} from '#lib/apis/folders/index.js';
 	import {
 		getChatById,
 		getChatsByFolderId,
 		getChatListByFolderId,
 		updateChatFolderIdById
-	} from '$lib/apis/chats';
+	} from '#lib/apis/chats/index.js';
 
 	import ChevronDown from '../../icons/ChevronDown.svelte';
 	import ChevronRight from '../../icons/ChevronRight.svelte';
 	import Collapsible from '../../common/Collapsible.svelte';
-	import DragGhost from '$lib/components/common/DragGhost.svelte';
+	import DragGhost from '#lib/components/common/DragGhost.svelte';
 
-	import FolderOpen from '$lib/components/icons/FolderOpen.svelte';
-	import EllipsisHorizontal from '$lib/components/icons/EllipsisHorizontal.svelte';
+	import FolderOpen from '#lib/components/icons/FolderOpen.svelte';
+	import EllipsisHorizontal from '#lib/components/icons/EllipsisHorizontal.svelte';
 
 	import ChatItem from './ChatItem.svelte';
 	import FolderMenu from './Folders/FolderMenu.svelte';
-	import ConfirmDialog from '$lib/components/common/ConfirmDialog.svelte';
-	import Emoji from '$lib/components/common/Emoji.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
+	import ConfirmDialog from '#lib/components/common/ConfirmDialog.svelte';
+	import Emoji from '#lib/components/common/Emoji.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
 
 	const i18n = getContext('i18n');
 

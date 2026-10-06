@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Info from '$lib/components/icons/Info.svelte';
+	import Info from '#lib/components/icons/Info.svelte';
 
 	export let content: string | Record<string, any> = '';
 </script>

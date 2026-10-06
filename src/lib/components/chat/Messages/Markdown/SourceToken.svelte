@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { LinkPreview } from 'bits-ui';
-	import { decodeString } from '$lib/utils';
+	import { decodeString } from '#lib/utils/index.js';
 	import Source from './Source.svelte';
 
 	export let token;

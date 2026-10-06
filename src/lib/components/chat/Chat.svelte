@@ -6,13 +6,13 @@
 	import { fade } from 'svelte/transition';
 	const i18n: Writable<i18nType> = getContext('i18n');
 
-	import { goto, replaceState } from '$app/navigation';
-	import { page } from '$app/stores';
+	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 
 	import { type Writable } from 'svelte/store';
 	import type { i18n as i18nType } from 'i18next';
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import type { ChatHistory } from '$lib/types';
+	import { WEBUI_BASE_URL } from '#lib/constants.js';
+	import type { ChatHistory } from '#lib/types/index.js';
 
 	import {
 		activeChatIds,
@@ -29,9 +29,9 @@
 		selectedFolder,
 		pinnedChats,
 		refreshChatList
-	} from '$lib/stores';
+	} from '#lib/stores/index.js';
 
-	import { createMessagesList, latestMessageId, processDetails } from '$lib/utils';
+	import { createMessagesList, latestMessageId, processDetails } from '#lib/utils/index.js';
 
 	import {
 		createNewChat,
@@ -39,14 +39,14 @@
 		getPinnedChatList,
 		updateChatById,
 		updateChatFolderIdById
-	} from '$lib/apis/chats';
-	import { generateOpenAIChatCompletion } from '$lib/apis/openai';
-	import { stopTask, getTaskIdsByChatId } from '$lib/apis';
-	import { updateFolderById } from '$lib/apis/folders';
+	} from '#lib/apis/chats/index.js';
+	import { generateOpenAIChatCompletion } from '#lib/apis/openai/index.js';
+	import { stopTask, getTaskIdsByChatId } from '#lib/apis/index.js';
+	import { updateFolderById } from '#lib/apis/folders/index.js';
 
-	import MessageInput from '$lib/components/chat/MessageInput.svelte';
-	import Messages from '$lib/components/chat/Messages.svelte';
-	import Navbar from '$lib/components/chat/Navbar.svelte';
+	import MessageInput from '#lib/components/chat/MessageInput.svelte';
+	import Messages from '#lib/components/chat/Messages.svelte';
+	import Navbar from '#lib/components/chat/Navbar.svelte';
 	import EventConfirmDialog from '../common/ConfirmDialog.svelte';
 	import Placeholder from './Placeholder.svelte';
 	import Spinner from '../common/Spinner.svelte';
@@ -525,17 +525,6 @@
 			initNewChat();
 		}
 
-		let pageSubscribeFirst = true;
-		const pageUnsubscribe = page.subscribe(() => {
-			if (pageSubscribeFirst) {
-				pageSubscribeFirst = false;
-				return;
-			}
-			if (window.location.pathname === '/') {
-				initNewChat();
-			}
-		});
-
 		const storageChatInput = sessionStorage.getItem(
 			`chat-input${chatIdProp ? `-${chatIdProp}` : ''}`
 		);
@@ -569,10 +558,22 @@
 				clearTimeout(saveDraftTimeout);
 				saveDraftTimeout = null;
 			}
-			pageUnsubscribe();
 			window.removeEventListener('message', onMessageHandler);
 			$socket?.off('events', chatEventHandler);
 		};
+	});
+
+	// `page` from `$app/state` is not a store; watch navigations with an effect.
+	let pageSubscribeFirst = true;
+	$effect(() => {
+		page.url.pathname; // track navigations
+		if (pageSubscribeFirst) {
+			pageSubscribeFirst = false;
+			return;
+		}
+		if (window.location.pathname === '/') {
+			initNewChat();
+		}
 	});
 
 	// File upload functions
@@ -596,10 +597,10 @@
 
 		const availableModels = $models.map((m) => m.id);
 
-		if ($page.url.searchParams.get('models') || $page.url.searchParams.get('model')) {
+		if (page.url.searchParams.get('models') || page.url.searchParams.get('model')) {
 			const urlModels = (
-				$page.url.searchParams.get('models') ||
-				$page.url.searchParams.get('model') ||
+				page.url.searchParams.get('models') ||
+				page.url.searchParams.get('model') ||
 				''
 			)?.split(',');
 
@@ -651,7 +652,7 @@
 			}
 		}
 
-		if ($page.url.pathname.includes('/c/')) {
+		if (page.url.pathname.includes('/c/')) {
 			goto('/');
 			return;
 		}
@@ -674,12 +675,12 @@
 		taskIds = null;
 		messageQueue = [];
 
-		if ($page.url.searchParams.get('q')) {
-			const q = $page.url.searchParams.get('q') ?? '';
+		if (page.url.searchParams.get('q')) {
+			const q = page.url.searchParams.get('q') ?? '';
 			messageInput?.setText(q);
 
 			if (q) {
-				if (($page.url.searchParams.get('submit') ?? 'true') === 'true') {
+				if ((page.url.searchParams.get('submit') ?? 'true') === 'true') {
 					await tick();
 					submitPrompt(q);
 				}
@@ -755,7 +756,7 @@
 		if ($chatId == _chatId && !$temporaryChatEnabled) {
 			chat = await updateChatById(localStorage.token, _chatId, {
 				models: selectedModels,
-				history: history,
+				history,
 				files: chatFiles
 			});
 		}
@@ -1042,6 +1043,7 @@
 					(item.type === 'file' && !(item?.content_type ?? '').startsWith('image/'))
 			)
 		);
+
 		chatFiles = chatFiles.filter(
 			// Remove duplicates
 			(item, index, array) =>
@@ -1114,7 +1116,7 @@
 
 		let responseMessageId = uuidv7();
 		let responseMessage = {
-			parentId: parentId,
+			parentId,
 			id: responseMessageId,
 			childrenIds: [],
 			role: 'assistant',
@@ -1203,7 +1205,7 @@
 		}
 
 		if (newChat && _chatId) {
-			replaceState(`/c/${_chatId}`, {});
+			goto(`/c/${_chatId}`, { shallow: true, replace: true });
 		}
 	};
 
@@ -1222,6 +1224,7 @@
 		});
 
 		let files = structuredClone(chatFiles);
+
 		files.push(
 			...(userMessage?.files ?? []).filter(
 				(item) =>
@@ -1229,6 +1232,7 @@
 					(item.type === 'file' && !(item?.content_type ?? '').startsWith('image/'))
 			)
 		);
+
 		// Remove duplicates
 		files = files.filter(
 			(item, index, array) =>
@@ -1283,9 +1287,7 @@
 									}))
 								]
 							}
-						: {
-								content: message?.merged?.content ?? message.content
-							})
+						: { content: message?.merged?.content ?? message.content })
 				};
 			})
 			.filter((message) => message?.role === 'user' || message?.content?.trim());
@@ -1294,7 +1296,7 @@
 			localStorage.token,
 			{
 				model: model.id,
-				messages: messages,
+				messages,
 				files: (files?.length ?? 0) > 0 ? files : undefined,
 
 				session_id: $socket?.id,
@@ -1311,19 +1313,12 @@
 							messages.at(0)?.role === 'system' &&
 							messages.at(1)?.role === 'user')) &&
 					selectedModels[0] === model.id
-						? {
-								title_generation: $settings?.title?.auto ?? true
-							}
+						? { title_generation: $settings?.title?.auto ?? true }
 						: {}),
 					follow_up_generation: $settings?.autoFollowUps ?? true
 				},
-
 				...((model.info?.meta?.capabilities?.usage ?? true)
-					? {
-							stream_options: {
-								include_usage: true
-							}
-						}
+					? { stream_options: { include_usage: true } }
 					: {})
 			},
 			`${WEBUI_BASE_URL}/api`
@@ -1444,7 +1439,7 @@
 
 		let userMessage = {
 			id: userMessageId,
-			parentId: parentId,
+			parentId,
 			childrenIds: [],
 			role: 'user',
 			content: userPrompt,
@@ -1535,7 +1530,7 @@
 					title: $i18n.t('New Chat'),
 					models: selectedModels,
 					system: $settings.system ?? undefined,
-					history: history,
+					history,
 					timestamp: Date.now()
 				},
 				$selectedFolder?.id
@@ -1562,7 +1557,7 @@
 		if (!$temporaryChatEnabled) {
 			chat = await updateChatById(localStorage.token, _chatId, {
 				models: selectedModels,
-				history: history,
+				history,
 				files: chatFiles
 			});
 		}
@@ -1662,7 +1657,7 @@
 							title: $chatTitle,
 							models: selectedModels,
 							system: $settings.system ?? undefined,
-							history: history,
+							history,
 							timestamp: Date.now()
 						}
 					}}
@@ -1683,7 +1678,7 @@
 									id: uuidv7(),
 									title: title.length > 50 ? `${title.slice(0, 50)}...` : title,
 									models: selectedModels,
-									history: history,
+									history,
 									timestamp: Date.now()
 								},
 								null

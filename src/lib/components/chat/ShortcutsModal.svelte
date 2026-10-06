@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { getContext, onMount } from 'svelte';
 	import Modal from '../common/Modal.svelte';
-	import { shortcuts } from '$lib/shortcuts';
-	import { settings } from '$lib/stores';
+	import { shortcuts } from '#lib/shortcuts.js';
+	import { settings } from '#lib/stores/index.js';
 	import ShortcutItem from './ShortcutItem.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
+	import XMark from '#lib/components/icons/XMark.svelte';
 
 	const i18n = getContext('i18n');
 

@@ -4,7 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 
-	import { getModels } from '$lib/apis';
+	import { getModels } from '#lib/apis/index.js';
 	import {
 		user,
 		models,
@@ -13,12 +13,12 @@
 		temporaryChatEnabled,
 		showSearch,
 		showSidebar
-	} from '$lib/stores';
-	import { Shortcut, shortcuts } from '$lib/shortcuts';
+	} from '#lib/stores/index.js';
+	import { Shortcut, shortcuts } from '#lib/shortcuts.js';
 
-	import Sidebar from '$lib/components/layout/Sidebar.svelte';
-	import AccountPending from '$lib/components/layout/Overlay/AccountPending.svelte';
-	import Spinner from '$lib/components/common/Spinner.svelte';
+	import Sidebar from '#lib/components/layout/Sidebar.svelte';
+	import AccountPending from '#lib/components/layout/Overlay/AccountPending.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
 
 	let { children }: { children: Snippet } = $props();
 
@@ -29,7 +29,7 @@
 	const loadSettingsModal = async () => {
 		if (SettingsModalComponent) return;
 
-		const { default: SettingsModal } = await import('$lib/components/chat/SettingsModal.svelte');
+		const { default: SettingsModal } = await import('#lib/components/chat/SettingsModal.svelte');
 		SettingsModalComponent = SettingsModal;
 	};
 

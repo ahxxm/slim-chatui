@@ -2,11 +2,11 @@
 	import type { ComponentType } from 'svelte';
 	import { marked, type Token } from 'marked';
 
-	import ArrowRightCircle from '$lib/components/icons/ArrowRightCircle.svelte';
-	import Bolt from '$lib/components/icons/Bolt.svelte';
-	import Info from '$lib/components/icons/Info.svelte';
-	import LightBulb from '$lib/components/icons/LightBulb.svelte';
-	import Star from '$lib/components/icons/Star.svelte';
+	import ArrowRightCircle from '#lib/components/icons/ArrowRightCircle.svelte';
+	import Bolt from '#lib/components/icons/Bolt.svelte';
+	import Info from '#lib/components/icons/Info.svelte';
+	import LightBulb from '#lib/components/icons/LightBulb.svelte';
+	import Star from '#lib/components/icons/Star.svelte';
 
 	type AlertType = 'NOTE' | 'TIP' | 'IMPORTANT' | 'WARNING' | 'CAUTION';
 	type AlertToken = Token & { text?: string | null };

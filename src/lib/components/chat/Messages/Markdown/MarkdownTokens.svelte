@@ -2,15 +2,15 @@
 	import type { Token } from 'marked';
 	import { getContext } from 'svelte';
 
-	import { unescapeHtml } from '$lib/utils';
+	import { unescapeHtml } from '#lib/utils/index.js';
 
-	import { WEBUI_BASE_URL } from '$lib/constants';
-	import { settings } from '$lib/stores';
-	import { createIndexedDetailsStateIds } from '$lib/utils/marked/details-state';
+	import { WEBUI_BASE_URL } from '#lib/constants.js';
+	import { settings } from '#lib/stores/index.js';
+	import { createIndexedDetailsStateIds } from '#lib/utils/marked/details-state.js';
 
-	import CodeBlock from '$lib/components/chat/Messages/CodeBlock.svelte';
-	import MarkdownInlineTokens from '$lib/components/chat/Messages/Markdown/MarkdownInlineTokens.svelte';
-	import MarkdownTokens from '$lib/components/chat/Messages/Markdown/MarkdownTokens.svelte';
+	import CodeBlock from '#lib/components/chat/Messages/CodeBlock.svelte';
+	import MarkdownInlineTokens from '#lib/components/chat/Messages/Markdown/MarkdownInlineTokens.svelte';
+	import MarkdownTokens from '#lib/components/chat/Messages/Markdown/MarkdownTokens.svelte';
 	import KatexRenderer from './KatexRenderer.svelte';
 	import AlertRenderer, { alertComponent } from './AlertRenderer.svelte';
 	import MarkdownDetailsScope from './MarkdownDetailsScope.svelte';

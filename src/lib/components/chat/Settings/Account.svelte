@@ -2,8 +2,8 @@
 	import { toast } from 'svelte-sonner';
 	import { onMount, getContext } from 'svelte';
 
-	import { user } from '$lib/stores';
-	import { updateUserProfile, getSessionUser } from '$lib/apis/auths';
+	import { user } from '#lib/stores/index.js';
+	import { updateUserProfile, getSessionUser } from '#lib/apis/auths/index.js';
 
 	import UpdatePassword from './Account/UpdatePassword.svelte';
 

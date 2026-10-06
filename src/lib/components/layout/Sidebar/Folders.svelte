@@ -2,7 +2,7 @@
 	import { untrack } from 'svelte';
 
 	import FolderItem from './FolderItem.svelte';
-	import { chatId, selectedFolder } from '$lib/stores';
+	import { chatId, selectedFolder } from '#lib/stores/index.js';
 
 	let {
 		folderRegistry = $bindable({}),

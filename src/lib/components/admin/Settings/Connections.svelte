@@ -2,16 +2,16 @@
 	import { toast } from 'svelte-sonner';
 	import { onMount, getContext } from 'svelte';
 
-	import { getOpenAIConfig, updateOpenAIConfig, getOpenAIModels } from '$lib/apis/openai';
-	import { getModels as _getModels, getBackendConfig } from '$lib/apis';
-	import { config, models, user } from '$lib/stores';
+	import { getOpenAIConfig, updateOpenAIConfig, getOpenAIModels } from '#lib/apis/openai/index.js';
+	import { getModels as _getModels, getBackendConfig } from '#lib/apis/index.js';
+	import { config, models, user } from '#lib/stores/index.js';
 
-	import Spinner from '$lib/components/common/Spinner.svelte';
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Plus from '$lib/components/icons/Plus.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import Plus from '#lib/components/icons/Plus.svelte';
 
 	import OpenAIConnection from './Connections/OpenAIConnection.svelte';
-	import AddConnectionModal from '$lib/components/AddConnectionModal.svelte';
+	import AddConnectionModal from '#lib/components/AddConnectionModal.svelte';
 
 	const i18n = getContext('i18n');
 

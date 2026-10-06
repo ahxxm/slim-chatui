@@ -1,7 +1,7 @@
 import { v7 as uuidv7 } from 'uuid';
 import { decode } from 'html-entities';
-import { WEBUI_BASE_URL } from '$lib/constants';
-import type { ChatHistory } from '$lib/types';
+import { WEBUI_BASE_URL } from '#lib/constants.js';
+import type { ChatHistory } from '#lib/types/index.js';
 
 import dayjs from 'dayjs';
 import isToday from 'dayjs/plugin/isToday';
@@ -249,9 +249,9 @@ export const copyToClipboard = async (
 				{ default: hljs }
 			] = await Promise.all([
 				import('marked'),
-				import('$lib/utils/marked/katex-extension'),
-				import('$lib/utils/marked/extension'),
-				import('$lib/highlight')
+				import('#lib/utils/marked/katex-extension.js'),
+				import('#lib/utils/marked/extension.js'),
+				import('#lib/highlight.js')
 			]);
 
 			const clipboardMarked = new Marked();

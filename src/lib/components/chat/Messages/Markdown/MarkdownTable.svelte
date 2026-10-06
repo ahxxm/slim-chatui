@@ -3,12 +3,12 @@
 	import type { Token } from 'marked';
 	import { getContext } from 'svelte';
 
-	import { settings } from '$lib/stores';
-	import { copyToClipboard, saveAs } from '$lib/utils';
+	import { settings } from '#lib/stores/index.js';
+	import { copyToClipboard, saveAs } from '#lib/utils/index.js';
 
-	import Tooltip from '$lib/components/common/Tooltip.svelte';
-	import Download from '$lib/components/icons/Download.svelte';
-	import Clipboard from '$lib/components/icons/Clipboard.svelte';
+	import Tooltip from '#lib/components/common/Tooltip.svelte';
+	import Download from '#lib/components/icons/Download.svelte';
+	import Clipboard from '#lib/components/icons/Clipboard.svelte';
 
 	import MarkdownInlineTokens from './MarkdownInlineTokens.svelte';
 

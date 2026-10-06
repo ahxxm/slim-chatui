@@ -7,7 +7,7 @@
 	const i18n = getContext('i18n');
 
 	import { fade } from 'svelte/transition';
-	import { flyAndScale } from '$lib/utils/transitions';
+	import { flyAndScale } from '#lib/utils/transitions/index.js';
 	import { marked } from 'marked';
 	import SensitiveInput from './SensitiveInput.svelte';
 

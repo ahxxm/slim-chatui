@@ -1,9 +1,9 @@
 <script lang="ts">
-	import { settings } from '$lib/stores';
+	import { settings } from '#lib/stores/index.js';
 	import { getContext } from 'svelte';
-	import { setTextScale } from '$lib/utils/text-scale';
+	import { setTextScale } from '#lib/utils/text-scale.js';
 
-	import Switch from '$lib/components/common/Switch.svelte';
+	import Switch from '#lib/components/common/Switch.svelte';
 	import ManageFloatingActionButtonsModal from './Interface/ManageFloatingActionButtonsModal.svelte';
 	import ManageImageCompressionModal from './Interface/ManageImageCompressionModal.svelte';
 

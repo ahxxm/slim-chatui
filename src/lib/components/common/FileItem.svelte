@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { createEventDispatcher, getContext } from 'svelte';
-	import { WEBUI_API_BASE_URL } from '$lib/constants';
+	import { WEBUI_API_BASE_URL } from '#lib/constants.js';
 
-	import { formatFileSize } from '$lib/utils';
-	import { settings } from '$lib/stores';
+	import { formatFileSize } from '#lib/utils/index.js';
+	import { settings } from '#lib/stores/index.js';
 
 	import FileItemModal from './FileItemModal.svelte';
 	import Spinner from './Spinner.svelte';
 	import Tooltip from './Tooltip.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
+	import XMark from '#lib/components/icons/XMark.svelte';
 
 	const i18n = getContext('i18n');
 	const dispatch = createEventDispatcher();

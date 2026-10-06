@@ -1,17 +1,17 @@
 <script lang="ts">
 	import { getContext, tick, untrack } from 'svelte';
 
-	import Spinner from '$lib/components/common/Spinner.svelte';
-	import Modal from '$lib/components/common/Modal.svelte';
-	import XMark from '$lib/components/icons/XMark.svelte';
-	import EmojiPicker from '$lib/components/common/EmojiPicker.svelte';
-	import Emoji from '$lib/components/common/Emoji.svelte';
-	import Folder from '$lib/components/icons/Folder.svelte';
+	import Spinner from '#lib/components/common/Spinner.svelte';
+	import Modal from '#lib/components/common/Modal.svelte';
+	import XMark from '#lib/components/icons/XMark.svelte';
+	import EmojiPicker from '#lib/components/common/EmojiPicker.svelte';
+	import Emoji from '#lib/components/common/Emoji.svelte';
+	import Folder from '#lib/components/icons/Folder.svelte';
 
 	import { toast } from 'svelte-sonner';
 
-	import Textarea from '$lib/components/common/Textarea.svelte';
-	import { getFolderById } from '$lib/apis/folders';
+	import Textarea from '#lib/components/common/Textarea.svelte';
+	import { getFolderById } from '#lib/apis/folders/index.js';
 	const i18n = getContext('i18n');
 
 	let {
