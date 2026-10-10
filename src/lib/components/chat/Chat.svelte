@@ -572,7 +572,9 @@
 			return;
 		}
 		if (window.location.pathname === '/') {
-			initNewChat();
+			// initNewChat writes state it also reads (selectedModels); tracked here,
+			// that write becomes a dependency and re-runs this navigation effect.
+			untrack(() => initNewChat());
 		}
 	});
 
@@ -597,50 +599,23 @@
 
 		const availableModels = $models.map((m) => m.id);
 
-		if (page.url.searchParams.get('models') || page.url.searchParams.get('model')) {
-			const urlModels = (
-				page.url.searchParams.get('models') ||
-				page.url.searchParams.get('model') ||
-				''
-			)?.split(',');
-
-			if ($models.find((m) => m.id === urlModels[0])) {
-				selectedModels = [urlModels[0]];
-			} else {
-				// Model not found; open model selector and prefill with search
-				selectedModels = [''];
-				const modelSelectorButton = document.getElementById('model-selector-0-button');
-				if (modelSelectorButton) {
-					modelSelectorButton.click();
-					await tick();
-
-					const modelSelectorInput = document.getElementById('model-search-input');
-					if (modelSelectorInput) {
-						modelSelectorInput.focus();
-						modelSelectorInput.value = urlModels[0];
-						modelSelectorInput.dispatchEvent(new Event('input'));
-					}
-				}
-			}
+		if ($selectedFolder?.data?.model_ids) {
+			// Set from folder model IDs
+			selectedModels = $selectedFolder?.data?.model_ids;
 		} else {
-			if ($selectedFolder?.data?.model_ids) {
-				// Set from folder model IDs
-				selectedModels = $selectedFolder?.data?.model_ids;
+			if (sessionStorage.selectedModels) {
+				// Set from session storage (temporary selection)
+				selectedModels = JSON.parse(sessionStorage.selectedModels);
+				sessionStorage.removeItem('selectedModels');
 			} else {
-				if (sessionStorage.selectedModels) {
-					// Set from session storage (temporary selection)
-					selectedModels = JSON.parse(sessionStorage.selectedModels);
-					sessionStorage.removeItem('selectedModels');
-				} else {
-					if ($settings?.models) {
-						selectedModels = $settings?.models;
-					}
+				if ($settings?.models) {
+					selectedModels = $settings?.models;
 				}
 			}
+		}
 
-			if (selectedModels[0] && !availableModels.includes(selectedModels[0])) {
-				selectedModels = [''];
-			}
+		if (selectedModels[0] && !availableModels.includes(selectedModels[0])) {
+			selectedModels = [''];
 		}
 
 		// Ensure a model is selected
