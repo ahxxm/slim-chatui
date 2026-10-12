@@ -265,20 +265,6 @@
 		}
 	};
 
-	$effect(() => {
-		if (selectedModels && chatIdProp !== '') {
-			untrack(() => saveSessionSelectedModels());
-		}
-	});
-
-	const saveSessionSelectedModels = () => {
-		if (!selectedModels[0] || sessionStorage.selectedModels === JSON.stringify(selectedModels)) {
-			return;
-		}
-		sessionStorage.selectedModels = JSON.stringify(selectedModels);
-		console.log('saveSessionSelectedModels', selectedModels);
-	};
-
 	const showMessage = async (message: any) => {
 		const _chatId = $chatId;
 		let _messageId = message.id;
@@ -563,23 +549,6 @@
 		};
 	});
 
-	// `page` from `$app/state` is not a store; watch navigations with an effect.
-	let pageSubscribeFirst = true;
-	$effect(() => {
-		page.url.pathname; // track navigations
-		if (pageSubscribeFirst) {
-			pageSubscribeFirst = false;
-			return;
-		}
-		if (window.location.pathname === '/') {
-			// initNewChat writes state it also reads (selectedModels); tracked here,
-			// that write becomes a dependency and re-runs this navigation effect.
-			untrack(() => initNewChat());
-		}
-	});
-
-	// File upload functions
-
 	//////////////////////////
 	// Web functions
 	//////////////////////////
@@ -600,18 +569,9 @@
 		const availableModels = $models.map((m) => m.id);
 
 		if ($selectedFolder?.data?.model_ids) {
-			// Set from folder model IDs
 			selectedModels = $selectedFolder?.data?.model_ids;
-		} else {
-			if (sessionStorage.selectedModels) {
-				// Set from session storage (temporary selection)
-				selectedModels = JSON.parse(sessionStorage.selectedModels);
-				sessionStorage.removeItem('selectedModels');
-			} else {
-				if ($settings?.models) {
-					selectedModels = $settings?.models;
-				}
-			}
+		} else if ($settings?.models) {
+			selectedModels = $settings?.models;
 		}
 
 		if (selectedModels[0] && !availableModels.includes(selectedModels[0])) {
@@ -625,11 +585,6 @@
 			} else {
 				selectedModels = [''];
 			}
-		}
-
-		if (page.url.pathname.includes('/c/')) {
-			goto('/');
-			return;
 		}
 
 		autoScroll = true;
@@ -664,6 +619,14 @@
 
 		const chatInput = document.getElementById('chat-input');
 		setTimeout(() => chatInput?.focus(), 0);
+	};
+
+	const goNewChat = async () => {
+		if (window.location.pathname !== '/') {
+			await goto('/');
+			return;
+		}
+		await initNewChat();
 	};
 
 	const loadChat = async () => {
@@ -1053,8 +1016,6 @@
 		// focus on chat input
 		const chatInput = document.getElementById('chat-input');
 		chatInput?.focus();
-
-		saveSessionSelectedModels();
 
 		// newChat triggers initChatHandler + replaceState; skip for existing chats
 		await sendMessage(history, userMessageId, { newChat: $chatId === '' });
@@ -1637,7 +1598,7 @@
 						}
 					}}
 					bind:selectedModels
-					{initNewChat}
+					initNewChat={goNewChat}
 					{moveChatHandler}
 					onSaveTempChat={async () => {
 						try {

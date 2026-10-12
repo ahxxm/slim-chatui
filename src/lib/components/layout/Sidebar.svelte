@@ -430,6 +430,12 @@
 
 		await temporaryChatEnabled.set(false);
 
+		if (window.location.pathname === '/') {
+			setTimeout(() => {
+				document.getElementById('new-chat-button')?.click();
+			}, 0);
+		}
+
 		setTimeout(() => {
 			if ($mobile) {
 				showSidebar.set(false);
