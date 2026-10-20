@@ -31,7 +31,7 @@ from open_webui.utils.misc import (
 )
 from open_webui.utils.payload import (
     apply_system_prompt_to_body,
-    DeltaBatcher,
+    ContentStream,
     EventEmitter,
 )
 from open_webui.utils.response import (
@@ -573,7 +573,11 @@ async def streaming_chat_response_handler(
     output = _initial_output(message, content)
     usage: dict[str, Any] | None = None
 
-    batcher = DeltaBatcher(event_emitter, CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE)
+    stream = ContentStream(
+        event_emitter,
+        CHAT_RESPONSE_STREAM_DELTA_CHUNK_SIZE,
+        serialize_output(output),
+    )
 
     try:
         async for data in parse_sse_lines(response.body_iterator):
@@ -595,13 +599,9 @@ async def streaming_chat_response_handler(
                 ):
                     log.debug("[stream] web_search_call done: %s", data.get("item"))
 
-                processed = {
-                    "output": output,
-                    "content": serialize_output(output),
-                }
+                await stream.push(serialize_output(output))
                 if response_metadata:
-                    processed.update(response_metadata)
-                await batcher.emit(processed, immediate=bool(response_metadata))
+                    await stream.emit_metadata(response_metadata)
                 continue
 
             # --- Chat Completions events ---
@@ -610,12 +610,12 @@ async def streaming_chat_response_handler(
             raw_usage = data.get("usage") or {}
             if raw_usage:
                 usage = normalize_usage(raw_usage)
-                await batcher.emit({"usage": usage}, immediate=True)
+                await stream.emit_metadata({"usage": usage})
 
             if not choices:
                 error = data.get("error")
                 if error:
-                    await batcher.emit({"error": error}, immediate=True)
+                    await stream.emit_metadata({"error": error})
                 continue
 
             delta = choices[0].get("delta", {})
@@ -627,12 +627,10 @@ async def streaming_chat_response_handler(
             # State update
             output, content = apply_completions_delta(delta, output, content)
 
-            await batcher.emit(
-                {"content": serialize_output(output)}, immediate=not delta
-            )
+            await stream.push(serialize_output(output))
 
         # Stream fully consumed
-        await batcher.flush()
+        await stream.flush()
 
         if response.background is not None:
             await response.background()
