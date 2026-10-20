@@ -266,9 +266,10 @@ def _replace_output_item_by_id(
     new_output = list(current_output)
     for idx, existing in enumerate(new_output):
         if existing.get("id") == item["id"]:
-            if "started_at" in existing and "started_at" not in item:
-                item = {**item, "started_at": existing["started_at"]}
-            new_output[idx] = item
+            merged = {**existing, **item}
+            if item.get("content"):
+                merged.pop("summary", None)
+            new_output[idx] = merged
             return new_output, {}
     return current_output, None
 
@@ -293,6 +294,23 @@ def _responses_item_added(
     return new_output, None
 
 
+def _resolve_output_index(
+    data: dict[str, Any], current_output: OutputList
+) -> int | None:
+    """Resolve by item_id first: upstream output_index can skip hidden items."""
+    item_id = data.get("item_id")
+    if item_id:
+        for index, item in enumerate(current_output):
+            if item.get("id") == item_id:
+                return index
+        return None
+
+    output_index = data.get("output_index", len(current_output) - 1)
+    if 0 <= output_index < len(current_output):
+        return output_index
+    return None
+
+
 def _responses_part_added(
     data: dict[str, Any],
     current_output: OutputList,
@@ -300,10 +318,10 @@ def _responses_part_added(
     skip_item_type: str | None = None,
 ) -> tuple[OutputList, dict[str, Any] | None]:
     part = data.get("part", {})
-    output_index = data.get("output_index", len(current_output) - 1)
+    output_index = _resolve_output_index(data, current_output)
 
-    if not current_output or not (0 <= output_index < len(current_output)):
-        log.warning(f"[stream] part_added has invalid output_index {output_index}")
+    if output_index is None:
+        log.warning("[stream] part_added has no target item: %s", data.get("item_id"))
         return current_output, None
 
     new_output = list(current_output)
@@ -364,11 +382,13 @@ def _responses_delta(
 
     delta_type = parts[1]
     delta = data.get("delta", "")
-    output_index = data.get("output_index", len(current_output) - 1)
+    output_index = _resolve_output_index(data, current_output)
 
-    if not current_output or not (0 <= output_index < len(current_output)):
+    if output_index is None:
         log.warning(
-            f"[stream] delta event {event_type} has invalid output_index {output_index}"
+            "[stream] delta event %s has no target item: %s",
+            event_type,
+            data.get("item_id"),
         )
         return current_output, None
 
@@ -396,10 +416,10 @@ def _resolve_done_item(
     data: dict[str, Any], current_output: OutputList
 ) -> dict[str, Any] | None:
     """Return the output item targeted by a .done event, or None."""
-    output_index = data.get("output_index", len(current_output) - 1)
-    if current_output and 0 <= output_index < len(current_output):
-        return current_output[output_index]
-    return None
+    output_index = _resolve_output_index(data, current_output)
+    if output_index is None:
+        return None
+    return current_output[output_index]
 
 
 # .done events that replace a part in a list field
@@ -491,11 +511,27 @@ def _responses_completed(
         item for item in current_output if item.get("type") == "reasoning"
     ]
 
-    new_output = final_output if final_output is not None else current_output
+    if final_output is None or not final_output:
+        merged_output = current_output
+    elif not current_output:
+        merged_output = final_output
+    else:
+        final_by_id = {item.get("id"): item for item in final_output if item.get("id")}
+        if any(item.get("id") in final_by_id for item in current_output):
+            merged_output = []
+            for item in current_output:
+                final_item = final_by_id.pop(item.get("id"), None)
+                merged_item = {**item, **(final_item or {})}
+                if "started_at" in item and "started_at" not in (final_item or {}):
+                    merged_item["started_at"] = item["started_at"]
+                merged_output.append(merged_item)
+            merged_output.extend(final_by_id.values())
+        else:
+            merged_output = final_output
 
     now = time.time()
     ordinal = 0
-    for item in new_output or []:
+    for item in merged_output or []:
         if item.get("type") != "reasoning":
             continue
         if item.get("status") != "completed":
@@ -510,7 +546,7 @@ def _responses_completed(
             )
         ordinal += 1
 
-    return new_output, {"usage": response_data.get("usage")}
+    return merged_output, {"usage": response_data.get("usage")}
 
 
 # ---------------------------------------------------------------------------
