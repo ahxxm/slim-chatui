@@ -843,7 +843,7 @@
 	};
 
 	const chatCompletionEventHandler = async (data, message, chatId) => {
-		const { done, choices, content, content_delta, output, sources, error, usage } = data;
+		const { done, choices, content, content_delta, offset, output, sources, error, usage } = data;
 
 		// Store raw OR-aligned output items from backend
 		if (output) {
@@ -877,7 +877,8 @@
 			// Snapshot: earlier text was rewritten, or the stream ended.
 			message.content = content;
 		} else if (typeof content_delta === 'string') {
-			message.content = (message.content ?? '') + content_delta;
+			const current = message.content ?? '';
+			message.content = current.slice(0, offset) + content_delta + current.slice(offset);
 		}
 
 		if (usage) {

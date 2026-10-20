@@ -39,7 +39,8 @@ def reassemble(frames: list[dict]) -> tuple[str, int]:
             content = frame["content"]
             snapshots += 1
         elif "content_delta" in frame:
-            content += frame["content_delta"]
+            at = frame["offset"]
+            content = content[:at] + frame["content_delta"] + content[at:]
 
     return content, snapshots
 
@@ -107,6 +108,74 @@ class TestStreamingHandler(IntegrationTest):
         saved = Chats.get_message_by_id_and_message_id(chat_id, message_id)
         assert saved["content"] == content
         assert saved["output"] == done["output"]
+
+    def test_interleaved_reasoning_search_and_updates_stream_incrementally(self):
+        chat_id, message_id, user = self.seed_assistant_message()
+        events = parse_sse_events(
+            TEST_DATA / "responses-api-stream-deepseek-interleaved.txt"
+        )
+
+        frames = completion_frames(self.run_handler(chat_id, message_id, user, events))
+        content, snapshots = reassemble(frames)
+        done = frames[-1]
+        deltas = "".join(frame.get("content_delta", "") for frame in frames)
+
+        for text in (
+            "We need to answer user in Chinese",
+            "氣溫約 28–32°C，降雨機率約 62%",
+            "已完成兩次搜尋",
+        ):
+            assert text in deltas, f"{text!r} must stream as a delta"
+
+        ordered = (
+            "We need to answer user in Chinese",
+            "香港 天气 今天",
+            "Now we need reply one sentence about HK weather",
+            "氣溫約 28–32°C，降雨機率約 62%",
+            "Texas weather today forecast",
+            "Now final reply in Chinese, summarizing both",
+            "已完成兩次搜尋",
+        )
+        positions = [content.index(text) for text in ordered]
+        assert positions == sorted(positions), "blocks must keep output order"
+
+        assert done["content"] == content
+        assert snapshots < 10
+        assert all("output" not in frame for frame in frames[:-1])
+
+        saved = Chats.get_message_by_id_and_message_id(chat_id, message_id)
+        assert saved["content"] == content
+
+    def test_gpt6_stream_keeps_output_when_completed_is_empty(self):
+        chat_id, message_id, user = self.seed_assistant_message()
+        events = parse_sse_events(
+            TEST_DATA / "responses-api-stream-gpt6-interleaved.txt"
+        )
+
+        frames = completion_frames(self.run_handler(chat_id, message_id, user, events))
+        content, snapshots = reassemble(frames)
+        done = frames[-1]
+        deltas = "".join(frame.get("content_delta", "") for frame in frames)
+
+        for text in ("香港天气。", "已完成：搜索香港天气"):
+            assert text in deltas, f"{text!r} must stream as a delta"
+
+        ordered = (
+            "香港 天气 今天",
+            "**Responding to weather request**",
+            "香港天气。",
+            "德州 天气 今天",
+            "已完成：搜索香港天气",
+        )
+        positions = [content.index(text) for text in ordered]
+        assert positions == sorted(positions), "blocks must keep output order"
+
+        assert done["content"] == content
+        assert snapshots < 10
+        assert all("output" not in frame for frame in frames[:-1])
+
+        saved = Chats.get_message_by_id_and_message_id(chat_id, message_id)
+        assert saved["content"] == content
 
     def test_chat_completions_stream_emits_deltas_and_persists(self):
         chat_id, message_id, user = self.seed_assistant_message()
