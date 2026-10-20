@@ -1,0 +1,2280 @@
+event: response.created
+data: {"type":"response.created"}
+
+event: response.in_progress
+data: {"type":"response.in_progress"}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","output_index":0,"content_index":0,"item":{"id":"reasoning_0","type":"reasoning","role":"assistant","summary":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","output_index":0,"item_id":"reasoning_0","content_index":0,"part":{"type":"reasoning_text","text":""}}
+
+event: response.ping
+data: {"type":"response.ping"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"We"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" need"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" to"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" answer"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" user"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" in"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Chinese"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" They"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" ask"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":":"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" \""}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"我们在"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"测试"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"api"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"，"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"你"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"这样做"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"几"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"件事情"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"："}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"web"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"香港"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"天气"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"，"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"回"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"一句"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"香港"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"天气"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"，"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"搜索"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"德州"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"天气"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"，"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"最终"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"回复"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"\""}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Means"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":":"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" We"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"'re"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" testing"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" API"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" do"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" several"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" things"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":":"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" web"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Hong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Kong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" reply"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" one"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" sentence"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Hong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Kong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Texas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" final"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" reply"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":".\n\n"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"We"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" need"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" actually"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" call"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" web"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"_search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" for"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Hong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Kong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" and"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Texas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" They"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" said"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" \""}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"回"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"一句"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"香港"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"天气"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"\""}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" maybe"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" after"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" first"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" respond"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" one"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" sentence"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" about"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Hong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Kong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" then"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Texas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" then"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" final"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" reply"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" We"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" can"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" call"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" both"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" searches"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" maybe"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" parallel"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"?"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" They"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" specify"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" sequence"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":":"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" web"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" HK"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" reply"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" one"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" sentence"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" HK"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Texas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" final"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" reply"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" We"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" can"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" do"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" first"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" then"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" maybe"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" output"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" interim"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" sentence"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"?"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" But"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" tool"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" calls"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" in"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" same"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" turn"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" We"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" need"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" satisfy"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Could"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" call"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" first"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" only"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" then"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" after"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" result"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" respond"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" with"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" one"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" sentence"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" and"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" call"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Texas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"?"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" The"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" system"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" expects"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" using"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" tools"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" We"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" can"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" make"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" two"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" tool"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" calls"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" in"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" same"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" block"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"?"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" But"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" the"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" sequence"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" says"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" first"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" HK"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" reply"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" sentence"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Texas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" final"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" We"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" may"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" need"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" honor"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" exact"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" ordering"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":":"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" first"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" web"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"_search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" HK"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Then"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" in"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" assistant"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" message"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" after"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" tool"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" result"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" maybe"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" say"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" one"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" sentence"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" and"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" call"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" web"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"_search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Texas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" But"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" tools"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" only"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" one"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" turn"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"?"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" We"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" can"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" do"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" sequential"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" tool"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" calls"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" in"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" multiple"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" assistant"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" messages"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Let"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"'s"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" start"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" with"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Hong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" Kong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0}
+
+event: response.reasoning_summary_text.done
+data: {"type":"response.reasoning_summary_text.done","output_index":0,"item_id":"reasoning_0","content_index":0,"summary_index":0,"text":"We need to answer user in Chinese. They ask: \"我们在测试api，你这样做几件事情：web search香港天气，回一句香港天气，搜索德州天气，最终回复\" Means: We're testing API, do several things: web search Hong Kong weather, reply one sentence Hong Kong weather, search Texas weather, final reply.\n\nWe need actually call web_search for Hong Kong weather and Texas weather. They said \"回一句香港天气\" maybe after first search, respond one sentence about Hong Kong weather, then search Texas weather, then final reply. We can call both searches maybe parallel? They specify sequence: web search HK, reply one sentence HK weather, search Texas weather, final reply. We can do first search, then maybe output interim sentence? But tool calls in same turn. We need satisfy. Could call first search only, then after result respond with one sentence and call Texas search? The system expects using tools. We can make two tool calls in same block? But the sequence says first HK search, reply sentence, search Texas, final. We may need honor exact ordering: first web_search HK. Then in assistant message after tool result maybe say one sentence and call web_search Texas. But tools only one turn? We can do sequential tool calls in multiple assistant messages. Let's start with Hong Kong weather search."}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","output_index":0,"item_id":"reasoning_0","content_index":0,"part":{"type":"reasoning_text","text":"We need to answer user in Chinese. They ask: \"我们在测试api，你这样做几件事情：web search香港天气，回一句香港天气，搜索德州天气，最终回复\" Means: We're testing API, do several things: web search Hong Kong weather, reply one sentence Hong Kong weather, search Texas weather, final reply.\n\nWe need actually call web_search for Hong Kong weather and Texas weather. They said \"回一句香港天气\" maybe after first search, respond one sentence about Hong Kong weather, then search Texas weather, then final reply. We can call both searches maybe parallel? They specify sequence: web search HK, reply one sentence HK weather, search Texas weather, final reply. We can do first search, then maybe output interim sentence? But tool calls in same turn. We need satisfy. Could call first search only, then after result respond with one sentence and call Texas search? The system expects using tools. We can make two tool calls in same block? But the sequence says first HK search, reply sentence, search Texas, final. We may need honor exact ordering: first web_search HK. Then in assistant message after tool result maybe say one sentence and call web_search Texas. But tools only one turn? We can do sequential tool calls in multiple assistant messages. Let's start with Hong Kong weather search."}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","output_index":0,"content_index":0,"item":{"id":"reasoning_0","type":"reasoning","role":"assistant","content":[{"type":"reasoning_text","text":"We need to answer user in Chinese. They ask: \"我们在测试api，你这样做几件事情：web search香港天气，回一句香港天气，搜索德州天气，最终回复\" Means: We're testing API, do several things: web search Hong Kong weather, reply one sentence Hong Kong weather, search Texas weather, final reply.\n\nWe need actually call web_search for Hong Kong weather and Texas weather. They said \"回一句香港天气\" maybe after first search, respond one sentence about Hong Kong weather, then search Texas weather, then final reply. We can call both searches maybe parallel? They specify sequence: web search HK, reply one sentence HK weather, search Texas weather, final reply. We can do first search, then maybe output interim sentence? But tool calls in same turn. We need satisfy. Could call first search only, then after result respond with one sentence and call Texas search? The system expects using tools. We can make two tool calls in same block? But the sequence says first HK search, reply sentence, search Texas, final. We may need honor exact ordering: first web_search HK. Then in assistant message after tool result maybe say one sentence and call web_search Texas. But tools only one turn? We can do sequential tool calls in multiple assistant messages. Let's start with Hong Kong weather search."}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","output_index":1,"content_index":1,"item":{"id":"web_search_call_0","type":"web_search_call","status":"in_progress","action":{"type":"search"}}}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","output_index":1,"item_id":"web_search_call_0"}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","output_index":1,"item_id":"web_search_call_0"}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","output_index":1,"item_id":"web_search_call_0"}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","output_index":1,"content_index":2,"item":{"id":"web_search_call_0","type":"web_search_call","status":"completed","action":{"type":"search","query":"香港 天气 今天"}}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","output_index":3,"content_index":3,"item":{"id":"reasoning_1","type":"reasoning","role":"assistant","summary":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","output_index":3,"item_id":"reasoning_1","content_index":3,"part":{"type":"reasoning_text","text":""}}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"Now"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" we"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" need"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" reply"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" one"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" sentence"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" about"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" HK"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" then"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" Texas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" The"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" user"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" wants"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" in"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" Chinese"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" Let"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"'s"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" say"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":":"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" \""}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"香港"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"今天"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"大致"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"多"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"雲"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"、"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"有"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"零星"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"陣"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"雨"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"，"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"氣"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"溫"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"約"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"28"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"–"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"32"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"C"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"，"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"降雨"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"機"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"率"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"約"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"62"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"%。"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"\""}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" That"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"'s"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" one"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" sentence"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" Then"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" Texas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" Need"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" decide"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" Texas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" is"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" large"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":";"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" use"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" \""}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"Texas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" today"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"\""}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" maybe"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" Call"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":" tool"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0}
+
+event: response.reasoning_summary_text.done
+data: {"type":"response.reasoning_summary_text.done","output_index":3,"item_id":"reasoning_1","content_index":3,"summary_index":0,"text":"Now we need reply one sentence about HK weather, then search Texas. The user wants in Chinese. Let's say: \"香港今天大致多雲、有零星陣雨，氣溫約28–32°C，降雨機率約62%。\" That's one sentence. Then search Texas weather. Need decide Texas is large; use \"Texas weather today\" maybe. Call tool."}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","output_index":3,"item_id":"reasoning_1","content_index":3,"part":{"type":"reasoning_text","text":"Now we need reply one sentence about HK weather, then search Texas. The user wants in Chinese. Let's say: \"香港今天大致多雲、有零星陣雨，氣溫約28–32°C，降雨機率約62%。\" That's one sentence. Then search Texas weather. Need decide Texas is large; use \"Texas weather today\" maybe. Call tool."}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","output_index":3,"content_index":3,"item":{"id":"reasoning_1","type":"reasoning","role":"assistant","content":[{"type":"reasoning_text","text":"Now we need reply one sentence about HK weather, then search Texas. The user wants in Chinese. Let's say: \"香港今天大致多雲、有零星陣雨，氣溫約28–32°C，降雨機率約62%。\" That's one sentence. Then search Texas weather. Need decide Texas is large; use \"Texas weather today\" maybe. Call tool."}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","output_index":4,"content_index":4,"item":{"id":"message_0","type":"message","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","output_index":4,"item_id":"message_0","content_index":4,"part":{"type":"output_text","text":""}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"香港"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"今天"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"大致"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"多"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"雲"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"、"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"有"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"零星"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"陣"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"雨"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"，"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"氣"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"溫"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"約"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":" "}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"28"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"–"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"32"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"°"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"C"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"，"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"降雨"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"機"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"率"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"約"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":" "}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"62"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_0","content_index":4,"delta":"%。"}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","output_index":4,"item_id":"message_0","content_index":4,"text":"香港今天大致多雲、有零星陣雨，氣溫約 28–32°C，降雨機率約 62%。"}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","output_index":4,"item_id":"message_0","content_index":4,"part":{"type":"output_text","text":"香港今天大致多雲、有零星陣雨，氣溫約 28–32°C，降雨機率約 62%。"}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","output_index":4,"content_index":4,"item":{"id":"message_0","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"香港今天大致多雲、有零星陣雨，氣溫約 28–32°C，降雨機率約 62%。"}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","output_index":5,"content_index":5,"item":{"id":"web_search_call_1","type":"web_search_call","status":"in_progress","action":{"type":"search"}}}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","output_index":5,"item_id":"web_search_call_1"}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","output_index":5,"item_id":"web_search_call_1"}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","output_index":5,"item_id":"web_search_call_1"}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","output_index":5,"content_index":6,"item":{"id":"web_search_call_1","type":"web_search_call","status":"completed","action":{"type":"search","query":"Texas weather today forecast"}}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","output_index":7,"content_index":7,"item":{"id":"reasoning_2","type":"reasoning","role":"assistant","summary":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","output_index":7,"item_id":"reasoning_2","content_index":7,"part":{"type":"reasoning_text","text":""}}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"Now"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" final"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" reply"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" in"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Chinese"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" summarizing"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" both"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Need"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" note"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Texas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" large"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" and"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" data"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" varies"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" by"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" city"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" We"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" have"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Dallas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" sunny"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" high"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"78"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"F"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" low"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"56"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"F"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":";"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Fort"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Worth"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" maybe"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"28"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"C"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" etc"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" There"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" is"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" inconsistency"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" and"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" dates"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" maybe"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" current"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"?"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Search"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" results"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" weird"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":":"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Dallas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"69"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" now"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" high"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"78"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":";"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Fort"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Worth"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"28"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"-"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"35"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" C"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" ("}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"82"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"-"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"95"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"F"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"),"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" perhaps"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" different"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" day"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" We"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" should"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" not"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" over"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"state"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Say"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Texas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" is"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" huge"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":";"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Dallas"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" today"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" sunny"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"21"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"-"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"26"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"C"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"?"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Wait"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"78"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"F"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" ="}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"25"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"6"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"C"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"56"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"F"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"="}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"13"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"3"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"C"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Yahoo"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" says"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" current"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"69"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"F"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"="}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"20"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"6"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"C"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" high"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"78"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" low"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"56"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Fort"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Worth"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" result"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" says"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" in"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" "}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"20"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"s"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"-"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"30"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"s"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" conflicting"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" We"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"'ll"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" say"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" \""}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"德州"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"范围"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"很大"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"，"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"各地"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"差异"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"明显"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"；"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"以"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"达"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"拉斯"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"为例"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"，"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"今天"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"晴"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"，"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"约"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"13"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"–"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"26"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"C"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"\"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Then"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" final"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" note"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" both"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" searches"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" complete"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" User"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" wants"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" \""}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"最终"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"回复"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"\"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Conc"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"ise"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":".\n\n"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"Need"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" maybe"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" include"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Hong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Kong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" sentence"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" again"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"?"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" They"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" already"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" got"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" one"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" sentence"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Final"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" reply"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" maybe"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":":"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" \""}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"已完成"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"两次"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"搜索"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"："}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"香港"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"今天"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"多云"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"有"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"零星"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"阵"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"雨"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"，"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"28"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"–"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"32"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"C"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"；"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"德州"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"很大"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"，"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"以"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"达"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"拉斯"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"为代表"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"今天"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"晴"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"，"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"约"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"13"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"–"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"26"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"°"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"C"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"（"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"其他"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"城市"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"差异"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"较大"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"）。"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"\""}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" That"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"'s"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" final"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Ensure"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" no"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" claim"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" that"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" a"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" second"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" sentence"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" about"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" HK"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"?"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Fine"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":".\n\n"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"Could"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" mention"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" \""}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"達"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"拉斯"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"\""}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Fahrenheit"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" conversion"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":" Good"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0}
+
+event: response.reasoning_summary_text.done
+data: {"type":"response.reasoning_summary_text.done","output_index":7,"item_id":"reasoning_2","content_index":7,"summary_index":0,"text":"Now final reply in Chinese, summarizing both. Need note Texas large and data varies by city. We have Dallas sunny high 78°F low 56°F; Fort Worth maybe 28°C etc. There is inconsistency and dates maybe current? Search results weird: Dallas 69 now, high 78; Fort Worth 28-35 C (82-95°F), perhaps different day. We should not overstate. Say Texas is huge; Dallas today sunny 21-26°C? Wait 78°F = 25.6°C, 56°F=13.3°C. Yahoo says current 69°F=20.6°C, high 78 low 56. Fort Worth result says in 20s-30s, conflicting. We'll say \"德州范围很大，各地差异明显；以达拉斯为例，今天晴，约13–26°C\". Then final note both searches complete. User wants \"最终回复\". Concise.\n\nNeed maybe include Hong Kong sentence again? They already got one sentence. Final reply maybe: \"已完成两次搜索：香港今天多云有零星阵雨，28–32°C；德州很大，以达拉斯为代表今天晴，约13–26°C（其他城市差异较大）。\" That's final. Ensure no claim that a second sentence about HK? Fine.\n\nCould mention \"達拉斯\" Fahrenheit conversion. Good."}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","output_index":7,"item_id":"reasoning_2","content_index":7,"part":{"type":"reasoning_text","text":"Now final reply in Chinese, summarizing both. Need note Texas large and data varies by city. We have Dallas sunny high 78°F low 56°F; Fort Worth maybe 28°C etc. There is inconsistency and dates maybe current? Search results weird: Dallas 69 now, high 78; Fort Worth 28-35 C (82-95°F), perhaps different day. We should not overstate. Say Texas is huge; Dallas today sunny 21-26°C? Wait 78°F = 25.6°C, 56°F=13.3°C. Yahoo says current 69°F=20.6°C, high 78 low 56. Fort Worth result says in 20s-30s, conflicting. We'll say \"德州范围很大，各地差异明显；以达拉斯为例，今天晴，约13–26°C\". Then final note both searches complete. User wants \"最终回复\". Concise.\n\nNeed maybe include Hong Kong sentence again? They already got one sentence. Final reply maybe: \"已完成两次搜索：香港今天多云有零星阵雨，28–32°C；德州很大，以达拉斯为代表今天晴，约13–26°C（其他城市差异较大）。\" That's final. Ensure no claim that a second sentence about HK? Fine.\n\nCould mention \"達拉斯\" Fahrenheit conversion. Good."}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","output_index":7,"content_index":7,"item":{"id":"reasoning_2","type":"reasoning","role":"assistant","content":[{"type":"reasoning_text","text":"Now final reply in Chinese, summarizing both. Need note Texas large and data varies by city. We have Dallas sunny high 78°F low 56°F; Fort Worth maybe 28°C etc. There is inconsistency and dates maybe current? Search results weird: Dallas 69 now, high 78; Fort Worth 28-35 C (82-95°F), perhaps different day. We should not overstate. Say Texas is huge; Dallas today sunny 21-26°C? Wait 78°F = 25.6°C, 56°F=13.3°C. Yahoo says current 69°F=20.6°C, high 78 low 56. Fort Worth result says in 20s-30s, conflicting. We'll say \"德州范围很大，各地差异明显；以达拉斯为例，今天晴，约13–26°C\". Then final note both searches complete. User wants \"最终回复\". Concise.\n\nNeed maybe include Hong Kong sentence again? They already got one sentence. Final reply maybe: \"已完成两次搜索：香港今天多云有零星阵雨，28–32°C；德州很大，以达拉斯为代表今天晴，约13–26°C（其他城市差异较大）。\" That's final. Ensure no claim that a second sentence about HK? Fine.\n\nCould mention \"達拉斯\" Fahrenheit conversion. Good."}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","output_index":8,"content_index":8,"item":{"id":"message_1","type":"message","status":"in_progress","role":"assistant","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","output_index":8,"item_id":"message_1","content_index":8,"part":{"type":"output_text","text":""}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"已完成"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"兩"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"次"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"搜"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"尋"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"："}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"香港"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"今天"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"多"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"雲"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"、"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"有"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"零星"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"陣"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"雨"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"，"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"約"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":" "}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"28"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"–"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"32"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"°"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"C"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"；"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"德州"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"範圍"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"很大"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"、"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"各地"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"差異"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"明顯"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"，"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"以"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"達"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"拉斯"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"為"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"例"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"，"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"今天"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"晴"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"，"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"約"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":" "}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"13"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"–"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"26"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"°"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"C"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":8,"item_id":"message_1","content_index":8,"delta":"。"}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","output_index":8,"item_id":"message_1","content_index":8,"text":"已完成兩次搜尋：香港今天多雲、有零星陣雨，約 28–32°C；德州範圍很大、各地差異明顯，以達拉斯為例，今天晴，約 13–26°C。"}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","output_index":8,"item_id":"message_1","content_index":8,"part":{"type":"output_text","text":"已完成兩次搜尋：香港今天多雲、有零星陣雨，約 28–32°C；德州範圍很大、各地差異明顯，以達拉斯為例，今天晴，約 13–26°C。"}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","output_index":8,"content_index":8,"item":{"id":"message_1","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"已完成兩次搜尋：香港今天多雲、有零星陣雨，約 28–32°C；德州範圍很大、各地差異明顯，以達拉斯為例，今天晴，約 13–26°C。"}]}}
+
+event: response.completed
+data: {"type":"response.completed","response":{"output":[{"id":"reasoning_0","type":"reasoning","role":"assistant","content":[{"type":"reasoning_text","text":"We need to answer user in Chinese. They ask: \"我们在测试api，你这样做几件事情：web search香港天气，回一句香港天气，搜索德州天气，最终回复\" Means: We're testing API, do several things: web search Hong Kong weather, reply one sentence Hong Kong weather, search Texas weather, final reply.\n\nWe need actually call web_search for Hong Kong weather and Texas weather. They said \"回一句香港天气\" maybe after first search, respond one sentence about Hong Kong weather, then search Texas weather, then final reply. We can call both searches maybe parallel? They specify sequence: web search HK, reply one sentence HK weather, search Texas weather, final reply. We can do first search, then maybe output interim sentence? But tool calls in same turn. We need satisfy. Could call first search only, then after result respond with one sentence and call Texas search? The system expects using tools. We can make two tool calls in same block? But the sequence says first HK search, reply sentence, search Texas, final. We may need honor exact ordering: first web_search HK. Then in assistant message after tool result maybe say one sentence and call web_search Texas. But tools only one turn? We can do sequential tool calls in multiple assistant messages. Let's start with Hong Kong weather search."}]},{"id":"reasoning_1","type":"reasoning","role":"assistant","content":[{"type":"reasoning_text","text":"Now we need reply one sentence about HK weather, then search Texas. The user wants in Chinese. Let's say: \"香港今天大致多雲、有零星陣雨，氣溫約28–32°C，降雨機率約62%。\" That's one sentence. Then search Texas weather. Need decide Texas is large; use \"Texas weather today\" maybe. Call tool."}]},{"id":"message_0","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"香港今天大致多雲、有零星陣雨，氣溫約 28–32°C，降雨機率約 62%。"}]},{"id":"reasoning_2","type":"reasoning","role":"assistant","content":[{"type":"reasoning_text","text":"Now final reply in Chinese, summarizing both. Need note Texas large and data varies by city. We have Dallas sunny high 78°F low 56°F; Fort Worth maybe 28°C etc. There is inconsistency and dates maybe current? Search results weird: Dallas 69 now, high 78; Fort Worth 28-35 C (82-95°F), perhaps different day. We should not overstate. Say Texas is huge; Dallas today sunny 21-26°C? Wait 78°F = 25.6°C, 56°F=13.3°C. Yahoo says current 69°F=20.6°C, high 78 low 56. Fort Worth result says in 20s-30s, conflicting. We'll say \"德州范围很大，各地差异明显；以达拉斯为例，今天晴，约13–26°C\". Then final note both searches complete. User wants \"最终回复\". Concise.\n\nNeed maybe include Hong Kong sentence again? They already got one sentence. Final reply maybe: \"已完成两次搜索：香港今天多云有零星阵雨，28–32°C；德州很大，以达拉斯为代表今天晴，约13–26°C（其他城市差异较大）。\" That's final. Ensure no claim that a second sentence about HK? Fine.\n\nCould mention \"達拉斯\" Fahrenheit conversion. Good."}]},{"id":"message_1","type":"message","status":"completed","role":"assistant","content":[{"type":"output_text","text":"已完成兩次搜尋：香港今天多雲、有零星陣雨，約 28–32°C；德州範圍很大、各地差異明顯，以達拉斯為例，今天晴，約 13–26°C。"}]}],"usage":{"input_tokens":16746,"output_tokens":801,"total_tokens":17547}}}
+

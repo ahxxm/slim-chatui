@@ -12,33 +12,15 @@ Capture new test data (with dev server running):
       -o backend/open_webui/test/data/responses-api-stream-DESCRIPTION.txt
 """
 
-import json
 import time
-from pathlib import Path
 
 from open_webui.utils.response import (
     handle_responses_streaming_event,
     serialize_output,
 )
+from test.util.stream_fixtures import TEST_DATA, parse_sse_events
 
-TEST_DATA = Path(__file__).resolve().parents[3] / "data"
 SIMULATED_REASONING_DELAY = 0.1
-
-
-def parse_sse_events(path: Path) -> list[dict]:
-    lines = path.read_text().splitlines()
-    events = []
-    i = 0
-    while i < len(lines):
-        if lines[i].startswith("event: "):
-            event_type = lines[i][len("event: ") :]
-            i += 1
-            if i < len(lines) and lines[i].startswith("data: "):
-                data = json.loads(lines[i][len("data: ") :])
-                data["type"] = event_type
-                events.append(data)
-        i += 1
-    return events
 
 
 def replay_stream(events: list[dict]) -> tuple[list, dict]:

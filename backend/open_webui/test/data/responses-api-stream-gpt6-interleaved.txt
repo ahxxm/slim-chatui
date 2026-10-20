@@ -1,0 +1,327 @@
+event: response.created
+data: {"type":"response.created"}
+
+event: response.in_progress
+data: {"type":"response.in_progress"}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","output_index":0,"item":{"id":"web_search_call_0","type":"web_search_call","status":"in_progress"}}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","output_index":0,"item_id":"web_search_call_0"}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","output_index":0,"item_id":"web_search_call_0"}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","output_index":0,"item_id":"web_search_call_0"}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","output_index":0,"item":{"id":"web_search_call_0","type":"web_search_call","status":"completed","action":{"type":"search","query":"香港 天气 今天"}}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","output_index":1,"item":{"id":"reasoning_0","type":"reasoning","content":[],"summary":[]}}
+
+event: response.reasoning_summary_part.added
+data: {"type":"response.reasoning_summary_part.added","output_index":1,"item_id":"reasoning_0","summary_index":0,"part":{"type":"summary_text","text":""}}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":"**Responding to weather request**\n\nI"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" think"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" I"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" should"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" focus"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" on"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" answering"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" the"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" user"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":"’s"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" request"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" literally"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" which"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" is"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" “"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":"香港"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":"天气"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":",”"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" meaning"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" “"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":"Hong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" Kong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":".”"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" There's"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" no"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" need"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" for"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" me"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" to"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" fetch"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" any"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" additional"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" information"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" since"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" it"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" looks"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" like"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" they"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" just"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" want"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" the"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" phrase"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" itself"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" That"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" seems"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" pretty"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" straightforward"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":"!"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" I"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":"’ll"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" just"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" say"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" the"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" weather"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" in"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" Hong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" Kong"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" as"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" they"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" asked"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":","}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" without"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" over"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":"comp"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":"lic"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":"ating"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" it"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":"."}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" Keeping"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" it"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" simple"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" is"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" key"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":" here"}
+
+event: response.reasoning_summary_text.delta
+data: {"type":"response.reasoning_summary_text.delta","output_index":1,"item_id":"reasoning_0","summary_index":0,"delta":"!"}
+
+event: response.reasoning_summary_text.done
+data: {"type":"response.reasoning_summary_text.done","output_index":1,"item_id":"reasoning_0","summary_index":0,"text":"**Responding to weather request**\n\nI think I should focus on answering the user’s request literally, which is “香港天气,” meaning “Hong Kong weather.” There's no need for me to fetch any additional information since it looks like they just want the phrase itself. That seems pretty straightforward! I’ll just say the weather in Hong Kong as they asked, without overcomplicating it. Keeping it simple is key here!"}
+
+event: response.reasoning_summary_part.done
+data: {"type":"response.reasoning_summary_part.done","output_index":1,"item_id":"reasoning_0","summary_index":0,"part":{"type":"summary_text","text":"**Responding to weather request**\n\nI think I should focus on answering the user’s request literally, which is “香港天气,” meaning “Hong Kong weather.” There's no need for me to fetch any additional information since it looks like they just want the phrase itself. That seems pretty straightforward! I’ll just say the weather in Hong Kong as they asked, without overcomplicating it. Keeping it simple is key here!"}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","output_index":1,"item":{"id":"reasoning_0","type":"reasoning","content":[],"summary":[{"type":"summary_text","text":"**Responding to weather request**\n\nI think I should focus on answering the user’s request literally, which is “香港天气,” meaning “Hong Kong weather.” There's no need for me to fetch any additional information since it looks like they just want the phrase itself. That seems pretty straightforward! I’ll just say the weather in Hong Kong as they asked, without overcomplicating it. Keeping it simple is key here!"}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","output_index":2,"item":{"id":"message_0","type":"message","status":"in_progress","role":"assistant","phase":"commentary","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","output_index":2,"item_id":"message_0","content_index":0,"part":{"type":"output_text","text":""}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":2,"item_id":"message_0","content_index":0,"delta":"香港天气。\n"}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","output_index":2,"item_id":"message_0","content_index":0,"text":"香港天气。\n"}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","output_index":2,"item_id":"message_0","content_index":0,"part":{"type":"output_text","text":"香港天气。\n"}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","output_index":2,"item":{"id":"message_0","type":"message","status":"completed","role":"assistant","phase":"commentary","content":[{"type":"output_text","text":"香港天气。\n"}]}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","output_index":3,"item":{"id":"web_search_call_1","type":"web_search_call","status":"in_progress"}}
+
+event: response.web_search_call.in_progress
+data: {"type":"response.web_search_call.in_progress","output_index":3,"item_id":"web_search_call_1"}
+
+event: response.web_search_call.searching
+data: {"type":"response.web_search_call.searching","output_index":3,"item_id":"web_search_call_1"}
+
+event: response.web_search_call.completed
+data: {"type":"response.web_search_call.completed","output_index":3,"item_id":"web_search_call_1"}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","output_index":3,"item":{"id":"web_search_call_1","type":"web_search_call","status":"completed","action":{"type":"search","query":"德州 天气 今天"}}}
+
+event: response.output_item.added
+data: {"type":"response.output_item.added","output_index":4,"item":{"id":"message_1","type":"message","status":"in_progress","role":"assistant","phase":"final_answer","content":[]}}
+
+event: response.content_part.added
+data: {"type":"response.content_part.added","output_index":4,"item_id":"message_1","content_index":0,"part":{"type":"output_text","text":""}}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_1","content_index":0,"delta":"已完成：搜索香港天气 → 回复“香港天气” → 搜"}
+
+event: response.output_text.delta
+data: {"type":"response.output_text.delta","output_index":4,"item_id":"message_1","content_index":0,"delta":"索德州天气。"}
+
+event: response.output_text.done
+data: {"type":"response.output_text.done","output_index":4,"item_id":"message_1","content_index":0,"text":"已完成：搜索香港天气 → 回复“香港天气” → 搜索德州天气。"}
+
+event: response.content_part.done
+data: {"type":"response.content_part.done","output_index":4,"item_id":"message_1","content_index":0,"part":{"type":"output_text","text":"已完成：搜索香港天气 → 回复“香港天气” → 搜索德州天气。"}}
+
+event: response.output_item.done
+data: {"type":"response.output_item.done","output_index":4,"item":{"id":"message_1","type":"message","status":"completed","role":"assistant","phase":"final_answer","content":[{"type":"output_text","text":"已完成：搜索香港天气 → 回复“香港天气” → 搜索德州天气。"}]}}
+
+event: response.completed
+data: {"type":"response.completed","response":{"output":[],"usage":{"input_tokens":12256,"output_tokens":115,"total_tokens":12371}}}
+
