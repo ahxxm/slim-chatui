@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 
 SESSION_SECRET = WEBUI_SECRET_KEY
 ALGORITHM = "HS256"
+BCRYPT_MAX_PASSWORD_BYTES = 72
 
 ##############
 # Auth Utils
@@ -38,7 +39,7 @@ def get_password_hash(password: str) -> str:
 
 
 def validate_password(password: str) -> None:
-    if len(password.encode("utf-8")) > 72:
+    if len(password.encode("utf-8")) > BCRYPT_MAX_PASSWORD_BYTES:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=ERROR_MESSAGES.PASSWORD_TOO_LONG,
