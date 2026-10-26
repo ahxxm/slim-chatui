@@ -1,3 +1,9 @@
+from unittest.mock import patch
+
+from open_webui.constants import ERROR_MESSAGES
+from open_webui.models.auths import Auths
+from open_webui.models.users import Users
+from open_webui.utils.auth import BCRYPT_MAX_PASSWORD_BYTES, verify_password
 from test.util.abstract_integration_test import IntegrationTest
 
 
@@ -7,9 +13,6 @@ class TestAuths(IntegrationTest):
     @classmethod
     def setup_class(cls):
         super().setup_class()
-        from open_webui.models.auths import Auths
-        from open_webui.models.users import Users
-
         cls.users = Users
         cls.auths = Auths
 
@@ -28,8 +31,6 @@ class TestAuths(IntegrationTest):
 
     def test_update_password(self):
         _, headers = self.sign_up()
-
-        from open_webui.utils.auth import verify_password
 
         response = self.fast_api_client.post(
             self.create_url("/update/password"),
@@ -52,6 +53,27 @@ class TestAuths(IntegrationTest):
             lambda pw: verify_password("new_password", pw),
         )
         assert new_auth is not None
+
+    def test_signin_rejects_password_over_bcrypt_limit(self):
+        _, headers = self.sign_up()
+        password = "a" * BCRYPT_MAX_PASSWORD_BYTES
+        response = self.fast_api_client.post(
+            self.create_url("/update/password"),
+            json={"password": self.ADMIN_PASSWORD, "new_password": password},
+            headers=headers,
+        )
+        assert response.status_code == 200, response.text
+
+        with patch("open_webui.routers.auths.WEBUI_AUTH", True):
+            response = self.fast_api_client.post(
+                self.create_url("/signin"),
+                json={"email": self.ADMIN_EMAIL, "password": password + "b"},
+            )
+
+        assert response.status_code == 400, response.text
+        assert (
+            response.json()["detail"] == ERROR_MESSAGES.PASSWORD_TOO_LONG
+        ), response.text
 
     def test_get_admin_details(self):
         _, headers = self.sign_up()
