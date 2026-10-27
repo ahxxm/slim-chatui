@@ -15,19 +15,20 @@
 	import Spinner from '#lib/components/common/Spinner.svelte';
 	import XMark from '#lib/components/icons/XMark.svelte';
 	import Textarea from './common/Textarea.svelte';
+	import type { Connection } from '#lib/types/index.js';
 
 	let {
-		onSubmit = () => {},
+		onSubmit = (_connection: Connection) => {},
 		onDelete = () => {},
 		show = $bindable(false),
 		edit = false,
 		connection = null
 	}: {
-		onSubmit?: Function;
-		onDelete?: Function;
+		onSubmit?: (connection: Connection) => void | Promise<void>;
+		onDelete?: () => void;
 		show?: boolean;
 		edit?: boolean;
-		connection?: any;
+		connection?: Connection | null;
 	} = $props();
 
 	let url = $state('');

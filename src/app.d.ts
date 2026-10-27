@@ -17,6 +17,12 @@ declare global {
 	interface Window {
 		applyTheme?: () => void;
 	}
+
+	interface Navigator {
+		keyboard?: {
+			getLayoutMap: () => Promise<Map<string, string>>;
+		};
+	}
 }
 
 declare module 'svelte' {

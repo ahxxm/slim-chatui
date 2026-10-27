@@ -4,7 +4,7 @@
 
 	let { show = $bindable(false), className = '', onClose = () => {} } = $props();
 
-	let modalElement = $state(null);
+	let modalElement: HTMLDivElement | null = $state(null);
 
 	const handleKeyDown = (event: KeyboardEvent) => {
 		if (event.key === 'Escape' && isTopModal()) {

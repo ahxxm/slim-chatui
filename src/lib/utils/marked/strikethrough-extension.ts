@@ -1,29 +1,37 @@
-export const disableSingleTilde = {
-	tokenizer: {
-		del(src) {
-			// 1. First check for the REAL strikethrough: ~~text~~
-			const doubleMatch = /^~~(?=\S)([\s\S]*?\S)~~/.exec(src);
-			if (doubleMatch) {
-				return {
-					type: 'del',
-					raw: doubleMatch[0],
-					text: doubleMatch[1],
-					tokens: this.lexer.inlineTokens(doubleMatch[1])
-				};
-			}
+import type { MarkedExtension } from 'marked';
 
-			// 2. Check for single-tilde: ~text~
-			const singleMatch = /^~(?=\S)([\s\S]*?\S)~/.exec(src);
-			if (singleMatch) {
-				// return a plain-text token, NOT del
+export const disableSingleTilde: MarkedExtension = {
+	extensions: [
+		{
+			name: 'singleTilde',
+			level: 'inline',
+			start(src) {
+				const index = src.indexOf('~');
+				return index === -1 ? undefined : index;
+			},
+			tokenizer(src) {
+				const match = /^~(?=\S)([\s\S]*?\S)~(?!~)/.exec(src);
+				if (!match || match[0].startsWith('~~')) return;
+
 				return {
 					type: 'text',
-					raw: singleMatch[0],
-					text: singleMatch[0] // include both tildes as literal text
+					raw: match[0],
+					text: match[0]
 				};
 			}
+		}
+	],
+	tokenizer: {
+		del(src) {
+			const match = /^~~(?=\S)([\s\S]*?\S)~~/.exec(src);
+			if (!match) return false;
 
-			return false;
+			return {
+				type: 'del',
+				raw: match[0],
+				text: match[1],
+				tokens: this.lexer.inlineTokens(match[1])
+			};
 		}
 	}
 };

@@ -28,19 +28,19 @@
 	let tab = $state('');
 
 	const detectMobile = () => {
-		const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+		const userAgent = navigator.userAgent || navigator.vendor;
 		return /android|iphone|ipad|ipod|windows phone/i.test(userAgent);
 	};
 
-	const handleFileChange = (event) => {
-		const inputFiles = Array.from(event.target?.files);
+	const handleFileChange = (event: Event) => {
+		const inputFiles = Array.from((event.currentTarget as HTMLInputElement).files ?? []);
 		if (inputFiles && inputFiles.length > 0) {
 			console.log(inputFiles);
 			inputFilesHandler(inputFiles);
 		}
 	};
 
-	const onSelect = (item) => {
+	const onSelect = (item: { id: string }) => {
 		if (files.find((f) => f.id === item.id)) {
 			return;
 		}
@@ -68,10 +68,8 @@
 
 <Dropdown
 	bind:show
-	on:change={(e) => {
-		if (e.detail === false) {
-			onClose();
-		}
+	onOpenChange={(open) => {
+		if (!open) onClose();
 	}}
 >
 	<Tooltip content={$i18n.t('More')}>

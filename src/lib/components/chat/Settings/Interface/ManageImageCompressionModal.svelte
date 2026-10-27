@@ -1,20 +1,19 @@
 <script lang="ts">
-	import { getContext, onMount } from 'svelte';
+	import { getContext } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import Modal from '#lib/components/common/Modal.svelte';
 	import XMark from '#lib/components/icons/XMark.svelte';
+	import type { ImageCompressionSize } from '#lib/stores/index.js';
 
 	export let show = false;
-	export let size = null;
-	export let onSave = () => {};
+	export let size: ImageCompressionSize;
+	export let onSave: (size: ImageCompressionSize) => void = () => {};
 
 	const submitHandler = async () => {
 		onSave(size);
 		show = false;
 	};
-
-	onMount(() => {});
 </script>
 
 <Modal size="sm" bind:show>

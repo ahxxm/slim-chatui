@@ -2,7 +2,7 @@
 	import { getContext, tick } from 'svelte';
 	import { untrack } from 'svelte';
 	import { toast } from 'svelte-sonner';
-	import { models, settings, user } from '#lib/stores/index.js';
+	import { models, settings, user, type Settings } from '#lib/stores/index.js';
 	import { updateUserSettings } from '#lib/apis/users/index.js';
 	import { getModels as _getModels } from '#lib/apis/index.js';
 	import { goto } from '$app/navigation';
@@ -32,7 +32,7 @@
 		}
 	});
 
-	const saveSettings = async (updated) => {
+	const saveSettings = async (updated: Partial<Settings>) => {
 		console.log(updated);
 		await settings.set({ ...$settings, ...updated });
 		await models.set(await getModels());
@@ -45,7 +45,7 @@
 
 	let selectedTab = $state('general');
 
-	const scrollHandler = (event) => {
+	const scrollHandler = (event: WheelEvent) => {
 		const settingsTabsContainer = document.getElementById('settings-tabs-container');
 		if (settingsTabsContainer) {
 			event.preventDefault();

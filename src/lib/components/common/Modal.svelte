@@ -9,13 +9,13 @@
 		className = 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm rounded-4xl'
 	} = $props();
 
-	let modalElement = $state(null);
+	let modalElement: HTMLDivElement | null = $state(null);
 	// Create focus trap to trap user tabs inside modal
 	// https://www.w3.org/WAI/WCAG21/Understanding/focus-order.html
 	// https://www.w3.org/WAI/WCAG21/Understanding/keyboard.html
 	let focusTrap: FocusTrap.FocusTrap | null = null;
 
-	const sizeToWidth = (size) => {
+	const sizeToWidth = (size: string) => {
 		if (size === 'full') {
 			return 'w-full';
 		}

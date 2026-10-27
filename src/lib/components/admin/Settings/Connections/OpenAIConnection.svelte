@@ -7,13 +7,14 @@
 	import Cog6 from '#lib/components/icons/Cog6.svelte';
 	import AddConnectionModal from '#lib/components/AddConnectionModal.svelte';
 	import ConfirmDialog from '#lib/components/common/ConfirmDialog.svelte';
+	import type { Connection } from '#lib/types/index.js';
 
-	export let onDelete = () => {};
-	export let onSubmit = () => {};
+	export let onDelete: () => void = () => {};
+	export let onSubmit: (connection: Connection) => void = () => {};
 
 	export let url = '';
 	export let key = '';
-	export let config = {};
+	export let config: Connection['config'] = {};
 
 	let showConfigModal = false;
 	let showDeleteConfirmDialog = false;

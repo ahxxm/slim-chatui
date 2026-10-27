@@ -104,11 +104,11 @@
 			} else if (isShortcutMatch(event, shortcuts[Shortcut.COPY_LAST_CODE_BLOCK])) {
 				console.log('Shortcut triggered: COPY_LAST_CODE_BLOCK');
 				event.preventDefault();
-				[...document.getElementsByClassName('copy-code-button')]?.at(-1)?.click();
+				[...document.querySelectorAll<HTMLElement>('.copy-code-button')].at(-1)?.click();
 			} else if (isShortcutMatch(event, shortcuts[Shortcut.COPY_LAST_RESPONSE])) {
 				console.log('Shortcut triggered: COPY_LAST_RESPONSE');
 				event.preventDefault();
-				[...document.getElementsByClassName('copy-response-button')]?.at(-1)?.click();
+				[...document.querySelectorAll<HTMLElement>('.copy-response-button')].at(-1)?.click();
 			} else if (isShortcutMatch(event, shortcuts[Shortcut.TOGGLE_SIDEBAR])) {
 				console.log('Shortcut triggered: TOGGLE_SIDEBAR');
 				event.preventDefault();
@@ -152,7 +152,7 @@
 			) {
 				console.log('Shortcut triggered: REGENERATE_RESPONSE');
 				event.preventDefault();
-				[...document.getElementsByClassName('regenerate-response-button')]?.at(-1)?.click();
+				[...document.querySelectorAll<HTMLElement>('.regenerate-response-button')].at(-1)?.click();
 			}
 		};
 		document.addEventListener('keydown', keydownHandler);

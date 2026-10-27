@@ -1,3 +1,5 @@
+import type { Settings } from '#lib/stores/index.js';
+
 export const Shortcut = {
 	NEW_CHAT: 'newChat',
 	NEW_TEMPORARY_CHAT: 'newTemporaryChat',
@@ -20,20 +22,20 @@ export const Shortcut = {
 	STOP_GENERATING: 'stopGenerating'
 } as const;
 
-export type Shortcut = (typeof Shortcut)[keyof typeof Shortcut];
+export type ShortcutId = (typeof Shortcut)[keyof typeof Shortcut];
 
-type ShortcutRegistry = {
-	[key in Shortcut]?: {
-		name: string;
-		keys: string[];
-		category: string;
-		tooltip?: string;
-		setting?: {
-			id: string;
-			value: any;
-		};
+export type ShortcutDefinition = {
+	name: string;
+	keys: string[];
+	category: string;
+	tooltip?: string;
+	setting?: {
+		id: keyof Settings;
+		value: unknown;
 	};
 };
+
+type ShortcutRegistry = Record<ShortcutId, ShortcutDefinition>;
 
 export const shortcuts: ShortcutRegistry = {
 	//Chat

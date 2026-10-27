@@ -12,23 +12,28 @@
 
 	import Textarea from '#lib/components/common/Textarea.svelte';
 	import { getFolderById } from '#lib/apis/folders/index.js';
+	import type { FolderItem } from '#lib/types/index.js';
 	const i18n = getContext('i18n');
 
 	let {
 		show = $bindable(false),
-		onSubmit = (e) => {},
+		onSubmit = (_folder) => {},
 		folderId = null,
 		edit = false
 	}: {
 		show?: boolean;
-		onSubmit?: Function;
+		onSubmit?: (folder: {
+			name: string;
+			meta: { icon?: string };
+			data: { system_prompt: string; files: { status?: string }[] };
+		}) => void | Promise<void>;
 		folderId?: string | null;
 		edit?: boolean;
 	} = $props();
 
-	let folder = $state(null);
+	let folder: FolderItem | null = $state(null);
 	let name = $state('');
-	let meta = $state({});
+	let meta: { icon?: string } = $state({});
 	let data: { system_prompt: string; files: any[] } = $state({
 		system_prompt: '',
 		files: []
@@ -61,12 +66,15 @@
 				return null;
 			});
 
-			name = folder.name;
-			meta = folder.meta || {};
-			data = folder.data || {
-				system_prompt: '',
-				files: []
-			};
+			if (folder) {
+				name = folder.name;
+				meta = folder.meta || {};
+				data = {
+					...folder.data,
+					system_prompt: folder.data?.system_prompt ?? '',
+					files: folder.data?.files ?? []
+				};
+			}
 		}
 
 		focusInput();

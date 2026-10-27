@@ -7,12 +7,41 @@
 	import Minus from '#lib/components/icons/Minus.svelte';
 	import XMark from '#lib/components/icons/XMark.svelte';
 	import Textarea from '#lib/components/common/Textarea.svelte';
+	import type { FloatingActionButton } from '#lib/stores/index.js';
 
-	let { show = $bindable(false), onSave = () => {}, floatingActionButtons = null } = $props();
+	let {
+		show = $bindable(false),
+		onSave = (_buttons: FloatingActionButton[] | null) => {},
+		floatingActionButtons = null
+	}: {
+		show?: boolean;
+		onSave?: (buttons: FloatingActionButton[] | null) => void;
+		floatingActionButtons: FloatingActionButton[] | null;
+	} = $props();
 
 	const submitHandler = async () => {
 		onSave(floatingActionButtons);
 		show = false;
+	};
+
+	const addButton = (buttons: FloatingActionButton[]) => {
+		let id = 'new-button';
+		let idx = 0;
+
+		while (buttons.some((button) => button.id === id)) {
+			idx++;
+			id = `new-button-${idx}`;
+		}
+
+		floatingActionButtons = [
+			...buttons,
+			{
+				id,
+				label: $i18n.t('New Button'),
+				input: true,
+				prompt: `{{CONTENT}}\n\n\n{{INPUT_CONTENT}}`
+			}
+		];
 	};
 
 	$effect(() => {
@@ -85,29 +114,8 @@
 								</button>
 
 								{#if floatingActionButtons !== null}
-									<button
-										class=""
-										type="button"
-										onclick={() => {
-											let id = `new-button`;
-											let idx = 0;
-
-											while (floatingActionButtons.some((b) => b.id === id)) {
-												idx++;
-												id = `new-button-${idx}`;
-											}
-
-											floatingActionButtons = [
-												...floatingActionButtons,
-												{
-													id: id,
-													label: `${$i18n.t('New Button')}`,
-													input: true,
-													prompt: `{{CONTENT}}\n\n\n{{INPUT_CONTENT}}`
-												}
-											];
-										}}
-									>
+									{@const buttons = floatingActionButtons}
+									<button class="" type="button" onclick={() => addButton(buttons)}>
 										<Plus className="size-4 " />
 									</button>
 								{/if}
@@ -150,7 +158,7 @@
 										class="pl-3 text-xs flex rounded-sm transition"
 										aria-label={$i18n.t('Remove action')}
 										onclick={() => {
-											floatingActionButtons = floatingActionButtons.filter(
+											floatingActionButtons = (floatingActionButtons ?? []).filter(
 												(b) => b.id !== button.id
 											);
 										}}

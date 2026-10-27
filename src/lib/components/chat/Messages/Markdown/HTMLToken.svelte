@@ -7,6 +7,18 @@
 
 	let { token }: { token: Token } = $props();
 
+	const resizeIframe = (event: Event) => {
+		const iframe = event.currentTarget;
+		if (!(iframe instanceof HTMLIFrameElement)) return;
+
+		try {
+			const height = iframe.contentWindow?.document.body.scrollHeight;
+			if (height !== undefined) iframe.style.height = `${height + 20}px`;
+		} catch {
+			// Cross-origin frames do not expose their document.
+		}
+	};
+
 	let html = $derived.by(() => {
 		if (token.type === 'html' && token?.text) {
 			return DOMPurify.sanitize(token.text);
@@ -20,15 +32,13 @@
 		{@const video = html.match(/<video[^>]*>([\s\S]*?)<\/video>/)}
 		{@const videoSrc = video && video[1]}
 		{#if videoSrc}
-			<!-- svelte-ignore a11y-media-has-caption -->
+			<!-- External model-provided videos may not have caption tracks. -->
+			<!-- svelte-ignore a11y_media_has_caption -->
 			<video
 				class="w-full my-2"
 				src={videoSrc.replaceAll('&amp;', '&')}
 				title="Video player"
-				frameborder="0"
-				referrerpolicy="strict-origin-when-cross-origin"
 				controls
-				allowfullscreen
 			></video>
 		{:else}
 			{token.text}
@@ -37,7 +47,6 @@
 		{@const audio = html.match(/<audio[^>]*>([\s\S]*?)<\/audio>/)}
 		{@const audioSrc = audio && audio[1]}
 		{#if audioSrc}
-			<!-- svelte-ignore a11y-media-has-caption -->
 			<audio
 				class="w-full my-2"
 				src={audioSrc.replaceAll('&amp;', '&')}
@@ -73,13 +82,8 @@
 				src={iframeSrc}
 				title="Embedded content"
 				frameborder="0"
-				sandbox
-				on:load={(e) => {
-					try {
-						e.currentTarget.style.height =
-							e.currentTarget.contentWindow.document.body.scrollHeight + 20 + 'px';
-					} catch {}
-				}}
+				sandbox=""
+				onload={resizeIframe}
 			></iframe>
 		{:else}
 			{token.text}
@@ -116,12 +120,7 @@
 				referrerpolicy="strict-origin-when-cross-origin"
 				allowfullscreen
 				width="100%"
-				on:load={(e) => {
-					try {
-						e.currentTarget.style.height =
-							e.currentTarget.contentWindow.document.body.scrollHeight + 20 + 'px';
-					} catch {}
-				}}
+				onload={resizeIframe}
 			></iframe>
 		{/if}
 	{:else if token.text.trim().match(/^<br\s*\/?>$/i)}

@@ -1,19 +1,10 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-
 	import TagItem from './TagItem.svelte';
-	const dispatch = createEventDispatcher();
-
-	export let tags = [];
+	export let tags: { name: string }[] = [];
 	export let disabled = false;
+	export let onDelete: (name: string) => void = () => {};
 </script>
 
-{#each tags as tag}
-	<TagItem
-		{tag}
-		{disabled}
-		onDelete={() => {
-			dispatch('delete', tag.name);
-		}}
-	/>
+{#each tags as tag (tag.name)}
+	<TagItem {tag} {disabled} onDelete={() => onDelete(tag.name)} />
 {/each}

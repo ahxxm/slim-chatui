@@ -7,6 +7,7 @@
 	import { getAllUserChats } from '#lib/apis/chats/index.js';
 	import { getAllUsers } from '#lib/apis/users/index.js';
 	import { exportConfig, importConfig } from '#lib/apis/configs/index.js';
+	import type { SessionUser } from '#lib/stores/index.js';
 
 	const i18n = getContext('i18n');
 
@@ -24,7 +25,7 @@
 
 		const csv = [
 			headers.join(','),
-			...users.users.map((user) => {
+			...users.users.map((user: SessionUser) => {
 				return headers
 					.map((header) => {
 						if (user[header] === null || user[header] === undefined) {
@@ -48,12 +49,15 @@
 			hidden
 			type="file"
 			accept=".json"
-			on:change={(e) => {
-				const file = e.target.files[0];
-				const reader = new FileReader();
+			onchange={(e) => {
+				const input = e.currentTarget;
+				const file = input.files?.[0];
+				if (!file) return;
 
-				reader.onload = async (e) => {
-					const res = await importConfig(localStorage.token, JSON.parse(e.target.result)).catch(
+				const reader = new FileReader();
+				reader.onload = async () => {
+					if (typeof reader.result !== 'string') return;
+					const res = await importConfig(localStorage.token, JSON.parse(reader.result)).catch(
 						(error) => {
 							toast.error(`${error}`);
 						}
@@ -62,7 +66,7 @@
 					if (res) {
 						toast.success($i18n.t('Config imported successfully'));
 					}
-					e.target.value = null;
+					input.value = '';
 				};
 
 				reader.readAsText(file);
@@ -75,15 +79,12 @@
 			<div>
 				<div class="py-0.5 flex w-full justify-between">
 					<div class="self-center text-xs">{$i18n.t('Import Config')}</div>
-					<button
-						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
-							document.getElementById('config-json-input').click();
-						}}
-						type="button"
+					<label
+						for="config-json-input"
+						class="p-1 px-3 text-xs flex rounded-sm transition cursor-pointer"
 					>
 						<span class="self-center">{$i18n.t('Import')}</span>
-					</button>
+					</label>
 				</div>
 			</div>
 
@@ -92,7 +93,7 @@
 					<div class="self-center text-xs">{$i18n.t('Export Config')}</div>
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={async () => {
+						onclick={async () => {
 							const config = await exportConfig(localStorage.token);
 							const blob = new Blob([JSON.stringify(config)], {
 								type: 'application/json'
@@ -115,7 +116,7 @@
 					<div class="self-center text-xs">{$i18n.t('Download Database')}</div>
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
+						onclick={() => {
 							downloadDatabase(localStorage.token).catch((error) => {
 								toast.error(`${error}`);
 							});
@@ -132,7 +133,7 @@
 					<div class="self-center text-xs">{$i18n.t('Export All Chats (All Users)')}</div>
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
+						onclick={() => {
 							exportAllUserChats();
 						}}
 						type="button"
@@ -147,7 +148,7 @@
 					<div class="self-center text-xs">{$i18n.t('Export Users')}</div>
 					<button
 						class="p-1 px-3 text-xs flex rounded-sm transition"
-						on:click={() => {
+						onclick={() => {
 							exportUsers();
 						}}
 						type="button"

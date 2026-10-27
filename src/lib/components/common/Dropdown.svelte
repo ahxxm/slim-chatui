@@ -9,17 +9,19 @@
 		side = 'bottom',
 		align = 'start',
 		children,
-		content
+		content,
+		onOpenChange
 	}: {
 		show?: boolean;
 		side?: 'bottom' | 'top' | 'right' | 'left';
 		align?: 'start' | 'center' | 'end';
 		children?: any;
 		content?: any;
+		onOpenChange?: (open: boolean) => void;
 	} = $props();
 </script>
 
-<DropdownMenu.Root bind:open={show}>
+<DropdownMenu.Root bind:open={show} {onOpenChange}>
 	<DropdownMenu.Trigger>
 		{#snippet child({ props })}
 			<div {...props}>

@@ -10,11 +10,11 @@
 
 	const i18n = getContext('i18n');
 
-	let previewElement = $state(null);
+	let previewElement: HTMLDivElement | null = $state(null);
 
 	let instance: PanZoom;
 
-	let sceneElement: HTMLElement = $state();
+	let sceneElement: HTMLElement | undefined = $state();
 
 	$effect(() => {
 		if (!sceneElement) return;

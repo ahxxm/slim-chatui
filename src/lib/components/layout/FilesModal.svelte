@@ -196,6 +196,8 @@
 		<div class="flex justify-between dark:text-gray-300 px-5 pt-4 pb-1">
 			<div class="text-lg font-medium self-center">{$i18n.t('Files')}</div>
 			<button
+				type="button"
+				aria-label={$i18n.t('Close modal')}
 				class="self-center"
 				onclick={() => {
 					show = false;
@@ -318,41 +320,46 @@
 
 							{#each files as file (file.id)}
 								<div
-									class="w-full flex justify-between items-center rounded-lg text-sm py-2 px-3 hover:bg-gray-50 dark:hover:bg-gray-850 cursor-pointer"
-									onclick={() => openFileViewer(file)}
+									class="w-full flex justify-between items-center rounded-lg text-sm py-2 px-3 hover:bg-gray-50 dark:hover:bg-gray-850"
 								>
-									<div class="basis-3/5 min-w-0">
-										<div class="text-ellipsis line-clamp-1">{file.filename}</div>
-										<div class="text-xs text-gray-500">
-											{formatFileSize(file.meta?.size ?? 0)}
+									<button
+										type="button"
+										class="flex min-w-0 flex-1 items-center text-left"
+										onclick={() => openFileViewer(file)}
+									>
+										<div class="basis-3/5 min-w-0">
+											<div class="text-ellipsis line-clamp-1">{file.filename}</div>
+											<div class="text-xs text-gray-500">
+												{formatFileSize(file.meta?.size ?? 0)}
+											</div>
 										</div>
-									</div>
-
-									<div class="basis-2/5 flex items-center justify-end">
-										<div class="hidden sm:flex text-gray-500 dark:text-gray-400 text-xs">
+										<div
+											class="basis-2/5 hidden sm:flex justify-end text-gray-500 dark:text-gray-400 text-xs"
+										>
 											{dayjs(file.created_at * 1000).format('MMM D, YYYY')}
 										</div>
+									</button>
 
-										<div class="flex justify-end pl-2.5 text-gray-600 dark:text-gray-300">
-											<Tooltip content={shiftKey ? $i18n.t('Delete File') : $i18n.t('Delete File')}>
-												<button
-													class="self-center w-fit px-1 text-sm rounded-xl {shiftKey
-														? 'text-red-500'
-														: ''}"
-													onclick={(e) => {
-														e.stopPropagation();
-														if (shiftKey) {
-															deleteHandler(file.id);
-														} else {
-															selectedFileId = file.id;
-															showDeleteConfirmDialog = true;
-														}
-													}}
-												>
-													<GarbageBin class="size-4" strokeWidth="1.5" />
-												</button>
-											</Tooltip>
-										</div>
+									<div class="flex justify-end pl-2.5 text-gray-600 dark:text-gray-300">
+										<Tooltip content={$i18n.t('Delete File')}>
+											<button
+												type="button"
+												aria-label={$i18n.t('Delete File')}
+												class="self-center w-fit px-1 text-sm rounded-xl {shiftKey
+													? 'text-red-500'
+													: ''}"
+												onclick={() => {
+													if (shiftKey) {
+														deleteHandler(file.id);
+													} else {
+														selectedFileId = file.id;
+														showDeleteConfirmDialog = true;
+													}
+												}}
+											>
+												<GarbageBin className="size-4" strokeWidth="1.5" />
+											</button>
+										</Tooltip>
 									</div>
 								</div>
 							{/each}

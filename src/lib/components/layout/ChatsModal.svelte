@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 	import { getContext } from 'svelte';
+	import { resolve } from '$app/paths';
+	import type { ChatListItem } from '#lib/types/index.js';
+
+	type ChatListEntry = ChatListItem & { user_id?: string; user_name?: string };
 
 	import dayjs from 'dayjs';
 	import localizedFormat from 'dayjs/plugin/localizedFormat';
@@ -35,18 +39,18 @@
 	export let orderBy = 'updated_at';
 	export let direction = 'desc'; // 'asc' or 'desc'
 
-	export let chatList: any[] | null = null;
+	export let chatList: ChatListEntry[] | null = null;
 	export let allChatsLoaded = false;
 	export let chatListLoading = false;
 
-	let selectedChatId = null;
+	let selectedChatId: string | null = null;
 	let showDeleteConfirmDialog = false;
 
 	export let onUpdate = () => {};
 
-	export let loadHandler: null | Function = null;
+	export let loadHandler: null | (() => void) = null;
 
-	const setSortKey = (key) => {
+	const setSortKey = (key: 'title' | 'updated_at' | 'created_at') => {
 		if (orderBy === key) {
 			direction = direction === 'asc' ? 'desc' : 'asc';
 		} else {
@@ -55,7 +59,7 @@
 		}
 	};
 
-	const deleteHandler = async (chatId) => {
+	const deleteHandler = async (chatId: string) => {
 		await deleteChatById(localStorage.token, chatId).catch((error) => {
 			toast.error(`${error}`);
 		});
@@ -79,8 +83,10 @@
 		<div class=" flex justify-between dark:text-gray-300 px-5 pt-4 pb-1">
 			<div class=" text-lg font-medium self-center">{title}</div>
 			<button
+				type="button"
+				aria-label={$i18n.t('Close')}
 				class="self-center"
-				on:click={() => {
+				onclick={() => {
 					show = false;
 				}}
 			>
@@ -128,7 +134,7 @@
 							<div class="self-center pl-1.5 pr-1 translate-y-[0.5px] rounded-l-xl bg-transparent">
 								<button
 									class="p-0.5 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition"
-									on:click={() => {
+									onclick={() => {
 										query = '';
 									}}
 								>
@@ -154,7 +160,7 @@
 									class="px-1.5 py-1 cursor-pointer select-none {showUserInfo
 										? 'flex-1'
 										: 'basis-3/5'}"
-									on:click={() => setSortKey('title')}
+									onclick={() => setSortKey('title')}
 								>
 									<div class="flex gap-1.5 items-center">
 										{$i18n.t('Title')}
@@ -178,7 +184,7 @@
 									class="px-1.5 py-1 cursor-pointer select-none hidden sm:flex {showUserInfo
 										? 'w-28'
 										: 'sm:basis-2/5'} justify-end"
-									on:click={() => setSortKey('updated_at')}
+									onclick={() => setSortKey('updated_at')}
 								>
 									<div class="flex gap-1.5 items-center">
 										{$i18n.t('Updated at')}
@@ -256,8 +262,8 @@
 									{/if}
 									<a
 										class={showUserInfo ? 'flex-1' : 'basis-3/5'}
-										href={`/c/${chat.id}`}
-										on:click={() => (show = false)}
+										href={resolve('/(app)/c/[id]', { id: chat.id })}
+										onclick={() => (show = false)}
 									>
 										<div class="text-ellipsis line-clamp-1 w-full">
 											{chat?.title}
@@ -282,8 +288,10 @@
 											<div class="flex justify-end pl-2.5 text-gray-600 dark:text-gray-300">
 												<Tooltip content={$i18n.t('Delete Chat')}>
 													<button
+														type="button"
+														aria-label={$i18n.t('Delete Chat')}
 														class="self-center w-fit px-1 text-sm rounded-xl"
-														on:click={async (e) => {
+														onclick={async (e) => {
 															e.stopImmediatePropagation();
 															e.stopPropagation();
 															selectedChatId = chat.id;

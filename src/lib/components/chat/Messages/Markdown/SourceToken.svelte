@@ -3,9 +3,13 @@
 	import { decodeString } from '#lib/utils/index.js';
 	import Source from './Source.svelte';
 
-	export let token;
-	export let sourceIds = [];
-	export let onClick: Function = () => {};
+	export let token: {
+		ids: number[];
+		citationIdentifiers?: (string | number)[];
+		raw: string;
+	};
+	export let sourceIds: string[] = [];
+	export let onClick: (id: string | number) => void = () => {};
 
 	let openPreview = false;
 
@@ -59,9 +63,9 @@
 				</button>
 			</LinkPreview.Trigger>
 			<LinkPreview.Portal>
-				<LinkPreview.Content class="z-[999]" align="start" strategy="fixed" sideOffset={6}>
+				<LinkPreview.Content class="z-[999] fixed" align="start" sideOffset={6}>
 					<div class="bg-gray-50 dark:bg-gray-850 rounded-xl p-1 cursor-pointer">
-						{#each token.citationIdentifiers ?? token.ids as identifier}
+						{#each token.citationIdentifiers ?? token.ids as identifier (identifier)}
 							{@const id =
 								typeof identifier === 'string' ? parseInt(identifier.split('#')[0]) : identifier}
 							<div class="">

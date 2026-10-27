@@ -4,12 +4,13 @@
 	import AddFilesPlaceholder from '#lib/components/AddFilesPlaceholder.svelte';
 
 	let { show = false } = $props();
-	let overlayElement = $state(null);
+	let overlayElement: HTMLDivElement | null = $state(null);
 
 	$effect(() => {
 		if (show && overlayElement) {
+			const element = overlayElement;
 			untrack(() => {
-				document.body.appendChild(overlayElement);
+				document.body.appendChild(element);
 				document.body.style.overflow = 'hidden';
 			});
 		} else if (overlayElement) {

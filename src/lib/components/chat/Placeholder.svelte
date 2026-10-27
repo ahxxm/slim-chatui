@@ -13,6 +13,7 @@
 		refreshChatList
 	} from '#lib/stores/index.js';
 	import { sanitizeResponseContent } from '#lib/utils/index.js';
+	import type { ChatHistory, ChatMessage } from '#lib/types/index.js';
 	import { WEBUI_BASE_URL } from '#lib/constants.js';
 
 	import Tooltip from '#lib/components/common/Tooltip.svelte';
@@ -32,9 +33,19 @@
 		prompt = $bindable(''),
 		files = $bindable([]),
 		messageInput = $bindable(null),
-		onSelect = (e) => {},
-		onChange = (e) => {},
-		onSubmit = (prompt: string) => {}
+		onChange = (_value: string) => {},
+		onSubmit = (_prompt: string) => {}
+	}: {
+		createMessagePair: () => void;
+		stopResponse: () => void;
+		autoScroll?: boolean;
+		selectedModels: string[];
+		history: ChatHistory;
+		prompt?: string;
+		files?: File[];
+		messageInput?: MessageInput | null;
+		onChange?: (value: string) => void;
+		onSubmit?: (prompt: string) => void;
 	} = $props();
 
 	let model = $derived($_models.find((m) => m.id === selectedModels[0]));
@@ -76,7 +87,7 @@
 								<img
 									src={`${WEBUI_BASE_URL}/static/favicon.png`}
 									class=" size-9 @sm:size-10 rounded-full border-[1px] border-gray-100 dark:border-none"
-									aria-hidden="true"
+									alt=""
 									draggable="false"
 								/>
 							{/if}
@@ -108,7 +119,8 @@
 									sanitizeResponseContent(model?.info?.meta?.description ?? '').replaceAll(
 										'\n',
 										'<br>'
-									)
+									),
+									{ async: false }
 								)}
 								placement="top"
 							>
@@ -119,7 +131,8 @@
 										sanitizeResponseContent(model?.info?.meta?.description ?? '').replaceAll(
 											'\n',
 											'<br>'
-										)
+										),
+										{ async: false }
 									)}
 								</div>
 							</Tooltip>
@@ -148,6 +161,7 @@
 					placeholder={$i18n.t('How can I help you today?')}
 					{onChange}
 					{onSubmit}
+					streamingMessages={[]}
 				/>
 			</div>
 		</div>

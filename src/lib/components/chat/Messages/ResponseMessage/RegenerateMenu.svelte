@@ -17,10 +17,8 @@
 
 <Dropdown
 	bind:show
-	on:change={(e) => {
-		if (e.detail === false) {
-			onClose();
-		}
+	onOpenChange={(open) => {
+		if (!open) onClose();
 	}}
 	align="end"
 >

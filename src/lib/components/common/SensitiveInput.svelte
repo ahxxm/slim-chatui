@@ -1,6 +1,7 @@
 <script lang="ts">
 	const i18n = getContext('i18n');
 	import { getContext } from 'svelte';
+	import type { HTMLInputAttributes } from 'svelte/elements';
 	import { settings } from '#lib/stores/index.js';
 	export let id = 'password-input';
 	export let value: string = '';
@@ -8,6 +9,10 @@
 	export let type = 'text';
 	export let required = true;
 	export let inputClassName = 'w-full text-sm py-0.5 bg-transparent';
+	export let autocomplete: HTMLInputAttributes['autocomplete'] = 'off';
+	export let name = '';
+	let className = '';
+	export { className as class };
 
 	let show = false;
 </script>
@@ -16,15 +21,16 @@
 	<label class="sr-only" for={id}>{placeholder || $i18n.t('Password')}</label>
 	<input
 		{id}
-		class={`${inputClassName} ${show ? '' : 'password'} ${($settings?.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : ' outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-600'}`}
+		class={`${className} ${inputClassName} ${show ? '' : 'password'} ${($settings.highContrastMode ?? false) ? 'placeholder:text-gray-700 dark:placeholder:text-gray-100' : ' outline-hidden placeholder:text-gray-300 dark:placeholder:text-gray-600'}`}
 		{placeholder}
 		type={type === 'password' && !show ? 'password' : 'text'}
 		{value}
 		{required}
 		on:change={(e) => {
-			value = e.target.value;
+			value = e.currentTarget.value;
 		}}
-		autocomplete="off"
+		{autocomplete}
+		{name}
 	/>
 	<button
 		class="pl-1.5 transition bg-transparent"

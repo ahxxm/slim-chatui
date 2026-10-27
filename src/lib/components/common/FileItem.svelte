@@ -59,12 +59,12 @@
 			if (url) {
 				if (type === 'file') {
 					if (url.startsWith('http')) {
-						window.open(`${url}/content`, '_blank').focus();
+						window.open(`${url}/content`, '_blank')?.focus();
 					} else {
-						window.open(`${WEBUI_API_BASE_URL}/files/${url}/content`, '_blank').focus();
+						window.open(`${WEBUI_API_BASE_URL}/files/${url}/content`, '_blank')?.focus();
 					}
 				} else {
-					window.open(`${url}`, '_blank').focus();
+					window.open(`${url}`, '_blank')?.focus();
 				}
 			}
 		}

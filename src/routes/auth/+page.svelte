@@ -12,7 +12,7 @@
 	import { userSignIn, userSignUp } from '#lib/apis/auths/index.js';
 
 	import { WEBUI_BASE_URL } from '#lib/constants.js';
-	import { WEBUI_NAME, config, user, socket } from '#lib/stores/index.js';
+	import { WEBUI_NAME, config, user, socket, type SessionUser } from '#lib/stores/index.js';
 
 	import Spinner from '#lib/components/common/Spinner.svelte';
 
@@ -28,14 +28,17 @@
 	let password = '';
 	let confirmPassword = '';
 
-	const setSessionUser = async (sessionUser, redirectPath: string | null = null) => {
+	const setSessionUser = async (
+		sessionUser: SessionUser | null,
+		redirectPath: string | null = null
+	) => {
 		if (sessionUser) {
 			console.log(sessionUser);
 			toast.success($i18n.t(`You're now logged in.`));
 			if (sessionUser.token) {
 				localStorage.token = sessionUser.token;
 			}
-			$socket.emit('user-join', { auth: { token: sessionUser.token } });
+			$socket?.emit('user-join', { auth: { token: sessionUser.token } });
 			await user.set(sessionUser);
 			await config.set(await getBackendConfig());
 
@@ -83,7 +86,7 @@
 
 	async function setLogoImage() {
 		await tick();
-		const logo = document.getElementById('logo');
+		const logo = document.querySelector<HTMLImageElement>('#logo');
 
 		if (logo) {
 			const isDarkMode = document.documentElement.classList.contains('dark');
@@ -240,7 +243,6 @@
 											autocomplete={mode === 'signup' ? 'new-password' : 'current-password'}
 											name="password"
 											required
-											aria-required="true"
 										/>
 									</div>
 
@@ -297,7 +299,9 @@
 						{#if $config?.metadata?.login_footer}
 							<div class="max-w-3xl mx-auto">
 								<div class="mt-2 text-[0.7rem] text-gray-500 dark:text-gray-400 marked">
-									{@html DOMPurify.sanitize(marked($config?.metadata?.login_footer))}
+									{@html DOMPurify.sanitize(
+										marked($config?.metadata?.login_footer, { async: false })
+									)}
 								</div>
 							</div>
 						{/if}
