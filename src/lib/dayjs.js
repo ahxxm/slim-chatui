@@ -38,7 +38,7 @@ const getDayjsLocaleCandidates = (locale) => {
 };
 
 /**
- * @param {string | string[] | null | undefined} locales
+ * @param {string | readonly string[] | null | undefined} locales
  */
 export const setDayjsLocale = async (locales) => {
 	const requestedLocales = Array.isArray(locales) ? locales : [locales];

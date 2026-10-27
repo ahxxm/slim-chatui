@@ -383,7 +383,7 @@
 	$effect(() => {
 		const languages = $i18n.languages;
 		untrack(() => {
-			void setDayjsLocale([...languages]);
+			void setDayjsLocale(languages);
 		});
 	});
 </script>
