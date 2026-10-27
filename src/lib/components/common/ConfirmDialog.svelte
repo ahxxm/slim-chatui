@@ -1,7 +1,7 @@
 <script lang="ts">
 	import DOMPurify from 'dompurify';
 
-	import { getContext, tick, untrack } from 'svelte';
+	import { getContext, tick, untrack, type Snippet } from 'svelte';
 	import * as FocusTrap from 'focus-trap';
 
 	const i18n = getContext('i18n');
@@ -22,7 +22,8 @@
 		inputPlaceholder = '',
 		inputValue = $bindable(''),
 		inputType = '',
-		show = $bindable(false)
+		show = $bindable(false),
+		children
 	}: {
 		title?: string;
 		message?: string;
@@ -35,6 +36,7 @@
 		inputValue?: string;
 		inputType?: string;
 		show?: boolean;
+		children?: Snippet;
 	} = $props();
 
 	$effect(() => {
@@ -86,10 +88,9 @@
 </script>
 
 {#if show}
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<div
 		bind:this={modalElement}
+		role="presentation"
 		class=" fixed top-0 right-0 left-0 bottom-0 bg-black/60 w-full h-screen max-h-[100dvh] flex justify-center z-9999 overflow-hidden overscroll-contain"
 		in:fade={{ duration: 10 }}
 		onmousedown={() => {
@@ -97,6 +98,10 @@
 		}}
 	>
 		<div
+			role="dialog"
+			aria-modal="true"
+			aria-labelledby="confirm-dialog-title"
+			tabindex="-1"
 			class=" m-auto max-w-full w-[32rem] mx-2 bg-white/95 dark:bg-gray-950/95 backdrop-blur-sm rounded-4xl max-h-[100dvh] shadow-3xl border border-white dark:border-gray-900"
 			in:flyAndScale
 			onmousedown={(e) => {
@@ -104,7 +109,7 @@
 			}}
 		>
 			<div class="px-[1.75rem] py-6 flex flex-col">
-				<div class=" text-lg font-medium dark:text-gray-200 mb-2.5">
+				<div id="confirm-dialog-title" class=" text-lg font-medium dark:text-gray-200 mb-2.5">
 					{#if title !== ''}
 						{title}
 					{:else}
@@ -112,10 +117,12 @@
 					{/if}
 				</div>
 
-				<slot>
+				{#if children}
+					{@render children()}
+				{:else}
 					<div class=" text-sm text-gray-500 flex-1">
 						{#if message !== ''}
-							{@const html = DOMPurify.sanitize(marked.parse(message))}
+							{@const html = DOMPurify.sanitize(marked.parse(message, { async: false }))}
 							{@html html}
 						{:else}
 							{$i18n.t('This action cannot be undone. Do you wish to continue?')}
@@ -140,13 +147,12 @@
 									bind:value={inputValue}
 									placeholder={inputPlaceholder ? inputPlaceholder : $i18n.t('Enter your message')}
 									class="w-full mt-2 rounded-lg px-4 py-2 text-sm dark:text-gray-300 dark:bg-gray-900 outline-hidden resize-none"
-									rows="3"
-									required
-								/>
+									rows={3}
+									required></textarea>
 							{/if}
 						{/if}
 					</div>
-				</slot>
+				{/if}
 
 				<div class="mt-6 flex justify-between gap-1.5">
 					<button

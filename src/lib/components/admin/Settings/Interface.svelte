@@ -7,15 +7,16 @@
 	import Switch from '#lib/components/common/Switch.svelte';
 	import Textarea from '#lib/components/common/Textarea.svelte';
 	import Spinner from '#lib/components/common/Spinner.svelte';
+	import type { TaskConfig } from '#lib/types/index.js';
 
 	let { onsave }: { onsave: () => void } = $props();
 
 	const i18n = getContext('i18n');
 
-	let taskConfig = $state(null);
+	let taskConfig: TaskConfig | null = $state(null);
 
-	const updateInterfaceHandler = async () => {
-		taskConfig = await updateTaskConfig(localStorage.token, taskConfig);
+	const updateInterfaceHandler = async (currentConfig: TaskConfig) => {
+		taskConfig = await updateTaskConfig(localStorage.token, currentConfig);
 	};
 
 	const init = async () => {
@@ -23,7 +24,9 @@
 			taskConfig = await getTaskConfig(localStorage.token);
 		} catch (err) {
 			console.error('Failed to initialize Interface settings:', err);
-			toast.error(err?.detail ?? err?.message ?? $i18n.t('Failed to load Interface settings'));
+			toast.error(
+				err instanceof Error ? err.message : $i18n.t('Failed to load Interface settings')
+			);
 		}
 	};
 
@@ -33,11 +36,12 @@
 </script>
 
 {#if taskConfig}
+	{@const currentConfig = taskConfig}
 	<form
 		class="flex flex-col h-full justify-between space-y-3 text-sm"
 		onsubmit={(e) => {
 			e.preventDefault();
-			updateInterfaceHandler();
+			updateInterfaceHandler(currentConfig);
 			onsave();
 		}}
 	>

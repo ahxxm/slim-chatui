@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { getContext, tick, onMount, untrack } from 'svelte';
 	import { page } from '$app/state';
 	import { toast } from 'svelte-sonner';
@@ -29,7 +29,7 @@
 		}
 	});
 
-	const scrollToTab = (tabId) => {
+	const scrollToTab = (tabId: string) => {
 		const tabElement = document.getElementById(tabId);
 		if (tabElement) {
 			tabElement.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'start' });
@@ -46,9 +46,9 @@
 	onMount(() => {
 		const containerElement = document.getElementById('admin-settings-tabs-container');
 
-		const wheelHandler = (event) => {
+		const wheelHandler = (event: WheelEvent) => {
 			if (event.deltaY !== 0) {
-				containerElement.scrollLeft += event.deltaY;
+				if (containerElement) containerElement.scrollLeft += event.deltaY;
 			}
 		};
 

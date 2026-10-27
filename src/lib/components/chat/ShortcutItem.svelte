@@ -1,16 +1,16 @@
 <script lang="ts">
 	import { getContext, onMount } from 'svelte';
 	import Tooltip from '../common/Tooltip.svelte';
-	import type { Shortcut } from '#lib/shortcuts.js';
+	import type { ShortcutDefinition } from '#lib/shortcuts.js';
 
-	export let shortcut: Shortcut;
+	export let shortcut: ShortcutDefinition;
 	export let isMac: boolean;
 
 	const i18n = getContext('i18n');
 	let keyboardLayoutMap: Map<string, string> | undefined;
 
 	onMount(async () => {
-		if (navigator.keyboard && 'getLayoutMap' in navigator.keyboard) {
+		if (navigator.keyboard) {
 			try {
 				keyboardLayoutMap = await navigator.keyboard.getLayoutMap();
 			} catch (error) {
@@ -85,7 +85,7 @@
 		{/if}
 	</div>
 	<div class="flex-shrink-0 flex justify-end self-start h-full space-x-1 text-xs">
-		{#each shortcut.keys.filter((key) => !(key.toLowerCase() === 'delete' && shortcut.keys.includes('Backspace'))) as key}
+		{#each shortcut.keys.filter((key) => !(key.toLowerCase() === 'delete' && shortcut.keys.includes('Backspace'))) as key (key)}
 			<div
 				class="h-fit px-1 py-0.5 flex items-start justify-center rounded-sm border border-black/10 capitalize text-gray-600 dark:border-white/10 dark:text-gray-300"
 			>

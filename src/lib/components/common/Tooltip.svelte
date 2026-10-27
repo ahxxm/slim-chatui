@@ -1,11 +1,16 @@
 <script lang="ts">
 	import DOMPurify from 'dompurify';
-	import { onDestroy } from 'svelte';
-	import { computePosition, flip, shift, offset as offsetMiddleware } from '@floating-ui/dom';
+	import { onDestroy, type Snippet } from 'svelte';
+	import {
+		computePosition,
+		flip,
+		shift,
+		offset as offsetMiddleware,
+		type Placement
+	} from '@floating-ui/dom';
 
 	let {
 		elementId = '',
-		as = 'div',
 		className = 'flex',
 		placement = 'top',
 		content = `I'm a tooltip!`,
@@ -14,7 +19,18 @@
 		allowHTML = true,
 		interactive = false,
 		duration = [150, 150] as [number, number],
-		onClick = () => {}
+		children
+	}: {
+		elementId?: string;
+		className?: string;
+		placement?: Placement;
+		content?: string;
+		touch?: boolean;
+		offset?: [number, number];
+		allowHTML?: boolean;
+		interactive?: boolean;
+		duration?: [number, number];
+		children?: Snippet;
 	} = $props();
 
 	let triggerEl: HTMLElement | undefined = $state();
@@ -23,7 +39,7 @@
 	const updatePosition = async () => {
 		if (!triggerEl || !tooltipEl) return;
 		const { x, y } = await computePosition(triggerEl, tooltipEl, {
-			placement: placement as any,
+			placement,
 			middleware: [
 				offsetMiddleware({ mainAxis: offset[1], crossAxis: offset[0] }),
 				flip(),
@@ -92,17 +108,15 @@
 	});
 </script>
 
-<!-- svelte-ignore a11y-no-static-element-interactions -->
-<svelte:element
-	this={as}
+<div
 	bind:this={triggerEl}
+	role="presentation"
 	class={className}
-	onclick={onClick}
 	onmouseenter={show}
 	onmouseleave={hide}
 	onfocus={show}
 	onblur={hide}
 	ontouchstart={touch ? showFromTouch : undefined}
 >
-	<slot />
-</svelte:element>
+	{@render children?.()}
+</div>

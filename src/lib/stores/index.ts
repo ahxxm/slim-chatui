@@ -37,7 +37,9 @@ export const showSidebar = writable(false);
 export const showSearch = writable(false);
 export const showSettings = writable(false);
 export const showShortcuts = writable(false);
-export const temporaryChatEnabled = writable(false);
+// null disables temporary chat once when temporaryChatByDefault is enabled.
+// TODO: Handle that override during initialization and keep this store boolean.
+export const temporaryChatEnabled = writable<boolean | null>(false);
 export const scrollPaginationEnabled = writable(false);
 export const currentChatPage = writable(1);
 
@@ -113,14 +115,26 @@ export type Model = {
 	owned_by: string;
 };
 
-type Settings = {
+export type FloatingActionButton = {
+	id: string;
+	label: string;
+	prompt: string;
+	input?: boolean;
+};
+
+export type ImageCompressionSize = {
+	width: number | '';
+	height: number | '';
+};
+
+export type Settings = {
 	collapseCodeBlocks?: boolean;
 	expandDetails?: boolean;
 	notificationSound?: boolean;
 	notificationSoundAlways?: boolean;
 	notifications?: any;
 	imageCompression?: boolean;
-	imageCompressionSize?: any;
+	imageCompressionSize?: ImageCompressionSize;
 	textScale?: number;
 	widescreenMode?: null;
 	largeTextAsFile?: boolean;
@@ -150,7 +164,7 @@ type Settings = {
 	keepFollowUpPrompts?: boolean;
 	enableMessageQueue?: boolean;
 	chatFadeStreamingText?: boolean;
-	floatingActionButtons?: boolean;
+	floatingActionButtons?: FloatingActionButton[];
 	showFloatingActionButtons?: boolean;
 	regenerateMenu?: boolean;
 };
@@ -184,7 +198,8 @@ type Config = {
 	user_count?: number;
 };
 
-type SessionUser = {
+export type SessionUser = {
+	token: string;
 	id: string;
 	email: string;
 	name: string;

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { toast } from 'svelte-sonner';
 
-	import { getContext, tick, onDestroy } from 'svelte';
+	import { getContext, tick, onDestroy, type Component } from 'svelte';
 	const i18n = getContext('i18n');
 
 	import { chatCompletion } from '#lib/apis/openai/index.js';
@@ -11,7 +11,15 @@
 	import LightBulb from '#lib/components/icons/LightBulb.svelte';
 	import Markdown from '../Messages/Markdown.svelte';
 	import Skeleton from '../Messages/Skeleton.svelte';
-	import { chatId, settings, socket } from '#lib/stores/index.js';
+	import { chatId, settings, socket, type FloatingActionButton } from '#lib/stores/index.js';
+	import type { ChatHistory, ChatMessage } from '#lib/types/index.js';
+
+	type FloatingAction = FloatingActionButton & { icon?: Component };
+	type AddEvent = {
+		modelId: string | null;
+		parentId: string;
+		messages: Pick<ChatMessage, 'role' | 'content'>[];
+	};
 
 	const DEFAULT_ACTIONS = [
 		{
@@ -32,28 +40,23 @@
 	let {
 		id = '',
 		messageId = '',
-		model = null, // the model that generated this message
-		history = { messages: {} } as { messages: Record<string, any> },
-		actions: actionsProp = [] as {
-			id: string;
-			label: string;
-			icon?: any;
-			input?: boolean;
-			prompt: string;
-		}[],
-		onAdd = (e) => {}
+		model = null,
+		history = { messages: {}, currentId: null },
+		actions: actionsProp = [],
+		onAdd = (_event: AddEvent) => {}
+	}: {
+		id?: string;
+		messageId?: string;
+		model?: string | null;
+		history?: ChatHistory;
+		actions?: FloatingAction[];
+		onAdd?: (event: AddEvent) => void;
 	} = $props();
 
 	let actions = $derived(actionsProp.length > 0 ? actionsProp : DEFAULT_ACTIONS);
 
 	let floatingInput = $state(false);
-	let selectedAction: {
-		id: string;
-		label: string;
-		icon?: any;
-		input?: boolean;
-		prompt: string;
-	} | null = $state(null);
+	let selectedAction: FloatingAction | null = $state(null);
 
 	let selectedText = $state('');
 	let floatingInputValue = $state('');
@@ -76,7 +79,7 @@
 		}
 	};
 
-	const actionHandler = async (actionId) => {
+	const actionHandler = async (actionId: string) => {
 		if (!model) {
 			toast.error($i18n.t('Model not selected'));
 			return;
@@ -93,7 +96,7 @@
 			return;
 		}
 
-		let prompt = selectedAction?.prompt ?? '';
+		let prompt = selectedAction.prompt ?? '';
 
 		if (prompt.includes('{{INPUT_CONTENT}}') && floatingInput) {
 			prompt = prompt.replace('{{INPUT_CONTENT}}', floatingInputValue);
@@ -113,14 +116,14 @@
 			session_id: $socket?.id,
 			chat_id: $chatId,
 			messages: [
-				...($settings?.system ? [{ role: 'system', content: $settings.system }] : []),
+				...($settings.system ? [{ role: 'system', content: $settings.system }] : []),
 				...contextMessages.map((m) => ({ role: m.role, content: m.content })),
 				{ role: 'user', content }
 			],
 			stream: true
 		});
 
-		if (res && res.ok) {
+		if (res?.ok && res.body) {
 			const reader = res.body.getReader();
 			const decoder = new TextDecoder();
 
@@ -174,7 +177,7 @@
 			try {
 				await processStream();
 			} catch (e) {
-				if (e.name !== 'AbortError') {
+				if (!(e instanceof Error && e.name === 'AbortError')) {
 					console.error(e);
 				}
 			}
@@ -184,19 +187,13 @@
 	};
 
 	const addHandler = async () => {
-		const messages = [
-			{
-				role: 'user',
-				content: content
-			},
-			{
-				role: 'assistant',
-				content: responseContent
-			}
+		const messages: Pick<ChatMessage, 'role' | 'content'>[] = [
+			{ role: 'user', content },
+			{ role: 'assistant', content: responseContent ?? '' }
 		];
 
 		onAdd({
-			modelId: model,
+			modelId: model ?? null,
 			parentId: messageId,
 			messages: messages
 		});
@@ -237,7 +234,7 @@
 						aria-label={action.label}
 						class="px-1.5 py-[1px] hover:bg-gray-50 dark:hover:bg-gray-800 rounded-xl flex items-center gap-1 min-w-fit transition"
 						onclick={async () => {
-							selectedText = window.getSelection().toString();
+							selectedText = window.getSelection()?.toString() ?? '';
 							selectedAction = action;
 
 							if (action.prompt.includes('{{INPUT_CONTENT}}')) {
@@ -257,7 +254,8 @@
 						}}
 					>
 						{#if action.icon}
-							<svelte:component this={action.icon} className="size-3 shrink-0" />
+							{@const Icon = action.icon}
+							<Icon className="size-3 shrink-0" />
 						{/if}
 						<div class="shrink-0">{action.label}</div>
 					</button>
@@ -275,8 +273,8 @@
 					aria-label={$i18n.t('Ask a question')}
 					bind:value={floatingInputValue}
 					onkeydown={(e) => {
-						if (e.key === 'Enter') {
-							actionHandler(selectedAction?.id);
+						if (e.key === 'Enter' && selectedAction) {
+							actionHandler(selectedAction.id);
 						}
 					}}
 				/>
@@ -288,7 +286,7 @@
 							? 'bg-black text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-gray-100 '
 							: 'text-white bg-gray-200 dark:text-gray-900 dark:bg-gray-700 disabled'} transition rounded-full p-1.5 m-0.5 self-center"
 						onclick={() => {
-							actionHandler(selectedAction?.id);
+							if (selectedAction) actionHandler(selectedAction.id);
 						}}
 					>
 						<svg

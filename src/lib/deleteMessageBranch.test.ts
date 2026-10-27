@@ -67,7 +67,10 @@ describe('Messages: deleting a branched user message deletes its whole subtree',
 				chatId: 'test-chat',
 				history,
 				streamingMessages: {},
-				selectedModels: ['test-model']
+				selectedModels: ['test-model'],
+				sendMessage: vi.fn(),
+				continueResponse: vi.fn(),
+				regenerateResponse: vi.fn()
 			}
 		});
 

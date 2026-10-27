@@ -23,8 +23,8 @@
 		onSearchInput: () => void;
 	} = $props();
 
-	let selectedIdx = $state(0);
-	let selectedOption = $state(null);
+	let selectedIdx: number | null = $state(0);
+	let selectedOption: string | null = $state(null);
 
 	let lastWord = $derived(value ? value.split(' ').pop()! : value);
 
@@ -144,16 +144,18 @@
 				}
 			}}
 			onkeydown={(e) => {
+				selectedIdx ??= 0;
+
 				if (e.key === 'Enter') {
 					if (filteredItems.length > 0) {
 						const itemElement = document.getElementById(`search-item-${selectedIdx}`);
-						itemElement.click();
+						itemElement?.click();
 						return;
 					}
 
 					if (filteredOptions.length > 0) {
 						const optionElement = document.getElementById(`search-option-${selectedIdx}`);
-						optionElement.click();
+						optionElement?.click();
 						return;
 					}
 				}
@@ -211,10 +213,10 @@
 	</div>
 
 	{#if focused && (filteredOptions.length > 0 || filteredItems.length > 0)}
-		<!-- svelte-ignore a11y-no-static-element-interactions -->
 		<div
 			class="absolute top-0 mt-8 left-0 right-1 border border-gray-100 dark:border-gray-900 bg-gray-50 dark:bg-gray-950 rounded-2xl z-10 shadow-lg"
 			id="search-options-container"
+			role="presentation"
 			in:fade={{ duration: 50 }}
 			onmouseenter={() => {
 				hovering = true;
@@ -232,7 +234,7 @@
 					</div>
 
 					<div class="max-h-60 overflow-auto">
-						{#each filteredItems as item, itemIdx}
+						{#each filteredItems as item, itemIdx (`${item.type}:${item.id}`)}
 							<button
 								class=" px-1.5 py-0.5 flex gap-1 hover:bg-gray-100 dark:hover:bg-gray-900 w-full rounded {selectedIdx ===
 								itemIdx
@@ -269,7 +271,7 @@
 					</div>
 
 					<div class=" max-h-60 overflow-auto">
-						{#each filteredOptions as option, optionIdx}
+						{#each filteredOptions as option, optionIdx (option.name)}
 							<button
 								class=" px-1.5 py-0.5 flex gap-1 hover:bg-gray-100 dark:hover:bg-gray-900 w-full rounded {selectedIdx ===
 								optionIdx

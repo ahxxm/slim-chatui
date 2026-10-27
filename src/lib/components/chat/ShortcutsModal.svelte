@@ -4,6 +4,7 @@
 	import { shortcuts } from '#lib/shortcuts.js';
 	import { settings } from '#lib/stores/index.js';
 	import ShortcutItem from './ShortcutItem.svelte';
+	import type { ShortcutDefinition } from '#lib/shortcuts.js';
 	import XMark from '#lib/components/icons/XMark.svelte';
 
 	const i18n = getContext('i18n');
@@ -24,14 +25,17 @@
 			return $settings[shortcut.setting.id] === shortcut.setting.value;
 		});
 
-		return allShortcuts.reduce((acc, shortcut) => {
-			const category = shortcut.category;
-			if (!acc[category]) {
-				acc[category] = [];
-			}
-			acc[category].push(shortcut);
-			return acc;
-		}, {});
+		return allShortcuts.reduce(
+			(acc, shortcut) => {
+				const category = shortcut.category;
+				if (!acc[category]) {
+					acc[category] = [];
+				}
+				acc[category].push(shortcut);
+				return acc;
+			},
+			{} as Record<string, ShortcutDefinition[]>
+		);
 	});
 </script>
 
@@ -44,10 +48,10 @@
 			</button>
 		</div>
 
-		{#each Object.entries(categorizedShortcuts) as [category, items], categoryIndex}
+		{#each Object.entries(categorizedShortcuts) as [category, items], categoryIndex (category)}
 			{#if categoryIndex > 0}
 				<div class="py-3">
-					<div class="w-full border-t dark:border-gray-850 border-gray-50" />
+					<div class="w-full border-t dark:border-gray-850 border-gray-50"></div>
 				</div>
 			{/if}
 
@@ -88,7 +92,7 @@
 						<!-- {$i18n.t('Only active when the chat input is in focus.')} -->
 						<!-- {$i18n.t('Only active when the chat input is in focus and an LLM is generating a response.')} -->
 						<!-- {$i18n.t('Only can be triggered when the chat input is in focus.')} -->
-						{#each items as shortcut}
+						{#each items as shortcut (shortcut.name)}
 							<div class="col-span-1 flex items-start">
 								<ShortcutItem {shortcut} {isMac} />
 							</div>
@@ -99,24 +103,3 @@
 		{/each}
 	</div>
 </Modal>
-
-<style>
-	input::-webkit-outer-spin-button,
-	input::-webkit-inner-spin-button {
-		-webkit-appearance: none;
-		margin: 0;
-	}
-
-	.tabs::-webkit-scrollbar {
-		display: none;
-	}
-
-	.tabs {
-		-ms-overflow-style: none;
-		scrollbar-width: none;
-	}
-
-	input[type='number'] {
-		-moz-appearance: textfield;
-	}
-</style>

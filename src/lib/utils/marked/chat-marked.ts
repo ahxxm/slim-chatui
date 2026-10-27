@@ -7,10 +7,8 @@ import { disableSingleTilde } from './strikethrough-extension';
 
 const chatMarked = new Marked();
 
-const options = { throwOnError: false };
-
 chatMarked.use(markedKatexExtension());
-chatMarked.use(markedExtension(options));
+chatMarked.use(markedExtension());
 chatMarked.use(citationExtension());
 chatMarked.use(footnoteExtension());
 chatMarked.use(disableSingleTilde);

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { settings } from '#lib/stores/index.js';
+	import { settings, type ImageCompressionSize } from '#lib/stores/index.js';
 	import { getContext } from 'svelte';
 	import { setTextScale } from '#lib/utils/text-scale.js';
 
@@ -47,7 +47,9 @@
 	let showFloatingActionButtons = $state($settings?.showFloatingActionButtons ?? true);
 	let floatingActionButtons = $state($settings?.floatingActionButtons ?? null);
 	let imageCompression = $state($settings?.imageCompression ?? false);
-	let imageCompressionSize = $state($settings?.imageCompressionSize ?? { width: '', height: '' });
+	let imageCompressionSize: ImageCompressionSize = $state(
+		$settings.imageCompressionSize ?? { width: '', height: '' }
+	);
 	let iframeSandboxAllowSameOrigin = $state($settings?.iframeSandboxAllowSameOrigin ?? false);
 	let iframeSandboxAllowForms = $state($settings?.iframeSandboxAllowForms ?? false);
 	let textScale: number | null = $state($settings?.textScale ?? null);
@@ -82,9 +84,9 @@
 		saveSettings({ ctrlEnterToSend });
 	};
 
-	const setTextScaleHandler = (scale) => {
+	const setTextScaleHandler = (scale: number) => {
 		textScale = scale;
-		setTextScale(textScale);
+		setTextScale(scale);
 
 		if (textScale === 1) {
 			textScale = null;
@@ -569,9 +571,9 @@
 
 			<div>
 				<div class=" py-0.5 flex w-full justify-between">
-					<label id="floating-action-buttons-label" class=" self-center text-xs">
+					<span id="floating-action-buttons-label" class=" self-center text-xs">
 						{$i18n.t('Floating Quick Actions')}
-					</label>
+					</span>
 
 					<div class="flex items-center gap-3 p-1">
 						{#if showFloatingActionButtons}

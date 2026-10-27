@@ -1,5 +1,6 @@
 import { WEBUI_API_BASE_URL } from '#lib/constants.js';
 import { getTimeRange } from '#lib/utils/index.js';
+import type { ChatListItem } from '#lib/types/index.js';
 
 export const createNewChat = async (token: string, chat: object, folderId: string | null) => {
 	let error = null;
@@ -114,7 +115,7 @@ export const getChatList = async (
 		return [];
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: ChatListItem) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -168,7 +169,7 @@ export const getChatListByUserId = async (
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: ChatListItem) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -237,7 +238,7 @@ export const getChatListBySearchText = async (token: string, text: string, page:
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: ChatListItem) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));
@@ -372,7 +373,7 @@ export const getPinnedChatList = async (token: string = '') => {
 		throw error;
 	}
 
-	return res.map((chat) => ({
+	return res.map((chat: ChatListItem) => ({
 		...chat,
 		time_range: getTimeRange(chat.updated_at)
 	}));

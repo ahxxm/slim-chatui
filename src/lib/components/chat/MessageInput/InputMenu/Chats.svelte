@@ -9,14 +9,17 @@
 	import Spinner from '#lib/components/common/Spinner.svelte';
 	import Loader from '#lib/components/common/Loader.svelte';
 	import { chatId } from '#lib/stores/index.js';
+	import type { ChatListItem } from '#lib/types/index.js';
+
+	type ChatSearchItem = ChatListItem & { type: string; name: string; description: string };
 
 	const i18n = getContext('i18n');
 
-	export let onSelect = (e) => {};
+	export let onSelect: (item: ChatSearchItem) => void = () => {};
 
 	let loaded = false;
 
-	let items = [];
+	let items: ChatSearchItem[] = [];
 	let selectedIdx = 0;
 
 	let page = 1;
@@ -43,9 +46,9 @@
 
 		items = [
 			...items,
-			...res
-				.filter((item) => item?.id !== $chatId)
-				.map((item) => {
+			...(res ?? [])
+				.filter((item: ChatListItem) => item?.id !== $chatId)
+				.map((item: ChatListItem) => {
 					return {
 						...item,
 						type: 'chat',
@@ -72,7 +75,7 @@
 		<div class="text-center text-xs text-gray-500 py-3">{$i18n.t('No chats found')}</div>
 	{:else}
 		<div class="flex flex-col gap-0.5">
-			{#each items as item, idx}
+			{#each items as item, idx (item.id)}
 				<button
 					class=" px-2.5 py-1 rounded-xl w-full text-left flex justify-between items-center text-sm {idx ===
 					selectedIdx

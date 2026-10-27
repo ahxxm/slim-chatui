@@ -5,17 +5,18 @@
 	import Tooltip from '#lib/components/common/Tooltip.svelte';
 	import { WEBUI_BUILD_HASH, WEBUI_VERSION } from '#lib/constants.js';
 	import { config } from '#lib/stores/index.js';
+	import type { AdminConfig } from '#lib/types/index.js';
 
 	import { onMount, getContext } from 'svelte';
 	import { toast } from 'svelte-sonner';
 	const i18n = getContext('i18n');
 
-	export let saveHandler: Function;
+	export let saveHandler: () => void;
 
-	let adminConfig = null;
+	let adminConfig: AdminConfig | null = null;
 
-	const updateHandler = async () => {
-		const res = await updateAdminConfig(localStorage.token, adminConfig);
+	const updateHandler = async (currentConfig: AdminConfig) => {
+		const res = await updateAdminConfig(localStorage.token, currentConfig);
 
 		await config.set(await getBackendConfig());
 
@@ -31,14 +32,15 @@
 	});
 </script>
 
-<form
-	class="flex flex-col h-full justify-between space-y-3 text-sm"
-	on:submit|preventDefault={async () => {
-		updateHandler();
-	}}
->
-	<div class="space-y-3 overflow-y-scroll scrollbar-hidden h-full">
-		{#if adminConfig !== null}
+{#if adminConfig}
+	{@const currentConfig = adminConfig}
+	<form
+		class="flex flex-col h-full justify-between space-y-3 text-sm"
+		on:submit|preventDefault={async () => {
+			updateHandler(currentConfig);
+		}}
+	>
+		<div class="space-y-3 overflow-y-scroll scrollbar-hidden h-full">
 			<div class="">
 				<div class="mb-3.5">
 					<div class=" mt-0.5 mb-2.5 text-base font-medium">{$i18n.t('General')}</div>
@@ -173,15 +175,15 @@
 					</div>
 				</div>
 			</div>
-		{/if}
-	</div>
+		</div>
 
-	<div class="flex justify-end pt-3 text-sm font-medium">
-		<button
-			class="px-3.5 py-1.5 text-sm font-medium bg-black hover:bg-gray-900 text-white dark:bg-white dark:text-black dark:hover:bg-gray-100 transition rounded-full"
-			type="submit"
-		>
-			{$i18n.t('Save')}
-		</button>
-	</div>
-</form>
+		<div class="flex justify-end pt-3 text-sm font-medium">
+			<button
+				class="px-3.5 py-1.5 text-sm font-medium bg-black hover:bg-gray-900 text-white dark:bg-white dark:text-black dark:hover:bg-gray-100 transition rounded-full"
+				type="submit"
+			>
+				{$i18n.t('Save')}
+			</button>
+		</div>
+	</form>
+{/if}

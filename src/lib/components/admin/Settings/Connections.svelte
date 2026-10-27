@@ -12,6 +12,7 @@
 
 	import OpenAIConnection from './Connections/OpenAIConnection.svelte';
 	import AddConnectionModal from '#lib/components/AddConnectionModal.svelte';
+	import type { Connection } from '#lib/types/index.js';
 
 	const i18n = getContext('i18n');
 
@@ -24,7 +25,7 @@
 
 	let OPENAI_API_KEYS = $state(['']);
 	let OPENAI_API_BASE_URLS = $state(['']);
-	let OPENAI_API_CONFIGS: Record<number, any> = $state({});
+	let OPENAI_API_CONFIGS: Record<number | string, Connection['config']> = $state({});
 
 	let loaded = $state(false);
 
@@ -64,7 +65,7 @@
 		}
 	};
 
-	const addOpenAIConnectionHandler = async (connection) => {
+	const addOpenAIConnectionHandler = async (connection: Connection) => {
 		OPENAI_API_BASE_URLS = [...OPENAI_API_BASE_URLS, connection.url];
 		OPENAI_API_KEYS = [...OPENAI_API_KEYS, connection.key];
 		OPENAI_API_CONFIGS[OPENAI_API_BASE_URLS.length - 1] = connection.config;
@@ -74,9 +75,7 @@
 
 	onMount(async () => {
 		if ($user?.role === 'admin') {
-			let openaiConfig = {};
-
-			openaiConfig = await getOpenAIConfig(localStorage.token);
+			const openaiConfig = await getOpenAIConfig(localStorage.token);
 
 			OPENAI_API_BASE_URLS = openaiConfig.OPENAI_API_BASE_URLS;
 			OPENAI_API_KEYS = openaiConfig.OPENAI_API_KEYS;
@@ -163,7 +162,7 @@
 										);
 										OPENAI_API_KEYS = OPENAI_API_KEYS.filter((key, keyIdx) => idx !== keyIdx);
 
-										let newConfig = {};
+										const newConfig: Record<number, Connection['config']> = {};
 										OPENAI_API_BASE_URLS.forEach((url, newIdx) => {
 											newConfig[newIdx] = OPENAI_API_CONFIGS[newIdx < idx ? newIdx : newIdx + 1];
 										});

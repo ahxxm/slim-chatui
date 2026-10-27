@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { shortcuts } from '#lib/shortcuts.js';
+	import { shortcuts, type ShortcutId } from '#lib/shortcuts.js';
 
-	export let name: string;
+	export let name: ShortcutId;
 	export let className = '';
 
 	let isMac = false;

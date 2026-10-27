@@ -38,7 +38,6 @@
 		topPadding = false,
 		bottomPadding = false,
 		autoScroll = $bindable(undefined),
-		onSelect = (e) => {},
 		messagesCount = $bindable(20),
 		scrollToBottom = () => {}
 	} = $props();
@@ -258,7 +257,7 @@
 
 <div class={className}>
 	{#if Object.keys(history?.messages ?? {}).length == 0}
-		<ChatPlaceholder modelIds={selectedModels} {onSelect} />
+		<ChatPlaceholder modelIds={selectedModels} />
 	{:else}
 		<div class="w-full pt-2">
 			{#key chatId}

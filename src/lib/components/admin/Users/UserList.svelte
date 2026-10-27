@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { WEBUI_BASE_URL } from '#lib/constants.js';
-	import { user } from '#lib/stores/index.js';
+	import { user, type SessionUser } from '#lib/stores/index.js';
+
+	type UserListItem = SessionUser & { created_at: number; png?: string };
 	import { getContext, untrack } from 'svelte';
 
 	import dayjs from 'dayjs';
@@ -31,13 +33,13 @@
 
 	let page = $state(1);
 
-	let users = $state(null);
-	let total = $state(null);
+	let users: UserListItem[] | null = $state(null);
+	let total: number | null = $state(null);
 
 	let orderBy = $state('created_at');
 	let direction = $state('asc');
 
-	let selectedUser = $state(null);
+	let selectedUser: UserListItem | null = $state(null);
 
 	let showDeleteConfirmDialog = $state(false);
 	let showAddUserModal = $state(false);
@@ -45,14 +47,14 @@
 	let showUserChatsModal = $state(false);
 	let showEditUserModal = $state(false);
 
-	const deleteUserHandler = async (id) => {
+	const deleteUserHandler = async (id: string) => {
 		const res = await deleteUserById(localStorage.token, id).catch((error) => {
 			toast.error(`${error}`);
 			return null;
 		});
 
 		// if the user is deleted and the current page has only one user, go back to the previous page
-		if (users.length === 1 && page > 1) {
+		if (users?.length === 1 && page > 1) {
 			page -= 1;
 		}
 
@@ -61,7 +63,7 @@
 		}
 	};
 
-	const setSortKey = (key) => {
+	const setSortKey = (key: 'created_at' | 'role' | 'name' | 'email') => {
 		if (orderBy === key) {
 			direction = direction === 'asc' ? 'desc' : 'asc';
 		} else {
@@ -97,7 +99,7 @@
 <ConfirmDialog
 	bind:show={showDeleteConfirmDialog}
 	onConfirm={() => {
-		deleteUserHandler(selectedUser.id);
+		if (selectedUser) deleteUserHandler(selectedUser.id);
 	}}
 />
 
@@ -250,11 +252,11 @@
 						</div>
 					</th>
 
-					<th scope="col" class="px-2.5 py-2 text-right" />
+					<th scope="col" class="px-2.5 py-2 text-right"></th>
 				</tr>
 			</thead>
 			<tbody class="">
-				{#each users as user (user.id)}
+				{#each users ?? [] as user (user.id)}
 					<tr class="bg-white dark:bg-gray-900 dark:border-gray-850 text-xs">
 						<td class="px-3 py-1 min-w-[7rem] w-28">
 							<button

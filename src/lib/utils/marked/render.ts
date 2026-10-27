@@ -1,9 +1,10 @@
 import type { Token } from 'marked';
 
-interface LinkLikeToken extends Token {
+type LinkLikeToken = {
+	type: string;
 	text?: string | null;
 	tokens?: Token[];
-}
+};
 
 export const shouldRenderNestedLinkTokens = (token: LinkLikeToken): boolean => {
 	const childTokens = token.tokens ?? [];

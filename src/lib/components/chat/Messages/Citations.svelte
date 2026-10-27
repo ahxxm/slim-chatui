@@ -2,13 +2,14 @@
 	import { getContext } from 'svelte';
 
 	import CitationModal from './Citations/CitationModal.svelte';
+	import type { Citation, CitationInput } from '#lib/types/index.js';
 
 	const i18n = getContext('i18n');
 
-	let { id = '', sources = [] } = $props();
+	let { id = '', sources = [] }: { id?: string; sources?: CitationInput[] } = $props();
 
 	let citations = $derived.by(() => {
-		return sources.reduce((acc, source) => {
+		return sources.reduce<Citation[]>((acc, source) => {
 			if (Object.keys(source).length === 0) {
 				return acc;
 			}
@@ -32,12 +33,12 @@
 
 				if (existingSource) {
 					existingSource.document.push(document);
-					existingSource.metadata.push(metadata);
+					if (metadata) existingSource.metadata.push(metadata);
 					if (distance !== undefined) existingSource.distances.push(distance);
 				} else {
 					acc.push({
 						id: id,
-						source: _source,
+						source: { ..._source, name: _source?.name ?? id },
 						document: [document],
 						metadata: metadata ? [metadata] : [],
 						distances: distance !== undefined ? [distance] : []
@@ -54,9 +55,9 @@
 	let showCitations = $state(false);
 	let showCitationModal = $state(false);
 
-	let selectedCitation: any = $state(null);
+	let selectedCitation: Citation | null = $state(null);
 
-	export const showSourceModal = (sourceId) => {
+	export const showSourceModal = (sourceId: string | number) => {
 		let index;
 
 		if (typeof sourceId === 'string') {
@@ -66,18 +67,19 @@
 			index = sourceId - 1;
 		}
 
-		if (citations[index]) {
-			if (citations[index]?.source?.embed_url) {
-				window.open(citations[index].source.embed_url, '_blank');
+		const citation = citations[index];
+		if (citation) {
+			if (citation.source.embed_url) {
+				window.open(citation.source.embed_url, '_blank');
 				return;
 			}
 
-			selectedCitation = citations[index];
+			selectedCitation = citation;
 			showCitationModal = true;
 		}
 	};
 
-	function calculateShowRelevance(sources: any[]) {
+	function calculateShowRelevance(sources: Citation[]) {
 		const distances = sources.flatMap((citation) => citation.distances ?? []);
 		const inRange = distances.filter((d) => d !== undefined && d >= -1 && d <= 1).length;
 		const outOfRange = distances.filter((d) => d !== undefined && (d < -1 || d > 1)).length;
@@ -96,7 +98,7 @@
 		return true;
 	}
 
-	function shouldShowPercentage(sources: any[]) {
+	function shouldShowPercentage(sources: Citation[]) {
 		const distances = sources.flatMap((citation) => citation.distances ?? []);
 		return distances.every((d) => d !== undefined && d >= -1 && d <= 1);
 	}
@@ -132,7 +134,7 @@
 		>
 			{#if urlCitations.length > 0}
 				<div class="flex -space-x-1 items-center">
-					{#each urlCitations.slice(0, 3) as citation}
+					{#each urlCitations.slice(0, 3) as citation (citation.id)}
 						<img
 							src="https://www.google.com/s2/favicons?sz=32&domain={citation.source.name}"
 							alt="favicon"
@@ -157,7 +159,7 @@
 {#if showCitations}
 	<div class="py-1.5">
 		<div class="text-xs gap-2 flex flex-col">
-			{#each citations as citation, idx}
+			{#each citations as citation, idx (citation.id)}
 				<button
 					id={`source-${id}-${idx + 1}`}
 					aria-label={$i18n.t('View source: {{name}}', {

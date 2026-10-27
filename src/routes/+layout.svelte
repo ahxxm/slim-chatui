@@ -121,7 +121,14 @@
 		});
 	};
 
-	const chatEventHandler = async (event) => {
+	const chatEventHandler = async (event: {
+		chat_id: string;
+		message_id?: string;
+		data?: {
+			type?: string;
+			data?: { done?: boolean; content?: string; title?: string };
+		};
+	}) => {
 		// Skip events from temporary chats that are not the current chat.
 		// This prevents notifications from being sent to other tabs/devices
 		// for privacy, since temporary chats are not meant to be persisted or visible elsewhere.
@@ -138,7 +145,7 @@
 
 		if ((event.chat_id !== $chatId && !$temporaryChatEnabled) || isBackground) {
 			if (type === 'chat:completion') {
-				const { done, content, title } = data;
+				const { done, content, title } = data ?? {};
 				const displayTitle = title || $i18n.t('New Chat');
 
 				if (done) {
@@ -195,17 +202,17 @@
 	onMount(async () => {
 		let touchstartY = 0;
 
-		function isNavOrDescendant(el) {
-			const nav = document.querySelector('nav'); // change selector if needed
-			return nav && (el === nav || nav.contains(el));
+		function isNavOrDescendant(el: EventTarget | null) {
+			const nav = document.querySelector('nav');
+			return el instanceof Node && !!nav && (el === nav || nav.contains(el));
 		}
 
-		const touchstartHandler = (e) => {
+		const touchstartHandler = (e: TouchEvent) => {
 			if (!isNavOrDescendant(e.target)) return;
 			touchstartY = e.touches[0].clientY;
 		};
 
-		const touchmoveHandler = (e) => {
+		const touchmoveHandler = (e: TouchEvent) => {
 			if (!isNavOrDescendant(e.target)) return;
 			const touchY = e.touches[0].clientY;
 			const touchDiff = touchY - touchstartY;
@@ -215,7 +222,7 @@
 			}
 		};
 
-		const touchendHandler = (e) => {
+		const touchendHandler = (e: TouchEvent) => {
 			if (!isNavOrDescendant(e.target)) return;
 			if (showRefresh) {
 				showRefresh = false;
@@ -376,7 +383,7 @@
 	$effect(() => {
 		const languages = $i18n.languages;
 		untrack(() => {
-			void setDayjsLocale(languages);
+			void setDayjsLocale([...languages]);
 		});
 	});
 </script>

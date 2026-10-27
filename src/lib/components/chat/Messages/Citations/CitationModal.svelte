@@ -12,7 +12,7 @@
 	const i18n = getContext('i18n');
 
 	const CONTENT_PREVIEW_LIMIT = 10000;
-	let expandedDocs: Set<number> = new Set();
+	let expandedDocs: Set<number> = $state(new Set());
 
 	let {
 		show = $bindable(false),
@@ -49,7 +49,7 @@
 		if (citation) {
 			untrack(() => {
 				expandedDocs = new Set();
-				mergedDocuments = citation.document?.map((c, i) => {
+				mergedDocuments = citation.document?.map((c: string, i: number) => {
 					return {
 						source: citation.source,
 						document: c,

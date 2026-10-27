@@ -13,7 +13,7 @@
 
 	const i18n = getContext('i18n');
 
-	let { modelIds = [], onSelect = (e) => {} } = $props();
+	let { modelIds = [] } = $props();
 
 	let mounted = $state(false);
 
@@ -31,7 +31,11 @@
 				{#if model}
 					<Tooltip
 						content={marked.parse(
-							sanitizeResponseContent(model?.info?.meta?.description ?? '').replaceAll('\n', '<br>')
+							sanitizeResponseContent(model?.info?.meta?.description ?? '').replaceAll(
+								'\n',
+								'<br>'
+							),
+							{ async: false }
 						)}
 						placement="right"
 					>
@@ -76,7 +80,11 @@
 							class="mt-0.5 text-base font-normal text-gray-500 dark:text-gray-400 line-clamp-3 markdown"
 						>
 							{@html marked.parse(
-								sanitizeResponseContent(model?.info?.meta?.description).replaceAll('\n', '<br>')
+								sanitizeResponseContent(model?.info?.meta?.description ?? '').replaceAll(
+									'\n',
+									'<br>'
+								),
+								{ async: false }
 							)}
 						</div>
 						{#if model?.info?.meta?.user}
