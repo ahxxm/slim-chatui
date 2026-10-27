@@ -13,9 +13,16 @@ dayjs.extend(isYesterday);
 dayjs.extend(localizedFormat);
 
 // 1x1 transparent PNG — shared drag ghost to suppress default browser preview
-export const DRAG_GHOST = new Image();
-DRAG_GHOST.src =
-	'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+let dragGhost: HTMLImageElement | undefined;
+
+export function setDragGhost(dataTransfer: DataTransfer) {
+	if (!dragGhost) {
+		dragGhost = new Image();
+		dragGhost.src =
+			'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+	}
+	dataTransfer.setDragImage(dragGhost, 0, 0);
+}
 
 //////////////////////////
 // Helper functions

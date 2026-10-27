@@ -10,16 +10,10 @@
  *   back to the latest-timestamp surviving message (same rule as the
  *   load-time dangling-currentId recovery in Chat.svelte)
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import type { ChatMessage, ChatHistory } from '#lib/types/index.js';
 
-// $lib/utils pulls in constants.ts which touches location when browser=true,
-// and builds a drag-ghost Image at module load; both are browser globals.
-// jsdom lacks a usable Image; browsers have the real thing.
-vi.mock('$app/env', () => ({ browser: false, dev: false, building: false, version: 'test' }));
-if (typeof Image === 'undefined') vi.stubGlobal('Image', class {});
-
-const { deleteMessage } = await import('#lib/utils/index.js');
+import { deleteMessage } from '#lib/utils/index.js';
 
 function historyOf(...specs: [id: string, parentId: string | null, timestamp: number][]) {
 	const messages: Record<string, ChatMessage> = {};

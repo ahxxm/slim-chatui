@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { getContext, onMount, tick, untrack } from 'svelte';
 
-	import { saveAs, DRAG_GHOST } from '#lib/utils/index.js';
+	import { saveAs, setDragGhost } from '#lib/utils/index.js';
 
 	import { goto } from '$app/navigation';
 	import { toast } from 'svelte-sonner';
@@ -139,7 +139,7 @@
 
 	const onDragStart = (event: DragEvent) => {
 		event.stopPropagation();
-		event.dataTransfer!.setDragImage(DRAG_GHOST, 0, 0);
+		setDragGhost(event.dataTransfer!);
 		event.dataTransfer!.setData('text/plain', JSON.stringify({ type: 'chat', id: folderId }));
 		dragged = true;
 		folderElement.style.opacity = '0.5';
