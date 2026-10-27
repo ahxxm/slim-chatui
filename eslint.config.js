@@ -34,7 +34,8 @@ export default [
 		plugins: { '@typescript-eslint': tsPlugin },
 		languageOptions: {
 			parser: svelteParser,
-			parserOptions: { parser: tsParser }
+			parserOptions: { parser: tsParser },
+			globals: { ...globals.browser, ...globals.es2017 }
 		},
 		rules: tsRules
 	},

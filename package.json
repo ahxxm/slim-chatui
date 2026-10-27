@@ -30,6 +30,7 @@
 		"@tailwindcss/typography": "^0.5.19",
 		"@tailwindcss/vite": "^4.2.2",
 		"@testing-library/svelte": "^5.3.1",
+		"@types/node": "^26.6.5",
 		"@typescript-eslint/eslint-plugin": "^8.72.0",
 		"@typescript-eslint/parser": "^8.72.0",
 		"@vitest/browser": "^5.0.5",
