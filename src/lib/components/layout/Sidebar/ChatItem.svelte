@@ -11,7 +11,7 @@
 		updateChatById,
 		updateChatFolderIdById
 	} from '#lib/apis/chats/index.js';
-	import { createMessagesList, DRAG_GHOST } from '#lib/utils/index.js';
+	import { createMessagesList, setDragGhost } from '#lib/utils/index.js';
 	import {
 		chatId,
 		chatTitle as _chatTitle,
@@ -136,7 +136,7 @@
 	const onDragStart = (event) => {
 		event.stopPropagation();
 
-		event.dataTransfer.setDragImage(DRAG_GHOST, 0, 0);
+		setDragGhost(event.dataTransfer);
 
 		// Set the data to be transferred
 		event.dataTransfer.setData(

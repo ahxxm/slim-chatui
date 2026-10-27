@@ -1,13 +1,6 @@
 import { marked } from 'marked';
-import { afterAll, describe, expect, it, vi } from 'vitest';
-
-vi.stubGlobal('Image', class {});
-vi.stubGlobal('location', { hostname: 'localhost' });
-const { processResponseContent } = await import('./index');
-
-afterAll(() => {
-	vi.unstubAllGlobals();
-});
+import { describe, expect, it } from 'vitest';
+import { processResponseContent } from './index';
 
 // Workaround for marked: processResponseContent adds spaces so CJK-adjacent emphasis parses.
 describe('processResponseContent Chinese Markdown delimiters', () => {
