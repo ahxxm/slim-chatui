@@ -49,10 +49,22 @@ async function seedChat() {
 				title: 'Repro delete-me',
 				history: {
 					messages: {
-						u1: { id: 'u1', parentId: null, childrenIds: ['a1'], role: 'user', content: 'hello repro', timestamp: now },
+						u1: {
+							id: 'u1',
+							parentId: null,
+							childrenIds: ['a1'],
+							role: 'user',
+							content: 'hello repro',
+							timestamp: now
+						},
 						a1: {
-							id: 'a1', parentId: 'u1', childrenIds: [], role: 'assistant',
-							content: REPLY, modelName: 'mock', timestamp: now
+							id: 'a1',
+							parentId: 'u1',
+							childrenIds: [],
+							role: 'assistant',
+							content: REPLY,
+							modelName: 'mock',
+							timestamp: now
 						}
 					},
 					currentId: 'a1'
