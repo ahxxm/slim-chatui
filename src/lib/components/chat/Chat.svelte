@@ -180,6 +180,19 @@
 		return () => controller.abort();
 	});
 
+	// A shallow goto (new chat → /c/{id}) leaves this instance mounted while
+	// the URL changes. Deleting the chat or starting a new one then goto('/')
+	// can land on the same page component class: nothing remounts,
+	// onMount/initNewChat never runs, and the store transition is the only
+	// signal this live instance gets — reset here or the conversation stays.
+	let previousChatId = '';
+
+	$effect(() => {
+		const activeChatCleared = previousChatId !== '' && $chatId === '';
+		previousChatId = $chatId;
+		if (activeChatCleared) untrack(() => resetChatView());
+	});
+
 	const navigateHandler = async (signal?: AbortSignal) => {
 		console.log('[navigateHandler] chatIdProp:', chatIdProp);
 		resetStreamingState();
@@ -553,6 +566,20 @@
 	// Web functions
 	//////////////////////////
 
+	const resetChatView = () => {
+		resetStreamingState();
+		chatTitle.set('');
+		history = {
+			messages: {},
+			currentId: null
+		};
+
+		chatFiles = [];
+		taskIds = null;
+		messageQueue = [];
+		loading = false;
+	};
+
 	const initNewChat = async () => {
 		console.log('initNewChat');
 		resetStreamingState();
@@ -590,20 +617,12 @@
 		autoScroll = true;
 
 		await chatId.set('');
-		await chatTitle.set('');
 
 		console.log(
 			'[initNewChat] resetting history',
 			new Error().stack.split('\n').slice(1, 4).join(' <- ')
 		);
-		history = {
-			messages: {},
-			currentId: null
-		};
-
-		chatFiles = [];
-		taskIds = null;
-		messageQueue = [];
+		resetChatView();
 
 		if (page.url.searchParams.get('q')) {
 			const q = page.url.searchParams.get('q') ?? '';
@@ -624,6 +643,12 @@
 	const goNewChat = async () => {
 		if (window.location.pathname !== '/') {
 			await goto('/');
+			// goto lands on the same page component class when this is the
+			// '/'-page instance (shallow state after a new chat's first
+			// message), so nothing remounts: clear the active chat id and the
+			// watcher resets the live view. Harmless if the navigation
+			// remounted — the fresh home instance clears it too.
+			await chatId.set('');
 			return;
 		}
 		await initNewChat();

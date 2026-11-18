@@ -430,11 +430,12 @@
 
 		await temporaryChatEnabled.set(false);
 
-		if (window.location.pathname === '/') {
-			setTimeout(() => {
-				document.getElementById('new-chat-button')?.click();
-			}, 0);
-		}
+		// Always delegate to #new-chat-button: its handler resets the live
+		// instance at '/' and navigates home otherwise. A pathname check here
+		// would race the in-flight goto and skip the reset.
+		setTimeout(() => {
+			document.getElementById('new-chat-button')?.click();
+		}, 0);
 
 		setTimeout(() => {
 			if ($mobile) {
